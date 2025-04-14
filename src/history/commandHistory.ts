@@ -105,16 +105,12 @@ export const useCommandHistory = <CommandMap extends CustomCommandMap>(): Comman
         if (!(key in commandMap)) {
             const applyWrapper = new Proxy(options.applyAction, {
                 apply(target, _thisArg, args) {
-                    return protectExecuteNest(() => {
-                        target(args[0])
-                    })
+                    return protectExecuteNest(() => target(args[0]))
                 }
             })
             const revertWrapper = new Proxy(options.revertAction, {
                 apply(target, _thisArg, args) {
-                    return protectExecuteNest(() => {
-                        target(args[0])
-                    })
+                    return protectExecuteNest(() => target(args[0]))
                 }
             })
             commandMap[key] = {
