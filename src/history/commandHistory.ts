@@ -1,11 +1,21 @@
 import {cloneDeep} from "lodash";
 
-export type CustomCommandMap = Record<string, object>
+export type CommandDefinition<ApplyOptions, RevertOptions = ApplyOptions> = {
+    applyAction: (options: ApplyOptions) => RevertOptions
+    revertAction: (options: RevertOptions) => void
+}
 
-export type HistoryCommand<CommandMap extends CustomCommandMap, Key extends keyof CommandMap> = {
+export type CustomCommandMap = Record<string, CommandDefinition<any>>
+
+export type HistoryCommand<
+    CommandMap extends CustomCommandMap,
+    Key extends keyof CommandMap,
+    ApplyOptions = Parameters<CommandMap[Key]['applyAction']>[0],
+    RevertOptions = Parameters<CommandMap[Key]['revertAction']>[0]
+> = {
     key: Key
-    applyAction: (options: CommandMap[Key]) => void
-    revertAction: (options: CommandMap[Key]) => void
+    applyAction: (options: ApplyOptions) => RevertOptions
+    revertAction: (options: RevertOptions) => void
 }
 
 export type HistoryCommandMap<CommandMap extends CustomCommandMap> = {
@@ -17,14 +27,16 @@ export type CustomHistoryOption<CommandMap extends CustomCommandMap, Key extends
 
 export type SingleCommandData<CommandMap extends CustomCommandMap, Key extends keyof CommandMap = keyof CommandMap> = {
     command: HistoryCommand<CommandMap, Key>,
-    options: CommandMap[Key],
+    options: Parameters<CommandMap[Key]['applyAction']>[0];
+    revertOptions: Parameters<CommandMap[Key]['revertAction']>[0],
 }
 
 export type BatchCommandData<CommandMap extends CustomCommandMap> = CommandData<CommandMap>[]
 
-export type CommandData<CommandMap extends CustomCommandMap> = SingleCommandData<CommandMap> | BatchCommandData<CommandMap>
+export type CommandData<CommandMap extends CustomCommandMap> =
+    SingleCommandData<CommandMap> | BatchCommandData<CommandMap>
 
-type BatchKey<CommandMap extends CustomCommandMap> = {key: symbol, batch: BatchCommandData<CommandMap>}
+type BatchKey<CommandMap extends CustomCommandMap> = { key: symbol, batch: BatchCommandData<CommandMap> }
 
 export const useCommandHistory = <CommandMap extends CustomCommandMap>() => {
     const commandMap: HistoryCommandMap<CommandMap> =
@@ -58,12 +70,12 @@ export const useCommandHistory = <CommandMap extends CustomCommandMap>() => {
 
     const executeCommand = <Key extends keyof CommandMap>(
         key: Key,
-        options: CommandMap[Key],
+        options: Parameters<CommandMap[Key]["applyAction"]>[0],
     ) => {
         const command = commandMap[key]
         if (command !== undefined) {
-            command.applyAction(options)
-            push({command: command as any as HistoryCommand<CommandMap, keyof CommandMap>, options})
+            const revertOptions = command.applyAction(options)
+            push({command: command as any as HistoryCommand<CommandMap, keyof CommandMap>, options, revertOptions})
         }
     }
 
@@ -73,8 +85,8 @@ export const useCommandHistory = <CommandMap extends CustomCommandMap>() => {
                 undoCommandData(cmd)
             }
         } else {
-            const { command, options } = commandData
-            command.revertAction(options)
+            const {command, revertOptions} = commandData
+            command.revertAction(revertOptions)
         }
     };
 
@@ -84,7 +96,7 @@ export const useCommandHistory = <CommandMap extends CustomCommandMap>() => {
                 redoCommandData(cmd)
             }
         } else {
-            const { command, options } = commandData
+            const {command, options} = commandData
             command.applyAction(options)
         }
     };

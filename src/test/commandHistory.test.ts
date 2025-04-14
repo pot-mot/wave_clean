@@ -1,7 +1,7 @@
-import {BatchCommandData, useCommandHistory} from '../history/commandHistory.ts';
+import {BatchCommandData, CommandDefinition, useCommandHistory} from '../history/commandHistory.ts';
 
 type TestCommandMap = {
-    testCommand: { value: number }
+    testCommand: CommandDefinition<{ value: number }>
 }
 
 describe('useCommandHistory', () => {
@@ -96,7 +96,7 @@ describe('useCommandHistory', () => {
             const batchKey1 = Symbol('batch1');
             history.startBatch(batchKey1);
 
-            expect(() => history.stopBatch(Symbol('invalid'))).toThrowError('stopBatch key is not match');
+            expect(() => history.stopBatch(Symbol('invalid'))).toThrow('stopBatch key is not match');
         });
     });
 
