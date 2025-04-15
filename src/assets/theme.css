@@ -1,0 +1,43 @@
+:root {
+    --primary-color: dodgerblue;
+
+    --text-color: #151515;
+    --comment-color: #1f1f1f;
+    --border-color: var(--text-color);
+    --background-color: #fff;
+    --background-color-hover: #eee;
+    --highlight-color: var(--primary-color);
+    --border: 1px solid var(--border-color);
+    --border-radius: 0.5em;
+
+    --scrollbar-track-color: #f1f1f1;
+    --scrollbar-thumb-color: #ddd;
+    --scrollbar-thumb-color-hover: #bbb;
+
+    --split-color: #eee;
+    --split-color-hover: #ccc;
+
+    --icon-color: #666;
+    --icon-color-light: #999;
+
+    background-color: var(--background-color);
+    transition: background-color 0.5s;
+}
+
+:root.dark {
+    --text-color: #eee;
+    --comment-color: #777;
+    --border-color: #ccc;
+    --background-color: #333;
+    --background-color-hover: #444;
+
+    --scrollbar-track-color: #444;
+    --scrollbar-thumb-color: #666;
+    --scrollbar-thumb-color-hover: #999;
+
+    --split-color: #555;
+    --split-color-hover: #888;
+
+    --icon-color: #bbb;
+    --icon-color-light: #666;
+}
