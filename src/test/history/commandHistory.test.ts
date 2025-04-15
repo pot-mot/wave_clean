@@ -1,4 +1,4 @@
-import {BatchCommandData, CommandDefinition, CommandHistory, useCommandHistory} from '../history/commandHistory.ts';
+import {BatchCommandData, CommandDefinition, CommandHistory, useCommandHistory} from '@/history/commandHistory.ts';
 
 describe('useCommandHistory', () => {
     type TestCommandMap = {
