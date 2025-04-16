@@ -12,11 +12,24 @@ describe('useStateHistory', () => {
             ]
         }
 
-        const {state, update} = useStateHistory<typeof initState>(initState)
+        const history = useStateHistory<typeof initState>(initState)
 
-        update((draft) => {
+        history.update((draft) => {
             draft.name = "b"
         })
-        expect(state.value.name).toEqual("b")
+        expect(history.state.value.name).toEqual("b")
+        expect(history.__view__.getUndoStack()).toHaveLength(2)
+
+        history.undo()
+
+        expect(history.state.value.name).toEqual("a")
+        expect(history.__view__.getUndoStack()).toHaveLength(1)
+        expect(history.__view__.getRedoStack()).toHaveLength(1)
+
+        history.redo()
+
+        expect(history.state.value.name).toEqual("b")
+        expect(history.__view__.getUndoStack()).toHaveLength(2)
+        expect(history.__view__.getRedoStack()).toHaveLength(0)
     })
 })

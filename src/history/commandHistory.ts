@@ -1,4 +1,5 @@
 import {cloneDeep} from "lodash";
+import {BaseHistory} from "@/history/BaseHistory.ts";
 
 export type CommandDefinition<ApplyOptions, RevertOptions = ApplyOptions> = {
     applyAction: (options: ApplyOptions) => RevertOptions
@@ -38,7 +39,7 @@ export type CommandData<CommandMap extends CustomCommandMap> =
 
 type BatchKey<CommandMap extends CustomCommandMap> = { key: symbol, batch: BatchCommandData<CommandMap> }
 
-export type CommandHistory<CommandMap extends CustomCommandMap> = {
+export type CommandHistory<CommandMap extends CustomCommandMap> = BaseHistory & {
     // 命令注册方法
     registerCommand<Key extends keyof CommandMap>(
         key: Key,
@@ -50,14 +51,6 @@ export type CommandHistory<CommandMap extends CustomCommandMap> = {
         key: Key,
         options: Parameters<CommandMap[Key]["applyAction"]>[0],
     ): void;
-
-    // 撤销操作
-    canUndo(): boolean
-    undo(): void
-
-    // 重做操作
-    canRedo(): boolean
-    redo(): void
 
     // 批次操作相关方法
     startBatch(key: symbol): void;
@@ -237,13 +230,13 @@ export const useCommandHistory = <CommandMap extends CustomCommandMap>(): Comman
     }
 
     return {
-        registerCommand,
-        executeCommand,
-
         canUndo,
         undo,
         canRedo,
         redo,
+
+        registerCommand,
+        executeCommand,
 
         startBatch,
         stopBatch,

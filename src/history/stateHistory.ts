@@ -1,10 +1,21 @@
 import type {Draft, Immutable} from 'immer'
 import {produce} from 'immer'
-import {computed, shallowRef} from 'vue'
+import {computed, ComputedRef, shallowRef} from 'vue'
+import {BaseHistory} from "@/history/BaseHistory.ts";
 
 type StateUpdater<T> = (draft: Draft<T>) => void
 
-export const useStateHistory = <T, StateType = Immutable<T>>(baseState: StateType) => {
+export type StateHistory<StateType> = BaseHistory & {
+    state: ComputedRef<StateType>
+    update: (updater: StateUpdater<StateType>) => void
+
+    __view__: {
+        getUndoStack: () => ReadonlyArray<StateType>
+        getRedoStack: () => ReadonlyArray<StateType>
+    };
+}
+
+export const useStateHistory = <T, StateType = Immutable<T>>(baseState: StateType): StateHistory<StateType> => {
     let undoStack: StateType[] = [baseState];
     let redoStack: StateType[] = [];
 
@@ -17,24 +28,38 @@ export const useStateHistory = <T, StateType = Immutable<T>>(baseState: StateTyp
     }
     const state = computed<StateType>(() => stateRef.value)
 
+    const canUndo = () => {
+        return undoStack.length > 1
+    }
     const undo = () => {
-        if (undoStack.length <= 1) return; // 不能撤销到初始状态之前
+        if (!canUndo()) return; // 不能撤销到初始状态之前
         const currentState = undoStack.pop()!;
         redoStack.push(currentState);
         stateRef.value = undoStack[undoStack.length - 1];
     };
 
+    const canRedo = () => {
+        return redoStack.length > 0
+    }
     const redo = () => {
-        if (redoStack.length === 0) return;
+        if (!canRedo()) return;
         const nextState = redoStack.pop()!;
         undoStack.push(nextState);
         stateRef.value = nextState;
     };
 
     return {
+        canUndo,
+        undo,
+        canRedo,
+        redo,
+
         state,
         update,
-        undo,
-        redo,
+
+        __view__: {
+            getUndoStack: () => undoStack.slice(),
+            getRedoStack: () => redoStack.slice(),
+        },
     } as const
 }
