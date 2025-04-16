@@ -52,10 +52,12 @@ export type CommandHistory<CommandMap extends CustomCommandMap> = {
     ): void;
 
     // 撤销操作
-    undo(): void;
+    canUndo(): boolean
+    undo(): void
 
     // 重做操作
-    redo(): void;
+    canRedo(): boolean
+    redo(): void
 
     // 批次操作相关方法
     startBatch(key: symbol): void;
@@ -82,19 +84,19 @@ export const useCommandHistory = <CommandMap extends CustomCommandMap>(): Comman
     let currentBatchKey: BatchKey<CommandMap> | undefined
 
 
-    let __executeFlag = false
+    let __executeFlag__ = false
     const ifIsExecuteThrow = () => {
-        if (__executeFlag) {
+        if (__executeFlag__) {
             throw new Error('Execution does not allow nesting')
         }
     }
     const protectExecuteNest = <R>(action: () => R): R => {
         ifIsExecuteThrow()
-        __executeFlag = true
+        __executeFlag__ = true
         try {
             return action()
         } finally {
-            __executeFlag = false
+            __executeFlag__ = false
         }
     }
 
@@ -127,8 +129,8 @@ export const useCommandHistory = <CommandMap extends CustomCommandMap>(): Comman
         if (currentBatchKey !== undefined) {
             currentBatchKey.batch.push(commandData)
         } else {
-            undoStack.push(commandData);
-            redoStack = [];
+            undoStack.push(commandData)
+            redoStack = []
         }
     }
 
@@ -165,9 +167,14 @@ export const useCommandHistory = <CommandMap extends CustomCommandMap>(): Comman
         }
     };
 
+    const canUndo = () => {
+        return !__executeFlag__ && undoStack.length > 0
+    }
+
     const undo = () => {
         ifIsExecuteThrow()
-        if (undoStack.length === 0) return;
+        if (!canUndo()) return
+
         const commandData = undoStack.pop()
         if (commandData !== undefined) {
             redoStack.push(commandData)
@@ -175,9 +182,14 @@ export const useCommandHistory = <CommandMap extends CustomCommandMap>(): Comman
         }
     }
 
+    const canRedo = () => {
+        return !__executeFlag__ && redoStack.length > 0
+    }
+
     const redo = () => {
         ifIsExecuteThrow()
-        if (redoStack.length === 0) return;
+        if (!canRedo()) return
+
         const commandData = redoStack.pop()
         if (commandData !== undefined) {
             undoStack.push(commandData)
@@ -227,8 +239,12 @@ export const useCommandHistory = <CommandMap extends CustomCommandMap>(): Comman
     return {
         registerCommand,
         executeCommand,
+
+        canUndo,
         undo,
+        canRedo,
         redo,
+
         startBatch,
         stopBatch,
         executeBatch,
