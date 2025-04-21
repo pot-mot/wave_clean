@@ -74,7 +74,7 @@ export type CommandHistory<CommandMap extends CustomCommandMap> =
 
         unregisterCommand<Key extends keyof CommandMap>(
             key: Key
-        ): void;
+        ): HistoryCommand<CommandMap, Key>;
 
         // 执行单个命令
         executeCommand<Key extends keyof CommandMap>(
@@ -88,7 +88,7 @@ export type CommandHistory<CommandMap extends CustomCommandMap> =
         executeBatch(key: symbol, action: () => void): void;
         executeAsyncBatch(key: symbol, action: () => Promise<any>): Promise<void>;
 
-        __clone_view__: {
+        readonly __clone_view__: {
             getCommandMap: () => HistoryCommandMap<CommandMap>;
             getUndoStack: () => CommandData<CommandMap>[];
             getRedoStack: () => CommandData<CommandMap>[];
@@ -154,9 +154,11 @@ export const useCommandHistory = <CommandMap extends CustomCommandMap>(): Comman
 
     const unregisterCommand = <Key extends keyof CommandMap>(key: Key) => {
         if (key in commandMap) {
+            const command = commandMap[key];
             delete commandMap[key];
 
             eventBus.emit('unregisterCommand', {key})
+            return command
         } else {
             throw new Error(`command ${String(key)} is not registered`);
         }
