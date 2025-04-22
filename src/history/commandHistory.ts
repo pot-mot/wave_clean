@@ -4,7 +4,7 @@ import mitt from "mitt";
 
 export type CommandDefinition<ApplyOptions, RevertOptions = ApplyOptions> = {
     applyAction: (options: ApplyOptions) => RevertOptions
-    revertAction: (options: RevertOptions) => void
+    revertAction: (options: RevertOptions) => ApplyOptions | undefined | void
 }
 
 export type CustomCommandMap = Record<string, CommandDefinition<any>>
@@ -16,9 +16,7 @@ export type HistoryCommand<
     RevertOptions = Parameters<CommandMap[Key]['revertAction']>[0]
 > = {
     key: Key
-    applyAction: (options: ApplyOptions) => RevertOptions
-    revertAction: (options: RevertOptions) => void
-}
+} & CommandDefinition<ApplyOptions, RevertOptions>
 
 export type HistoryCommandMap<CommandMap extends CustomCommandMap> = {
     [Key in keyof CommandMap]: HistoryCommand<CommandMap, Key>;
@@ -200,7 +198,10 @@ export const useCommandHistory = <CommandMap extends CustomCommandMap>(): Comman
 
             const type = 'revert'
             eventBus.emit("beforeChange", {key: command.key, type})
-            command.revertAction(revertOptions)
+            const newOptions = command.revertAction(revertOptions)
+            if (newOptions !== undefined) {
+                commandData.options = newOptions
+            }
             eventBus.emit("change", {type, ...commandData})
         }
     };
