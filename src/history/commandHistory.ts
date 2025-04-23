@@ -80,6 +80,13 @@ export type CommandHistory<CommandMap extends CustomCommandMap> =
             options: Parameters<CommandMap[Key]["applyAction"]>[0],
         ): void;
 
+        // 记录单个命令
+        pushCommand<Key extends keyof CommandMap>(
+            key: Key,
+            options: Parameters<CommandMap[Key]["applyAction"]>[0],
+            revertOptions: Parameters<CommandMap[Key]["revertAction"]>[0],
+        ): void;
+
         // 批次操作相关方法
         startBatch(key: symbol): void;
         stopBatch(key: symbol): void;
@@ -185,6 +192,18 @@ export const useCommandHistory = <CommandMap extends CustomCommandMap>(): Comman
             push(commandData)
 
             eventBus.emit("change", {type, ...commandData})
+        }
+    }
+
+    const pushCommand = <Key extends keyof CommandMap>(
+        key: Key,
+        options: Parameters<CommandMap[Key]["applyAction"]>[0],
+        revertOptions: Parameters<CommandMap[Key]["revertAction"]>[0],
+    ) => {
+        const command = commandMap[key]
+        if (command !== undefined) {
+            push({command, options, revertOptions})
+
         }
     }
 
@@ -309,6 +328,7 @@ export const useCommandHistory = <CommandMap extends CustomCommandMap>(): Comman
         registerCommand,
         unregisterCommand,
         executeCommand,
+        pushCommand,
 
         startBatch,
         stopBatch,

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {CommandDefinition, useCommandHistory} from "./history/commandHistory.ts";
-import {Handle, Node, Panel, Position, useVueFlow, VueFlow, XYPosition} from "@vue-flow/core"
+import {Edge, Handle, Node, Panel, Position, useVueFlow, VueFlow, XYPosition} from "@vue-flow/core"
 
 let nodeId = 0
 const nodeType1 = "table" as const
@@ -14,14 +14,15 @@ const history = useCommandHistory<{
     }, {
         id: string,
         oldPosition: XYPosition,
-    }>
+    }>,
+    "edge:add": CommandDefinition<Edge, string>,
 }>()
 
 history.eventBus.on('beforeChange', ({type, key}) => {
     console.log("beforeChange", type, key)
 })
 
-const {addNodes, removeNodes, findNode, updateNode, onNodeDragStart, onNodeDragStop} = useVueFlow("graph-1")
+const {addNodes, removeNodes, updateNode, addEdges, removeEdges, findNode, findEdge, onNodeDragStart, onNodeDragStop, onConnect} = useVueFlow("graph-1")
 
 history.registerCommand("node:add", {
     applyAction: (node) => {
@@ -51,6 +52,20 @@ history.registerCommand("node:move", {
         updateNode(id, {
             position: oldPosition
         })
+    }
+})
+
+history.registerCommand("edge:add", {
+    applyAction: (edge) => {
+        addEdges(edge)
+        return edge.id
+    },
+    revertAction: (edgeId) => {
+        const edge = findEdge(edgeId)
+        if (edge !== undefined) {
+            removeEdges(edgeId)
+            return edge
+        }
     }
 })
 
@@ -94,6 +109,10 @@ onNodeDragStop(({nodes}) => {
         }
     }
 })
+
+onConnect((connectData) => {
+    history.executeCommand('edge:add', {...connectData, id: `edge-${connectData.source}-${connectData.sourceHandle}-${connectData.target}-${connectData.sourceHandle}`})
+})
 </script>
 
 <template>
@@ -104,10 +123,10 @@ onNodeDragStop(({nodes}) => {
             </Panel>
 
             <template #node-table="nodeProps">
-                <Handle type="source" :position="Position.Left"/>
+                <Handle id="source" type="source" :position="Position.Left"/>
                 <div>{{ nodeProps.data.name }}</div>
                 <div>{{ nodeProps.data.comment }}</div>
-                <Handle type="target" :position="Position.Right"/>
+                <Handle id="target" type="target" :position="Position.Right"/>
             </template>
         </VueFlow>
     </div>
