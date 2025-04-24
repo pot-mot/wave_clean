@@ -33,8 +33,7 @@ const emits = defineEmits<{
 const updateTextSize = () => {
     if (!textareaRef.value) return
     const expanding = (props.borderWidth + props.padding) * 2
-    const innerWidth = getTextBlockWidth(innerValue.value, textareaRef.value)
-    const innerHeight = textareaRef.value.scrollHeight - expanding
+    const {width: innerWidth, height: innerHeight} = getTextBlockWidth(innerValue.value, textareaRef.value)
     width.value = (innerWidth <= 0 ? 1 : innerWidth) + expanding
     height.value = (innerHeight < props.fontSize ? props.fontSize : innerHeight) + expanding
     emits("resize", {width: width.value, height: height.value})
