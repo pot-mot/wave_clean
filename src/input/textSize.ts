@@ -1,23 +1,27 @@
 const canvas = document.createElement('canvas')
 const context = canvas.getContext('2d')!
 
-export const getTextLineSize = (text: string, targetEl: HTMLElement) => {
-    const computedStyle = window.getComputedStyle(targetEl)
-    context.font = computedStyle.font
-    const metrics = context.measureText(text)
-    const width = metrics.width
-    const height =
-        metrics.actualBoundingBoxAscent +
-        metrics.actualBoundingBoxDescent
-
-    return {width, height}
-}
-
 const lineHeightComputeSpan = document.createElement('span');
 lineHeightComputeSpan.innerText = 'a'
 lineHeightComputeSpan.style.position = 'absolute'
 lineHeightComputeSpan.style.visibility = 'hidden'
 document.body.appendChild(lineHeightComputeSpan)
+
+export const getLineHeight = (style: CSSStyleDeclaration): number => {
+    lineHeightComputeSpan.style.font = style.font
+    lineHeightComputeSpan.style.lineHeight = style.lineHeight
+    return lineHeightComputeSpan.offsetHeight
+}
+
+export const getTextLineSize = (text: string, targetEl: HTMLElement) => {
+    const computedStyle = window.getComputedStyle(targetEl)
+    context.font = computedStyle.font
+    const metrics = context.measureText(text)
+    const width = metrics.width
+    const height = getLineHeight(computedStyle)
+
+    return {width, height}
+}
 
 export const getTextBlockWidth = (text: string, targetEl: HTMLElement) => {
     const computedStyle = window.getComputedStyle(targetEl)
@@ -26,12 +30,7 @@ export const getTextBlockWidth = (text: string, targetEl: HTMLElement) => {
     const width = Math.max(
         ...lines.map(line => context.measureText(line).width)
     )
-
-    lineHeightComputeSpan.style.font = computedStyle.font
-    lineHeightComputeSpan.style.lineHeight = computedStyle.lineHeight
-    const lineHeight = lineHeightComputeSpan.offsetHeight
-    const height = lineHeight * lines.length
-    console.log(lineHeight)
+    const height = getLineHeight(computedStyle) * lines.length
 
     return {width, height}
 }
