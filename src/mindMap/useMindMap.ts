@@ -1,7 +1,7 @@
 import {CommandDefinition, useCommandHistory} from "@/history/commandHistory.ts";
 import {Edge, Node, useVueFlow, XYPosition} from "@vue-flow/core";
 import {toRaw} from "vue";
-import {checkElementParent} from "@/utils/checkElementParent.ts";
+import {checkElementParent} from "@/mindMap/checkElementParent.ts";
 
 export const MIND_MAP_ID = "mind_map" as const
 

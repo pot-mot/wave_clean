@@ -2,7 +2,7 @@
 import {computed, ref} from "vue";
 import {BezierEdge, BezierEdgeProps} from "@vue-flow/core";
 import {ContentEdgeData, useMindMap} from "@/mindMap/useMindMap.ts";
-import FitSizeInput from "@/input/FitSizeInput.vue";
+import FitSizeBlockInput from "@/input/FitSizeBlockInput.vue";
 
 const {updateEdgeData} = useMindMap()
 
@@ -35,7 +35,7 @@ const handleResize = (size: { width: number, height: number }) => {
         <g :transform="`translate(${(sourceX + targetX - inputWidth) / 2} ${(sourceY + targetY - inputHeight) / 2})`">
             <foreignObject x="0" y="0" :width="inputWidth" :height="inputHeight">
                 <div xmlns="http://www.w3.org/1999/xhtml" style="width: 100%; height: 100%;">
-                    <FitSizeInput v-model="innerValue" @resize="handleResize"/>
+                    <FitSizeBlockInput v-model="innerValue" @resize="handleResize"/>
                 </div>
             </foreignObject>
         </g>

@@ -2,7 +2,7 @@
 import {Handle, NodeProps, Position} from "@vue-flow/core";
 import {ContentNodeData, useMindMap} from "@/mindMap/useMindMap.ts";
 import {computed, ref} from "vue";
-import FitSizeInput from "@/input/FitSizeInput.vue";
+import FitSizeBlockInput from "@/input/FitSizeBlockInput.vue";
 
 const {updateNodeData} = useMindMap()
 
@@ -32,7 +32,7 @@ const handleResize = (size: { width: number, height: number }) => {
     <div style="border: 1px solid #ccc">
         <Handle id="source" type="source" :position="Position.Left"/>
         <div :style="{width: `${inputWidth}px`, height: `${inputHeight}px`}">
-            <FitSizeInput v-model="innerValue" @resize="handleResize"/>
+            <FitSizeBlockInput v-model="innerValue" @resize="handleResize"/>
         </div>
         <Handle id="target" type="target" :position="Position.Right"/>
     </div>

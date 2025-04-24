@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {nextTick, onMounted, ref, useTemplateRef, watch} from "vue";
-import {getTextLineSize} from "@/utils/textSize.ts";
+import {getTextLineSize} from "@/input/textSize.ts";
 
 const isEdit = ref(false)
 
@@ -32,11 +32,10 @@ const emits = defineEmits<{
 
 const updateTextSize = () => {
     if (!inputRef.value) return;
-    const textSize = getTextLineSize(innerValue.value, inputRef.value)
-
     const expanding = (props.borderWidth + props.padding) * 2
-    width.value = textSize.width <= 0 ? 1 + expanding : textSize.width + expanding
-    height.value = textSize.height < props.fontSize ? props.fontSize + expanding : textSize.height + expanding
+    const {width: innerWidth, height: innerHeight} = getTextLineSize(innerValue.value, inputRef.value)
+    width.value = (innerWidth <= 0 ? 1 : innerWidth) + expanding
+    height.value = (innerHeight < props.fontSize ? props.fontSize : innerHeight) + expanding
     emits("resize", {width: width.value, height: height.value})
 }
 
