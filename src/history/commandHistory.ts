@@ -19,7 +19,7 @@ export type HistoryCommand<
 } & CommandDefinition<ApplyOptions, RevertOptions>
 
 export type HistoryCommandMap<CommandMap extends CustomCommandMap> = {
-    [Key in keyof CommandMap]: HistoryCommand<CommandMap, Key>;
+    [Key in keyof CommandMap]?: HistoryCommand<CommandMap, Key>;
 }
 
 export type HistoryCommandOption<CommandMap extends CustomCommandMap, Key extends keyof CommandMap> =
@@ -102,12 +102,11 @@ export type CommandHistory<CommandMap extends CustomCommandMap> =
     };
 
 export const useCommandHistory = <CommandMap extends CustomCommandMap>(): CommandHistory<CommandMap> => {
-    const commandMap: HistoryCommandMap<CommandMap> =
-        {} as HistoryCommandMap<CommandMap>
+    const commandMap: HistoryCommandMap<CommandMap> = {}
 
     const eventBus = mitt<CommandHistoryEvents<CommandMap>>()
 
-    let undoStack: CommandData<CommandMap>[] = []
+    const undoStack: CommandData<CommandMap>[] = []
     let redoStack: CommandData<CommandMap>[] = []
 
     const batchKeyStack: BatchKey<CommandMap>[] = [];
@@ -159,15 +158,19 @@ export const useCommandHistory = <CommandMap extends CustomCommandMap>(): Comman
 
     const unregisterCommand = <Key extends keyof CommandMap>(key: Key) => {
         if (key in commandMap) {
-            const command = commandMap[key];
-            delete commandMap[key];
+            const command = commandMap[key]
+            if (command === undefined) {
+                throw new Error(`command ${String(key)} is not registered`)
+            }
+
+            delete commandMap[key]
 
             eventBus.emit('unregisterCommand', {key})
             return command
         } else {
-            throw new Error(`command ${String(key)} is not registered`);
+            throw new Error(`command ${String(key)} is not registered`)
         }
-    };
+    }
 
     const push = (commandData: CommandData<CommandMap>) => {
         if (currentBatchKey !== undefined) {

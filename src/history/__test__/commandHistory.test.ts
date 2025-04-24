@@ -21,7 +21,7 @@ describe('useCommandHistory', () => {
             });
 
             expect(Object.keys(history.__clone_view__.getCommandMap()).length).toEqual(1);
-            expect(history.__clone_view__.getCommandMap().testCommand.key).toEqual('testCommand');
+            expect(history.__clone_view__.getCommandMap().testCommand?.key).toEqual('testCommand');
         });
     });
 
