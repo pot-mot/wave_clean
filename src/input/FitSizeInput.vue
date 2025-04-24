@@ -56,11 +56,22 @@ watch(() => modelValue.value, (newVal) => {
     innerValue.value = newVal
 })
 
-const handleChange = async () => {
+const handleFocus = () => {
+    isEdit.value = true
+}
+
+const handleChange = () => {
     if (!inputRef.value) return
     modelValue.value = innerValue.value
 
     inputRef.value.blur()
+}
+
+const handleBlur = () => {
+    if (innerValue.value !== modelValue.value) {
+        innerValue.value = modelValue.value
+    }
+    isEdit.value = false
 }
 
 defineExpose({el: inputRef})
@@ -81,8 +92,8 @@ defineExpose({el: inputRef})
             backgroundColor: isEdit ? '#fff' : 'transparent'
         }"
         v-model="innerValue"
+        @focus="handleFocus"
         @change="handleChange"
-        @blur="isEdit = false"
-        @focus="isEdit = true"
+        @blur="handleBlur"
     />
 </template>

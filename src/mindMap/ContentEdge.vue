@@ -20,7 +20,6 @@ const innerValue = computed<string>({
     }
 })
 
-
 const inputWidth = ref(0)
 const inputHeight = ref(0)
 

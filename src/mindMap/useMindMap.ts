@@ -1,6 +1,7 @@
 import {CommandDefinition, useCommandHistory} from "@/history/commandHistory.ts";
 import {Edge, Node, useVueFlow, XYPosition} from "@vue-flow/core";
 import {toRaw} from "vue";
+import {checkElementParent} from "@/utils/checkElementParent.ts";
 
 export const MIND_MAP_ID = "mind_map" as const
 
@@ -115,7 +116,7 @@ const initMindMap = () => {
             if (node === undefined) throw new Error("node is undefined")
 
             const previousData = toRaw(node.data)
-            updateNodeData(id, data)
+            updateNodeData(id, data, {replace: true})
             return {id, data: previousData}
         },
         revertAction: ({id, data}) => {
@@ -123,7 +124,7 @@ const initMindMap = () => {
             if (node === undefined) throw new Error("node is undefined")
 
             const currentData = toRaw(node.data)
-            updateNodeData(id, data)
+            updateNodeData(id, data, {replace: true})
             return {id, data: currentData}
         }
     })
@@ -148,7 +149,7 @@ const initMindMap = () => {
             if (edge === undefined) throw new Error("edge is undefined")
 
             const previousData = toRaw(edge.data)
-            updateEdgeData(id, data)
+            updateEdgeData(id, data, {replace: true})
             return {id, data: previousData}
         },
         revertAction: ({id, data}) => {
@@ -156,7 +157,7 @@ const initMindMap = () => {
             if (edge === undefined) throw new Error("edge is undefined")
 
             const currentData = toRaw(edge.data)
-            updateEdgeData(id, data)
+            updateEdgeData(id, data, {replace: true})
             return {id, data: currentData}
         }
     })
@@ -207,17 +208,23 @@ const initMindMap = () => {
         }
 
         document.addEventListener('keydown', (e: KeyboardEvent) => {
-            console.log(e.target)
-
-            if (e.target === el) {
+            if (e.target === el || e.target instanceof Element && checkElementParent(e.target, el)) {
                 if (e.ctrlKey) {
                     if ((e.key === "z" || e.key === "Z")) {
                         if (e.shiftKey) {
+                            if (document.activeElement instanceof HTMLElement) {
+                                console.log(document.activeElement)
+                                document.activeElement.blur()
+                            }
+                            el.focus()
                             e.preventDefault()
                             history.redo()
                         } else {
-                            e.preventDefault()
+                            if (document.activeElement instanceof HTMLElement) {
+                                document.activeElement.blur()
+                            }
                             el.focus()
+                            e.preventDefault()
                             history.undo()
                         }
                     }
