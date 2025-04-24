@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {nextTick, ref, useTemplateRef, watch} from "vue";
+import {nextTick, onMounted, ref, useTemplateRef, watch} from "vue";
 import {getTextLineSize} from "@/utils/textSize.ts";
 
 const isEdit = ref(false)
@@ -21,7 +21,7 @@ const modelValue = defineModel<string>({
 })
 
 const inputRef = useTemplateRef<HTMLInputElement>("inputRef")
-const innerValue = ref<string>('')
+const innerValue = ref<string>(modelValue.value)
 
 const width = ref(0)
 const height = ref(0)
@@ -40,45 +40,27 @@ const updateTextSize = () => {
     emits("resize", {width: width.value, height: height.value})
 }
 
-watch(() => modelValue.value, (newVal) => {
-    nextTick(() => {
-        innerValue.value = newVal
-        updateTextSize()
-    })
-}, {immediate: true})
-
-watch(() => innerValue.value, (newVal, oldVal) => {
-    if (oldVal !== undefined && oldVal.length === 0) {
-        nextTick(() => {
-            if (!inputRef.value) return
-            inputRef.value.setSelectionRange(newVal.length, newVal.length)
-        })
-    }
+onMounted(() => {
     nextTick(() => {
         updateTextSize()
     })
 })
 
-// 阻止 handleBlur 发生
-let emitBlur = true
+watch(() => innerValue.value, () => {
+    nextTick(() => {
+        updateTextSize()
+    })
+})
+
+watch(() => modelValue.value, (newVal) => {
+    innerValue.value = newVal
+})
 
 const handleChange = async () => {
     if (!inputRef.value) return
     modelValue.value = innerValue.value
 
-    emitBlur = false
     inputRef.value.blur()
-    isEdit.value = false
-}
-
-const handleBlur = () => {
-    if (!emitBlur) {
-        emitBlur = true
-        return
-    }
-    if (!inputRef.value) return
-    innerValue.value = modelValue.value
-    isEdit.value = false
 }
 
 defineExpose({el: inputRef})
@@ -99,8 +81,8 @@ defineExpose({el: inputRef})
             backgroundColor: isEdit ? '#fff' : 'transparent'
         }"
         v-model="innerValue"
-        @keydown.enter="handleChange"
-        @blur="handleBlur"
+        @change="handleChange"
+        @blur="isEdit = false"
         @focus="isEdit = true"
     />
 </template>

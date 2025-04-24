@@ -78,7 +78,7 @@ export type CommandHistory<CommandMap extends CustomCommandMap> =
         executeCommand<Key extends keyof CommandMap>(
             key: Key,
             options: Parameters<CommandMap[Key]["applyAction"]>[0],
-        ): void;
+        ): ReturnType<CommandMap[Key]["applyAction"]>;
 
         // 记录单个命令
         pushCommand<Key extends keyof CommandMap>(
@@ -184,18 +184,22 @@ export const useCommandHistory = <CommandMap extends CustomCommandMap>(): Comman
     const executeCommand = <Key extends keyof CommandMap>(
         key: Key,
         options: Parameters<CommandMap[Key]["applyAction"]>[0],
-    ) => {
+    ): ReturnType<CommandMap[Key]["applyAction"]> => {
         const type = 'apply'
         eventBus.emit("beforeChange", {key, type})
 
         const command = commandMap[key]
-        if (command !== undefined) {
-            const revertOptions = command.applyAction(options)
-            const commandData = {command, options, revertOptions}
-            push(commandData)
-
-            eventBus.emit("change", {type, ...commandData})
+        if (command === undefined) {
+            throw new Error(`command ${String(key)} is not registered`)
         }
+
+        const revertOptions = command.applyAction(options)
+        const commandData = {command, options, revertOptions}
+        push(commandData)
+
+        eventBus.emit("change", {type, ...commandData})
+
+        return revertOptions
     }
 
     const pushCommand = <Key extends keyof CommandMap>(

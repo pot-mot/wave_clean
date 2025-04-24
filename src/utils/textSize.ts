@@ -1,7 +1,6 @@
-const canvas = document.createElement('canvas')
-const context = canvas.getContext('2d')!
-
 export const getTextLineSize = (text: string, targetEl: HTMLElement) => {
+    const canvas = document.createElement('canvas')
+    const context = canvas.getContext('2d')!
     const computedStyle = window.getComputedStyle(targetEl)
     context.font = computedStyle.font
     const metrics = context.measureText(text)

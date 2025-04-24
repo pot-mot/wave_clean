@@ -45,6 +45,8 @@ const initMindMap = () => {
         vueFlowRef,
         onInit,
 
+        getViewport,
+
         addNodes,
         removeNodes,
         updateNode,
@@ -57,13 +59,23 @@ const initMindMap = () => {
         onNodeDragStart,
         onNodeDragStop,
         onConnect,
+
+        zoomOnDoubleClick,
     } = useVueFlow(MIND_MAP_ID)
+    zoomOnDoubleClick.value = false
+
+    const clientToViewport = (point: XYPosition): XYPosition => {
+        const canvasRect = vueFlowRef.value!.getBoundingClientRect()
+
+        const viewport = getViewport()
+
+        const localX = point.x - canvasRect.left
+        const localY = point.y - canvasRect.top
+
+        return { x:  (localX - viewport.x) / viewport.zoom, y: (localY - viewport.y) / viewport.zoom }
+    }
 
     const history = useCommandHistory<MindMapHistoryCommands>()
-
-    history.eventBus.on("beforeChange", (command) => {
-        console.log(command)
-    })
 
     history.registerCommand("node:add", {
         applyAction: (node) => {
@@ -149,11 +161,10 @@ const initMindMap = () => {
         }
     })
 
-
-    const addNode = () => {
-        history.executeCommand("node:add", {
+    const addNode = (position: XYPosition) => {
+        return history.executeCommand("node:add", {
             id: `node-${nodeId++}`,
-            position: {x: 0, y: 0},
+            position,
             type: CONTENT_NODE_TYPE,
             data: {
                 content: ""
@@ -190,25 +201,43 @@ const initMindMap = () => {
     })
 
     onInit(() => {
-        if (vueFlowRef.value === undefined) {
+        const el = vueFlowRef.value
+        if (el === null) {
             throw new Error("vueFlowRef is undefined in onInit")
         }
 
-        vueFlowRef.value?.addEventListener('keydown', (e: KeyboardEvent) => {
-            if ((e.key === "z" || e.key === "Z") && e.ctrlKey) {
-                if (e.shiftKey) {
-                    e.preventDefault()
-                    history.redo()
-                } else {
-                    e.preventDefault()
-                    history.undo()
+        document.addEventListener('keydown', (e: KeyboardEvent) => {
+            console.log(e.target)
+
+            if (e.target === el) {
+                if (e.ctrlKey) {
+                    if ((e.key === "z" || e.key === "Z")) {
+                        if (e.shiftKey) {
+                            e.preventDefault()
+                            history.redo()
+                        } else {
+                            e.preventDefault()
+                            el.focus()
+                            history.undo()
+                        }
+                    }
                 }
+            }
+        })
+
+        el.addEventListener('dblclick', (e) => {
+            if (!(e.target instanceof HTMLElement)) return
+            if (!e.target.classList.contains('vue-flow__pane')) return
+
+            const nodeId = addNode(clientToViewport({x: e.clientX, y: e.clientY}))
+            const node = findNode(nodeId) as ContentNode | undefined
+            if (node === undefined) {
+                throw new Error("new node not find")
             }
         })
     })
 
     return {
-        addNode,
         updateNodeData: (id: string, data: ContentNodeData) => {
             history.executeCommand('node:data:change', {id, data})
         },

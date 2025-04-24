@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import {computed, ref, useTemplateRef} from "vue";
+import {computed, ref} from "vue";
 import {BezierEdge, BezierEdgeProps} from "@vue-flow/core";
 import {ContentEdgeData, useMindMap} from "@/mindMap/useMindMap.ts";
-import ContentInput from "@/mindMap/ContentInput.vue";
+import FitSizeInput from "@/input/FitSizeInput.vue";
 
 const {updateEdgeData} = useMindMap()
 
@@ -28,21 +28,15 @@ const handleResize = (size: { width: number, height: number }) => {
     inputWidth.value = size.width
     inputHeight.value = size.height
 }
-
-const inputRef = useTemplateRef<InstanceType<typeof ContentInput>>("inputRef")
-
-const handleClick = () => {
-    inputRef.value?.el?.focus()
-}
 </script>
 
 <template>
-    <g @click="handleClick">
+    <g>
         <BezierEdge v-bind.prop="props"/>
         <g :transform="`translate(${(sourceX + targetX - inputWidth) / 2} ${(sourceY + targetY - inputHeight) / 2})`">
             <foreignObject x="0" y="0" :width="inputWidth" :height="inputHeight">
                 <div xmlns="http://www.w3.org/1999/xhtml" style="width: 100%; height: 100%;">
-                    <ContentInput ref="inputRef" v-model="innerValue" @resize="handleResize"/>
+                    <FitSizeInput v-model="innerValue" @resize="handleResize"/>
                 </div>
             </foreignObject>
         </g>
