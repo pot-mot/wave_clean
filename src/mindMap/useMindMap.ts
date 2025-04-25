@@ -11,7 +11,7 @@ export type ContentNodeData = {
 }
 export type ContentNode = Node & {
     data: ContentNodeData,
-    type: typeof CONTENT_NODE_TYPE
+    type: typeof CONTENT_NODE_TYPE,
 }
 
 const CONTENT_EDGE_TYPE = "CONTENT_EDGE" as const
@@ -20,11 +20,12 @@ export type ContentEdgeData = {
 }
 export type ContentEdge = Edge & {
     data: ContentEdgeData,
-    type: typeof CONTENT_EDGE_TYPE
+    type: typeof CONTENT_EDGE_TYPE,
 }
 
 type MindMapHistoryCommands = {
     "node:add": CommandDefinition<ContentNode, string>,
+    "node:remove": CommandDefinition<string, ContentNode>,
     "node:move": CommandDefinition<{
         id: string,
         newPosition: XYPosition,
@@ -36,11 +37,17 @@ type MindMapHistoryCommands = {
     "node:data:change": CommandDefinition<{ id: string, data: ContentNodeData }>,
 
     "edge:add": CommandDefinition<ContentEdge, string>,
+    "edge:remove": CommandDefinition<string, ContentEdge>,
     "edge:data:change": CommandDefinition<{ id: string, data: ContentEdgeData }>,
 }
 
 const initMindMap = () => {
     let nodeId = 0
+
+    const vueFlow = useVueFlow(MIND_MAP_ID)
+    vueFlow.multiSelectionActive.value = false
+    vueFlow.zoomOnDoubleClick.value = false
+    vueFlow.selectNodesOnDrag.value = false
 
     const {
         vueFlowRef,
@@ -61,9 +68,9 @@ const initMindMap = () => {
         onNodeDragStop,
         onConnect,
 
-        zoomOnDoubleClick,
-    } = useVueFlow(MIND_MAP_ID)
-    zoomOnDoubleClick.value = false
+        getSelectedNodes,
+        getSelectedEdges,
+    } = vueFlow
 
     const clientToViewport = (point: XYPosition): XYPosition => {
         const canvasRect = vueFlowRef.value!.getBoundingClientRect()
@@ -90,6 +97,20 @@ const initMindMap = () => {
                 return node
             }
         }
+    })
+    history.registerCommand("node:remove", {
+        applyAction: (nodeId) => {
+            const node = findNode(nodeId) as ContentNode | undefined
+            if (node === undefined) {
+                throw new Error("node is undefined")
+            }
+            removeNodes(nodeId)
+            return node
+        },
+        revertAction: (node) => {
+            addNodes(node)
+            return node.id
+        },
     })
 
     history.registerCommand("node:move", {
@@ -143,6 +164,21 @@ const initMindMap = () => {
         }
     })
 
+    history.registerCommand("edge:remove", {
+        applyAction: (edgeId) => {
+            const edge = findEdge(edgeId) as ContentEdge | undefined
+            if (edge === undefined) {
+                throw new Error("edge is undefined")
+            }
+            removeEdges(edgeId)
+            return edge
+        },
+        revertAction: (edge) => {
+            addEdges(edge)
+            return edge.id
+        }
+    })
+
     history.registerCommand("edge:data:change", {
         applyAction: ({id, data}) => {
             const edge = findEdge(id) as ContentEdge | undefined
@@ -169,7 +205,7 @@ const initMindMap = () => {
             type: CONTENT_NODE_TYPE,
             data: {
                 content: ""
-            }
+            },
         })
     }
 
@@ -213,7 +249,6 @@ const initMindMap = () => {
                     if ((e.key === "z" || e.key === "Z")) {
                         if (e.shiftKey) {
                             if (document.activeElement instanceof HTMLElement) {
-                                console.log(document.activeElement)
                                 document.activeElement.blur()
                             }
                             el.focus()
@@ -229,6 +264,21 @@ const initMindMap = () => {
                         }
                     }
                 }
+            }
+        })
+
+        el.addEventListener('keydown', (e) => {
+            if (e.key === "Delete") {
+                e.preventDefault()
+                el.focus()
+                history.executeBatch(Symbol("delete"), () => {
+                    getSelectedEdges.value.forEach((edge) => {
+                        history.executeCommand('edge:remove', edge.id)
+                    })
+                    getSelectedNodes.value.forEach((node) => {
+                        history.executeCommand('node:remove', node.id)
+                    })
+                })
             }
         })
 
