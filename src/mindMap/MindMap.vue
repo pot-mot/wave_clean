@@ -17,7 +17,7 @@ useMindMap()
         :style="{ backgroundColor: 'var(--background-color)' }"
     >
         <Background pattern-color="var(--border-color)"/>
-        <MiniMap pannable zoomable/>
+        <MiniMap pannable zoomable style="background-color: var(--background-color)"/>
 
         <template #node-CONTENT_NODE="nodeProps">
             <ContentNode v-bind="nodeProps"/>

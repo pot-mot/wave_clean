@@ -4,7 +4,7 @@ import {ContentNodeData, useMindMap} from "@/mindMap/useMindMap.ts";
 import {computed, ref} from "vue";
 import FitSizeBlockInput from "@/input/FitSizeBlockInput.vue";
 
-const {updateNodeData} = useMindMap()
+const {updateNodeData, disableDrag, enableDrag} = useMindMap()
 
 const props = defineProps<NodeProps & {
     data: ContentNodeData,
@@ -29,11 +29,27 @@ const handleResize = (size: { width: number, height: number }) => {
 </script>
 
 <template>
-    <div style="border: 1px solid #ccc">
+    <div class="content-node">
         <Handle id="source" type="source" :position="Position.Left"/>
         <div :style="{width: `${inputWidth}px`, height: `${inputHeight}px`}">
-            <FitSizeBlockInput v-model="innerValue" @resize="handleResize"/>
+            <FitSizeBlockInput
+                v-model="innerValue"
+                @resize="handleResize"
+                @edit-start="disableDrag"
+                @edit-exit="enableDrag"
+            />
         </div>
         <Handle id="target" type="target" :position="Position.Right"/>
     </div>
 </template>
+
+<style scoped>
+.content-node {
+    border: 1px solid #ccc;
+}
+
+.selected .content-node {
+    outline-offset: 4px;
+    outline: 2px solid var(--primary-color);
+}
+</style>

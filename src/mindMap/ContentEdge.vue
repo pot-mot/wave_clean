@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import {computed, ref} from "vue";
-import {BezierEdge, BezierEdgeProps} from "@vue-flow/core";
+import {BezierEdge, EdgeProps} from "@vue-flow/core";
 import {ContentEdgeData, useMindMap} from "@/mindMap/useMindMap.ts";
 import FitSizeBlockInput from "@/input/FitSizeBlockInput.vue";
 
 const {updateEdgeData} = useMindMap()
 
-const props = defineProps<BezierEdgeProps & {
+const props = defineProps<EdgeProps & {
     id: string,
     data: ContentEdgeData,
 }>()
@@ -30,12 +30,15 @@ const handleResize = (size: { width: number, height: number }) => {
 </script>
 
 <template>
-    <g>
+    <g class="content-edge">
         <BezierEdge v-bind.prop="props"/>
         <g :transform="`translate(${(sourceX + targetX - inputWidth) / 2} ${(sourceY + targetY - inputHeight) / 2})`">
             <foreignObject x="0" y="0" :width="inputWidth" :height="inputHeight">
                 <div xmlns="http://www.w3.org/1999/xhtml" style="width: 100%; height: 100%;">
-                    <FitSizeBlockInput v-model="innerValue" @resize="handleResize"/>
+                    <FitSizeBlockInput
+                        v-model="innerValue"
+                        @resize="handleResize"
+                    />
                 </div>
             </foreignObject>
         </g>

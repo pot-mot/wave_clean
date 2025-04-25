@@ -45,7 +45,6 @@ const initMindMap = () => {
     let nodeId = 0
 
     const vueFlow = useVueFlow(MIND_MAP_ID)
-    vueFlow.multiSelectionActive.value = false
     vueFlow.zoomOnDoubleClick.value = false
     vueFlow.selectNodesOnDrag.value = false
 
@@ -53,8 +52,10 @@ const initMindMap = () => {
         vueFlowRef,
         onInit,
 
-        getViewport,
+        nodesDraggable,
+        panOnDrag,
 
+        getViewport,
         addNodes,
         removeNodes,
         updateNode,
@@ -295,6 +296,17 @@ const initMindMap = () => {
     })
 
     return {
+        nodesDraggable,
+        disableDrag() {
+            panOnDrag.value = false
+            nodesDraggable.value = false
+            console.log("disable")
+        },
+        enableDrag() {
+            panOnDrag.value = true
+            nodesDraggable.value = true
+            console.log("enable")
+        },
         updateNodeData: (id: string, data: ContentNodeData) => {
             history.executeCommand('node:data:change', {id, data})
         },

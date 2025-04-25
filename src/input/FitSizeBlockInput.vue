@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {nextTick, onMounted, ref, useTemplateRef, watch} from "vue";
 import {getTextBlockWidth} from "@/input/textSize.ts";
+import {vTapInput} from "@/input/vTabInput.ts";
 
 const isEdit = ref(false)
 
@@ -28,6 +29,8 @@ const height = ref(0)
 
 const emits = defineEmits<{
     (event: "resize", size: {width: number, height: number}): void
+    (event: "editStart"): void
+    (event: "editExit"): void
 }>()
 
 const updateTextSize = () => {
@@ -55,21 +58,14 @@ watch(() => modelValue.value, (newVal) => {
     innerValue.value = newVal
 })
 
-const handleKeyDown = (e: KeyboardEvent) => {
-    console.log(e)
-    if (e.key === 'Tab') {
-    }
-}
-
 const handleFocus = () => {
     isEdit.value = true
+    emits("editStart")
 }
 
 const handleChange = () => {
     if (!textareaRef.value) return
     modelValue.value = innerValue.value
-
-    textareaRef.value.blur()
 }
 
 const handleBlur = () => {
@@ -77,6 +73,7 @@ const handleBlur = () => {
         innerValue.value = modelValue.value
     }
     isEdit.value = false
+    emits("editExit")
 }
 
 defineExpose({el: textareaRef})
@@ -97,10 +94,10 @@ defineExpose({el: textareaRef})
             backgroundColor: isEdit ? '#fff' : 'transparent'
         }"
         v-model="innerValue"
-        @keydown="handleKeyDown"
         @focus="handleFocus"
         @change="handleChange"
         @blur="handleBlur"
+        v-tap-input
     />
 </template>
 

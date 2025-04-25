@@ -28,6 +28,8 @@ const height = ref(0)
 
 const emits = defineEmits<{
     (event: "resize", size: {width: number, height: number}): void
+    (event: "editStart"): void
+    (event: "editExit"): void
 }>()
 
 const updateTextSize = () => {
@@ -57,6 +59,7 @@ watch(() => modelValue.value, (newVal) => {
 
 const handleFocus = () => {
     isEdit.value = true
+    emits("editStart")
 }
 
 const handleChange = () => {
@@ -71,6 +74,7 @@ const handleBlur = () => {
         innerValue.value = modelValue.value
     }
     isEdit.value = false
+    emits("editExit")
 }
 
 defineExpose({el: inputRef})
