@@ -1,7 +1,7 @@
 import {CommandDefinition, useCommandHistory} from "@/history/commandHistory.ts";
 import {Edge, Node, useVueFlow, XYPosition} from "@vue-flow/core";
 import {toRaw} from "vue";
-import {checkElementParent} from "@/mindMap/checkElementParent.ts";
+import {checkElementParent, judgeTargetIsInteraction} from "@/mindMap/clickUtils.ts";
 
 export const MIND_MAP_ID = "mind_map" as const
 
@@ -245,7 +245,7 @@ const initMindMap = () => {
         }
 
         document.addEventListener('keydown', (e: KeyboardEvent) => {
-            if (e.target === el || e.target instanceof Element && checkElementParent(e.target, el)) {
+            if (e.target === el || e.target instanceof Element && checkElementParent(e.target, el) && !judgeTargetIsInteraction(e)) {
                 if (e.ctrlKey) {
                     if ((e.key === "z" || e.key === "Z")) {
                         if (e.shiftKey) {
