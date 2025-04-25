@@ -10,10 +10,12 @@ const props = withDefaults(
         padding?: number,
         borderWidth?: number,
         fontSize?: number,
+        readonly?: boolean,
     }>(), {
         padding: 8,
         borderWidth: 1,
         fontSize: 16,
+        readonly: false,
     }
 )
 
@@ -59,6 +61,8 @@ watch(() => modelValue.value, (newVal) => {
 })
 
 const handleFocus = () => {
+    if (props.readonly) return
+    if (isEdit.value) return
     isEdit.value = true
     emits("editStart")
 }
@@ -93,6 +97,7 @@ defineExpose({el: textareaRef})
             borderColor: isEdit ? '#000' : 'transparent',
             backgroundColor: isEdit ? '#fff' : 'transparent'
         }"
+        :readonly="readonly"
         v-model="innerValue"
         @focus="handleFocus"
         @change="handleChange"
