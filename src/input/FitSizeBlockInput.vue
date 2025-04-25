@@ -3,19 +3,17 @@ import {nextTick, onMounted, ref, useTemplateRef, watch} from "vue";
 import {getTextBlockWidth} from "@/input/textSize.ts";
 import {vTapInput} from "@/input/vTabInput.ts";
 
-const isEdit = ref(false)
+const isFocus = ref(false)
 
 const props = withDefaults(
     defineProps<{
         padding?: number,
         borderWidth?: number,
         fontSize?: number,
-        readonly?: boolean,
     }>(), {
         padding: 8,
         borderWidth: 1,
         fontSize: 16,
-        readonly: false,
     }
 )
 
@@ -31,8 +29,6 @@ const height = ref(0)
 
 const emits = defineEmits<{
     (event: "resize", size: {width: number, height: number}): void
-    (event: "editStart"): void
-    (event: "editExit"): void
 }>()
 
 const updateTextSize = () => {
@@ -61,10 +57,8 @@ watch(() => modelValue.value, (newVal) => {
 })
 
 const handleFocus = () => {
-    if (props.readonly) return
-    if (isEdit.value) return
-    isEdit.value = true
-    emits("editStart")
+    if (isFocus.value) return
+    isFocus.value = true
 }
 
 const handleChange = () => {
@@ -76,28 +70,30 @@ const handleBlur = () => {
     if (innerValue.value !== modelValue.value) {
         innerValue.value = modelValue.value
     }
-    isEdit.value = false
-    emits("editExit")
+    isFocus.value = false
 }
 
-defineExpose({el: textareaRef})
+defineExpose({el: textareaRef, isFocus})
 </script>
 
 <template>
     <textarea
         ref="textareaRef"
         :style="{
+            color: 'var(--text-color)',
+            backgroundColor: 'var(--background-color)',
+            border: 'var(--border)',
+            borderRadius: 'var(--border-radius)',
+
             verticalAlign: 'top',
-            outlineOffset: '2px',
+            outline: 'none',
             padding: `${props.padding}px`,
             borderWidth: `${props.borderWidth}px`,
             fontSize: `${props.fontSize}px`,
             width: `${width}px`,
             height: `${height}px`,
-            borderColor: isEdit ? '#000' : 'transparent',
-            backgroundColor: isEdit ? '#fff' : 'transparent'
+            cursor: isFocus ? 'text' : 'default'
         }"
-        :readonly="readonly"
         v-model="innerValue"
         @focus="handleFocus"
         @change="handleChange"

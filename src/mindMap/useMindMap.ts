@@ -1,5 +1,5 @@
 import {CommandDefinition, useCommandHistory} from "@/history/commandHistory.ts";
-import {Edge, Node, useVueFlow, XYPosition} from "@vue-flow/core";
+import {Edge, Node, useVueFlow, XYPosition, SelectionMode} from "@vue-flow/core";
 import {toRaw} from "vue";
 import {checkElementParent, judgeTargetIsInteraction} from "@/mindMap/clickUtils.ts";
 
@@ -46,7 +46,10 @@ const initMindMap = () => {
 
     const vueFlow = useVueFlow(MIND_MAP_ID)
     vueFlow.zoomOnDoubleClick.value = false
-    vueFlow.selectNodesOnDrag.value = false
+    vueFlow.selectNodesOnDrag.value = true
+    vueFlow.selectionMode.value = SelectionMode.Partial
+    vueFlow.multiSelectionActive.value = false
+    vueFlow.multiSelectionKeyCode.value = null
 
     const {
         vueFlowRef,
@@ -272,11 +275,18 @@ const initMindMap = () => {
             if (e.key === "Delete") {
                 e.preventDefault()
                 el.focus()
+
+                const waitRemoveNodes = getSelectedNodes.value
+                vueFlow.removeSelectedNodes(waitRemoveNodes)
+
+                const waitRemoveEdges = getSelectedEdges.value
+                vueFlow.removeSelectedEdges(waitRemoveEdges)
+
                 history.executeBatch(Symbol("delete"), () => {
-                    getSelectedEdges.value.forEach((edge) => {
+                    waitRemoveEdges.forEach((edge) => {
                         history.executeCommand('edge:remove', edge.id)
                     })
-                    getSelectedNodes.value.forEach((node) => {
+                    waitRemoveNodes.forEach((node) => {
                         history.executeCommand('node:remove', node.id)
                     })
                 })
@@ -300,12 +310,10 @@ const initMindMap = () => {
         disableDrag() {
             panOnDrag.value = false
             nodesDraggable.value = false
-            console.log("disable")
         },
         enableDrag() {
             panOnDrag.value = true
             nodesDraggable.value = true
-            console.log("enable")
         },
         updateNodeData: (id: string, data: ContentNodeData) => {
             history.executeCommand('node:data:change', {id, data})

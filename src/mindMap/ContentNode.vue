@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {Handle, NodeProps, Position} from "@vue-flow/core";
 import {ContentNodeData, useMindMap} from "@/mindMap/useMindMap.ts";
-import {computed, ref} from "vue";
+import {computed, nextTick, ref} from "vue";
 import FitSizeBlockInput from "@/input/FitSizeBlockInput.vue";
 
 const {updateNodeData, disableDrag, enableDrag} = useMindMap()
@@ -26,17 +26,42 @@ const handleResize = (size: { width: number, height: number }) => {
     inputWidth.value = size.width
     inputHeight.value = size.height
 }
+
+// 当触发 click 时，组件等待父元素的 click 事件以确定不是拖曳事件，如果不是 drag，则触发 edit 并 disableDrag
+const notDragFlag = ref(false)
+
+const onClick = () => {
+    notDragFlag.value = true
+}
+
+const handleInputClick = () => {
+    nextTick(() => {
+        if (notDragFlag.value) {
+            disableDrag()
+        }
+    })
+}
+
+const handleBlur = () => {
+    enableDrag()
+    notDragFlag.value = false
+}
 </script>
 
 <template>
-    <div class="content-node">
+    <div
+        class="content-node"
+        @click.capture="onClick"
+    >
         <Handle id="source" type="source" :position="Position.Left"/>
         <div :style="{width: `${inputWidth}px`, height: `${inputHeight}px`}">
             <FitSizeBlockInput
+                :style="{borderColor: selected ? 'var(--primary-color)' : undefined}"
+                :class="{untouchable: !notDragFlag}"
                 v-model="innerValue"
                 @resize="handleResize"
-                @edit-start="disableDrag"
-                @edit-exit="enableDrag"
+                @click="handleInputClick"
+                @blur="handleBlur"
             />
         </div>
         <Handle id="target" type="target" :position="Position.Right"/>
@@ -44,12 +69,8 @@ const handleResize = (size: { width: number, height: number }) => {
 </template>
 
 <style scoped>
-.content-node {
-    border: 1px solid #ccc;
-}
-
-.selected .content-node {
-    outline-offset: 4px;
-    outline: 2px solid var(--primary-color);
+.untouchable {
+    user-select: none;
+    pointer-events: none;
 }
 </style>
