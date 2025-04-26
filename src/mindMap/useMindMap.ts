@@ -291,6 +291,15 @@ const initMindMap = () => {
                     })
                 })
             }
+
+            if (e.key === "Control") {
+                vueFlow.multiSelectionActive.value = true
+                el.addEventListener('keyup', (e) => {
+                    if (e.key === "Control") {
+                        vueFlow.multiSelectionActive.value = false
+                    }
+                }, {once: true})
+            }
         })
 
         el.addEventListener('dblclick', (e) => {

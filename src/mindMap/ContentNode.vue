@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {Handle, NodeProps, Position} from "@vue-flow/core";
 import {ContentNodeData, useMindMap} from "@/mindMap/useMindMap.ts";
-import {computed, nextTick, ref} from "vue";
+import {computed, ref, useTemplateRef} from "vue";
 import FitSizeBlockInput from "@/input/FitSizeBlockInput.vue";
 
 const {updateNodeData, disableDrag, enableDrag} = useMindMap()
@@ -27,40 +27,35 @@ const handleResize = (size: { width: number, height: number }) => {
     inputHeight.value = size.height
 }
 
-// 当触发 click 时，组件等待父元素的 click 事件以确定不是拖曳事件，如果不是 drag，则触发 edit 并 disableDrag
-const notDragFlag = ref(false)
+const inputDisable = ref(true)
+const inputRef = useTemplateRef<InstanceType<typeof FitSizeBlockInput>>("inputRef")
 
-const onClick = () => {
-    notDragFlag.value = true
-}
-
-const handleInputClick = () => {
-    nextTick(() => {
-        if (notDragFlag.value) {
-            disableDrag()
-        }
-    })
+const handleDoubleClick = () => {
+    console.log("double click")
+    disableDrag()
+    inputDisable.value = false
+    inputRef.value?.el?.focus()
 }
 
 const handleBlur = () => {
     enableDrag()
-    notDragFlag.value = false
+    inputDisable.value = true
 }
 </script>
 
 <template>
-    <div
-        class="content-node"
-        @click.capture="onClick"
-    >
+    <div class="content-node">
         <Handle id="source" type="source" :position="Position.Left"/>
-        <div :style="{width: `${inputWidth}px`, height: `${inputHeight}px`}">
+        <div
+            :style="{width: `${inputWidth}px`, height: `${inputHeight}px`}"
+            @dblclick.capture="handleDoubleClick"
+        >
             <FitSizeBlockInput
+                ref="inputRef"
+                :class="{untouchable: inputDisable}"
                 :style="{borderColor: selected ? 'var(--primary-color)' : undefined}"
-                :class="{untouchable: !notDragFlag}"
                 v-model="innerValue"
                 @resize="handleResize"
-                @click="handleInputClick"
                 @blur="handleBlur"
             />
         </div>
