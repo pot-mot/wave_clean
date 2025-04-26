@@ -46,6 +46,7 @@ const initMindMap = () => {
 
     const vueFlow = useVueFlow(MIND_MAP_ID)
     vueFlow.zoomOnDoubleClick.value = false
+    vueFlow.zoomOnPinch.value = false
     vueFlow.selectionMode.value = SelectionMode.Partial
     vueFlow.multiSelectionKeyCode.value = null
 
