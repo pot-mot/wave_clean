@@ -53,6 +53,7 @@ const handleBlur = () => {
                     <FitSizeBlockInput
                         ref="inputRef"
                         v-show="innerValue.length > 0 || inputShow"
+                        :class="{untouchable: !inputShow}"
                         :font-size="12"
                         :padding="2"
                         :style="{
@@ -67,3 +68,10 @@ const handleBlur = () => {
         </g>
     </g>
 </template>
+
+<style scoped>
+.untouchable {
+    user-select: none;
+    pointer-events: none;
+}
+</style>

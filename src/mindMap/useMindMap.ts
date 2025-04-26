@@ -61,11 +61,9 @@ const initMindMap = () => {
 
     const disableDrag = () => {
         vueFlow.nodesDraggable.value = false
-        vueFlow.panOnDrag.value = false
     }
     const enableDrag = () => {
         vueFlow.nodesDraggable.value = true
-        vueFlow.panOnDrag.value = true
     }
     enableDrag()
 
@@ -264,21 +262,30 @@ const initMindMap = () => {
             throw new Error("vueFlowRef is undefined in onInit")
         }
 
+        const checkTargetIsPane = (e: Event) => {
+            if (!(e.target instanceof HTMLElement)) return false
+            if (!e.target.classList.contains('vue-flow__pane')) return false
+            if (checkElementParent(e.target, el))
+            return true
+        }
+
+        const blurActiveElement = () => {
+            if (document.activeElement instanceof HTMLElement) {
+                document.activeElement.blur()
+            }
+        }
+
         document.addEventListener('keydown', (e: KeyboardEvent) => {
             if (e.target === el || e.target instanceof Element && checkElementParent(e.target, el) && !judgeTargetIsInteraction(e)) {
                 if (e.ctrlKey) {
                     if ((e.key === "z" || e.key === "Z")) {
                         if (e.shiftKey) {
-                            if (document.activeElement instanceof HTMLElement) {
-                                document.activeElement.blur()
-                            }
+                            blurActiveElement()
                             el.focus()
                             e.preventDefault()
                             history.redo()
                         } else {
-                            if (document.activeElement instanceof HTMLElement) {
-                                document.activeElement.blur()
-                            }
+                            blurActiveElement()
                             el.focus()
                             e.preventDefault()
                             history.undo()
@@ -326,21 +333,32 @@ const initMindMap = () => {
         })
 
         el.addEventListener('dblclick', (e) => {
-            if (!(e.target instanceof HTMLElement)) return
-            if (!e.target.classList.contains('vue-flow__pane')) return
+            if (!checkTargetIsPane(e)) return
             addNode(clientToViewport({x: e.clientX, y: e.clientY}))
         })
         el.addEventListener('touchend', () => {
             const createOnNextTouchEnd = (e: TouchEvent) => {
-                if (!(e.target instanceof HTMLElement)) return
-                if (!e.target.classList.contains('vue-flow__pane')) return
-
-                addNode(clientToViewport({x: e.touches[0].clientX, y: e.touches[0].clientY}))
+                if (!checkTargetIsPane(e)) return
+                if (e.touches.length === 1) {
+                    addNode(clientToViewport({x: e.touches[0].clientX, y: e.touches[0].clientY}))
+                }
             }
             el.addEventListener('touchend', createOnNextTouchEnd, {once: true})
             setTimeout(() => {
                 el.removeEventListener('touchend', createOnNextTouchEnd)
             }, 100)
+        })
+
+        el.addEventListener('mouseover', (e) => {
+            if (judgeTargetIsInteraction(e)) {
+                if (vueFlow.panOnDrag.value) {
+                    vueFlow.panOnDrag.value = false
+                }
+            } else {
+                if (!vueFlow.panOnDrag.value) {
+                    vueFlow.panOnDrag.value = true
+                }
+            }
         })
     })
 

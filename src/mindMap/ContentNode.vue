@@ -38,8 +38,8 @@ const handleClick = () => {
 }
 
 const handleBlur = () => {
-    enableDrag()
     inputDisable.value = true
+    enableDrag()
 }
 </script>
 
