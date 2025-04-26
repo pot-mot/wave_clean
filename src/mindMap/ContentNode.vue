@@ -30,8 +30,8 @@ const handleResize = (size: { width: number, height: number }) => {
 const inputDisable = ref(true)
 const inputRef = useTemplateRef<InstanceType<typeof FitSizeBlockInput>>("inputRef")
 
-const handleDoubleClick = () => {
-    console.log("double click")
+const handleClick = () => {
+    if (!props.selected) return
     disableDrag()
     inputDisable.value = false
     inputRef.value?.el?.focus()
@@ -45,10 +45,9 @@ const handleBlur = () => {
 
 <template>
     <div class="content-node">
-        <Handle id="source" type="source" :position="Position.Left"/>
         <div
             :style="{width: `${inputWidth}px`, height: `${inputHeight}px`}"
-            @dblclick.capture="handleDoubleClick"
+            @click.capture="handleClick"
         >
             <FitSizeBlockInput
                 ref="inputRef"
@@ -59,7 +58,11 @@ const handleBlur = () => {
                 @blur="handleBlur"
             />
         </div>
-        <Handle id="target" type="target" :position="Position.Right"/>
+
+        <Handle :id="`${id}-left`" :position="Position.Left"/>
+        <Handle :id="`${id}-right`" :position="Position.Right"/>
+        <Handle :id="`${id}-top`" :position="Position.Top"/>
+        <Handle :id="`${id}-bottom`" :position="Position.Bottom"/>
     </div>
 </template>
 

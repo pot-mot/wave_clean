@@ -46,10 +46,20 @@ const initMindMap = () => {
 
     const vueFlow = useVueFlow(MIND_MAP_ID)
     vueFlow.zoomOnDoubleClick.value = false
-    vueFlow.selectNodesOnDrag.value = true
     vueFlow.selectionMode.value = SelectionMode.Partial
-    vueFlow.multiSelectionActive.value = false
     vueFlow.multiSelectionKeyCode.value = null
+
+    const enableMultiSelect = () => {
+        vueFlow.multiSelectionActive.value = true
+        vueFlow.selectNodesOnDrag.value = false
+    }
+
+    const disableMultiSelect = () => {
+        vueFlow.multiSelectionActive.value = false
+        vueFlow.selectNodesOnDrag.value = true
+    }
+
+    disableMultiSelect()
 
     const {
         vueFlowRef,
@@ -295,10 +305,10 @@ const initMindMap = () => {
             }
 
             if (e.key === "Control") {
-                vueFlow.multiSelectionActive.value = true
+                enableMultiSelect()
                 document.documentElement.addEventListener('keyup', (e) => {
                     if (e.key === "Control") {
-                        vueFlow.multiSelectionActive.value = false
+                        disableMultiSelect()
                     }
                 }, {once: true})
             }
