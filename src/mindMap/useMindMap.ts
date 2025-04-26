@@ -278,6 +278,12 @@ const initMindMap = () => {
                             e.preventDefault()
                             history.undo()
                         }
+                    } else if (e.key === "a" || e.key === "A") {
+                        e.preventDefault()
+                        enableMultiSelect()
+                        vueFlow.addSelectedNodes(vueFlow.getNodes.value)
+                        vueFlow.addSelectedEdges(vueFlow.getEdges.value)
+                        disableMultiSelect()
                     }
                 }
             }
