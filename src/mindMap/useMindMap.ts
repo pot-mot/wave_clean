@@ -53,20 +53,25 @@ const initMindMap = () => {
         vueFlow.multiSelectionActive.value = true
         vueFlow.selectNodesOnDrag.value = false
     }
-
     const disableMultiSelect = () => {
         vueFlow.multiSelectionActive.value = false
         vueFlow.selectNodesOnDrag.value = true
     }
-
     disableMultiSelect()
+
+    const disableDrag = () => {
+        vueFlow.nodesDraggable.value = false
+        vueFlow.panOnDrag.value = false
+    }
+    const enableDrag = () => {
+        vueFlow.nodesDraggable.value = true
+        vueFlow.panOnDrag.value = true
+    }
+    enableDrag()
 
     const {
         vueFlowRef,
         onInit,
-
-        nodesDraggable,
-        panOnDrag,
 
         getViewport,
         addNodes,
@@ -323,25 +328,29 @@ const initMindMap = () => {
         el.addEventListener('dblclick', (e) => {
             if (!(e.target instanceof HTMLElement)) return
             if (!e.target.classList.contains('vue-flow__pane')) return
+            addNode(clientToViewport({x: e.clientX, y: e.clientY}))
+        })
+        el.addEventListener('touchend', () => {
+            const createOnNextTouchEnd = (e: TouchEvent) => {
+                if (!(e.target instanceof HTMLElement)) return
+                if (!e.target.classList.contains('vue-flow__pane')) return
 
-            const nodeId = addNode(clientToViewport({x: e.clientX, y: e.clientY}))
-            const node = findNode(nodeId) as ContentNode | undefined
-            if (node === undefined) {
-                throw new Error("new node not find")
+                addNode(clientToViewport({x: e.touches[0].clientX, y: e.touches[0].clientY}))
             }
+            el.addEventListener('touchend', createOnNextTouchEnd, {once: true})
+            setTimeout(() => {
+                el.removeEventListener('touchend', createOnNextTouchEnd)
+            }, 100)
         })
     })
 
     return {
-        nodesDraggable,
-        disableDrag() {
-            panOnDrag.value = false
-            nodesDraggable.value = false
-        },
-        enableDrag() {
-            panOnDrag.value = true
-            nodesDraggable.value = true
-        },
+        disableMultiSelect,
+        enableMultiSelect,
+
+        disableDrag,
+        enableDrag,
+
         updateNodeData: (id: string, data: ContentNodeData) => {
             history.executeCommand('node:data:change', {id, data})
         },
