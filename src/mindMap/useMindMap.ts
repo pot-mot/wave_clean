@@ -233,12 +233,14 @@ const initMindMap = () => {
     })
 
     onNodeDragStop(({nodes}) => {
-        for (const node of nodes) {
-            const oldPosition = nodeMoveMap.get(node.id)
-            if (oldPosition !== undefined) {
-                history.executeCommand('node:move', {id: node.id, newPosition: node.position, oldPosition})
+        history.executeBatch(Symbol("node:move"), () => {
+            for (const node of nodes) {
+                const oldPosition = nodeMoveMap.get(node.id)
+                if (oldPosition !== undefined) {
+                    history.executeCommand('node:move', {id: node.id, newPosition: node.position, oldPosition})
+                }
             }
-        }
+        })
     })
 
     onInit(() => {
