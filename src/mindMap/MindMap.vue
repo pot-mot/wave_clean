@@ -25,7 +25,11 @@ const toggleMultiSelect = () => {
         :style="{ backgroundColor: 'var(--background-color)' }"
     >
         <Background pattern-color="var(--border-color)"/>
-        <MiniMap v-if="!isTouchDevice" pannable zoomable style="background-color: var(--background-color)"/>
+        <MiniMap
+            v-if="!isTouchDevice"
+            pannable zoomable
+            style="background-color: var(--background-color); border: var(--border);"
+        />
 
         <Panel position="top-left">
             <button :disabled="!canUndo" @click="undo">undo</button>
