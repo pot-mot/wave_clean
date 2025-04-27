@@ -51,13 +51,8 @@ const curveMidpoint = ref<{ x: number; y: number }>({ x: 0, y: 0 });
 onMounted(() => {
     const path = bezierRef.value?.$el?.nextElementSibling as SVGPathElement | undefined
     if (path === undefined) return
-    pathObserver = new MutationObserver((mutations) => {
-        mutations.forEach(mutation => {
-            if (mutation.attributeName === 'd') {
-                curveMidpoint.value = path.getPointAtLength(path.getTotalLength() / 2)
-                console.log(curveMidpoint.value)
-            }
-        })
+    pathObserver = new MutationObserver(() => {
+        curveMidpoint.value = path.getPointAtLength(path.getTotalLength() / 2)
     })
     pathObserver.observe(path, {
         attributes: true,

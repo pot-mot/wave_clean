@@ -3,7 +3,7 @@
 
     --text-color: #151515;
     --comment-color: #1f1f1f;
-    --border-color: var(--text-color);
+    --border-color: #555;
     --background-color: #fff;
     --background-color-hover: #eee;
     --highlight-color: var(--primary-color);

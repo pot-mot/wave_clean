@@ -41,6 +41,16 @@ const handleBlur = () => {
     inputDisable.value = true
     enableDrag()
 }
+
+const onHandleMouseDown = (e: MouseEvent) => {
+    if (e.target instanceof HTMLElement) {
+        const target = e.target as HTMLElement
+        target.classList.add("mousedown")
+        document.documentElement.addEventListener("mouseup", () => {
+            target.classList.remove("mousedown")
+        }, {once: true})
+    }
+}
 </script>
 
 <template>
@@ -52,17 +62,17 @@ const handleBlur = () => {
             <FitSizeBlockInput
                 ref="inputRef"
                 :class="{untouchable: inputDisable}"
-                :style="{borderColor: selected ? 'var(--primary-color)' : undefined}"
+                :style="{borderColor: selected ? 'var(--primary-color)' : 'var(--border-color)'}"
                 v-model="innerValue"
                 @resize="handleResize"
                 @blur="handleBlur"
             />
         </div>
 
-        <Handle :id="`${id}-left`" :position="Position.Left"/>
-        <Handle :id="`${id}-right`" :position="Position.Right"/>
-        <Handle :id="`${id}-top`" :position="Position.Top"/>
-        <Handle :id="`${id}-bottom`" :position="Position.Bottom"/>
+        <Handle :id="`${id}-left`" :position="Position.Left" @mousedown="onHandleMouseDown"/>
+        <Handle :id="`${id}-right`" :position="Position.Right" @mousedown="onHandleMouseDown"/>
+        <Handle :id="`${id}-top`" :position="Position.Top" @mousedown="onHandleMouseDown"/>
+        <Handle :id="`${id}-bottom`" :position="Position.Bottom" @mousedown="onHandleMouseDown"/>
     </div>
 </template>
 
@@ -70,5 +80,23 @@ const handleBlur = () => {
 .untouchable {
     user-select: none;
     pointer-events: none;
+}
+
+:deep(.vue-flow__handle) {
+    width: 0.4em;
+    height: 0.4em;
+    background: var(--background-color);
+    border-color: var(--border-color);
+    border-radius: 100%;
+}
+
+:deep(.vue-flow__handle.mousedown) {
+    background: var(--background-color);
+    border-color: var(--primary-color);
+}
+
+:deep(.vue-flow__handle.connecting) {
+    background: var(--background-color);
+    border-color: var(--primary-color);
 }
 </style>
