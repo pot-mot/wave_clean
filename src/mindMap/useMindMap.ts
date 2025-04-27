@@ -1,6 +1,6 @@
 import {CommandDefinition, useCommandHistory} from "@/history/commandHistory.ts";
-import {Edge, Node, useVueFlow, XYPosition, SelectionMode} from "@vue-flow/core";
-import {toRaw} from "vue";
+import {Edge, Node, SelectionMode, useVueFlow, XYPosition} from "@vue-flow/core";
+import {computed, readonly, ref, toRaw} from "vue";
 import {checkElementParent, judgeTargetIsInteraction} from "@/mindMap/clickUtils.ts";
 
 export const MIND_MAP_ID = "mind_map" as const
@@ -42,14 +42,20 @@ type MindMapHistoryCommands = {
 }
 
 const initMindMap = () => {
+    const isTouchDevice = ref('ontouchstart' in document.documentElement);
+
     let nodeId = 0
 
     const vueFlow = useVueFlow(MIND_MAP_ID)
+
     vueFlow.zoomOnDoubleClick.value = false
     vueFlow.zoomOnPinch.value = false
     vueFlow.selectionMode.value = SelectionMode.Partial
     vueFlow.multiSelectionKeyCode.value = null
 
+    const canMultiSelect = computed(() => {
+        return vueFlow.multiSelectionActive.value
+    })
     const enableMultiSelect = () => {
         vueFlow.multiSelectionActive.value = true
         vueFlow.selectNodesOnDrag.value = false
@@ -60,6 +66,9 @@ const initMindMap = () => {
     }
     disableMultiSelect()
 
+    const canDrag = computed(() => {
+        return vueFlow.nodesDraggable.value
+    })
     const disableDrag = () => {
         vueFlow.nodesDraggable.value = false
     }
@@ -98,10 +107,17 @@ const initMindMap = () => {
         const localX = point.x - canvasRect.left
         const localY = point.y - canvasRect.top
 
-        return { x:  (localX - viewport.x) / viewport.zoom, y: (localY - viewport.y) / viewport.zoom }
+        return {x: (localX - viewport.x) / viewport.zoom, y: (localY - viewport.y) / viewport.zoom}
     }
 
     const history = useCommandHistory<MindMapHistoryCommands>()
+
+    const canUndo = ref(false)
+    const canRedo = ref(false)
+    history.eventBus.on("change", () => {
+        canUndo.value = history.canUndo()
+        canRedo.value = history.canRedo()
+    })
 
     history.registerCommand("node:add", {
         applyAction: (node) => {
@@ -116,6 +132,7 @@ const initMindMap = () => {
             }
         }
     })
+
     history.registerCommand("node:remove", {
         applyAction: (nodeId) => {
             const node = findNode(nodeId) as ContentNode | undefined
@@ -267,7 +284,7 @@ const initMindMap = () => {
             if (!(e.target instanceof HTMLElement)) return false
             if (!e.target.classList.contains('vue-flow__pane')) return false
             if (checkElementParent(e.target, el))
-            return true
+                return true
         }
 
         const blurActiveElement = () => {
@@ -364,9 +381,20 @@ const initMindMap = () => {
     })
 
     return {
+        isTouchDevice,
+
+        canUndo: readonly(canUndo),
+        canRedo: readonly(canRedo),
+        undo: history.undo,
+        redo: history.redo,
+
+        fitView: vueFlow.fitView,
+
+        canMultiSelect,
         disableMultiSelect,
         enableMultiSelect,
 
+        canDrag,
         disableDrag,
         enableDrag,
 
