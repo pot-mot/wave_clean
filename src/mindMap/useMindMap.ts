@@ -7,10 +7,11 @@ import {
     Node,
     SelectionMode,
     useVueFlow,
-    XYPosition
+    XYPosition,
 } from "@vue-flow/core";
 import {computed, readonly, ref, toRaw} from "vue";
 import {checkElementParent, judgeTargetIsInteraction} from "@/mindMap/clickUtils.ts";
+import {useEdgeDrag} from "@/mindMap/useEdgeDrag.ts";
 
 export const MIND_MAP_ID = "mind_map" as const
 
@@ -34,7 +35,7 @@ export type ContentEdge = Edge & {
 
 type MindMapHistoryCommands = {
     "node:add": CommandDefinition<ContentNode, string>,
-    "node:remove": CommandDefinition<string, {node: ContentNode, edges: ContentEdge[]}>,
+    "node:remove": CommandDefinition<string, { node: ContentNode, edges: ContentEdge[] }>,
     "node:move": CommandDefinition<{
         id: string,
         newPosition: XYPosition,
@@ -47,6 +48,14 @@ type MindMapHistoryCommands = {
 
     "edge:add": CommandDefinition<ContentEdge, string>,
     "edge:remove": CommandDefinition<string, ContentEdge>,
+    "edge:reconnect": CommandDefinition<{
+        id: string,
+        oldConnection: Connection,
+        newConnection: Connection,
+    }, {
+        id: string,
+        oldConnection: Connection,
+    }>;
     "edge:data:change": CommandDefinition<{ id: string, data: ContentEdgeData }>,
 }
 
@@ -55,7 +64,7 @@ const initMindMap = () => {
 
     let nodeId = 0
 
-    const vueFlow = useVueFlow(MIND_MAP_ID)
+    const vueFlow = useEdgeDrag(useVueFlow(MIND_MAP_ID))
 
     vueFlow.zoomOnDoubleClick.value = false
     vueFlow.zoomOnPinch.value = false
@@ -68,11 +77,9 @@ const initMindMap = () => {
     })
     const enableMultiSelect = () => {
         vueFlow.multiSelectionActive.value = true
-        vueFlow.selectNodesOnDrag.value = false
     }
     const disableMultiSelect = () => {
         vueFlow.multiSelectionActive.value = false
-        vueFlow.selectNodesOnDrag.value = true
     }
     disableMultiSelect()
 
@@ -102,6 +109,8 @@ const initMindMap = () => {
         onNodeDragStart,
         onNodeDragStop,
         onConnect,
+        onEdgeDragStart,
+        onEdgeDragStop,
 
         getSelectedNodes,
         getSelectedEdges,
@@ -231,6 +240,24 @@ const initMindMap = () => {
         }
     })
 
+    history.registerCommand("edge:reconnect", {
+        applyAction: ({id, oldConnection, newConnection}) => {
+            const edge = findEdge(id)
+            if (edge === undefined) {
+                throw new Error("edge is undefined")
+            }
+            vueFlow.updateEdge(edge, {...newConnection})
+            return {id, oldConnection}
+        },
+        revertAction: ({id, oldConnection}) => {
+            const edge = findEdge(id)
+            if (edge === undefined) {
+                throw new Error("edge is undefined")
+            }
+            vueFlow.updateEdge(edge, {...oldConnection})
+        }
+    })
+
     history.registerCommand("edge:data:change", {
         applyAction: ({id, data}) => {
             const edge = findEdge(id) as ContentEdge | undefined
@@ -262,7 +289,7 @@ const initMindMap = () => {
     }
 
     const addEdge = (connectData: Connection) => {
-        const id = `edge-${connectData.source}-${connectData.sourceHandle}-${connectData.target}-${connectData.sourceHandle}`
+        const id = `vueflow__edge-${connectData.source}${connectData.sourceHandle ?? ''}-${connectData.target}${connectData.targetHandle ?? ''}`
         if (findEdge(id)) return
 
         history.executeCommand('edge:add', {
@@ -302,12 +329,47 @@ const initMindMap = () => {
         history.executeBatch(Symbol("node:move"), () => {
             for (const node of nodes) {
                 const oldPosition = nodeMoveMap.get(node.id)
+                nodeMoveMap.delete(node.id)
                 if (oldPosition !== undefined) {
                     history.executeCommand('node:move', {id: node.id, newPosition: node.position, oldPosition})
                 }
             }
         })
     })
+
+
+    const edgeReconnectMap = new Map<string, Connection>
+
+    onEdgeDragStart(({edges}) => {
+        for (const edge of edges) {
+            const connection: Connection = {
+                source: edge.source,
+                sourceHandle: edge.sourceHandle,
+                target: edge.target,
+                targetHandle: edge.targetHandle,
+            }
+            edgeReconnectMap.set(edge.id, connection)
+        }
+    })
+
+    onEdgeDragStop(({edges}) => {
+        history.executeBatch(Symbol("edge:reconnect"), () => {
+            for (const edge of edges) {
+                const oldConnection = edgeReconnectMap.get(edge.id)
+                edgeReconnectMap.delete(edge.id)
+                if (oldConnection !== undefined) {
+                    const newConnection = {
+                        source: edge.source,
+                        sourceHandle: edge.sourceHandle,
+                        target: edge.target,
+                        targetHandle: edge.targetHandle,
+                    }
+                    history.executeCommand('edge:reconnect', {id: edge.id, newConnection, oldConnection})
+                }
+            }
+        })
+    })
+
 
     onInit(() => {
         const el = vueFlowRef.value
@@ -432,8 +494,20 @@ const initMindMap = () => {
         disableDrag,
         enableDrag,
 
+        selectNode: (id: string) => {
+            const node = findNode(id)
+            if (node !== undefined) {
+                vueFlow.addSelectedNodes([node])
+            }
+        },
         updateNodeData: (id: string, data: ContentNodeData) => {
             history.executeCommand('node:data:change', {id, data})
+        },
+        selectEdge: (id: string) => {
+            const edge = findEdge(id)
+            if (edge !== undefined) {
+                vueFlow.addSelectedEdges([edge])
+            }
         },
         updateEdgeData: (id: string, data: ContentEdgeData) => {
             history.executeCommand('edge:data:change', {id, data})
