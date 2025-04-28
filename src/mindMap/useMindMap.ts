@@ -309,10 +309,14 @@ const initMindMap = () => {
     const remove = (nodes: GraphNode[], edges: GraphEdge[]) => {
         history.executeBatch(Symbol("remove"), () => {
             nodes.forEach((node) => {
-                history.executeCommand('node:remove', node.id)
+                if (node && findNode(node.id)) {
+                    history.executeCommand('node:remove', node.id)
+                }
             })
             edges.forEach((edge) => {
-                history.executeCommand('edge:remove', edge.id)
+                if (edge && findEdge(edge.id)) {
+                    history.executeCommand('edge:remove', edge.id)
+                }
             })
         })
     }
@@ -422,8 +426,6 @@ const initMindMap = () => {
 
         el.addEventListener('keydown', (e) => {
             if (e.key === "Delete") {
-                if (judgeTargetIsInteraction(e)) return
-
                 if (getSelectedNodes.value.length === 0 && getSelectedEdges.value.length === 0) return
 
                 e.preventDefault()
@@ -437,7 +439,7 @@ const initMindMap = () => {
             if (e.key === "Control") {
                 enableMultiSelect()
                 document.documentElement.addEventListener('keyup', (e) => {
-                    if (e.key === "Control") {
+                    if (e.key === "Control" || e.ctrlKey) {
                         disableMultiSelect()
                     }
                 }, {once: true})
