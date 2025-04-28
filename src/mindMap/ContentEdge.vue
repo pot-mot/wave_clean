@@ -4,7 +4,7 @@ import {BezierEdge, EdgeProps} from "@vue-flow/core";
 import {ContentEdgeData, useMindMap} from "@/mindMap/useMindMap.ts";
 import FitSizeBlockInput from "@/input/FitSizeBlockInput.vue";
 
-const {updateEdgeData} = useMindMap()
+const {updateEdgeData, canMultiSelect, selectEdge} = useMindMap()
 
 const props = defineProps<EdgeProps & {
     id: string,
@@ -65,10 +65,15 @@ onMounted(() => {
 onBeforeUnmount(() => {
     pathObserver?.disconnect()
 })
+
+const handleEdgeMouseDown = () => {
+    if (canMultiSelect.value) return
+    selectEdge(props.id)
+}
 </script>
 
 <template>
-    <g class="content-edge" @click.capture="handleClick">
+    <g class="content-edge" @mousedown.capture="handleEdgeMouseDown" @click.capture="handleClick">
         <BezierEdge ref="bezierRef" v-bind.prop="props" :style="{stroke: selected ? 'var(--primary-color)' : undefined}"/>
         <g :transform="`translate(${curveMidpoint.x - inputWidth / 2} ${curveMidpoint.y - inputHeight / 2})`">
             <foreignObject x="0" y="0" :width="inputWidth" :height="inputHeight">
