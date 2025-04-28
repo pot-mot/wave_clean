@@ -1,14 +1,5 @@
 import {CommandDefinition, useCommandHistory} from "@/history/commandHistory.ts";
-import {
-    Connection,
-    Edge,
-    GraphEdge,
-    GraphNode,
-    Node,
-    SelectionMode,
-    useVueFlow,
-    XYPosition,
-} from "@vue-flow/core";
+import {Connection, Edge, GraphEdge, GraphNode, Node, SelectionMode, useVueFlow, XYPosition,} from "@vue-flow/core";
 import {computed, readonly, ref, toRaw} from "vue";
 import {checkElementParent, judgeTargetIsInteraction} from "@/mindMap/clickUtils.ts";
 import {useEdgeDrag} from "@/mindMap/useEdgeDrag.ts";
@@ -67,15 +58,13 @@ const initMindMap = () => {
 
     const vueFlow = useEdgeDrag(useVueFlow(MIND_MAP_ID))
 
-    vueFlow.zoomOnDoubleClick.value = false
-    vueFlow.zoomOnPinch.value = false
     vueFlow.selectionMode.value = SelectionMode.Partial
     vueFlow.multiSelectionKeyCode.value = null
     vueFlow.connectOnClick.value = false
     vueFlow.selectNodesOnDrag.value = false
 
     const isMultiSelected = computed(() => {
-        return vueFlow.getSelectedNodes.value.length > 0 && vueFlow.getSelectedEdges.value.length > 0
+        return vueFlow.getSelectedNodes.value.length > 0 || vueFlow.getSelectedEdges.value.length > 0
     })
     const canMultiSelect = computed(() => {
         return vueFlow.multiSelectionActive.value
@@ -381,18 +370,13 @@ const initMindMap = () => {
         })
     })
 
-
     onInit(() => {
         const el = vueFlowRef.value
-        if (el === null) {
-            throw new Error("vueFlowRef is undefined in onInit")
-        }
+        const viewportEl = vueFlowRef.value
+        const paneEl = el?.querySelector('div.vue-flow__pane') as HTMLDivElement | null
 
-        const checkTargetIsPane = (e: Event) => {
-            if (!(e.target instanceof HTMLElement)) return false
-            if (!e.target.classList.contains('vue-flow__pane')) return false
-            if (checkElementParent(e.target, el))
-                return true
+        if (el === null || viewportEl === null || paneEl === null) {
+            throw new Error("vueFlow Ref is undefined in onInit")
         }
 
         const blurActiveElement = () => {
@@ -449,34 +433,45 @@ const initMindMap = () => {
             }
         })
 
-        el.addEventListener('dblclick', (e) => {
-            if (!checkTargetIsPane(e)) return
-            addNode(clientToViewport({x: e.clientX, y: e.clientY}))
-        })
-        el.addEventListener('touchend', () => {
-            const createOnNextTouchEnd = (e: TouchEvent) => {
-                if (!checkTargetIsPane(e)) return
-                if (e.touches.length === 1) {
-                    addNode(clientToViewport({x: e.touches[0].clientX, y: e.touches[0].clientY}))
-                }
-            }
-            el.addEventListener('touchend', createOnNextTouchEnd, {once: true})
-            setTimeout(() => {
-                el.removeEventListener('touchend', createOnNextTouchEnd)
-            }, 100)
-        })
+        if (!isTouchDevice.value) {
+            paneEl.addEventListener('dblclick', (e) => {
+                if (e.target !== paneEl) return
+                addNode(clientToViewport({x: e.clientX, y: e.clientY}))
+            })
 
-        el.addEventListener('mouseover', (e) => {
-            if (judgeTargetIsInteraction(e)) {
-                if (vueFlow.panOnDrag.value) {
-                    vueFlow.panOnDrag.value = false
+            paneEl.addEventListener('mouseover', (e) => {
+                if (judgeTargetIsInteraction(e)) {
+                    if (vueFlow.panOnDrag.value) {
+                        vueFlow.panOnDrag.value = false
+                    }
+                } else {
+                    if (!vueFlow.panOnDrag.value) {
+                        vueFlow.panOnDrag.value = true
+                    }
                 }
-            } else {
-                if (!vueFlow.panOnDrag.value) {
-                    vueFlow.panOnDrag.value = true
+            })
+        } else {
+            let waitNextTouchEnd = false
+            let waitTimeout: number | undefined
+            paneEl.addEventListener('touchstart', (e) => {
+                if (e.target !== paneEl) return
+                if (waitNextTouchEnd) {
+                    addNode(clientToViewport({x: e.touches[0].clientX, y: e.touches[0].clientY}))
+                    waitNextTouchEnd = false
+                    clearTimeout(waitTimeout)
+                    e.stopPropagation()
                 }
-            }
-        })
+            })
+            paneEl.addEventListener('touchend', (e) => {
+                if (e.target !== paneEl) return
+                if (!waitNextTouchEnd) {
+                    waitNextTouchEnd = true
+                    waitTimeout = setTimeout(() => {
+                        waitNextTouchEnd = false
+                    }, 150)
+                }
+            })
+        }
     })
 
     return {

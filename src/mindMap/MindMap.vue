@@ -23,6 +23,8 @@ const toggleMultiSelect = () => {
         tabindex="-1"
         style="width: 100%; height: 100%;"
         :style="{ backgroundColor: 'var(--background-color)' }"
+        :zoom-on-pinch="false"
+        :zoom-on-double-click="false"
     >
         <Background pattern-color="var(--border-color)"/>
         <MiniMap
