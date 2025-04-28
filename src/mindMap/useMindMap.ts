@@ -64,7 +64,7 @@ const initMindMap = () => {
     vueFlow.selectNodesOnDrag.value = false
 
     const isMultiSelected = computed(() => {
-        return vueFlow.getSelectedNodes.value.length > 0 || vueFlow.getSelectedEdges.value.length > 0
+        return vueFlow.getSelectedNodes.value.length + vueFlow.getSelectedEdges.value.length > 1
     })
     const canMultiSelect = computed(() => {
         return vueFlow.multiSelectionActive.value
