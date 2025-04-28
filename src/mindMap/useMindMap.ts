@@ -12,6 +12,7 @@ import {
 import {computed, readonly, ref, toRaw} from "vue";
 import {checkElementParent, judgeTargetIsInteraction} from "@/mindMap/clickUtils.ts";
 import {useEdgeDrag} from "@/mindMap/useEdgeDrag.ts";
+import {jsonSortPropStringify} from "@/json/jsonStringify.ts";
 
 export const MIND_MAP_ID = "mind_map" as const
 
@@ -372,7 +373,9 @@ const initMindMap = () => {
                         target: edge.target,
                         targetHandle: edge.targetHandle,
                     }
-                    history.executeCommand('edge:reconnect', {id: edge.id, newConnection, oldConnection})
+                    if (jsonSortPropStringify(oldConnection) != jsonSortPropStringify(newConnection)) {
+                        history.executeCommand('edge:reconnect', {id: edge.id, newConnection, oldConnection})
+                    }
                 }
             }
         })
