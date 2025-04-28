@@ -71,7 +71,11 @@ const initMindMap = () => {
     vueFlow.selectionMode.value = SelectionMode.Partial
     vueFlow.multiSelectionKeyCode.value = null
     vueFlow.connectOnClick.value = false
+    vueFlow.selectNodesOnDrag.value = false
 
+    const isMultiSelected = computed(() => {
+        return vueFlow.getSelectedNodes.value.length > 0 && vueFlow.getSelectedEdges.value.length > 0
+    })
     const canMultiSelect = computed(() => {
         return vueFlow.multiSelectionActive.value
     })
@@ -431,8 +435,6 @@ const initMindMap = () => {
             }
 
             if (e.key === "Control") {
-                if (judgeTargetIsInteraction(e)) return
-
                 enableMultiSelect()
                 document.documentElement.addEventListener('keyup', (e) => {
                     if (e.key === "Control") {
@@ -486,6 +488,7 @@ const initMindMap = () => {
 
         fitView: vueFlow.fitView,
 
+        isMultiSelected,
         canMultiSelect,
         disableMultiSelect,
         enableMultiSelect,

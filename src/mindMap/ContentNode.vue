@@ -4,7 +4,7 @@ import {ContentNodeData, useMindMap} from "@/mindMap/useMindMap.ts";
 import {computed, ref, useTemplateRef} from "vue";
 import FitSizeBlockInput from "@/input/FitSizeBlockInput.vue";
 
-const {updateNodeData, disableDrag, enableDrag, canMultiSelect, selectNode} = useMindMap()
+const {updateNodeData, disableDrag, enableDrag, isMultiSelected, canMultiSelect, selectNode} = useMindMap()
 
 const props = defineProps<NodeProps & {
     data: ContentNodeData,
@@ -31,11 +31,13 @@ const inputDisable = ref(true)
 const inputRef = useTemplateRef<InstanceType<typeof FitSizeBlockInput>>("inputRef")
 
 const handleNodeMouseDown = () => {
+    if (isMultiSelected.value) return
     if (canMultiSelect.value) return
     selectNode(props.id)
 }
 
 const handleNodeWrapperClick = () => {
+    if (canMultiSelect.value) return
     if (!props.selected) return
     disableDrag()
     inputDisable.value = false
@@ -59,7 +61,11 @@ const onHandleMouseDown = (e: MouseEvent) => {
 </script>
 
 <template>
-    <div class="content-node" @mousedown.capture="handleNodeMouseDown">
+    <div
+        class="content-node"
+        @mousedown.capture="handleNodeMouseDown"
+        @touchstart.capture="handleNodeMouseDown"
+    >
         <div
             class="node-wrapper"
             :style="{width: `${inputWidth}px`, height: `${inputHeight}px`}"
