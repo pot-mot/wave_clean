@@ -6,15 +6,18 @@ import {MIND_MAP_ID, useMindMap} from "@/mindMap/useMindMap.ts";
 import {MiniMap} from "@vue-flow/minimap";
 import {Background} from "@vue-flow/background";
 
-const {isTouchDevice, canUndo, canRedo, undo, redo, fitView, canMultiSelect, disableMultiSelect, enableMultiSelect} = useMindMap()
-
-const toggleMultiSelect = () => {
-    if (canMultiSelect.value) {
-        disableMultiSelect()
-    } else {
-        enableMultiSelect()
-    }
-}
+const {
+    isTouchDevice,
+    canUndo,
+    canRedo,
+    undo,
+    redo,
+    fitView,
+    canMultiSelect,
+    toggleMultiSelect,
+    defaultMouseAction,
+    toggleDefaultMouseAction,
+} = useMindMap()
 </script>
 
 <template>
@@ -37,6 +40,7 @@ const toggleMultiSelect = () => {
             <button :disabled="!canUndo" @click="undo">undo</button>
             <button :disabled="!canRedo" @click="redo">redo</button>
             <button @click="fitView()">fit</button>
+            <button @click="toggleDefaultMouseAction">{{ defaultMouseAction }}</button>
             <button v-if="isTouchDevice" @click="toggleMultiSelect">{{ canMultiSelect }}multiselect</button>
         </Panel>
 

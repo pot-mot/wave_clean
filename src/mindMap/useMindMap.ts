@@ -51,6 +51,8 @@ type MindMapHistoryCommands = {
     "edge:data:change": CommandDefinition<{ id: string, data: ContentEdgeData }>,
 }
 
+export type MouseAction = "panDrag" | "selectionRect"
+
 const initMindMap = () => {
     const isTouchDevice = ref('ontouchstart' in document.documentElement);
 
@@ -58,7 +60,15 @@ const initMindMap = () => {
 
     const vueFlow = useEdgeDrag(useVueFlow(MIND_MAP_ID))
 
-    vueFlow.selectionMode.value = SelectionMode.Partial
+    /**
+     * 选中时使得节点和边位于最上层
+     */
+    vueFlow.elevateEdgesOnSelect.value = true
+    vueFlow.elevateNodesOnSelect.value = true
+
+    /**
+     * 点击多选相关配置
+     */
     vueFlow.multiSelectionKeyCode.value = null
     vueFlow.connectOnClick.value = false
     vueFlow.selectNodesOnDrag.value = false
@@ -75,7 +85,52 @@ const initMindMap = () => {
     const disableMultiSelect = () => {
         vueFlow.multiSelectionActive.value = false
     }
+    const toggleMultiSelect = () => {
+        if (canMultiSelect.value) {
+            disableMultiSelect()
+        } else {
+            enableMultiSelect()
+        }
+    }
     disableMultiSelect()
+
+
+    /**
+     * 框选相关配置
+     */
+    vueFlow.selectionMode.value = SelectionMode.Partial
+    const defaultMouseAction = ref<MouseAction>('panDrag')
+
+    // 默认操作为拖拽，按下 Shift 允许框选
+    const setDefaultPanDrag = () => {
+        defaultMouseAction.value = 'panDrag'
+        vueFlow.selectionKeyCode.value = "Shift"
+        vueFlow.panOnDrag.value = true
+    }
+    // 默认操作为框选，通过鼠标右键拖拽
+    const setDefaultSelectionRect = () => {
+        defaultMouseAction.value = 'selectionRect'
+        vueFlow.selectionKeyCode.value = true
+        vueFlow.panOnDrag.value = [2]
+    }
+    vueFlow.onPaneClick(() => {
+        if (defaultMouseAction.value === 'selectionRect') {
+            if (vueFlow.userSelectionRect.value !== null && vueFlow.userSelectionRect.value.width === 0 && vueFlow.userSelectionRect.value.height === 0) {
+                vueFlow.selectionKeyCode.value = false
+            } else {
+                vueFlow.selectionKeyCode.value = true
+            }
+            vueFlow.panOnDrag.value = [2]
+        }
+    })
+    const toggleDefaultMouseAction = () => {
+        if (defaultMouseAction.value === 'panDrag') {
+            setDefaultSelectionRect()
+        } else {
+            setDefaultPanDrag()
+        }
+    }
+    setDefaultPanDrag()
 
     const canDrag = computed(() => {
         return vueFlow.nodesDraggable.value
@@ -423,7 +478,7 @@ const initMindMap = () => {
                 })
             }
 
-            if (e.key === "Control") {
+            else if (e.key === "Control") {
                 enableMultiSelect()
                 document.documentElement.addEventListener('keyup', (e) => {
                     if (e.key === "Control" || e.ctrlKey) {
@@ -492,6 +547,10 @@ const initMindMap = () => {
         canMultiSelect,
         disableMultiSelect,
         enableMultiSelect,
+        toggleMultiSelect,
+
+        defaultMouseAction: readonly(defaultMouseAction),
+        toggleDefaultMouseAction,
 
         canDrag,
         disableDrag,
