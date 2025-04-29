@@ -59,4 +59,13 @@ const toggleMultiSelect = () => {
     padding: 1rem;
     transform: translateX(-1rem) translateY(-1rem);
 }
+
+:deep(.vue-flow__pane.draggable) {
+    cursor: default;
+}
+
+
+:deep(.vue-flow__pane.dragging) {
+    cursor: default;
+}
 </style>
