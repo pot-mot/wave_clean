@@ -370,6 +370,9 @@ const initMindMap = () => {
         blurActiveElement()
         history.executeCommand('remove', data)
         focus()
+        vueFlow.vueFlowRef.value?.addEventListener('blur', () => {
+            focus()
+        }, {once: true})
     }
 
     onConnect((connectData) => {
