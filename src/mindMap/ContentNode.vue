@@ -3,12 +3,17 @@ import {Handle, NodeProps, Position} from "@vue-flow/core";
 import {ContentNodeData, useMindMap} from "@/mindMap/useMindMap.ts";
 import {computed, ref, useTemplateRef} from "vue";
 import FitSizeBlockInput from "@/input/FitSizeBlockInput.vue";
+import {NodeToolbar} from "@vue-flow/node-toolbar";
 
-const {updateNodeData, disableDrag, enableDrag, isMultiSelected, canMultiSelect, selectNode} = useMindMap()
+const {updateNodeData, disableDrag, enableDrag, isMultiSelected, canMultiSelect, selectNode, remove} = useMindMap()
 
 const props = defineProps<NodeProps & {
     data: ContentNodeData,
 }>()
+
+const handleDelete = () => {
+    remove({nodes: [props.id]})
+}
 
 const innerValue = computed<string>({
     get() {
@@ -61,30 +66,36 @@ const onHandleMouseDown = (e: MouseEvent) => {
 </script>
 
 <template>
-    <div
-        class="content-node"
-        @mousedown.capture="handleNodeMouseDown"
-        @touchstart.capture="handleNodeMouseDown"
-    >
-        <div
-            class="node-wrapper"
-            :style="{width: `${inputWidth}px`, height: `${inputHeight}px`}"
-            @click.capture="handleNodeWrapperClick"
-        >
-            <FitSizeBlockInput
-                ref="inputRef"
-                :class="{untouchable: inputDisable}"
-                :style="{borderColor: selected ? 'var(--primary-color)' : 'var(--border-color)'}"
-                v-model="innerValue"
-                @resize="handleResize"
-                @blur="handleBlur"
-            />
-        </div>
+    <div>
+        <NodeToolbar :node-id="id" :is-visible="selected && !inputDisable">
+            <button @mousedown.capture="handleDelete">delete</button>
+        </NodeToolbar>
 
-        <Handle :id="`${id}-left`" :position="Position.Left" @mousedown="onHandleMouseDown"/>
-        <Handle :id="`${id}-right`" :position="Position.Right" @mousedown="onHandleMouseDown"/>
-        <Handle :id="`${id}-top`" :position="Position.Top" @mousedown="onHandleMouseDown"/>
-        <Handle :id="`${id}-bottom`" :position="Position.Bottom" @mousedown="onHandleMouseDown"/>
+        <div
+            class="content-node"
+            @mousedown.capture="handleNodeMouseDown"
+            @touchstart.capture="handleNodeMouseDown"
+        >
+            <div
+                class="node-wrapper"
+                :style="{width: `${inputWidth}px`, height: `${inputHeight}px`}"
+                @click.capture="handleNodeWrapperClick"
+            >
+                <FitSizeBlockInput
+                    ref="inputRef"
+                    :class="{untouchable: inputDisable}"
+                    :style="{borderColor: selected ? 'var(--primary-color)' : 'var(--border-color)'}"
+                    v-model="innerValue"
+                    @resize="handleResize"
+                    @blur="handleBlur"
+                />
+            </div>
+
+            <Handle :id="`${id}-left`" :position="Position.Left" @mousedown="onHandleMouseDown"/>
+            <Handle :id="`${id}-right`" :position="Position.Right" @mousedown="onHandleMouseDown"/>
+            <Handle :id="`${id}-top`" :position="Position.Top" @mousedown="onHandleMouseDown"/>
+            <Handle :id="`${id}-bottom`" :position="Position.Bottom" @mousedown="onHandleMouseDown"/>
+        </div>
     </div>
 </template>
 

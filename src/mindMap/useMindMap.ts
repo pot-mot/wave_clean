@@ -36,7 +36,6 @@ export type ContentEdge = Edge & {
 
 type MindMapHistoryCommands = {
     "node:add": CommandDefinition<ContentNode, string>,
-    "node:remove": CommandDefinition<string, { node: ContentNode, edges: ContentEdge[] }>,
     "node:move": CommandDefinition<{
         id: string,
         newPosition: XYPosition,
@@ -48,7 +47,6 @@ type MindMapHistoryCommands = {
     "node:data:change": CommandDefinition<{ id: string, data: ContentNodeData }>,
 
     "edge:add": CommandDefinition<ContentEdge, string>,
-    "edge:remove": CommandDefinition<string, ContentEdge>,
     "edge:reconnect": CommandDefinition<{
         id: string,
         oldConnection: Connection,
@@ -58,6 +56,14 @@ type MindMapHistoryCommands = {
         oldConnection: Connection,
     }>;
     "edge:data:change": CommandDefinition<{ id: string, data: ContentEdgeData }>,
+
+    "remove": CommandDefinition<{
+        nodes?: (GraphNode | string)[],
+        edges?: (GraphEdge | string)[]
+    }, {
+        nodes: GraphNode[],
+        edges: GraphEdge[]
+    }>,
 }
 
 export type MouseAction = "panDrag" | "selectionRect"
@@ -205,27 +211,6 @@ const initMindMap = () => {
         }
     })
 
-    history.registerCommand("node:remove", {
-        applyAction: (nodeId) => {
-            const node = findNode(nodeId)
-            if (node === undefined) {
-                throw new Error("node is undefined")
-            }
-            const connectedEdges = vueFlow.getConnectedEdges(nodeId)
-            vueFlow.removeSelectedEdges(connectedEdges)
-            vueFlow.removeEdges(connectedEdges)
-
-            vueFlow.removeSelectedNodes([node])
-            vueFlow.removeNodes(nodeId)
-            return {node: node as ContentNode, edges: connectedEdges as ContentEdge[]}
-        },
-        revertAction: ({node, edges}) => {
-            addNodes(node)
-            addEdges(edges)
-            return node.id
-        },
-    })
-
     history.registerCommand("node:move", {
         applyAction: ({id, newPosition, oldPosition}) => {
             updateNode(id, {
@@ -275,22 +260,6 @@ const initMindMap = () => {
                 vueFlow.removeEdges(edgeId)
                 return edge as ContentEdge
             }
-        }
-    })
-
-    history.registerCommand("edge:remove", {
-        applyAction: (edgeId) => {
-            const edge = findEdge(edgeId)
-            if (edge === undefined) {
-                throw new Error("edge is undefined")
-            }
-            vueFlow.removeSelectedEdges([edge])
-            vueFlow.removeEdges(edgeId)
-            return edge as ContentEdge
-        },
-        revertAction: (edge) => {
-            addEdges(edge)
-            return edge.id
         }
     })
 
@@ -356,19 +325,46 @@ const initMindMap = () => {
         })
     }
 
-    const remove = (nodes: GraphNode[], edges: GraphEdge[]) => {
-        history.executeBatch(Symbol("remove"), () => {
-            nodes.forEach((node) => {
-                if (node && findNode(node.id)) {
-                    history.executeCommand('node:remove', node.id)
+    history.registerCommand("remove", {
+        applyAction: (data) => {
+            const removedNodes: GraphNode[] = []
+            const removedEdges: GraphEdge[] = []
+
+            data?.edges?.forEach((edge) => {
+                const edgeId = typeof edge === "string" ? edge : edge.id
+                const foundEdge = findEdge(edgeId)
+                if (foundEdge) {
+                    removedEdges.push(foundEdge)
                 }
             })
-            edges.forEach((edge) => {
-                if (edge && findEdge(edge.id)) {
-                    history.executeCommand('edge:remove', edge.id)
+            data?.nodes?.forEach((node) => {
+                const nodeId = typeof node === "string" ? node : node.id
+                const foundNode = findNode(nodeId)
+                if (foundNode) {
+                    removedNodes.push(foundNode)
                 }
             })
-        })
+            removedEdges.push(...vueFlow.getConnectedEdges(removedNodes))
+            vueFlow.removeSelectedEdges(removedEdges)
+            vueFlow.removeSelectedNodes(removedNodes)
+            vueFlow.removeEdges(removedEdges)
+            vueFlow.removeNodes(removedNodes)
+
+            return {
+                nodes: removedNodes,
+                edges: removedEdges
+            }
+        },
+        revertAction: (data) => {
+            const {nodes, edges} = data
+            addNodes(nodes)
+            addEdges(edges)
+            return {nodes, edges}
+        },
+    })
+
+    const remove = (data: {nodes?: (GraphNode | string)[], edges?: (GraphEdge | string)[]}) => {
+        history.executeCommand('remove', data)
     }
 
     onConnect((connectData) => {
@@ -479,7 +475,7 @@ const initMindMap = () => {
                 el.focus()
 
                 history.executeBatch(Symbol("delete"), () => {
-                    remove(getSelectedNodes.value, getSelectedEdges.value)
+                    remove({nodes: getSelectedNodes.value, edges: getSelectedEdges.value})
                 })
             }
 
