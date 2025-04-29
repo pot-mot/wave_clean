@@ -1,5 +1,14 @@
 import {CommandDefinition, useCommandHistory} from "@/history/commandHistory.ts";
-import {Connection, Edge, GraphEdge, GraphNode, Node, SelectionMode, useVueFlow, XYPosition,} from "@vue-flow/core";
+import {
+    Connection,
+    Edge,
+    GraphEdge,
+    GraphNode,
+    Node,
+    SelectionMode,
+    useVueFlow,
+    XYPosition,
+} from "@vue-flow/core";
 import {computed, readonly, ref, toRaw} from "vue";
 import {checkElementParent, judgeTargetIsInteraction} from "@/mindMap/clickUtils.ts";
 import {useEdgeDrag} from "@/mindMap/useEdgeDrag.ts";
@@ -60,11 +69,7 @@ const initMindMap = () => {
 
     const vueFlow = useEdgeDrag(useVueFlow(MIND_MAP_ID))
 
-    /**
-     * 选中时使得节点和边位于最上层
-     */
-    vueFlow.elevateEdgesOnSelect.value = true
-    vueFlow.elevateNodesOnSelect.value = true
+    let zIndex = 0
 
     /**
      * 点击多选相关配置
@@ -559,6 +564,7 @@ const initMindMap = () => {
         selectNode: (id: string) => {
             const node = findNode(id)
             if (node !== undefined) {
+                node.zIndex = zIndex ++
                 vueFlow.addSelectedNodes([node])
             }
         },
@@ -568,6 +574,7 @@ const initMindMap = () => {
         selectEdge: (id: string) => {
             const edge = findEdge(id)
             if (edge !== undefined) {
+                edge.zIndex = zIndex ++
                 vueFlow.addSelectedEdges([edge])
             }
         },
