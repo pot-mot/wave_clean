@@ -10,7 +10,7 @@ import {
     XYPosition,
 } from "@vue-flow/core";
 import {computed, readonly, ref, toRaw} from "vue";
-import {checkElementParent, judgeTargetIsInteraction} from "@/mindMap/clickUtils.ts";
+import {blurActiveElement, judgeTargetIsInteraction} from "@/mindMap/clickUtils.ts";
 import {useEdgeDrag} from "@/mindMap/useEdgeDrag.ts";
 import {jsonSortPropStringify} from "@/json/jsonStringify.ts";
 
@@ -74,6 +74,9 @@ const initMindMap = () => {
     let nodeId = 0
 
     const vueFlow = useEdgeDrag(useVueFlow(MIND_MAP_ID))
+    const focus = () => {
+        vueFlow.vueFlowRef.value?.focus()
+    }
 
     let zIndex = 0
 
@@ -364,7 +367,9 @@ const initMindMap = () => {
     })
 
     const remove = (data: {nodes?: (GraphNode | string)[], edges?: (GraphEdge | string)[]}) => {
+        blurActiveElement()
         history.executeCommand('remove', data)
+        focus()
     }
 
     onConnect((connectData) => {
@@ -435,48 +440,13 @@ const initMindMap = () => {
             throw new Error("vueFlow Ref is undefined in onInit")
         }
 
-        const blurActiveElement = () => {
-            if (document.activeElement instanceof HTMLElement) {
-                document.activeElement.blur()
-            }
-        }
-
-        document.addEventListener('keydown', (e: KeyboardEvent) => {
-            if (e.target === el || e.target instanceof Element && checkElementParent(e.target, el) && !judgeTargetIsInteraction(e)) {
-                if (e.ctrlKey) {
-                    if ((e.key === "z" || e.key === "Z")) {
-                        if (e.shiftKey) {
-                            blurActiveElement()
-                            el.focus()
-                            e.preventDefault()
-                            history.redo()
-                        } else {
-                            blurActiveElement()
-                            el.focus()
-                            e.preventDefault()
-                            history.undo()
-                        }
-                    } else if (e.key === "a" || e.key === "A") {
-                        e.preventDefault()
-                        enableMultiSelect()
-                        vueFlow.addSelectedNodes(vueFlow.getNodes.value)
-                        vueFlow.addSelectedEdges(vueFlow.getEdges.value)
-                        disableMultiSelect()
-                    }
-                }
-            }
-        })
-
         el.addEventListener('keydown', (e) => {
             if (e.key === "Delete") {
                 if (getSelectedNodes.value.length === 0 && getSelectedEdges.value.length === 0) return
 
                 e.preventDefault()
-                el.focus()
 
-                history.executeBatch(Symbol("delete"), () => {
-                    remove({nodes: getSelectedNodes.value, edges: getSelectedEdges.value})
-                })
+                remove({nodes: getSelectedNodes.value, edges: getSelectedEdges.value})
             }
 
             else if (e.key === "Control") {
@@ -486,6 +456,24 @@ const initMindMap = () => {
                         disableMultiSelect()
                     }
                 }, {once: true})
+            }
+
+            else if (e.ctrlKey) {
+                if ((e.key === "z" || e.key === "Z")) {
+                    if (e.shiftKey) {
+                        e.preventDefault()
+                        history.redo()
+                    } else {
+                        e.preventDefault()
+                        history.undo()
+                    }
+                } else if (e.key === "a" || e.key === "A") {
+                    e.preventDefault()
+                    enableMultiSelect()
+                    vueFlow.addSelectedNodes(vueFlow.getNodes.value)
+                    vueFlow.addSelectedEdges(vueFlow.getEdges.value)
+                    disableMultiSelect()
+                }
             }
         })
 
@@ -531,6 +519,8 @@ const initMindMap = () => {
     })
 
     return {
+        focus,
+
         isTouchDevice,
 
         canUndo: readonly(canUndo),

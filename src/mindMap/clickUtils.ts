@@ -54,3 +54,9 @@ export const checkElementParent = (el: Element | null, parent: Element) => {
     }
     return false
 }
+
+export const blurActiveElement = () => {
+    if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur()
+    }
+}
