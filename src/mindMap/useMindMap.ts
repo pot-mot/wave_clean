@@ -69,6 +69,11 @@ const initMindMap = () => {
         vueFlow.vueFlowRef.value?.focus()
     }
 
+    const clearSelection = () => {
+        vueFlow.removeSelectedNodes(vueFlow.getSelectedNodes.value)
+        vueFlow.removeSelectedEdges(vueFlow.getSelectedEdges.value)
+    }
+
     let zIndex = 0
 
     /**
@@ -107,6 +112,49 @@ const initMindMap = () => {
 
     let selectionRectEnable: boolean = false
     let selectionRectMouseButton: number = 0
+
+    const getByClientRect = (rect: {readonly x: number, readonly y: number, readonly width: number, readonly height: number}) => {
+        const innerNodes: GraphNode[] = []
+        const innerEdges: GraphEdge[] = []
+
+        const leftTop = clientToViewport({x: rect.x, y: rect.y})
+        const rightBottom = clientToViewport({x: rect.x + rect.width, y: rect.y + rect.height})
+
+        for (const node of vueFlow.getNodes.value) {
+            if (typeof node.width !== "number" || typeof node.height !== "number") continue
+
+            const nodeLeft = node.position.x
+            const nodeRight = node.position.x + node.width
+            const nodeTop = node.position.y
+            const nodeBottom = node.position.y + node.height
+
+            if (
+                nodeRight > leftTop.x &&
+                nodeLeft < rightBottom.x &&
+                nodeBottom > leftTop.y &&
+                nodeTop < rightBottom.y
+            ) {
+                innerNodes.push(node);
+            }
+        }
+
+        for (const edge of vueFlow.getEdges.value) {
+            if (
+                edge.sourceX > leftTop.x &&
+                edge.sourceX < rightBottom.x &&
+                edge.sourceY > leftTop.y &&
+                edge.sourceY < rightBottom.y &&
+                edge.targetX > leftTop.x &&
+                edge.targetX < rightBottom.x &&
+                edge.targetY > leftTop.y &&
+                edge.targetY < rightBottom.y
+            ) {
+                innerEdges.push(edge);
+            }
+        }
+
+        return {nodes: innerNodes, edges: innerEdges}
+    }
 
     const defaultMouseAction = ref<MouseAction>('panDrag')
 
@@ -337,8 +385,8 @@ const initMindMap = () => {
                 }
             })
             removedEdges.push(...vueFlow.getConnectedEdges(removedNodes))
-            vueFlow.removeSelectedEdges(removedEdges)
-            vueFlow.removeSelectedNodes(removedNodes)
+
+            clearSelection()
             vueFlow.removeEdges(removedEdges)
             vueFlow.removeNodes(removedNodes)
 
@@ -513,10 +561,10 @@ const initMindMap = () => {
 
                 // 如果开启了 selectionRectEnable，则将根据 selectionRectMouseButton 判断并进行拖曳创建选择框
                 if (selectionRectEnable) {
+                    e.preventDefault()
                     vueFlow.multiSelectionActive.value = false
 
-                    vueFlow.removeSelectedNodes(vueFlow.getSelectedNodes.value)
-                    vueFlow.removeSelectedEdges(vueFlow.getSelectedEdges.value)
+                    clearSelection()
 
                     if (e.button === selectionRectMouseButton) {
                         vueFlow.userSelectionActive.value = true
@@ -533,6 +581,7 @@ const initMindMap = () => {
                         }
 
                         const onMove = (e: MouseEvent) => {
+                            e.preventDefault()
                             const current = {x: e.clientX, y: e.clientY}
                             let width = current.x - start.x
                             let height = current.y - start.y
@@ -540,7 +589,8 @@ const initMindMap = () => {
                             const y = height > 0 ? start.y : current.y
                             width = width > 0 ? width : -width
                             height = height > 0 ? height : -height
-                            vueFlow.userSelectionRect.value = {
+
+                            const rect = {
                                 width,
                                 height,
                                 x,
@@ -548,31 +598,13 @@ const initMindMap = () => {
                                 startX: start.x,
                                 startY: start.y,
                             }
-                            const newSelectedNodes: GraphNode[] = []
+                            vueFlow.userSelectionRect.value = rect
 
-                            const leftTop = clientToViewport({x, y})
-                            const rightBottom = clientToViewport({x: x + width, y: y + height})
+                            const {nodes, edges} = getByClientRect(rect)
 
-                            for (const node of vueFlow.getNodes.value) {
-                                if (typeof node.width !== "number" || typeof node.height !== "number") return
-
-                                const nodeLeft = node.position.x
-                                const nodeRight = node.position.x + node.width
-                                const nodeTop = node.position.y
-                                const nodeBottom = node.position.y + node.height
-
-                                if (
-                                    nodeRight > leftTop.x &&
-                                    nodeLeft < rightBottom.x &&
-                                    nodeBottom > leftTop.y &&
-                                    nodeTop < rightBottom.y
-                                ) {
-                                    newSelectedNodes.push(node);
-                                }
-                            }
-
-                            vueFlow.removeSelectedNodes(vueFlow.getSelectedNodes.value)
-                            vueFlow.addSelectedNodes(newSelectedNodes)
+                            clearSelection()
+                            vueFlow.addSelectedNodes(nodes)
+                            vueFlow.addSelectedEdges(edges)
                         }
 
                         const onMouseUp = () => {
@@ -583,8 +615,11 @@ const initMindMap = () => {
                             document.documentElement.removeEventListener('mouseup', onMouseUp)
 
                             const newSelectedNodes = vueFlow.getSelectedNodes.value
+                            const newSelectedEdges = vueFlow.getSelectedEdges.value
                             setTimeout(() => {
+                                clearSelection()
                                 vueFlow.addSelectedNodes(newSelectedNodes)
+                                vueFlow.addSelectedEdges(newSelectedEdges)
                                 vueFlow.multiSelectionActive.value = false
                             })
                         }
@@ -623,10 +658,10 @@ const initMindMap = () => {
 
                 // 如果开启了 selectionRect，则将根据 selectionRectMouseButton 判断并进行拖曳创建选择框
                 if (selectionRectEnable) {
+                    e.preventDefault()
                     vueFlow.multiSelectionActive.value = false
 
-                    vueFlow.removeSelectedNodes(vueFlow.getSelectedNodes.value)
-                    vueFlow.removeSelectedEdges(vueFlow.getSelectedEdges.value)
+                    clearSelection()
 
                     vueFlow.userSelectionActive.value = true
                     vueFlow.multiSelectionActive.value = true
@@ -642,6 +677,7 @@ const initMindMap = () => {
                     }
 
                     const onMove = (e: TouchEvent) => {
+                        e.preventDefault()
                         const current = {x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY}
                         let width = current.x - start.x
                         let height = current.y - start.y
@@ -657,31 +693,21 @@ const initMindMap = () => {
                             startX: start.x,
                             startY: start.y,
                         }
-                        const newSelectedNodes: GraphNode[] = []
-
-                        const leftTop = clientToViewport({x, y})
-                        const rightBottom = clientToViewport({x: x + width, y: y + height})
-
-                        for (const node of vueFlow.getNodes.value) {
-                            if (typeof node.width !== "number" || typeof node.height !== "number") return
-
-                            const nodeLeft = node.position.x
-                            const nodeRight = node.position.x + node.width
-                            const nodeTop = node.position.y
-                            const nodeBottom = node.position.y + node.height
-
-                            if (
-                                nodeRight > leftTop.x &&
-                                nodeLeft < rightBottom.x &&
-                                nodeBottom > leftTop.y &&
-                                nodeTop < rightBottom.y
-                            ) {
-                                newSelectedNodes.push(node);
-                            }
+                        const rect = {
+                            width,
+                            height,
+                            x,
+                            y,
+                            startX: start.x,
+                            startY: start.y,
                         }
+                        vueFlow.userSelectionRect.value = rect
 
-                        vueFlow.removeSelectedNodes(vueFlow.getSelectedNodes.value)
-                        vueFlow.addSelectedNodes(newSelectedNodes)
+                        const {nodes, edges} = getByClientRect(rect)
+
+                        clearSelection()
+                        vueFlow.addSelectedNodes(nodes)
+                        vueFlow.addSelectedEdges(edges)
                     }
 
                     const onTouchEnd = () => {
@@ -693,8 +719,11 @@ const initMindMap = () => {
                         document.documentElement.removeEventListener('touchcancel', onTouchEnd)
 
                         const newSelectedNodes = vueFlow.getSelectedNodes.value
+                        const newSelectedEdges = vueFlow.getSelectedEdges.value
                         setTimeout(() => {
+                            clearSelection()
                             vueFlow.addSelectedNodes(newSelectedNodes)
+                            vueFlow.addSelectedEdges(newSelectedEdges)
                             vueFlow.multiSelectionActive.value = false
                         })
                     }
