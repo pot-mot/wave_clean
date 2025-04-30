@@ -571,14 +571,6 @@ const initMindMap = () => {
                         vueFlow.multiSelectionActive.value = true
 
                         const start = {x: e.clientX, y: e.clientY}
-                        vueFlow.userSelectionRect.value = {
-                            width: 0,
-                            height: 0,
-                            x: start.x,
-                            y: start.y,
-                            startX: start.x,
-                            startY: start.y,
-                        }
 
                         const onMove = (e: MouseEvent) => {
                             e.preventDefault()
@@ -667,14 +659,6 @@ const initMindMap = () => {
                     vueFlow.multiSelectionActive.value = true
 
                     const start = {x: e.touches[0].clientX, y: e.touches[0].clientY}
-                    vueFlow.userSelectionRect.value = {
-                        width: 0,
-                        height: 0,
-                        x: start.x,
-                        y: start.y,
-                        startX: start.x,
-                        startY: start.y,
-                    }
 
                     const onMove = (e: TouchEvent) => {
                         e.preventDefault()
