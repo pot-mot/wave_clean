@@ -5,7 +5,7 @@ import {computed, ref, useTemplateRef} from "vue";
 import FitSizeBlockInput from "@/input/FitSizeBlockInput.vue";
 import {NodeToolbar} from "@vue-flow/node-toolbar";
 
-const {updateNodeData, disableDrag, enableDrag, isMultiSelected, canMultiSelect, selectNode, remove} = useMindMap()
+const {updateNodeData, disableDrag, enableDrag, isMultiSelected, canMultiSelect, findNode, selectNode, remove} = useMindMap()
 
 const props = defineProps<NodeProps & {
     data: ContentNodeData,
@@ -28,6 +28,11 @@ const inputWidth = ref(0)
 const inputHeight = ref(0)
 
 const handleResize = (size: { width: number, height: number }) => {
+    const node = findNode(props.id)
+    if (node) {
+        node.width = size.width
+        node.height = size.height
+    }
     inputWidth.value = size.width
     inputHeight.value = size.height
 }

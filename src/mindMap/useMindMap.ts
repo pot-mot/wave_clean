@@ -1,14 +1,5 @@
 import {CommandDefinition, useCommandHistory} from "@/history/commandHistory.ts";
-import {
-    Connection,
-    Edge,
-    GraphEdge,
-    GraphNode,
-    Node,
-    SelectionMode,
-    useVueFlow,
-    XYPosition,
-} from "@vue-flow/core";
+import {Connection, Edge, GraphEdge, GraphNode, Node, useVueFlow, XYPosition,} from "@vue-flow/core";
 import {computed, readonly, ref, toRaw} from "vue";
 import {blurActiveElement, judgeTargetIsInteraction} from "@/mindMap/clickUtils.ts";
 import {useEdgeDrag} from "@/mindMap/useEdgeDrag.ts";
@@ -112,31 +103,27 @@ const initMindMap = () => {
     /**
      * 框选相关配置
      */
-    vueFlow.selectionMode.value = SelectionMode.Partial
+    vueFlow.selectionKeyCode.value = false
+
+    const selectionRect = ref(false)
+    const selectionRectMouseButton = ref<number>(0)
+
     const defaultMouseAction = ref<MouseAction>('panDrag')
 
-    // 默认操作为拖拽，按下 Shift 允许框选
+    // 默认操作为拖拽
     const setDefaultPanDrag = () => {
         defaultMouseAction.value = 'panDrag'
-        vueFlow.selectionKeyCode.value = "Shift"
-        vueFlow.panOnDrag.value = true
+        vueFlow.panOnDrag.value = [0, 2]
+        selectionRectMouseButton.value = 2
+        selectionRect.value = false
     }
     // 默认操作为框选，通过鼠标右键拖拽
     const setDefaultSelectionRect = () => {
         defaultMouseAction.value = 'selectionRect'
-        vueFlow.selectionKeyCode.value = true
         vueFlow.panOnDrag.value = [2]
+        selectionRectMouseButton.value = 0
+        selectionRect.value = true
     }
-    vueFlow.onPaneClick(() => {
-        if (defaultMouseAction.value === 'selectionRect') {
-            if (vueFlow.userSelectionRect.value !== null && vueFlow.userSelectionRect.value.width === 0 && vueFlow.userSelectionRect.value.height === 0) {
-                vueFlow.selectionKeyCode.value = false
-            } else {
-                vueFlow.selectionKeyCode.value = true
-            }
-            vueFlow.panOnDrag.value = [2]
-        }
-    })
     const toggleDefaultMouseAction = () => {
         if (defaultMouseAction.value === 'panDrag') {
             setDefaultSelectionRect()
@@ -308,6 +295,7 @@ const initMindMap = () => {
             id: `node-${nodeId++}`,
             position,
             type: CONTENT_NODE_TYPE,
+            zIndex: zIndex++,
             data: {
                 content: ""
             },
@@ -322,6 +310,7 @@ const initMindMap = () => {
             ...connectData,
             id,
             type: CONTENT_EDGE_TYPE,
+            zIndex: zIndex++,
             data: {
                 content: ""
             },
@@ -366,7 +355,7 @@ const initMindMap = () => {
         },
     })
 
-    const remove = (data: {nodes?: (GraphNode | string)[], edges?: (GraphEdge | string)[]}) => {
+    const remove = (data: { nodes?: (GraphNode | string)[], edges?: (GraphEdge | string)[] }) => {
         blurActiveElement()
         history.executeCommand('remove', data)
         focus()
@@ -434,6 +423,7 @@ const initMindMap = () => {
         })
     })
 
+
     onInit(() => {
         const el = vueFlowRef.value
         const viewportEl = vueFlowRef.value
@@ -444,6 +434,7 @@ const initMindMap = () => {
         }
 
         el.addEventListener('keydown', (e) => {
+            // 按下 Delete 键删除选中的节点和边
             if (e.key === "Delete") {
                 if (getSelectedNodes.value.length === 0 && getSelectedEdges.value.length === 0) return
 
@@ -452,6 +443,7 @@ const initMindMap = () => {
                 remove({nodes: getSelectedNodes.value, edges: getSelectedEdges.value})
             }
 
+            // 按下 Ctrl 键进入多选模式，直到松开 Ctrl 键
             else if (e.key === "Control") {
                 enableMultiSelect()
                 document.documentElement.addEventListener('keyup', (e) => {
@@ -459,10 +451,20 @@ const initMindMap = () => {
                         disableMultiSelect()
                     }
                 }, {once: true})
-            }
+            } else if (e.key === "Shift") {
+                if (judgeTargetIsInteraction(e)) return
 
-            else if (e.ctrlKey) {
+                toggleDefaultMouseAction()
+                document.documentElement.addEventListener('keyup', (e) => {
+                    if (e.key === "Shift" || e.shiftKey) {
+                        toggleDefaultMouseAction()
+                    }
+                }, {once: true})
+            } else if (e.ctrlKey) {
+                // 按下 Ctrl + z 键，进行历史记录的撤回重做
                 if ((e.key === "z" || e.key === "Z")) {
+                    if (judgeTargetIsInteraction(e)) return
+
                     if (e.shiftKey) {
                         e.preventDefault()
                         history.redo()
@@ -470,34 +472,130 @@ const initMindMap = () => {
                         e.preventDefault()
                         history.undo()
                     }
-                } else if (e.key === "a" || e.key === "A") {
+                }
+
+                // 按下 Ctrl + a 键，全选
+                else if (e.key === "a" || e.key === "A") {
+                    if (judgeTargetIsInteraction(e)) return
+
+                    const isCurrentMultiSelect = isMultiSelected.value
+
                     e.preventDefault()
-                    enableMultiSelect()
+                    if (!isCurrentMultiSelect) enableMultiSelect()
                     vueFlow.addSelectedNodes(vueFlow.getNodes.value)
                     vueFlow.addSelectedEdges(vueFlow.getEdges.value)
-                    disableMultiSelect()
+                    if (!isCurrentMultiSelect) disableMultiSelect()
                 }
             }
         })
 
         if (!isTouchDevice.value) {
+            // 双击添加节点
             paneEl.addEventListener('dblclick', (e) => {
                 if (e.target !== paneEl) return
                 addNode(clientToViewport({x: e.clientX, y: e.clientY}))
             })
 
+            let currentPanOnDrag = vueFlow.panOnDrag.value
+            // 鼠标移入非交互元素时，允许拖拽，否则禁止画布拖拽
             paneEl.addEventListener('mouseover', (e) => {
                 if (judgeTargetIsInteraction(e)) {
-                    if (vueFlow.panOnDrag.value) {
-                        vueFlow.panOnDrag.value = false
-                    }
+                    currentPanOnDrag = vueFlow.panOnDrag.value
+                    vueFlow.panOnDrag.value = false
                 } else {
-                    if (!vueFlow.panOnDrag.value) {
-                        vueFlow.panOnDrag.value = true
+                    vueFlow.panOnDrag.value = currentPanOnDrag
+                }
+            })
+
+            // 多选框
+            paneEl.addEventListener('mousedown', (e) => {
+                if (e.target !== paneEl) return
+
+                // 如果开启了 selectionRect，则将根据 selectionRectMouseButton 判断并进行拖曳创建选择框
+                if (selectionRect.value) {
+                    vueFlow.multiSelectionActive.value = false
+
+                    vueFlow.removeSelectedNodes(vueFlow.getSelectedNodes.value)
+                    vueFlow.removeSelectedEdges(vueFlow.getSelectedEdges.value)
+
+                    if (e.button === selectionRectMouseButton.value) {
+                        vueFlow.userSelectionActive.value = true
+                        vueFlow.multiSelectionActive.value = true
+
+                        const start = {x: e.clientX, y: e.clientY}
+                        vueFlow.userSelectionRect.value = {
+                            width: 0,
+                            height: 0,
+                            x: start.x,
+                            y: start.y,
+                            startX: start.x,
+                            startY: start.y,
+                        }
+
+                        const onMove = (e: MouseEvent) => {
+                            const current = {x: e.clientX, y: e.clientY}
+                            let width = current.x - start.x
+                            let height = current.y - start.y
+                            const x = width > 0 ? start.x : current.x
+                            const y = height > 0 ? start.y : current.y
+                            width = width > 0 ? width : -width
+                            height = height > 0 ? height : -height
+                            vueFlow.userSelectionRect.value = {
+                                width,
+                                height,
+                                x,
+                                y,
+                                startX: start.x,
+                                startY: start.y,
+                            }
+                            const newSelectedNodes: GraphNode[] = []
+
+                            const leftTop = clientToViewport({x, y})
+                            const rightBottom = clientToViewport({x: x + width, y: y + height})
+
+                            for (const node of vueFlow.getNodes.value) {
+                                if (typeof node.width !== "number" || typeof node.height !== "number") return
+
+                                const nodeLeft = node.position.x
+                                const nodeRight = node.position.x + node.width
+                                const nodeTop = node.position.y
+                                const nodeBottom = node.position.y + node.height
+
+                                if (
+                                    nodeRight > leftTop.x &&
+                                    nodeLeft < rightBottom.x &&
+                                    nodeBottom > leftTop.y &&
+                                    nodeTop < rightBottom.y
+                                ) {
+                                    newSelectedNodes.push(node);
+                                }
+                            }
+
+                            vueFlow.removeSelectedNodes(vueFlow.getSelectedNodes.value)
+                            vueFlow.addSelectedNodes(newSelectedNodes)
+                        }
+
+                        const onMouseUp = () => {
+                            vueFlow.userSelectionActive.value = false
+                            vueFlow.userSelectionRect.value = null
+
+                            document.documentElement.removeEventListener('mousemove', onMove)
+                            document.documentElement.removeEventListener('mouseup', onMouseUp)
+
+                            const newSelectedNodes = vueFlow.getSelectedNodes.value
+                            setTimeout(() => {
+                                vueFlow.addSelectedNodes(newSelectedNodes)
+                                vueFlow.multiSelectionActive.value = false
+                            })
+                        }
+
+                        document.documentElement.addEventListener('mousemove', onMove)
+                        document.documentElement.addEventListener('mouseup', onMouseUp)
                     }
                 }
             })
         } else {
+            // 双击添加节点
             let waitNextTouchEnd = false
             let waitTimeout: number | undefined
             paneEl.addEventListener('touchstart', (e) => {
@@ -531,7 +629,9 @@ const initMindMap = () => {
         undo: history.undo,
         redo: history.redo,
 
+        findNode,
         addNode,
+        findEdge,
         addEdge,
         remove,
 
@@ -553,7 +653,7 @@ const initMindMap = () => {
         selectNode: (id: string) => {
             const node = findNode(id)
             if (node !== undefined) {
-                node.zIndex = zIndex ++
+                node.zIndex = zIndex++
                 vueFlow.addSelectedNodes([node])
             }
         },
@@ -563,7 +663,7 @@ const initMindMap = () => {
         selectEdge: (id: string) => {
             const edge = findEdge(id)
             if (edge !== undefined) {
-                edge.zIndex = zIndex ++
+                edge.zIndex = zIndex++
                 vueFlow.addSelectedEdges([edge])
             }
         },
