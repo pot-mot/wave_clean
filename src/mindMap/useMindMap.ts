@@ -1,13 +1,13 @@
 import {CommandDefinition, useCommandHistory} from "@/history/commandHistory.ts";
-import {Connection, Edge, GraphEdge, GraphNode, Node, useVueFlow, XYPosition,} from "@vue-flow/core";
+import {Connection, Edge, EdgeProps, GraphEdge, GraphNode, Node, useVueFlow, XYPosition,} from "@vue-flow/core";
 import {computed, readonly, ref, toRaw} from "vue";
 import {blurActiveElement, judgeTargetIsInteraction} from "@/mindMap/clickUtils.ts";
-import {useEdgeDrag} from "@/mindMap/useEdgeDrag.ts";
 import {jsonSortPropStringify} from "@/json/jsonStringify.ts";
+import {prepareImportIntoMindMap, MindMapImportData} from "@/mindMap/importExport/import.ts";
 
 export const MIND_MAP_ID = "mind_map" as const
 
-const CONTENT_NODE_TYPE = "CONTENT_NODE" as const
+export const CONTENT_NODE_TYPE = "CONTENT_NODE" as const
 export type ContentNodeData = {
     content: string,
 }
@@ -16,14 +16,14 @@ export type ContentNode = Node & {
     type: typeof CONTENT_NODE_TYPE,
 }
 
-const CONTENT_EDGE_TYPE = "CONTENT_EDGE" as const
+export const CONTENT_EDGE_TYPE = "CONTENT_EDGE" as const
 export type ContentEdgeData = {
     content: string,
 }
 export type ContentEdge = Edge & {
     data: ContentEdgeData,
     type: typeof CONTENT_EDGE_TYPE,
-}
+} & Pick<EdgeProps, "updatable">
 
 type MindMapHistoryCommands = {
     "node:add": CommandDefinition<ContentNode, string>,
@@ -48,6 +48,13 @@ type MindMapHistoryCommands = {
     }>;
     "edge:data:change": CommandDefinition<{ id: string, data: ContentEdgeData }>,
 
+    "import": CommandDefinition<{
+        nodes: ContentNode[],
+        edges: ContentEdge[]
+    }, {
+        nodeIds: string[],
+        edgeIds: string[]
+    }>,
     "remove": CommandDefinition<{
         nodes?: (GraphNode | string)[],
         edges?: (GraphEdge | string)[]
@@ -63,8 +70,11 @@ const initMindMap = () => {
     const isTouchDevice = ref('ontouchstart' in document.documentElement);
 
     let nodeId = 0
+    const createEdgeId  = (connection: Connection) => {
+        return `vueflow__edge-${connection.source}${connection.sourceHandle ?? ''}-${connection.target}${connection.targetHandle ?? ''}`
+    }
 
-    const vueFlow = useEdgeDrag(useVueFlow(MIND_MAP_ID))
+    const vueFlow = useVueFlow(MIND_MAP_ID)
     const focus = () => {
         vueFlow.vueFlowRef.value?.focus()
     }
@@ -113,12 +123,17 @@ const initMindMap = () => {
     let selectionRectEnable: boolean = false
     let selectionRectMouseButton: number = 0
 
-    const getByClientRect = (rect: {readonly x: number, readonly y: number, readonly width: number, readonly height: number}) => {
+    const getByClientRect = (rect: {
+        readonly x: number,
+        readonly y: number,
+        readonly width: number,
+        readonly height: number
+    }) => {
         const innerNodes: GraphNode[] = []
         const innerEdges: GraphEdge[] = []
 
-        const leftTop = clientToViewport({x: rect.x, y: rect.y})
-        const rightBottom = clientToViewport({x: rect.x + rect.width, y: rect.y + rect.height})
+        const leftTop = screenToFlowCoordinate({x: rect.x, y: rect.y})
+        const rightBottom = screenToFlowCoordinate({x: rect.x + rect.width, y: rect.y + rect.height})
 
         for (const node of vueFlow.getNodes.value) {
             if (typeof node.width !== "number" || typeof node.height !== "number") continue
@@ -196,7 +211,8 @@ const initMindMap = () => {
         vueFlowRef,
         onInit,
 
-        getViewport,
+        screenToFlowCoordinate,
+
         addNodes,
         updateNode,
         updateNodeData,
@@ -207,23 +223,12 @@ const initMindMap = () => {
         onNodeDragStart,
         onNodeDragStop,
         onConnect,
-        onEdgeDragStart,
-        onEdgeDragStop,
+        onEdgeUpdateStart,
+        onEdgeUpdate,
 
         getSelectedNodes,
         getSelectedEdges,
     } = vueFlow
-
-    const clientToViewport = (point: XYPosition): XYPosition => {
-        const canvasRect = vueFlowRef.value!.getBoundingClientRect()
-
-        const viewport = getViewport()
-
-        const localX = point.x - canvasRect.left
-        const localY = point.y - canvasRect.top
-
-        return {x: (localX - viewport.x) / viewport.zoom, y: (localY - viewport.y) / viewport.zoom}
-    }
 
     const history = useCommandHistory<MindMapHistoryCommands>()
 
@@ -307,15 +312,15 @@ const initMindMap = () => {
             if (edge === undefined) {
                 throw new Error("edge is undefined")
             }
-            vueFlow.updateEdge(edge, {...newConnection})
-            return {id, oldConnection}
+            vueFlow.updateEdge(edge, newConnection, true)
+            return {id: createEdgeId(newConnection), oldConnection}
         },
         revertAction: ({id, oldConnection}) => {
             const edge = findEdge(id)
             if (edge === undefined) {
                 throw new Error("edge is undefined")
             }
-            vueFlow.updateEdge(edge, {...oldConnection})
+            vueFlow.updateEdge(edge, oldConnection, true)
         }
     })
 
@@ -338,32 +343,38 @@ const initMindMap = () => {
         }
     })
 
-    const addNode = (position: XYPosition) => {
-        return history.executeCommand("node:add", {
-            id: `node-${nodeId++}`,
-            position,
-            type: CONTENT_NODE_TYPE,
-            zIndex: zIndex++,
-            data: {
-                content: ""
-            },
-        })
-    }
+    history.registerCommand("import", {
+        applyAction: (data) => {
+            const {nodes, edges} = data
+            addNodes(nodes)
+            addEdges(edges)
+            return {nodeIds: nodes.map(it => it.id), edgeIds: edges.map(it => it.id)}
+        },
+        revertAction: (data) => {
+            const {nodeIds, edgeIds} = data
 
-    const addEdge = (connectData: Connection) => {
-        const id = `vueflow__edge-${connectData.source}${connectData.sourceHandle ?? ''}-${connectData.target}${connectData.targetHandle ?? ''}`
-        if (findEdge(id)) return
+            const removedNodes: GraphNode[] = []
+            const removedEdges: GraphEdge[] = []
 
-        history.executeCommand('edge:add', {
-            ...connectData,
-            id,
-            type: CONTENT_EDGE_TYPE,
-            zIndex: zIndex++,
-            data: {
-                content: ""
-            },
-        })
-    }
+            for (const edgeId of edgeIds) {
+                const foundEdge = findEdge(edgeId)
+                if (foundEdge) {
+                    removedEdges.push(foundEdge)
+                }
+            }
+            for (const nodeId of nodeIds) {
+                const foundNode = findNode(nodeId)
+                if (foundNode) {
+                    removedNodes.push(foundNode)
+                }
+            }
+            removedEdges.push(...vueFlow.getConnectedEdges(removedNodes))
+
+            clearSelection()
+            vueFlow.removeEdges(removedEdges)
+            vueFlow.removeNodes(removedNodes)
+        }
+    })
 
     history.registerCommand("remove", {
         applyAction: (data) => {
@@ -403,6 +414,51 @@ const initMindMap = () => {
         },
     })
 
+    const addNode = (position: XYPosition) => {
+        return history.executeCommand("node:add", {
+            id: `node-${nodeId++}`,
+            position,
+            type: CONTENT_NODE_TYPE,
+            zIndex: zIndex++,
+            data: {
+                content: ""
+            },
+        })
+    }
+
+    const addEdge = (connection: Connection) => {
+        const id = createEdgeId(connection)
+        if (findEdge(id)) return
+
+        history.executeCommand('edge:add', {
+            ...connection,
+            id,
+            type: CONTENT_EDGE_TYPE,
+            zIndex: zIndex++,
+            data: {
+                content: ""
+            },
+            updatable: true,
+        })
+    }
+
+    onConnect((connectData) => {
+        addEdge(connectData)
+    })
+
+
+    const getCenterPosition = () => {
+        const rect = vueFlow.vueFlowRef.value!.getBoundingClientRect()
+        return screenToFlowCoordinate({x: rect.width / 2, y: rect.height / 2})
+    }
+
+    const importData = (data: MindMapImportData) => {
+        blurActiveElement()
+        const {newNodes, newEdges} = prepareImportIntoMindMap(vueFlow, data, getCenterPosition())
+        history.executeCommand("import", {nodes: newNodes, edges: newEdges})
+    }
+
+
     const remove = (data: { nodes?: (GraphNode | string)[], edges?: (GraphEdge | string)[] }) => {
         blurActiveElement()
         history.executeCommand('remove', data)
@@ -412,10 +468,10 @@ const initMindMap = () => {
         }, {once: true})
     }
 
-    onConnect((connectData) => {
-        addEdge(connectData)
-    })
 
+    /**
+     * 节点移动
+     */
     const nodeMoveMap = new Map<string, XYPosition>
 
     onNodeDragStart(({nodes}) => {
@@ -430,48 +486,46 @@ const initMindMap = () => {
                 const oldPosition = nodeMoveMap.get(node.id)
                 nodeMoveMap.delete(node.id)
                 if (oldPosition !== undefined) {
-                    history.executeCommand('node:move', {id: node.id, newPosition: node.position, oldPosition})
+                    const newPosition = node.position
+                    if (jsonSortPropStringify(oldPosition) != jsonSortPropStringify(newPosition)) {
+                        history.executeCommand('node:move', {id: node.id, newPosition, oldPosition})
+                    }
                 }
             }
         })
     })
 
-
+    /**
+     * 边重连接
+     */
     const edgeReconnectMap = new Map<string, Connection>
 
-    onEdgeDragStart(({edges}) => {
-        for (const edge of edges) {
-            const connection: Connection = {
-                source: edge.source,
-                sourceHandle: edge.sourceHandle,
-                target: edge.target,
-                targetHandle: edge.targetHandle,
-            }
-            edgeReconnectMap.set(edge.id, connection)
+    onEdgeUpdateStart(({edge}) => {
+        const connection: Connection = {
+            source: edge.source,
+            sourceHandle: edge.sourceHandle,
+            target: edge.target,
+            targetHandle: edge.targetHandle,
         }
+        edgeReconnectMap.set(edge.id, connection)
     })
 
-    onEdgeDragStop(({edges}) => {
+    onEdgeUpdate(({edge, connection}) => {
         history.executeBatch(Symbol("edge:reconnect"), () => {
-            for (const edge of edges) {
-                const oldConnection = edgeReconnectMap.get(edge.id)
-                edgeReconnectMap.delete(edge.id)
-                if (oldConnection !== undefined) {
-                    const newConnection = {
-                        source: edge.source,
-                        sourceHandle: edge.sourceHandle,
-                        target: edge.target,
-                        targetHandle: edge.targetHandle,
-                    }
-                    if (jsonSortPropStringify(oldConnection) != jsonSortPropStringify(newConnection)) {
-                        history.executeCommand('edge:reconnect', {id: edge.id, newConnection, oldConnection})
-                    }
+            const oldConnection = edgeReconnectMap.get(edge.id)
+            edgeReconnectMap.delete(edge.id)
+            if (oldConnection !== undefined) {
+                if (jsonSortPropStringify(oldConnection) != jsonSortPropStringify(connection)) {
+                    history.executeCommand('edge:reconnect', {id: edge.id, newConnection: connection, oldConnection})
                 }
             }
         })
     })
 
 
+    /**
+     * 初始化添加事件
+     */
     onInit(() => {
         const el = vueFlowRef.value
         const viewportEl = vueFlowRef.value
@@ -541,7 +595,7 @@ const initMindMap = () => {
             // 双击添加节点
             paneEl.addEventListener('dblclick', (e) => {
                 if (e.target !== paneEl) return
-                addNode(clientToViewport({x: e.clientX, y: e.clientY}))
+                addNode(screenToFlowCoordinate({x: e.clientX, y: e.clientY}))
             })
 
             let currentPanOnDrag = vueFlow.panOnDrag.value
@@ -628,7 +682,7 @@ const initMindMap = () => {
             paneEl.addEventListener('touchstart', (e) => {
                 if (e.target !== paneEl) return
                 if (waitNextTouchEnd) {
-                    addNode(clientToViewport({x: e.touches[0].clientX, y: e.touches[0].clientY}))
+                    addNode(screenToFlowCoordinate({x: e.touches[0].clientX, y: e.touches[0].clientY}))
                     waitNextTouchEnd = false
                     clearTimeout(waitTimeout)
                     e.stopPropagation()
@@ -734,6 +788,7 @@ const initMindMap = () => {
         addNode,
         findEdge,
         addEdge,
+
         remove,
 
         fitView: vueFlow.fitView,
@@ -774,7 +829,9 @@ const initMindMap = () => {
     }
 }
 
-let mindMap: ReturnType<typeof initMindMap> | undefined = undefined
+export type MindMapStore = ReturnType<typeof initMindMap>
+
+let mindMap: MindMapStore | undefined = undefined
 
 export const useMindMap = () => {
     if (mindMap === undefined) {
