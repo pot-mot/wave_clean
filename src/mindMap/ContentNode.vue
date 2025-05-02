@@ -106,6 +106,9 @@ const onHandleMouseDown = (e: MouseEvent) => {
 
 <style scoped>
 .untouchable {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
     user-select: none;
     pointer-events: none;
 }

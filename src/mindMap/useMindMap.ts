@@ -499,8 +499,12 @@ const initMindMap = () => {
      * 边重连接
      */
     const edgeReconnectMap = new Map<string, Connection>
+    const stopSelectStart = (e: Event) => {
+        e.preventDefault()
+    }
 
     onEdgeUpdateStart(({edge}) => {
+        vueFlowRef.value?.addEventListener('selectstart', stopSelectStart)
         const connection: Connection = {
             source: edge.source,
             sourceHandle: edge.sourceHandle,
@@ -515,11 +519,12 @@ const initMindMap = () => {
             const oldConnection = edgeReconnectMap.get(edge.id)
             edgeReconnectMap.delete(edge.id)
             if (oldConnection !== undefined) {
-                if (jsonSortPropStringify(oldConnection) != jsonSortPropStringify(connection)) {
+                if (jsonSortPropStringify(oldConnection) != jsonSortPropStringify(connection) && findEdge(createEdgeId(connection)) === undefined) {
                     history.executeCommand('edge:reconnect', {id: edge.id, newConnection: connection, oldConnection})
                 }
             }
         })
+        vueFlowRef.value?.removeEventListener('selectstart', stopSelectStart)
     })
 
 
