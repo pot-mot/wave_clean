@@ -1,9 +1,9 @@
 import {CommandDefinition, useCommandHistory} from "@/history/commandHistory.ts";
-import {Connection, Edge, EdgeProps, GraphEdge, GraphNode, Node, useVueFlow, XYPosition,} from "@vue-flow/core";
+import {Connection, Edge, GraphEdge, GraphNode, Node, useVueFlow, XYPosition,} from "@vue-flow/core";
 import {computed, readonly, ref, toRaw} from "vue";
 import {blurActiveElement, judgeTargetIsInteraction} from "@/mindMap/clickUtils.ts";
 import {jsonSortPropStringify} from "@/json/jsonStringify.ts";
-import {prepareImportIntoMindMap, MindMapImportData} from "@/mindMap/importExport/import.ts";
+import {MindMapImportData, prepareImportIntoMindMap} from "@/mindMap/importExport/import.ts";
 
 export const MIND_MAP_ID = "mind_map" as const
 
@@ -11,7 +11,7 @@ export const CONTENT_NODE_TYPE = "CONTENT_NODE" as const
 export type ContentNodeData = {
     content: string,
 }
-export type ContentNode = Node & {
+export type ContentNode = Pick<Node, 'id' | 'position'> & {
     data: ContentNodeData,
     type: typeof CONTENT_NODE_TYPE,
 }
@@ -20,10 +20,33 @@ export const CONTENT_EDGE_TYPE = "CONTENT_EDGE" as const
 export type ContentEdgeData = {
     content: string,
 }
-export type ContentEdge = Edge & {
+export type ContentEdge = Pick<Edge, 'id' | 'source' | 'target'> & {
     data: ContentEdgeData,
     type: typeof CONTENT_EDGE_TYPE,
-} & Pick<EdgeProps, "updatable">
+    sourceHandle: string,
+    targetHandle: string,
+}
+
+type FullConnection = {
+    source: string,
+    sourceHandle: string,
+    target: string,
+    targetHandle: string,
+}
+
+const checkFullConnection = (connection: Connection): connection is FullConnection => {
+    if (connection.sourceHandle === null || connection.sourceHandle === undefined) return false
+    return !(connection.targetHandle === null || connection.targetHandle === undefined)
+}
+
+const reverseConnection = (connection: Connection): Connection => {
+    return {
+        source: connection.target,
+        sourceHandle: connection.targetHandle,
+        target: connection.source,
+        targetHandle: connection.sourceHandle,
+    }
+}
 
 type MindMapHistoryCommands = {
     "node:add": CommandDefinition<ContentNode, string>,
@@ -40,11 +63,11 @@ type MindMapHistoryCommands = {
     "edge:add": CommandDefinition<ContentEdge, string>,
     "edge:reconnect": CommandDefinition<{
         id: string,
-        oldConnection: Connection,
-        newConnection: Connection,
+        oldConnection: FullConnection,
+        newConnection: FullConnection,
     }, {
         id: string,
-        oldConnection: Connection,
+        oldConnection: FullConnection,
     }>;
     "edge:data:change": CommandDefinition<{ id: string, data: ContentEdgeData }>,
 
@@ -70,8 +93,13 @@ const initMindMap = () => {
     const isTouchDevice = ref('ontouchstart' in document.documentElement);
 
     let nodeId = 0
-    const createEdgeId  = (connection: Connection) => {
+    const createEdgeId = (connection: Connection) => {
         return `vueflow__edge-${connection.source}${connection.sourceHandle ?? ''}-${connection.target}${connection.targetHandle ?? ''}`
+    }
+
+    const checkConnectionExist = (connection: Connection): boolean => {
+        return vueFlow.findEdge(createEdgeId(connection)) !== undefined ||
+            vueFlow.findEdge(createEdgeId(reverseConnection(connection))) !== undefined
     }
 
     const vueFlow = useVueFlow(MIND_MAP_ID)
@@ -241,7 +269,7 @@ const initMindMap = () => {
 
     history.registerCommand("node:add", {
         applyAction: (node) => {
-            addNodes(node)
+            addNodes({...node, zIndex: zIndex++})
             return node.id
         },
         revertAction: (nodeId) => {
@@ -293,7 +321,7 @@ const initMindMap = () => {
 
     history.registerCommand("edge:add", {
         applyAction: (edge) => {
-            addEdges(edge)
+            addEdges({...edge, zIndex: zIndex++, updatable: true})
             return edge.id
         },
         revertAction: (edgeId) => {
@@ -419,7 +447,6 @@ const initMindMap = () => {
             id: `node-${nodeId++}`,
             position,
             type: CONTENT_NODE_TYPE,
-            zIndex: zIndex++,
             data: {
                 content: ""
             },
@@ -427,18 +454,18 @@ const initMindMap = () => {
     }
 
     const addEdge = (connection: Connection) => {
+        if (checkConnectionExist(connection)) return
+        if (!checkFullConnection(connection)) return
+
         const id = createEdgeId(connection)
-        if (findEdge(id)) return
 
         history.executeCommand('edge:add', {
             ...connection,
             id,
             type: CONTENT_EDGE_TYPE,
-            zIndex: zIndex++,
             data: {
                 content: ""
             },
-            updatable: true,
         })
     }
 
@@ -456,6 +483,15 @@ const initMindMap = () => {
         blurActiveElement()
         const {newNodes, newEdges} = prepareImportIntoMindMap(vueFlow, data, getCenterPosition())
         history.executeCommand("import", {nodes: newNodes, edges: newEdges})
+
+        const currentMultiSelectionActive = vueFlow.multiSelectionActive.value
+        vueFlow.multiSelectionActive.value = true
+        clearSelection()
+        const graphNodes = newNodes.map(it => findNode(it.id)).filter(it => it !== undefined)
+        const graphEdges = newEdges.map(it => findEdge(it.id)).filter(it => it !== undefined)
+        vueFlow.addSelectedNodes(graphNodes)
+        vueFlow.addSelectedEdges(graphEdges)
+        vueFlow.multiSelectionActive.value = currentMultiSelectionActive
     }
 
 
@@ -487,7 +523,7 @@ const initMindMap = () => {
                 nodeMoveMap.delete(node.id)
                 if (oldPosition !== undefined) {
                     const newPosition = node.position
-                    if (jsonSortPropStringify(oldPosition) != jsonSortPropStringify(newPosition)) {
+                    if (jsonSortPropStringify(oldPosition) !== jsonSortPropStringify(newPosition)) {
                         history.executeCommand('node:move', {id: node.id, newPosition, oldPosition})
                     }
                 }
@@ -498,7 +534,7 @@ const initMindMap = () => {
     /**
      * 边重连接
      */
-    const edgeReconnectMap = new Map<string, Connection>
+    const edgeReconnectMap = new Map<string, FullConnection>
     const stopSelectStart = (e: Event) => {
         e.preventDefault()
     }
@@ -511,15 +547,17 @@ const initMindMap = () => {
             target: edge.target,
             targetHandle: edge.targetHandle,
         }
-        edgeReconnectMap.set(edge.id, connection)
+        if (checkFullConnection(connection)) {
+            edgeReconnectMap.set(edge.id, connection)
+        }
     })
 
     onEdgeUpdate(({edge, connection}) => {
         history.executeBatch(Symbol("edge:reconnect"), () => {
             const oldConnection = edgeReconnectMap.get(edge.id)
             edgeReconnectMap.delete(edge.id)
-            if (oldConnection !== undefined) {
-                if (jsonSortPropStringify(oldConnection) != jsonSortPropStringify(connection) && findEdge(createEdgeId(connection)) === undefined) {
+            if (oldConnection !== undefined && checkFullConnection(connection)) {
+                if (jsonSortPropStringify(oldConnection) !== jsonSortPropStringify(connection) && !checkConnectionExist(connection)) {
                     history.executeCommand('edge:reconnect', {id: edge.id, newConnection: connection, oldConnection})
                 }
             }
