@@ -1,5 +1,12 @@
-import {GraphNode, VueFlowStore, XYPosition} from "@vue-flow/core";
-import {ContentEdge, ContentNode} from "@/mindMap/useMindMap.ts";
+import {VueFlowStore, XYPosition} from "@vue-flow/core";
+import {
+    ContentEdge,
+    ContentNode,
+    ContentNodeHandles,
+    createEdgeId,
+    FullConnection,
+    reverseConnection
+} from "@/mindMap/useMindMap.ts";
 import {toRaw} from "vue";
 
 export type MindMapImportData = {
@@ -8,6 +15,7 @@ export type MindMapImportData = {
 }
 
 export type UnconnectedEdgeReason = {
+    connectionExist: boolean,
     sourceNotExist: boolean,
     targetNotExist: boolean,
     sourceHandleNotExist: boolean,
@@ -22,15 +30,11 @@ export type MindMapImportDataCleanResult = {
     unconnectedEdges: Map<ContentEdge, UnconnectedEdgeReason>
 }
 
-const checkHasHandles = (node: ContentNode): node is ContentNode & Pick<GraphNode, "handleBounds"> => {
-    return "handleBounds" in node
-}
-
 /**
  * 将对导入数据进行清理，保证：
  *      data.nodes id 与当前 vueStore nodes id 以及自身的其他 id 不存在重复。若存在重复则根据顺序在 data.nodes id 后追加 -1 -2 直至不会重复。
  *          若出现 id 修改，返回 nodeIdChangeMap: Map<oldId, newId>。
- *      data.edges id 与当前 vueStore nodes id 以及自身的其他 id 不存在重复。若存在重复则根据顺序在 data.edges id 后追加 -1 -2 直至不会重复。
+ *      data.edges id 与当前 vueStore nodes id 以及自身的其他 id 不存在重复。若存在重复则根据新的关联重置 id。
  *          若出现 id 修改，返回 edgeIdChangeMap: Map<oldId, newId>。
  *      data.edges source target 保证一定为 vueStore 或 data 中的 nodes id。
  *          如果 source target 同时存在于 vueStore 和 data，优先采用 newId。
@@ -78,13 +82,7 @@ export const clearImportData = (
     }
 
     for (const node of newNodes) {
-        if (checkHasHandles(node)) {
-            const handles = [
-                ...(node.handleBounds.source ?? []),
-                ...(node.handleBounds.target ?? []),
-            ]
-            tempHandleMap.set(node.id, new Set(...handles.map(it => it.id)))
-        }
+        tempHandleMap.set(node.id, new Set(ContentNodeHandles))
     }
 
     // 处理边ID冲突
@@ -93,21 +91,7 @@ export const clearImportData = (
 
     for (const edge of edges) {
         const {id, source, target, ...other} = edge
-        let newId = id
-        let suffix = 0
 
-        while (usedEdgeIds.has(newId)) {
-            suffix++
-            newId = `${edge.id}-${suffix}`
-        }
-
-        if (suffix > 0) {
-            edgeIdChangeMap.set(id, newId)
-        }
-
-        usedEdgeIds.add(newId)
-
-        // 替换source/target为新ID（如果存在）
         let newSource = source
         let newTarget = target
 
@@ -126,19 +110,40 @@ export const clearImportData = (
         const targetExists = tempHandleMap.has(newTarget)
 
         // 检查handle是否存在
-        const sourceHandleExists = edge.sourceHandle !== null && edge.sourceHandle !== undefined && tempHandleMap.get(source)?.has(edge.sourceHandle)
-        const targetHandleExists = edge.targetHandle !== null && edge.targetHandle !== undefined && tempHandleMap.get(target)?.has(edge.targetHandle)
+        const sourceHandleExists = edge.sourceHandle !== null && edge.sourceHandle !== undefined && tempHandleMap.get(newSource)?.has(edge.sourceHandle)
+        const targetHandleExists = edge.targetHandle !== null && edge.targetHandle !== undefined && tempHandleMap.get(newTarget)?.has(edge.targetHandle)
 
         // 如果有任一不存在，则不作为 newEdges
         if (!sourceExists || !targetExists || !sourceHandleExists || !targetHandleExists) {
             unconnectedEdges.set(edge, {
+                connectionExist: false,
                 sourceNotExist: !sourceExists,
                 targetNotExist: !targetExists,
                 sourceHandleNotExist: !sourceHandleExists,
                 targetHandleNotExist: !targetHandleExists,
             })
         } else {
-            newEdges.push({...other, id: newId, source: newSource, target: newTarget})
+            const newConnection: FullConnection = {
+                source: newSource,
+                target: newTarget,
+                sourceHandle: edge.sourceHandle,
+                targetHandle: edge.targetHandle
+            }
+            const newId = createEdgeId(newConnection)
+            if (usedEdgeIds.has(newId) || usedEdgeIds.has(createEdgeId(reverseConnection(newConnection)))) {
+                unconnectedEdges.set(edge, {
+                    connectionExist: true,
+                    sourceNotExist: !sourceExists,
+                    targetNotExist: !targetExists,
+                    sourceHandleNotExist: !sourceHandleExists,
+                    targetHandleNotExist: !targetHandleExists,
+                })
+            } else {
+                usedEdgeIds.add(newId)
+                edgeIdChangeMap.set(edge.id, newId)
+
+                newEdges.push({...other, id: newId, source: newSource, target: newTarget})
+            }
         }
     }
 

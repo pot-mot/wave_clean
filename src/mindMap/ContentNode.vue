@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {Handle, NodeProps, Position} from "@vue-flow/core";
-import {ContentNodeData, useMindMap} from "@/mindMap/useMindMap.ts";
+import {ContentNodeData, ContentNodeHandles, useMindMap} from "@/mindMap/useMindMap.ts";
 import {computed, ref, useTemplateRef} from "vue";
 import FitSizeBlockInput from "@/input/FitSizeBlockInput.vue";
 import {NodeToolbar} from "@vue-flow/node-toolbar";
@@ -96,10 +96,13 @@ const onHandleMouseDown = (e: MouseEvent) => {
                 />
             </div>
 
-            <Handle :id="`${id}-left`" :position="Position.Left" @mousedown="onHandleMouseDown"/>
-            <Handle :id="`${id}-right`" :position="Position.Right" @mousedown="onHandleMouseDown"/>
-            <Handle :id="`${id}-top`" :position="Position.Top" @mousedown="onHandleMouseDown"/>
-            <Handle :id="`${id}-bottom`" :position="Position.Bottom" @mousedown="onHandleMouseDown"/>
+            <template v-for="handle in ContentNodeHandles">
+                <Handle
+                    :id="handle"
+                    :position="handle"
+                    @mousedown="onHandleMouseDown"
+                />
+            </template>
         </div>
     </div>
 </template>

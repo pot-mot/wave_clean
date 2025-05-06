@@ -1,5 +1,5 @@
 import {CommandDefinition, useCommandHistory} from "@/history/commandHistory.ts";
-import {Connection, Edge, GraphEdge, GraphNode, Node, useVueFlow, XYPosition,} from "@vue-flow/core";
+import {Connection, Edge, GraphEdge, GraphNode, Node, Position, useVueFlow, XYPosition,} from "@vue-flow/core";
 import {computed, readonly, ref, toRaw} from "vue";
 import {blurActiveElement, judgeTargetIsInteraction} from "@/mindMap/clickUtils.ts";
 import {jsonSortPropStringify} from "@/json/jsonStringify.ts";
@@ -19,6 +19,8 @@ export type ContentNode = Pick<Node, 'id' | 'position'> & {
     type: typeof CONTENT_NODE_TYPE,
 }
 
+export const ContentNodeHandles: Position[] = [Position.Left, Position.Right, Position.Top, Position.Bottom] as const
+
 export const CONTENT_EDGE_TYPE = "CONTENT_EDGE" as const
 export type ContentEdgeData = {
     content: string,
@@ -30,11 +32,15 @@ export type ContentEdge = Pick<Edge, 'id' | 'source' | 'target'> & {
     targetHandle: string,
 }
 
-type FullConnection = {
+export type FullConnection = {
     source: string,
     sourceHandle: string,
     target: string,
     targetHandle: string,
+}
+
+export const createEdgeId = (connection: Connection) => {
+    return `vueflow__edge-${connection.source}${connection.sourceHandle ?? ''}-${connection.target}${connection.targetHandle ?? ''}`
 }
 
 const checkFullConnection = (connection: Connection): connection is FullConnection => {
@@ -42,7 +48,7 @@ const checkFullConnection = (connection: Connection): connection is FullConnecti
     return !(connection.targetHandle === null || connection.targetHandle === undefined)
 }
 
-const reverseConnection = (connection: Connection): Connection => {
+export const reverseConnection = (connection: Connection): Connection => {
     return {
         source: connection.target,
         sourceHandle: connection.targetHandle,
@@ -97,9 +103,6 @@ const initMindMap = () => {
     const screenPosition = ref<XYPosition>({x: 0, y: 0})
 
     let nodeId = 0
-    const createEdgeId = (connection: Connection) => {
-        return `vueflow__edge-${connection.source}${connection.sourceHandle ?? ''}-${connection.target}${connection.targetHandle ?? ''}`
-    }
 
     const checkConnectionExist = (connection: Connection): boolean => {
         return vueFlow.findEdge(createEdgeId(connection)) !== undefined ||

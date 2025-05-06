@@ -28,7 +28,6 @@ const useClipBoard = <INPUT, OUTPUT>(target: ClipBoardTarget<INPUT, OUTPUT>) => 
         try {
             const data = JSON.parse(text)
             if (target.validateInput(data)) {
-                console.log(data)
                 await target.importData(data)
                 return data
             } else {
