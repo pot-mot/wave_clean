@@ -657,6 +657,9 @@ const initMindMap = () => {
 
         if (!isTouchDevice.value) {
             // 设置屏幕位置
+            paneEl.addEventListener('mouseenter', (e) => {
+                screenPosition.value = {x: e.clientX, y: e.clientY}
+            })
             paneEl.addEventListener('mousemove', (e) => {
                 screenPosition.value = {x: e.clientX, y: e.clientY}
             })
@@ -746,6 +749,9 @@ const initMindMap = () => {
             })
         } else {
             // 设置屏幕位置
+            paneEl.addEventListener('touchstart', (e) => {
+                screenPosition.value = {x: e.touches[0].clientX, y: e.touches[0].clientY}
+            })
             paneEl.addEventListener('touchmove', (e) => {
                 screenPosition.value = {x: e.touches[0].clientX, y: e.touches[0].clientY}
             })
