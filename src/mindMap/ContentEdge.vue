@@ -3,6 +3,7 @@ import {computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef} fro
 import {BezierEdge, EdgeProps} from "@vue-flow/core";
 import {ContentEdgeData, useMindMap} from "@/mindMap/useMindMap.ts";
 import FitSizeBlockInput from "@/input/FitSizeBlockInput.vue";
+import {useEdgeUpdaterTouch} from "@/mindMap/touchToMouse/useEdgeUpdaterTouch.ts";
 
 const {updateEdgeData, isMultiSelected, canMultiSelect, selectEdge} = useMindMap()
 
@@ -10,6 +11,8 @@ const props = defineProps<EdgeProps & {
     id: string,
     data: ContentEdgeData,
 }>()
+
+useEdgeUpdaterTouch(props.id)
 
 const innerValue = computed<string>({
     get() {
