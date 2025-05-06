@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {Handle, NodeProps, Position} from "@vue-flow/core";
+import {Handle, NodeProps} from "@vue-flow/core";
 import {ContentNodeData, ContentNodeHandles, useMindMap} from "@/mindMap/useMindMap.ts";
 import {computed, ref, useTemplateRef} from "vue";
 import FitSizeBlockInput from "@/input/FitSizeBlockInput.vue";
