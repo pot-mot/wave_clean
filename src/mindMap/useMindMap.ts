@@ -121,6 +121,8 @@ const initMindMap = () => {
 
     let zIndex = 0
 
+    vueFlow.edgesUpdatable.value = true
+
     /**
      * 点击多选相关配置
      */
@@ -328,7 +330,7 @@ const initMindMap = () => {
 
     history.registerCommand("edge:add", {
         applyAction: (edge) => {
-            addEdges({...edge, zIndex: zIndex++, updatable: true})
+            addEdges({...edge, zIndex: zIndex++})
             return edge.id
         },
         revertAction: (edgeId) => {
