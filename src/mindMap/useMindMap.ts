@@ -4,6 +4,9 @@ import {computed, readonly, ref, toRaw} from "vue";
 import {blurActiveElement, judgeTargetIsInteraction} from "@/mindMap/clickUtils.ts";
 import {jsonSortPropStringify} from "@/json/jsonStringify.ts";
 import {MindMapImportData, prepareImportIntoMindMap} from "@/mindMap/importExport/import.ts";
+import {useClipBoardWithKeyboard} from "@/clipBoard/useClipBoard.ts";
+import {exportMindMapSelection, MindMapExportData} from "@/mindMap/importExport/export.ts";
+import {validateMindMapImportData} from "@/mindMap/clipBoard/inputParse.ts";
 
 export const MIND_MAP_ID = "mind_map" as const
 
@@ -90,7 +93,8 @@ type MindMapHistoryCommands = {
 export type MouseAction = "panDrag" | "selectionRect"
 
 const initMindMap = () => {
-    const isTouchDevice = ref('ontouchstart' in document.documentElement);
+    const isTouchDevice = ref('ontouchstart' in document.documentElement)
+    const screenPosition = ref<XYPosition>({x: 0, y: 0})
 
     let nodeId = 0
     const createEdgeId = (connection: Connection) => {
@@ -475,13 +479,12 @@ const initMindMap = () => {
 
 
     const getCenterPosition = () => {
-        const rect = vueFlow.vueFlowRef.value!.getBoundingClientRect()
-        return screenToFlowCoordinate({x: rect.width / 2, y: rect.height / 2})
+        return screenToFlowCoordinate({x: window.innerWidth / 2, y: window.innerHeight / 2})
     }
 
-    const importData = (data: MindMapImportData) => {
+    const importData = (data: MindMapImportData, leftTop: XYPosition = getCenterPosition()) => {
         blurActiveElement()
-        const {newNodes, newEdges} = prepareImportIntoMindMap(vueFlow, data, getCenterPosition())
+        const {newNodes, newEdges} = prepareImportIntoMindMap(vueFlow, data, leftTop)
         history.executeCommand("import", {nodes: newNodes, edges: newEdges})
 
         const currentMultiSelectionActive = vueFlow.multiSelectionActive.value
@@ -504,6 +507,24 @@ const initMindMap = () => {
         }, {once: true})
     }
 
+    /**
+     * 剪切板
+     */
+    useClipBoardWithKeyboard<MindMapImportData, MindMapExportData>(() => vueFlowRef.value, {
+        exportData: (): MindMapExportData => {
+            return exportMindMapSelection(vueFlow)
+        },
+        importData: (data: MindMapImportData) => {
+            importData(data, screenToFlowCoordinate(screenPosition.value))
+        },
+        removeData: (data: MindMapExportData) => {
+            remove({nodes: data.nodes?.map(it => it.id), edges: data.edges?.map(it => it.id)})
+        },
+        stringifyData: (data: MindMapExportData): string => {
+            return jsonSortPropStringify(data)
+        },
+        validateInput: validateMindMapImportData
+    })
 
     /**
      * 节点移动
@@ -635,6 +656,11 @@ const initMindMap = () => {
         })
 
         if (!isTouchDevice.value) {
+            // 设置屏幕位置
+            paneEl.addEventListener('mousemove', (e) => {
+                screenPosition.value = {x: e.clientX, y: e.clientY}
+            })
+
             // 双击添加节点
             paneEl.addEventListener('dblclick', (e) => {
                 if (e.target !== paneEl) return
@@ -719,6 +745,11 @@ const initMindMap = () => {
                 }
             })
         } else {
+            // 设置屏幕位置
+            paneEl.addEventListener('touchmove', (e) => {
+                screenPosition.value = {x: e.touches[0].clientX, y: e.touches[0].clientY}
+            })
+
             // 双击添加节点
             let waitNextTouchEnd = false
             let waitTimeout: number | undefined

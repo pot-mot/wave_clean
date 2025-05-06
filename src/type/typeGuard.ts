@@ -25,3 +25,5 @@ export const createSchemaValidator = <T>(schema: JSONSchemaType<T>, errorHandler
         return true
     }
 }
+
+export type SchemaValidator<T> = ReturnType<typeof createSchemaValidator<T>>
