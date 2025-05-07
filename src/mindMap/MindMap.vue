@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {VueFlow} from "@vue-flow/core";
-import ContentNode from "@/mindMap/ContentNode.vue";
-import ContentEdge from "@/mindMap/ContentEdge.vue";
+import ContentNode from "@/mindMap/node/ContentNode.vue";
+import ContentEdge from "@/mindMap/edge/ContentEdge.vue";
 import {MIND_MAP_ID, useMindMap} from "@/mindMap/useMindMap.ts";
 import {Background} from "@vue-flow/background";
 import MobileBar from "@/mindMap/toolBar/mobile/MobileBar.vue";
