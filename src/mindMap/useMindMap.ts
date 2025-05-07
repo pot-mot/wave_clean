@@ -9,7 +9,7 @@ import {
     VueFlowStore,
     XYPosition,
 } from "@vue-flow/core";
-import {computed, readonly, ref, ShallowReactive, shallowReactive, ShallowRef, shallowRef, toRaw} from "vue";
+import {computed, nextTick, readonly, ref, ShallowReactive, shallowReactive, ShallowRef, shallowRef, toRaw} from "vue";
 import {blurActiveElement, judgeTargetIsInteraction} from "@/mindMap/clickUtils.ts";
 import {jsonSortPropStringify} from "@/json/jsonStringify.ts";
 import {MindMapImportData, prepareImportIntoMindMap} from "@/mindMap/importExport/import.ts";
@@ -103,19 +103,25 @@ const initMindMap = () => {
         vueFlow.vueFlowRef.value?.focus()
     }
 
-    const addLayer = () => {
+    const addLayer = async () => {
         const layerId = `layer-${global.layerIdIncrement++}`
         history.executeCommand("layer:add", layerId)
-        toggleLayer(layerId)
+        await toggleLayer(layerId)
     }
 
     const removeLayer = (layerId: string) => {
         history.executeCommand("layer:remove", layerId)
     }
 
-    const toggleLayer = (layerId: string) => {
+    const toggleLayer = async (layerId: string) => {
+        const targetLayer = global.layers.find(layer => layer.id === layerId)
+        if (targetLayer === undefined) throw new Error("layer is undefined")
+
+        const currentViewport = toRaw(getCurrentVueFlow().viewport.value)
         cleanSelection()
-        global.currentLayer.value = global.layers.find(layer => layer.id === layerId) ?? defaultLayer
+        global.currentLayer.value = targetLayer
+        await nextTick()
+        await global.currentLayer.value.vueFlow.setViewport(currentViewport)
     }
 
     /**
@@ -343,7 +349,7 @@ const initMindMap = () => {
         onViewportChange((viewport) => {
             for (const layer of global.layers) {
                 if (layer.id !== id) {
-                    layer.vueFlow.viewport.value = toRaw(viewport)
+                    layer.vueFlow.viewport.value = viewport
                 }
             }
         })
