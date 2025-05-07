@@ -29,11 +29,11 @@ export type MindMapGlobal = {
     currentLayer: ShallowRef<MindMapLayer>,
 }
 
-export type MindMapLayer = {
+export type MindMapLayer = ShallowReactive<{
     readonly id: string,
     readonly vueFlow: VueFlowStore,
     visible: boolean,
-}
+}>
 
 export const CONTENT_NODE_TYPE = "CONTENT_NODE" as const
 export type ContentNodeData = {
@@ -64,11 +64,11 @@ export const createEdgeId = (connection: Connection) => {
 export type MouseAction = "panDrag" | "selectionRect"
 
 const initMindMap = () => {
-    const defaultLayer = {
+    const defaultLayer: MindMapLayer = shallowReactive({
         id: MIND_MAP_ID,
         vueFlow: useVueFlow(MIND_MAP_ID),
         visible: true,
-    }
+    })
 
     const global: MindMapGlobal = {
         zIndexIncrement: 0,
@@ -101,6 +101,18 @@ const initMindMap = () => {
     const focus = () => {
         const vueFlow = getCurrentVueFlow()
         vueFlow.vueFlowRef.value?.focus()
+    }
+
+    const addLayer = () => {
+        history.executeCommand("layer:add", undefined)
+    }
+
+    const removeLayer = (layerId: string) => {
+        history.executeCommand("layer:remove", layerId)
+    }
+
+    const toggleLayer = (layerId: string) => {
+        global.currentLayer.value = global.layers.find(layer => layer.id === layerId) ?? defaultLayer
     }
 
     /**
@@ -681,6 +693,10 @@ const initMindMap = () => {
         layers: global.layers,
         currentLayer: global.currentLayer,
         initLayer,
+
+        addLayer,
+        removeLayer,
+        toggleLayer,
 
         focus,
 

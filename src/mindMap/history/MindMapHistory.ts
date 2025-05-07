@@ -9,7 +9,7 @@ import {
     createEdgeId, MindMapGlobal,
     MindMapLayer
 } from "@/mindMap/useMindMap.ts";
-import {ref, toRaw} from "vue";
+import {ref, shallowReactive, toRaw} from "vue";
 
 export type MindMapHistoryCommands = {
     "layer:add": CommandDefinition<undefined, string>,
@@ -100,11 +100,11 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
     history.registerCommand("layer:add", {
         applyAction: () => {
             const layerId = `layer-${global.layerIdIncrement++}`
-            const layer = {
+            const layer = shallowReactive({
                 id: layerId,
                 vueFlow: useVueFlow(layerId),
                 visible: true,
-            }
+            })
             global.layers.push(layer)
             return layerId
         },
