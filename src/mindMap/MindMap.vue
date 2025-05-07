@@ -1,22 +1,14 @@
 <script setup lang="ts">
-import {Panel, VueFlow} from "@vue-flow/core";
+import {VueFlow} from "@vue-flow/core";
 import ContentNode from "@/mindMap/ContentNode.vue";
 import ContentEdge from "@/mindMap/ContentEdge.vue";
 import {MIND_MAP_ID, useMindMap} from "@/mindMap/useMindMap.ts";
-import {MiniMap} from "@vue-flow/minimap";
 import {Background} from "@vue-flow/background";
+import MobileBar from "@/mindMap/toolBar/mobile/MobileBar.vue";
+import DeskTopBar from "@/mindMap/toolBar/desktop/DeskTopBar.vue";
 
 const {
     isTouchDevice,
-    canUndo,
-    canRedo,
-    undo,
-    redo,
-    fitView,
-    canMultiSelect,
-    toggleMultiSelect,
-    defaultMouseAction,
-    toggleDefaultMouseAction,
 } = useMindMap()
 </script>
 
@@ -30,19 +22,6 @@ const {
         :zoom-on-double-click="false"
     >
         <Background pattern-color="var(--border-color)"/>
-        <MiniMap
-            v-if="!isTouchDevice"
-            pannable zoomable
-            style="background-color: var(--background-color); border: var(--border);"
-        />
-
-        <Panel position="top-left">
-            <button :disabled="!canUndo" @click="undo">undo</button>
-            <button :disabled="!canRedo" @click="redo">redo</button>
-            <button @click="fitView()">fit</button>
-            <button @click="toggleDefaultMouseAction">{{ defaultMouseAction }}</button>
-            <button v-if="isTouchDevice" @click="toggleMultiSelect">{{ canMultiSelect }}multiselect</button>
-        </Panel>
 
         <template #node-CONTENT_NODE="nodeProps">
             <ContentNode v-bind="nodeProps"/>
@@ -50,6 +29,13 @@ const {
 
         <template #edge-CONTENT_EDGE="edgeProps">
             <ContentEdge v-bind="edgeProps"/>
+        </template>
+
+        <template v-if="isTouchDevice">
+            <MobileBar/>
+        </template>
+        <template v-else>
+            <DeskTopBar/>
         </template>
     </VueFlow>
 </template>
