@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {MIND_MAP_ID, useMindMap} from "@/mindMap/useMindMap.ts";
+import {useMindMap} from "@/mindMap/useMindMap.ts";
 import {Background} from "@vue-flow/background";
 import MobileBar from "@/mindMap/toolBar/mobile/MobileBar.vue";
 import DeskTopBar from "@/mindMap/toolBar/desktop/DeskTopBar.vue";
@@ -7,6 +7,7 @@ import MindMapLayer from "@/mindMap/layer/MindMapLayer.vue";
 
 const {
     isTouchDevice,
+    layers,
 } = useMindMap()
 </script>
 
@@ -18,7 +19,9 @@ const {
     >
         <Background pattern-color="var(--border-color)"/>
 
-        <MindMapLayer :id="MIND_MAP_ID"/>
+        <template v-for="layer in layers" :key="layer.id">
+            <MindMapLayer :layer="layer"/>
+        </template>
 
         <template v-if="isTouchDevice">
             <MobileBar/>

@@ -2,19 +2,32 @@
 import {VueFlow} from "@vue-flow/core";
 import ContentNode from "@/mindMap/node/ContentNode.vue";
 import ContentEdge from "@/mindMap/edge/ContentEdge.vue";
+import {MindMapLayer, useMindMap} from "@/mindMap/useMindMap.ts";
 
 defineProps<{
-    id: string
+    layer: MindMapLayer,
 }>()
+
+const {currentLayer} = useMindMap()
 </script>
 
 <template>
     <VueFlow
-        :id="id"
+        :id="layer.id"
+        v-show="layer.visible"
+        :style="{
+            pointerEvents: layer.id === currentLayer.id ? undefined : 'none'
+        }"
+
         tabindex="-1"
         style="width: 100%; height: 100%; background-color: transparent;"
         :zoom-on-pinch="false"
         :zoom-on-double-click="false"
+        :edges-updatable="true"
+        :multi-selection-key-code="null"
+        :connect-on-click="false"
+        :select-nodes-on-drag="false"
+        :selection-key-code="false"
     >
         <template #node-CONTENT_NODE="nodeProps">
             <ContentNode v-bind="nodeProps"/>

@@ -1,6 +1,15 @@
-import {CommandDefinition, useCommandHistory} from "@/history/commandHistory.ts";
-import {Connection, Edge, GraphEdge, GraphNode, Node, Position, useVueFlow, XYPosition,} from "@vue-flow/core";
-import {computed, readonly, ref, toRaw} from "vue";
+import {
+    Connection,
+    Edge,
+    GraphEdge,
+    GraphNode,
+    Node,
+    Position,
+    useVueFlow,
+    VueFlowStore,
+    XYPosition,
+} from "@vue-flow/core";
+import {computed, readonly, ref, ShallowReactive, shallowReactive, ShallowRef, shallowRef} from "vue";
 import {blurActiveElement, judgeTargetIsInteraction} from "@/mindMap/clickUtils.ts";
 import {jsonSortPropStringify} from "@/json/jsonStringify.ts";
 import {MindMapImportData, prepareImportIntoMindMap} from "@/mindMap/importExport/import.ts";
@@ -8,8 +17,23 @@ import {useClipBoardWithKeyboard} from "@/clipBoard/useClipBoard.ts";
 import {exportMindMapSelection, MindMapExportData} from "@/mindMap/importExport/export.ts";
 import {validateMindMapImportData} from "@/mindMap/clipBoard/inputParse.ts";
 import {checkFullConnection, FullConnection, reverseConnection} from "@/mindMap/edge/connection.ts";
+import {useMindMapHistory} from "@/mindMap/history/MindMapHistory.ts";
 
 export const MIND_MAP_ID = "mind_map" as const
+
+export type MindMapGlobal = {
+    zIndexIncrement: number,
+    layerIdIncrement: number,
+    nodeIdIncrement: number,
+    layers: ShallowReactive<MindMapLayer[]>,
+    currentLayer: ShallowRef<MindMapLayer>,
+}
+
+export type MindMapLayer = {
+    readonly id: string,
+    readonly vueFlow: VueFlowStore,
+    visible: boolean,
+}
 
 export const CONTENT_NODE_TYPE = "CONTENT_NODE" as const
 export type ContentNodeData = {
@@ -37,84 +61,65 @@ export const createEdgeId = (connection: Connection) => {
     return `vueflow__edge-${connection.source}${connection.sourceHandle ?? ''}-${connection.target}${connection.targetHandle ?? ''}`
 }
 
-type MindMapHistoryCommands = {
-    "node:add": CommandDefinition<ContentNode, string>,
-    "node:move": CommandDefinition<{
-        id: string,
-        newPosition: XYPosition,
-        oldPosition: XYPosition,
-    }, {
-        id: string,
-        oldPosition: XYPosition,
-    }>,
-    "node:data:change": CommandDefinition<{ id: string, data: ContentNodeData }>,
-
-    "edge:add": CommandDefinition<ContentEdge, string>,
-    "edge:reconnect": CommandDefinition<{
-        id: string,
-        oldConnection: FullConnection,
-        newConnection: FullConnection,
-    }, {
-        id: string,
-        oldConnection: FullConnection,
-    }>;
-    "edge:data:change": CommandDefinition<{ id: string, data: ContentEdgeData }>,
-
-    "import": CommandDefinition<{
-        nodes: ContentNode[],
-        edges: ContentEdge[]
-    }, {
-        nodeIds: string[],
-        edgeIds: string[]
-    }>,
-    "remove": CommandDefinition<{
-        nodes?: (GraphNode | string)[],
-        edges?: (GraphEdge | string)[]
-    }, {
-        nodes: GraphNode[],
-        edges: GraphEdge[]
-    }>,
-}
-
 export type MouseAction = "panDrag" | "selectionRect"
 
 const initMindMap = () => {
+    const defaultLayer = {
+        id: MIND_MAP_ID,
+        vueFlow: useVueFlow(MIND_MAP_ID),
+        visible: true,
+    }
+
+    const global: MindMapGlobal = {
+        zIndexIncrement: 0,
+        layerIdIncrement: 0,
+        nodeIdIncrement: 0,
+        layers: shallowReactive<MindMapLayer[]>([
+            defaultLayer
+        ]),
+        currentLayer: shallowRef<MindMapLayer>(
+            defaultLayer
+        ),
+    }
+
+    const layerId = computed(() => global.currentLayer.value.id)
+
     const isTouchDevice = ref('ontouchstart' in document.documentElement)
     const screenPosition = ref<XYPosition>({x: 0, y: 0})
 
-    let nodeId = 0
+    const {history, canUndo, canRedo} = useMindMapHistory(global)
 
-    const vueFlow = useVueFlow(MIND_MAP_ID)
-    const focus = () => {
-        vueFlow.vueFlowRef.value?.focus()
+    const getCurrentVueFlow = () => {
+        return global.currentLayer.value.vueFlow
     }
 
-    const clearSelection = () => {
+    const cleanSelection = () => {
+        const vueFlow = getCurrentVueFlow()
         vueFlow.removeSelectedNodes(vueFlow.getSelectedNodes.value)
         vueFlow.removeSelectedEdges(vueFlow.getSelectedEdges.value)
     }
-
-    let zIndex = 0
-
-    vueFlow.edgesUpdatable.value = true
+    const focus = () => {
+        const vueFlow = getCurrentVueFlow()
+        vueFlow.vueFlowRef.value?.focus()
+    }
 
     /**
      * 点击多选相关配置
      */
-    vueFlow.multiSelectionKeyCode.value = null
-    vueFlow.connectOnClick.value = false
-    vueFlow.selectNodesOnDrag.value = false
-
     const isMultiSelected = computed(() => {
+        const vueFlow = getCurrentVueFlow()
         return vueFlow.getSelectedNodes.value.length + vueFlow.getSelectedEdges.value.length > 1
     })
     const canMultiSelect = computed(() => {
+        const vueFlow = getCurrentVueFlow()
         return vueFlow.multiSelectionActive.value
     })
     const enableMultiSelect = () => {
+        const vueFlow = getCurrentVueFlow()
         vueFlow.multiSelectionActive.value = true
     }
     const disableMultiSelect = () => {
+        const vueFlow = getCurrentVueFlow()
         vueFlow.multiSelectionActive.value = false
     }
     const toggleMultiSelect = () => {
@@ -130,8 +135,6 @@ const initMindMap = () => {
     /**
      * 框选相关配置
      */
-    vueFlow.selectionKeyCode.value = false
-
     let selectionRectEnable: boolean = false
     let selectionRectMouseButton: number = 0
 
@@ -141,11 +144,13 @@ const initMindMap = () => {
         readonly width: number,
         readonly height: number
     }) => {
+        const vueFlow = getCurrentVueFlow()
+
         const innerNodes: GraphNode[] = []
         const innerEdges: GraphEdge[] = []
 
-        const leftTop = screenToFlowCoordinate({x: rect.x, y: rect.y})
-        const rightBottom = screenToFlowCoordinate({x: rect.x + rect.width, y: rect.y + rect.height})
+        const leftTop = vueFlow.screenToFlowCoordinate({x: rect.x, y: rect.y})
+        const rightBottom = vueFlow.screenToFlowCoordinate({x: rect.x + rect.width, y: rect.y + rect.height})
 
         for (const node of vueFlow.getNodes.value) {
             if (typeof node.width !== "number" || typeof node.height !== "number") continue
@@ -187,6 +192,8 @@ const initMindMap = () => {
 
     // 默认操作为拖拽
     const setDefaultPanDrag = () => {
+        const vueFlow = getCurrentVueFlow()
+
         defaultMouseAction.value = 'panDrag'
         vueFlow.panOnDrag.value = isTouchDevice.value ? true : [0, 2]
         selectionRectMouseButton = 2
@@ -194,6 +201,8 @@ const initMindMap = () => {
     }
     // 默认操作为框选，通过鼠标右键拖拽
     const setDefaultSelectionRect = () => {
+        const vueFlow = getCurrentVueFlow()
+
         defaultMouseAction.value = 'selectionRect'
         vueFlow.panOnDrag.value = isTouchDevice.value ? false : [2]
         selectionRectMouseButton = 0
@@ -209,237 +218,37 @@ const initMindMap = () => {
     setDefaultPanDrag()
 
     const canDrag = computed(() => {
+        const vueFlow = getCurrentVueFlow()
         return vueFlow.nodesDraggable.value
     })
     const disableDrag = () => {
+        const vueFlow = getCurrentVueFlow()
         vueFlow.nodesDraggable.value = false
     }
     const enableDrag = () => {
+        const vueFlow = getCurrentVueFlow()
         vueFlow.nodesDraggable.value = true
     }
     enableDrag()
 
-    const {
-        vueFlowRef,
-        onInit,
-
-        screenToFlowCoordinate,
-
-        addNodes,
-        updateNode,
-        updateNodeData,
-        addEdges,
-        updateEdgeData,
-        findNode,
-        findEdge,
-        onNodeDragStart,
-        onNodeDragStop,
-        onConnect,
-        onEdgeUpdateStart,
-        onEdgeUpdate,
-
-        getSelectedNodes,
-        getSelectedEdges,
-    } = vueFlow
-
-    const history = useCommandHistory<MindMapHistoryCommands>()
-
-    const canUndo = ref(false)
-    const canRedo = ref(false)
-    history.eventBus.on("change", () => {
-        canUndo.value = history.canUndo()
-        canRedo.value = history.canRedo()
-    })
-
-    history.registerCommand("node:add", {
-        applyAction: (node) => {
-            addNodes({...node, zIndex: zIndex++})
-            return node.id
-        },
-        revertAction: (nodeId) => {
-            const node = findNode(nodeId)
-            if (node !== undefined) {
-                vueFlow.removeSelectedNodes([node])
-                vueFlow.removeNodes(nodeId)
-                return node as ContentNode
-            }
-        }
-    })
-
-    history.registerCommand("node:move", {
-        applyAction: ({id, newPosition, oldPosition}) => {
-            updateNode(id, {
-                position: newPosition
-            })
-            return {
-                id,
-                oldPosition
-            }
-        },
-        revertAction: ({id, oldPosition}) => {
-            updateNode(id, {
-                position: oldPosition
-            })
-        }
-    })
-
-
-    history.registerCommand("node:data:change", {
-        applyAction: ({id, data}) => {
-            const node = findNode(id) as ContentNode | undefined
-            if (node === undefined) throw new Error("node is undefined")
-
-            const previousData = toRaw(node.data)
-            updateNodeData(id, data, {replace: true})
-            return {id, data: previousData}
-        },
-        revertAction: ({id, data}) => {
-            const node = findNode(id) as ContentNode | undefined
-            if (node === undefined) throw new Error("node is undefined")
-
-            const currentData = toRaw(node.data)
-            updateNodeData(id, data, {replace: true})
-            return {id, data: currentData}
-        }
-    })
-
-    history.registerCommand("edge:add", {
-        applyAction: (edge) => {
-            addEdges({...edge, zIndex: zIndex++})
-            return edge.id
-        },
-        revertAction: (edgeId) => {
-            const edge = findEdge(edgeId)
-            if (edge !== undefined) {
-                vueFlow.removeSelectedEdges([edge])
-                vueFlow.removeEdges(edgeId)
-                return edge as ContentEdge
-            }
-        }
-    })
-
-    history.registerCommand("edge:reconnect", {
-        applyAction: ({id, oldConnection, newConnection}) => {
-            const edge = findEdge(id)
-            if (edge === undefined) {
-                throw new Error("edge is undefined")
-            }
-            vueFlow.updateEdge(edge, newConnection, true)
-            return {id: createEdgeId(newConnection), oldConnection}
-        },
-        revertAction: ({id, oldConnection}) => {
-            const edge = findEdge(id)
-            if (edge === undefined) {
-                throw new Error("edge is undefined")
-            }
-            vueFlow.updateEdge(edge, oldConnection, true)
-        }
-    })
-
-    history.registerCommand("edge:data:change", {
-        applyAction: ({id, data}) => {
-            const edge = findEdge(id) as ContentEdge | undefined
-            if (edge === undefined) throw new Error("edge is undefined")
-
-            const previousData = toRaw(edge.data)
-            updateEdgeData(id, data, {replace: true})
-            return {id, data: previousData}
-        },
-        revertAction: ({id, data}) => {
-            const edge = findEdge(id) as ContentEdge | undefined
-            if (edge === undefined) throw new Error("edge is undefined")
-
-            const currentData = toRaw(edge.data)
-            updateEdgeData(id, data, {replace: true})
-            return {id, data: currentData}
-        }
-    })
-
-    history.registerCommand("import", {
-        applyAction: (data) => {
-            const {nodes, edges} = data
-            addNodes(nodes)
-            addEdges(edges)
-            return {nodeIds: nodes.map(it => it.id), edgeIds: edges.map(it => it.id)}
-        },
-        revertAction: (data) => {
-            const {nodeIds, edgeIds} = data
-
-            const removedNodes: GraphNode[] = []
-            const removedEdges: GraphEdge[] = []
-
-            for (const edgeId of edgeIds) {
-                const foundEdge = findEdge(edgeId)
-                if (foundEdge) {
-                    removedEdges.push(foundEdge)
-                }
-            }
-            for (const nodeId of nodeIds) {
-                const foundNode = findNode(nodeId)
-                if (foundNode) {
-                    removedNodes.push(foundNode)
-                }
-            }
-            removedEdges.push(...vueFlow.getConnectedEdges(removedNodes))
-
-            clearSelection()
-            vueFlow.removeEdges(removedEdges)
-            vueFlow.removeNodes(removedNodes)
-        }
-    })
-
-    history.registerCommand("remove", {
-        applyAction: (data) => {
-            const removedNodes: GraphNode[] = []
-            const removedEdges: GraphEdge[] = []
-
-            data?.edges?.forEach((edge) => {
-                const edgeId = typeof edge === "string" ? edge : edge.id
-                const foundEdge = findEdge(edgeId)
-                if (foundEdge) {
-                    removedEdges.push(foundEdge)
-                }
-            })
-            data?.nodes?.forEach((node) => {
-                const nodeId = typeof node === "string" ? node : node.id
-                const foundNode = findNode(nodeId)
-                if (foundNode) {
-                    removedNodes.push(foundNode)
-                }
-            })
-            removedEdges.push(...vueFlow.getConnectedEdges(removedNodes))
-
-            clearSelection()
-            vueFlow.removeEdges(removedEdges)
-            vueFlow.removeNodes(removedNodes)
-
-            return {
-                nodes: removedNodes,
-                edges: removedEdges
-            }
-        },
-        revertAction: (data) => {
-            const {nodes, edges} = data
-            addNodes(nodes)
-            addEdges(edges)
-            return {nodes, edges}
-        },
-    })
-
     const addNode = (position: XYPosition) => {
         return history.executeCommand("node:add", {
-            id: `node-${nodeId++}`,
-            position,
-            type: CONTENT_NODE_TYPE,
-            data: {
-                content: ""
-            },
+            layerId: layerId.value,
+            node: {
+                id: `node-${global.nodeIdIncrement++}`,
+                position,
+                type: CONTENT_NODE_TYPE,
+                data: {
+                    content: ""
+                },
+            }
         })
     }
 
     const checkConnectionExist = (connection: Connection): boolean => {
-        return findEdge(createEdgeId(connection)) !== undefined ||
-            findEdge(createEdgeId(reverseConnection(connection))) !== undefined
+        const vueFlow = getCurrentVueFlow()
+        return vueFlow.findEdge(createEdgeId(connection)) !== undefined ||
+            vueFlow.findEdge(createEdgeId(reverseConnection(connection))) !== undefined
     }
 
     const addEdge = (connection: Connection) => {
@@ -449,34 +258,36 @@ const initMindMap = () => {
         const id = createEdgeId(connection)
 
         history.executeCommand('edge:add', {
-            ...connection,
-            id,
-            type: CONTENT_EDGE_TYPE,
-            data: {
-                content: ""
-            },
+            layerId: layerId.value,
+            edge: {
+                ...connection,
+                id,
+                type: CONTENT_EDGE_TYPE,
+                data: {
+                    content: ""
+                },
+            }
         })
     }
 
-    onConnect((connectData) => {
-        addEdge(connectData)
-    })
-
 
     const getCenterPosition = () => {
-        return screenToFlowCoordinate({x: window.innerWidth / 2, y: window.innerHeight / 2})
+        const vueFlow = getCurrentVueFlow()
+        return vueFlow.screenToFlowCoordinate({x: window.innerWidth / 2, y: window.innerHeight / 2})
     }
 
     const importData = (data: MindMapImportData, leftTop: XYPosition = getCenterPosition()) => {
+        const vueFlow = getCurrentVueFlow()
+
         blurActiveElement()
         const {newNodes, newEdges} = prepareImportIntoMindMap(vueFlow, data, leftTop)
-        history.executeCommand("import", {nodes: newNodes, edges: newEdges})
+        history.executeCommand("import", {layerId: layerId.value, nodes: newNodes, edges: newEdges})
 
         const currentMultiSelectionActive = vueFlow.multiSelectionActive.value
         vueFlow.multiSelectionActive.value = true
-        clearSelection()
-        const graphNodes = newNodes.map(it => findNode(it.id)).filter(it => it !== undefined)
-        const graphEdges = newEdges.map(it => findEdge(it.id)).filter(it => it !== undefined)
+        cleanSelection()
+        const graphNodes = newNodes.map(it => vueFlow.findNode(it.id)).filter(it => it !== undefined)
+        const graphEdges = newEdges.map(it => vueFlow.findEdge(it.id)).filter(it => it !== undefined)
         vueFlow.addSelectedNodes(graphNodes)
         vueFlow.addSelectedEdges(graphEdges)
         vueFlow.multiSelectionActive.value = currentMultiSelectionActive
@@ -484,215 +295,344 @@ const initMindMap = () => {
 
 
     const remove = (data: { nodes?: (GraphNode | string)[], edges?: (GraphEdge | string)[] }) => {
+        const vueFlow = getCurrentVueFlow()
+
         blurActiveElement()
-        history.executeCommand('remove', data)
+        history.executeCommand('remove', {...data, layerId: layerId.value})
         focus()
         vueFlow.vueFlowRef.value?.addEventListener('blur', () => {
             focus()
         }, {once: true})
     }
 
-    /**
-     * 剪切板
-     */
-    useClipBoardWithKeyboard<MindMapImportData, MindMapExportData>(() => vueFlowRef.value, {
-        exportData: (): MindMapExportData => {
-            return exportMindMapSelection(vueFlow)
-        },
-        importData: (data: MindMapImportData) => {
-            importData(data, screenToFlowCoordinate(screenPosition.value))
-        },
-        removeData: (data: MindMapExportData) => {
-            remove({nodes: data.nodes?.map(it => it.id), edges: data.edges?.map(it => it.id)})
-        },
-        stringifyData: (data: MindMapExportData): string => {
-            return jsonSortPropStringify(data)
-        },
-        validateInput: validateMindMapImportData
-    })
+    const initLayer = (layer: MindMapLayer) => {
+        const {vueFlow} = layer
+        const {
+            vueFlowRef,
+            onInit,
 
-    /**
-     * 节点移动
-     */
-    const nodeMoveMap = new Map<string, XYPosition>
+            screenToFlowCoordinate,
 
-    onNodeDragStart(({nodes}) => {
-        for (const node of nodes) {
-            nodeMoveMap.set(node.id, node.position)
-        }
-    })
+            onNodeDragStart,
+            onNodeDragStop,
+            onConnect,
+            onEdgeUpdateStart,
+            onEdgeUpdate,
 
-    onNodeDragStop(({nodes}) => {
-        history.executeBatch(Symbol("node:move"), () => {
+            getSelectedNodes,
+            getSelectedEdges,
+        } = vueFlow
+
+        /**
+         * 剪切板
+         */
+        useClipBoardWithKeyboard<MindMapImportData, MindMapExportData>(() => vueFlowRef.value, {
+            exportData: (): MindMapExportData => {
+                return exportMindMapSelection(vueFlow)
+            },
+            importData: (data: MindMapImportData) => {
+                importData(data, screenToFlowCoordinate(screenPosition.value))
+            },
+            removeData: (data: MindMapExportData) => {
+                remove({nodes: data.nodes?.map(it => it.id), edges: data.edges?.map(it => it.id)})
+            },
+            stringifyData: (data: MindMapExportData): string => {
+                return jsonSortPropStringify(data)
+            },
+            validateInput: validateMindMapImportData
+        })
+
+        /**
+         * 节点移动
+         */
+        const nodeMoveMap = new Map<string, XYPosition>
+
+        onNodeDragStart(({nodes}) => {
             for (const node of nodes) {
-                const oldPosition = nodeMoveMap.get(node.id)
-                nodeMoveMap.delete(node.id)
-                if (oldPosition !== undefined) {
-                    const newPosition = node.position
-                    if (jsonSortPropStringify(oldPosition) !== jsonSortPropStringify(newPosition)) {
-                        history.executeCommand('node:move', {id: node.id, newPosition, oldPosition})
-                    }
-                }
+                nodeMoveMap.set(node.id, node.position)
             }
         })
-    })
 
-    /**
-     * 边重连接
-     */
-    const edgeReconnectMap = new Map<string, FullConnection>
-    const stopSelectStart = (e: Event) => {
-        e.preventDefault()
-    }
-
-    onEdgeUpdateStart(({edge}) => {
-        vueFlowRef.value?.addEventListener('selectstart', stopSelectStart)
-        const connection: Connection = {
-            source: edge.source,
-            sourceHandle: edge.sourceHandle,
-            target: edge.target,
-            targetHandle: edge.targetHandle,
-        }
-        if (checkFullConnection(connection)) {
-            edgeReconnectMap.set(edge.id, connection)
-        }
-    })
-
-    onEdgeUpdate(({edge, connection}) => {
-        history.executeBatch(Symbol("edge:reconnect"), () => {
-            const oldConnection = edgeReconnectMap.get(edge.id)
-            edgeReconnectMap.delete(edge.id)
-            if (oldConnection !== undefined && checkFullConnection(connection)) {
-                if (jsonSortPropStringify(oldConnection) !== jsonSortPropStringify(connection) && !checkConnectionExist(connection)) {
-                    history.executeCommand('edge:reconnect', {id: edge.id, newConnection: connection, oldConnection})
+        onNodeDragStop(({nodes}) => {
+            history.executeBatch(Symbol("node:move"), () => {
+                for (const node of nodes) {
+                    const oldPosition = nodeMoveMap.get(node.id)
+                    nodeMoveMap.delete(node.id)
+                    if (oldPosition !== undefined) {
+                        const newPosition = node.position
+                        if (jsonSortPropStringify(oldPosition) !== jsonSortPropStringify(newPosition)) {
+                            history.executeCommand('node:move', {layerId: layerId.value, id: node.id, newPosition, oldPosition})
+                        }
+                    }
                 }
+            })
+        })
+
+        /**
+         * 添加边
+         */
+        onConnect((connectData) => {
+            addEdge(connectData)
+        })
+
+        /**
+         * 边重连接
+         */
+        const edgeReconnectMap = new Map<string, FullConnection>
+        const stopSelectStart = (e: Event) => {
+            e.preventDefault()
+        }
+
+        onEdgeUpdateStart(({edge}) => {
+            vueFlowRef.value?.addEventListener('selectstart', stopSelectStart)
+            const connection: Connection = {
+                source: edge.source,
+                sourceHandle: edge.sourceHandle,
+                target: edge.target,
+                targetHandle: edge.targetHandle,
+            }
+            if (checkFullConnection(connection)) {
+                edgeReconnectMap.set(edge.id, connection)
             }
         })
-        vueFlowRef.value?.removeEventListener('selectstart', stopSelectStart)
-    })
 
+        onEdgeUpdate(({edge, connection}) => {
+            history.executeBatch(Symbol("edge:reconnect"), () => {
+                const oldConnection = edgeReconnectMap.get(edge.id)
+                edgeReconnectMap.delete(edge.id)
+                if (oldConnection !== undefined && checkFullConnection(connection)) {
+                    if (jsonSortPropStringify(oldConnection) !== jsonSortPropStringify(connection) && !checkConnectionExist(connection)) {
+                        history.executeCommand('edge:reconnect', {layerId: layerId.value, id: edge.id, newConnection: connection, oldConnection})
+                    }
+                }
+            })
+            vueFlowRef.value?.removeEventListener('selectstart', stopSelectStart)
+        })
 
-    /**
-     * 初始化添加事件
-     */
-    onInit(() => {
-        const el = vueFlowRef.value
-        const viewportEl = vueFlowRef.value
-        const paneEl = el?.querySelector('div.vue-flow__pane') as HTMLDivElement | null
+        /**
+         * 初始化添加事件
+         */
+        onInit(() => {
+            const el = vueFlowRef.value
+            const viewportEl = vueFlowRef.value
+            const paneEl = el?.querySelector('div.vue-flow__pane') as HTMLDivElement | null
 
-        if (el === null || viewportEl === null || paneEl === null) {
-            throw new Error("vueFlow Ref is undefined in onInit")
-        }
-
-        el.addEventListener('keydown', (e) => {
-            // 按下 Delete 键删除选中的节点和边
-            if (e.key === "Delete") {
-                if (getSelectedNodes.value.length === 0 && getSelectedEdges.value.length === 0) return
-
-                e.preventDefault()
-
-                remove({nodes: getSelectedNodes.value, edges: getSelectedEdges.value})
+            if (el === null || viewportEl === null || paneEl === null) {
+                throw new Error("vueFlow Ref is undefined in onInit")
             }
 
-            // 按下 Ctrl 键进入多选模式，直到松开 Ctrl 键
-            else if (e.key === "Control") {
-                enableMultiSelect()
-                document.documentElement.addEventListener('keyup', (e) => {
-                    if (e.key === "Control" || e.ctrlKey) {
-                        disableMultiSelect()
-                    }
-                }, {once: true})
-            } else if (e.key === "Shift") {
-                if (judgeTargetIsInteraction(e)) return
+            el.addEventListener('keydown', (e) => {
+                // 按下 Delete 键删除选中的节点和边
+                if (e.key === "Delete") {
+                    if (getSelectedNodes.value.length === 0 && getSelectedEdges.value.length === 0) return
 
-                toggleDefaultMouseAction()
-                document.documentElement.addEventListener('keyup', (e) => {
-                    if (e.key === "Shift" || e.shiftKey) {
-                        toggleDefaultMouseAction()
-                    }
-                }, {once: true})
-            } else if (e.ctrlKey) {
-                // 按下 Ctrl + z 键，进行历史记录的撤回重做
-                if ((e.key === "z" || e.key === "Z")) {
+                    e.preventDefault()
+
+                    remove({nodes: getSelectedNodes.value, edges: getSelectedEdges.value})
+                }
+
+                // 按下 Ctrl 键进入多选模式，直到松开 Ctrl 键
+                else if (e.key === "Control") {
+                    enableMultiSelect()
+                    document.documentElement.addEventListener('keyup', (e) => {
+                        if (e.key === "Control" || e.ctrlKey) {
+                            disableMultiSelect()
+                        }
+                    }, {once: true})
+                } else if (e.key === "Shift") {
                     if (judgeTargetIsInteraction(e)) return
 
-                    if (e.shiftKey) {
+                    toggleDefaultMouseAction()
+                    document.documentElement.addEventListener('keyup', (e) => {
+                        if (e.key === "Shift" || e.shiftKey) {
+                            toggleDefaultMouseAction()
+                        }
+                    }, {once: true})
+                } else if (e.ctrlKey) {
+                    // 按下 Ctrl + z 键，进行历史记录的撤回重做
+                    if ((e.key === "z" || e.key === "Z")) {
+                        if (judgeTargetIsInteraction(e)) return
+
+                        if (e.shiftKey) {
+                            e.preventDefault()
+                            history.redo()
+                        } else {
+                            e.preventDefault()
+                            history.undo()
+                        }
+                    }
+
+                    // 按下 Ctrl + a 键，全选
+                    else if (e.key === "a" || e.key === "A") {
+                        if (judgeTargetIsInteraction(e)) return
+
+                        const isCurrentMultiSelect = isMultiSelected.value
+
                         e.preventDefault()
-                        history.redo()
+                        if (!isCurrentMultiSelect) enableMultiSelect()
+                        vueFlow.addSelectedNodes(vueFlow.getNodes.value)
+                        vueFlow.addSelectedEdges(vueFlow.getEdges.value)
+                        if (!isCurrentMultiSelect) disableMultiSelect()
+                    }
+                }
+            })
+
+            if (!isTouchDevice.value) {
+                // 设置屏幕位置
+                paneEl.addEventListener('mouseenter', (e) => {
+                    screenPosition.value = {x: e.clientX, y: e.clientY}
+                })
+                paneEl.addEventListener('mousemove', (e) => {
+                    screenPosition.value = {x: e.clientX, y: e.clientY}
+                })
+
+                // 双击添加节点
+                paneEl.addEventListener('dblclick', (e) => {
+                    if (e.target !== paneEl) return
+                    addNode(screenToFlowCoordinate({x: e.clientX, y: e.clientY}))
+                })
+
+                let currentPanOnDrag = vueFlow.panOnDrag.value
+                // 鼠标移入非交互元素时，允许拖拽，否则禁止画布拖拽
+                paneEl.addEventListener('mouseover', (e) => {
+                    if (judgeTargetIsInteraction(e)) {
+                        currentPanOnDrag = vueFlow.panOnDrag.value
+                        vueFlow.panOnDrag.value = false
                     } else {
-                        e.preventDefault()
-                        history.undo()
+                        vueFlow.panOnDrag.value = currentPanOnDrag
                     }
-                }
+                })
 
-                // 按下 Ctrl + a 键，全选
-                else if (e.key === "a" || e.key === "A") {
-                    if (judgeTargetIsInteraction(e)) return
+                // 多选框
+                paneEl.addEventListener('mousedown', (e) => {
+                    if (e.target !== paneEl) return
 
-                    const isCurrentMultiSelect = isMultiSelected.value
+                    // 如果开启了 selectionRectEnable，则将根据 selectionRectMouseButton 判断并进行拖曳创建选择框
+                    if (selectionRectEnable) {
+                        e.preventDefault()
+                        vueFlow.multiSelectionActive.value = false
 
-                    e.preventDefault()
-                    if (!isCurrentMultiSelect) enableMultiSelect()
-                    vueFlow.addSelectedNodes(vueFlow.getNodes.value)
-                    vueFlow.addSelectedEdges(vueFlow.getEdges.value)
-                    if (!isCurrentMultiSelect) disableMultiSelect()
-                }
-            }
-        })
+                        cleanSelection()
 
-        if (!isTouchDevice.value) {
-            // 设置屏幕位置
-            paneEl.addEventListener('mouseenter', (e) => {
-                screenPosition.value = {x: e.clientX, y: e.clientY}
-            })
-            paneEl.addEventListener('mousemove', (e) => {
-                screenPosition.value = {x: e.clientX, y: e.clientY}
-            })
+                        if (e.button === selectionRectMouseButton) {
+                            vueFlow.userSelectionActive.value = true
+                            vueFlow.multiSelectionActive.value = true
 
-            // 双击添加节点
-            paneEl.addEventListener('dblclick', (e) => {
-                if (e.target !== paneEl) return
-                addNode(screenToFlowCoordinate({x: e.clientX, y: e.clientY}))
-            })
+                            const start = {x: e.clientX, y: e.clientY}
 
-            let currentPanOnDrag = vueFlow.panOnDrag.value
-            // 鼠标移入非交互元素时，允许拖拽，否则禁止画布拖拽
-            paneEl.addEventListener('mouseover', (e) => {
-                if (judgeTargetIsInteraction(e)) {
-                    currentPanOnDrag = vueFlow.panOnDrag.value
-                    vueFlow.panOnDrag.value = false
-                } else {
-                    vueFlow.panOnDrag.value = currentPanOnDrag
-                }
-            })
+                            const onMove = (e: MouseEvent) => {
+                                e.preventDefault()
+                                const current = {x: e.clientX, y: e.clientY}
+                                let width = current.x - start.x
+                                let height = current.y - start.y
+                                const x = width > 0 ? start.x : current.x
+                                const y = height > 0 ? start.y : current.y
+                                width = width > 0 ? width : -width
+                                height = height > 0 ? height : -height
 
-            // 多选框
-            paneEl.addEventListener('mousedown', (e) => {
-                if (e.target !== paneEl) return
+                                const rect = {
+                                    width,
+                                    height,
+                                    x,
+                                    y,
+                                    startX: start.x,
+                                    startY: start.y,
+                                }
+                                vueFlow.userSelectionRect.value = rect
 
-                // 如果开启了 selectionRectEnable，则将根据 selectionRectMouseButton 判断并进行拖曳创建选择框
-                if (selectionRectEnable) {
-                    e.preventDefault()
-                    vueFlow.multiSelectionActive.value = false
+                                const {nodes, edges} = getByClientRect(rect)
 
-                    clearSelection()
+                                cleanSelection()
+                                vueFlow.addSelectedNodes(nodes)
+                                vueFlow.addSelectedEdges(edges)
+                            }
 
-                    if (e.button === selectionRectMouseButton) {
+                            const onMouseUp = () => {
+                                vueFlow.userSelectionActive.value = false
+                                vueFlow.userSelectionRect.value = null
+
+                                document.documentElement.removeEventListener('mousemove', onMove)
+                                document.documentElement.removeEventListener('mouseup', onMouseUp)
+
+                                const newSelectedNodes = vueFlow.getSelectedNodes.value
+                                const newSelectedEdges = vueFlow.getSelectedEdges.value
+                                setTimeout(() => {
+                                    cleanSelection()
+                                    vueFlow.addSelectedNodes(newSelectedNodes)
+                                    vueFlow.addSelectedEdges(newSelectedEdges)
+                                    vueFlow.multiSelectionActive.value = false
+                                })
+                            }
+
+                            document.documentElement.addEventListener('mousemove', onMove)
+                            document.documentElement.addEventListener('mouseup', onMouseUp)
+                        }
+                    }
+                })
+            } else {
+                // 设置屏幕位置
+                paneEl.addEventListener('touchstart', (e) => {
+                    screenPosition.value = {x: e.touches[0].clientX, y: e.touches[0].clientY}
+                })
+                paneEl.addEventListener('touchmove', (e) => {
+                    screenPosition.value = {x: e.touches[0].clientX, y: e.touches[0].clientY}
+                })
+
+                // 双击添加节点
+                let waitNextTouchEnd = false
+                let waitTimeout: number | undefined
+                paneEl.addEventListener('touchstart', (e) => {
+                    if (e.target !== paneEl) return
+                    if (waitNextTouchEnd) {
+                        addNode(screenToFlowCoordinate({x: e.touches[0].clientX, y: e.touches[0].clientY}))
+                        waitNextTouchEnd = false
+                        clearTimeout(waitTimeout)
+                        e.stopPropagation()
+                    }
+                })
+                paneEl.addEventListener('touchend', (e) => {
+                    if (e.target !== paneEl) return
+                    if (!waitNextTouchEnd) {
+                        waitNextTouchEnd = true
+                        waitTimeout = setTimeout(() => {
+                            waitNextTouchEnd = false
+                        }, 150)
+                    }
+                })
+
+                // 多选框
+                paneEl.addEventListener('touchstart', (e) => {
+                    if (e.target !== paneEl) return
+
+                    // 如果开启了 selectionRect，则将根据 selectionRectMouseButton 判断并进行拖曳创建选择框
+                    if (selectionRectEnable) {
+                        e.preventDefault()
+                        vueFlow.multiSelectionActive.value = false
+
+                        cleanSelection()
+
                         vueFlow.userSelectionActive.value = true
                         vueFlow.multiSelectionActive.value = true
 
-                        const start = {x: e.clientX, y: e.clientY}
+                        const start = {x: e.touches[0].clientX, y: e.touches[0].clientY}
 
-                        const onMove = (e: MouseEvent) => {
+                        const onMove = (e: TouchEvent) => {
                             e.preventDefault()
-                            const current = {x: e.clientX, y: e.clientY}
+                            const current = {x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY}
                             let width = current.x - start.x
                             let height = current.y - start.y
                             const x = width > 0 ? start.x : current.x
                             const y = height > 0 ? start.y : current.y
                             width = width > 0 ? width : -width
                             height = height > 0 ? height : -height
-
+                            vueFlow.userSelectionRect.value = {
+                                width,
+                                height,
+                                x,
+                                y,
+                                startX: start.x,
+                                startY: start.y,
+                            }
                             const rect = {
                                 width,
                                 height,
@@ -705,141 +645,44 @@ const initMindMap = () => {
 
                             const {nodes, edges} = getByClientRect(rect)
 
-                            clearSelection()
+                            cleanSelection()
                             vueFlow.addSelectedNodes(nodes)
                             vueFlow.addSelectedEdges(edges)
                         }
 
-                        const onMouseUp = () => {
+                        const onTouchEnd = () => {
                             vueFlow.userSelectionActive.value = false
                             vueFlow.userSelectionRect.value = null
 
-                            document.documentElement.removeEventListener('mousemove', onMove)
-                            document.documentElement.removeEventListener('mouseup', onMouseUp)
+                            document.documentElement.removeEventListener('touchmove', onMove)
+                            document.documentElement.removeEventListener('touchend', onTouchEnd)
+                            document.documentElement.removeEventListener('touchcancel', onTouchEnd)
 
                             const newSelectedNodes = vueFlow.getSelectedNodes.value
                             const newSelectedEdges = vueFlow.getSelectedEdges.value
                             setTimeout(() => {
-                                clearSelection()
+                                cleanSelection()
                                 vueFlow.addSelectedNodes(newSelectedNodes)
                                 vueFlow.addSelectedEdges(newSelectedEdges)
                                 vueFlow.multiSelectionActive.value = false
                             })
                         }
 
-                        document.documentElement.addEventListener('mousemove', onMove)
-                        document.documentElement.addEventListener('mouseup', onMouseUp)
+                        document.documentElement.addEventListener('touchmove', onMove)
+                        document.documentElement.addEventListener('touchend', onTouchEnd)
+                        document.documentElement.addEventListener('touchcancel', onTouchEnd)
                     }
-                }
-            })
-        } else {
-            // 设置屏幕位置
-            paneEl.addEventListener('touchstart', (e) => {
-                screenPosition.value = {x: e.touches[0].clientX, y: e.touches[0].clientY}
-            })
-            paneEl.addEventListener('touchmove', (e) => {
-                screenPosition.value = {x: e.touches[0].clientX, y: e.touches[0].clientY}
-            })
+                })
+            }
+        })
+    }
 
-            // 双击添加节点
-            let waitNextTouchEnd = false
-            let waitTimeout: number | undefined
-            paneEl.addEventListener('touchstart', (e) => {
-                if (e.target !== paneEl) return
-                if (waitNextTouchEnd) {
-                    addNode(screenToFlowCoordinate({x: e.touches[0].clientX, y: e.touches[0].clientY}))
-                    waitNextTouchEnd = false
-                    clearTimeout(waitTimeout)
-                    e.stopPropagation()
-                }
-            })
-            paneEl.addEventListener('touchend', (e) => {
-                if (e.target !== paneEl) return
-                if (!waitNextTouchEnd) {
-                    waitNextTouchEnd = true
-                    waitTimeout = setTimeout(() => {
-                        waitNextTouchEnd = false
-                    }, 150)
-                }
-            })
-
-            // 多选框
-            paneEl.addEventListener('touchstart', (e) => {
-                if (e.target !== paneEl) return
-
-                // 如果开启了 selectionRect，则将根据 selectionRectMouseButton 判断并进行拖曳创建选择框
-                if (selectionRectEnable) {
-                    e.preventDefault()
-                    vueFlow.multiSelectionActive.value = false
-
-                    clearSelection()
-
-                    vueFlow.userSelectionActive.value = true
-                    vueFlow.multiSelectionActive.value = true
-
-                    const start = {x: e.touches[0].clientX, y: e.touches[0].clientY}
-
-                    const onMove = (e: TouchEvent) => {
-                        e.preventDefault()
-                        const current = {x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY}
-                        let width = current.x - start.x
-                        let height = current.y - start.y
-                        const x = width > 0 ? start.x : current.x
-                        const y = height > 0 ? start.y : current.y
-                        width = width > 0 ? width : -width
-                        height = height > 0 ? height : -height
-                        vueFlow.userSelectionRect.value = {
-                            width,
-                            height,
-                            x,
-                            y,
-                            startX: start.x,
-                            startY: start.y,
-                        }
-                        const rect = {
-                            width,
-                            height,
-                            x,
-                            y,
-                            startX: start.x,
-                            startY: start.y,
-                        }
-                        vueFlow.userSelectionRect.value = rect
-
-                        const {nodes, edges} = getByClientRect(rect)
-
-                        clearSelection()
-                        vueFlow.addSelectedNodes(nodes)
-                        vueFlow.addSelectedEdges(edges)
-                    }
-
-                    const onTouchEnd = () => {
-                        vueFlow.userSelectionActive.value = false
-                        vueFlow.userSelectionRect.value = null
-
-                        document.documentElement.removeEventListener('touchmove', onMove)
-                        document.documentElement.removeEventListener('touchend', onTouchEnd)
-                        document.documentElement.removeEventListener('touchcancel', onTouchEnd)
-
-                        const newSelectedNodes = vueFlow.getSelectedNodes.value
-                        const newSelectedEdges = vueFlow.getSelectedEdges.value
-                        setTimeout(() => {
-                            clearSelection()
-                            vueFlow.addSelectedNodes(newSelectedNodes)
-                            vueFlow.addSelectedEdges(newSelectedEdges)
-                            vueFlow.multiSelectionActive.value = false
-                        })
-                    }
-
-                    document.documentElement.addEventListener('touchmove', onMove)
-                    document.documentElement.addEventListener('touchend', onTouchEnd)
-                    document.documentElement.addEventListener('touchcancel', onTouchEnd)
-                }
-            })
-        }
-    })
+    initLayer(global.currentLayer.value)
 
     return {
+        layers: global.layers,
+        currentLayer: global.currentLayer,
+
         focus,
 
         isTouchDevice,
@@ -849,14 +692,22 @@ const initMindMap = () => {
         undo: history.undo,
         redo: history.redo,
 
-        findNode,
+        findNode: (id: string) => {
+            const vueFlow = getCurrentVueFlow()
+            return vueFlow.findNode(id)
+        },
+        findEdge: (id: string) => {
+            const vueFlow = getCurrentVueFlow()
+            return vueFlow.findEdge(id)
+        },
         addNode,
-        findEdge,
         addEdge,
 
         remove,
 
-        fitView: vueFlow.fitView,
+        fitView: () => {
+            return getCurrentVueFlow().fitView()
+        },
 
         isMultiSelected,
         canMultiSelect,
@@ -872,24 +723,26 @@ const initMindMap = () => {
         enableDrag,
 
         selectNode: (id: string) => {
-            const node = findNode(id)
+            const vueFlow = getCurrentVueFlow()
+            const node = vueFlow.findNode(id)
             if (node !== undefined) {
-                node.zIndex = zIndex++
+                node.zIndex = global.zIndexIncrement++
                 vueFlow.addSelectedNodes([node])
             }
         },
         updateNodeData: (id: string, data: ContentNodeData) => {
-            history.executeCommand('node:data:change', {id, data})
+            history.executeCommand('node:data:change', {layerId: layerId.value, id, data})
         },
         selectEdge: (id: string) => {
-            const edge = findEdge(id)
+            const vueFlow = getCurrentVueFlow()
+            const edge = vueFlow.findEdge(id)
             if (edge !== undefined) {
-                edge.zIndex = zIndex++
+                edge.zIndex = global.zIndexIncrement++
                 vueFlow.addSelectedEdges([edge])
             }
         },
         updateEdgeData: (id: string, data: ContentEdgeData) => {
-            history.executeCommand('edge:data:change', {id, data})
+            history.executeCommand('edge:data:change', {layerId: layerId.value, id, data})
         },
     }
 }
