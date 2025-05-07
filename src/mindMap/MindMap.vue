@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import {useMindMap} from "@/mindMap/useMindMap.ts";
-import {Background} from "@vue-flow/background";
 import MobileBar from "@/mindMap/toolBar/mobile/MobileBar.vue";
 import DeskTopBar from "@/mindMap/toolBar/desktop/DeskTopBar.vue";
 import MindMapLayer from "@/mindMap/layer/MindMapLayer.vue";
@@ -17,8 +16,6 @@ const {
         style="width: 100%; height: 100%;"
         :style="{ backgroundColor: 'var(--background-color)' }"
     >
-        <Background pattern-color="var(--border-color)"/>
-
         <template v-for="layer in layers" :key="layer.id">
             <MindMapLayer :layer="layer"/>
         </template>
