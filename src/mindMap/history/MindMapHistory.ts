@@ -12,7 +12,7 @@ import {
 import {ref, shallowReactive, toRaw} from "vue";
 
 export type MindMapHistoryCommands = {
-    "layer:add": CommandDefinition<undefined, string>,
+    "layer:add": CommandDefinition<string, string>,
     "layer:remove": CommandDefinition<string, MindMapLayer>,
 
     "node:add": CommandDefinition<{
@@ -98,8 +98,7 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
     })
 
     history.registerCommand("layer:add", {
-        applyAction: () => {
-            const layerId = `layer-${global.layerIdIncrement++}`
+        applyAction: (layerId) => {
             const layer = shallowReactive({
                 id: layerId,
                 vueFlow: useVueFlow(layerId),

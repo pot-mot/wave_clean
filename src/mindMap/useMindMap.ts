@@ -9,7 +9,7 @@ import {
     VueFlowStore,
     XYPosition,
 } from "@vue-flow/core";
-import {computed, readonly, ref, ShallowReactive, shallowReactive, ShallowRef, shallowRef} from "vue";
+import {computed, readonly, ref, ShallowReactive, shallowReactive, ShallowRef, shallowRef, toRaw} from "vue";
 import {blurActiveElement, judgeTargetIsInteraction} from "@/mindMap/clickUtils.ts";
 import {jsonSortPropStringify} from "@/json/jsonStringify.ts";
 import {MindMapImportData, prepareImportIntoMindMap} from "@/mindMap/importExport/import.ts";
@@ -104,7 +104,9 @@ const initMindMap = () => {
     }
 
     const addLayer = () => {
-        history.executeCommand("layer:add", undefined)
+        const layerId = `layer-${global.layerIdIncrement++}`
+        history.executeCommand("layer:add", layerId)
+        toggleLayer(layerId)
     }
 
     const removeLayer = (layerId: string) => {
@@ -112,6 +114,7 @@ const initMindMap = () => {
     }
 
     const toggleLayer = (layerId: string) => {
+        cleanSelection()
         global.currentLayer.value = global.layers.find(layer => layer.id === layerId) ?? defaultLayer
     }
 
@@ -318,12 +321,14 @@ const initMindMap = () => {
     }
 
     const initLayer = (layer: MindMapLayer) => {
-        const {vueFlow} = layer
+        const {id, vueFlow} = layer
         const {
             vueFlowRef,
             onInit,
 
             screenToFlowCoordinate,
+
+            onViewportChange,
 
             onNodeDragStart,
             onNodeDragStop,
@@ -334,6 +339,14 @@ const initMindMap = () => {
             getSelectedNodes,
             getSelectedEdges,
         } = vueFlow
+
+        onViewportChange((viewport) => {
+            for (const layer of global.layers) {
+                if (layer.id !== id) {
+                    layer.vueFlow.viewport.value = toRaw(viewport)
+                }
+            }
+        })
 
         /**
          * 剪切板

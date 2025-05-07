@@ -16,7 +16,10 @@ initLayer(props.layer)
 <template>
     <VueFlow
         :id="layer.id"
-        :style="{pointerEvents: layer.id === currentLayer.id ? undefined : 'none', opacity: layer.visible ? 1 : 0}"
+        :style="{
+            pointerEvents: (layer.id === currentLayer.id && layer.visible) ? undefined : 'none',
+            opacity: layer.visible ? (layer.id === currentLayer.id ? 1 : 0.6) : 0
+        }"
 
         tabindex="-1"
         style="width: 100%; height: 100%; background-color: transparent; position: absolute; top: 0; left: 0;"

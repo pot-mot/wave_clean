@@ -20,6 +20,7 @@ const {
 
 const toggleLayerVisible = (layer: MindMapLayer) => {
     layer.visible = !layer.visible
+    toggleLayer(layer.id)
 }
 </script>
 
