@@ -7,6 +7,7 @@ import {MindMapImportData, prepareImportIntoMindMap} from "@/mindMap/importExpor
 import {useClipBoardWithKeyboard} from "@/clipBoard/useClipBoard.ts";
 import {exportMindMapSelection, MindMapExportData} from "@/mindMap/importExport/export.ts";
 import {validateMindMapImportData} from "@/mindMap/clipBoard/inputParse.ts";
+import {checkFullConnection, FullConnection, reverseConnection} from "@/mindMap/edge/connection.ts";
 
 export const MIND_MAP_ID = "mind_map" as const
 
@@ -32,29 +33,8 @@ export type ContentEdge = Pick<Edge, 'id' | 'source' | 'target'> & {
     targetHandle: string,
 }
 
-export type FullConnection = {
-    source: string,
-    sourceHandle: string,
-    target: string,
-    targetHandle: string,
-}
-
 export const createEdgeId = (connection: Connection) => {
     return `vueflow__edge-${connection.source}${connection.sourceHandle ?? ''}-${connection.target}${connection.targetHandle ?? ''}`
-}
-
-const checkFullConnection = (connection: Connection): connection is FullConnection => {
-    if (connection.sourceHandle === null || connection.sourceHandle === undefined) return false
-    return !(connection.targetHandle === null || connection.targetHandle === undefined)
-}
-
-export const reverseConnection = (connection: Connection): Connection => {
-    return {
-        source: connection.target,
-        sourceHandle: connection.targetHandle,
-        target: connection.source,
-        targetHandle: connection.sourceHandle,
-    }
 }
 
 type MindMapHistoryCommands = {
@@ -103,11 +83,6 @@ const initMindMap = () => {
     const screenPosition = ref<XYPosition>({x: 0, y: 0})
 
     let nodeId = 0
-
-    const checkConnectionExist = (connection: Connection): boolean => {
-        return vueFlow.findEdge(createEdgeId(connection)) !== undefined ||
-            vueFlow.findEdge(createEdgeId(reverseConnection(connection))) !== undefined
-    }
 
     const vueFlow = useVueFlow(MIND_MAP_ID)
     const focus = () => {
@@ -460,6 +435,11 @@ const initMindMap = () => {
                 content: ""
             },
         })
+    }
+
+    const checkConnectionExist = (connection: Connection): boolean => {
+        return findEdge(createEdgeId(connection)) !== undefined ||
+            findEdge(createEdgeId(reverseConnection(connection))) !== undefined
     }
 
     const addEdge = (connection: Connection) => {

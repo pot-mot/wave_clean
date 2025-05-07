@@ -3,11 +3,10 @@ import {
     ContentEdge,
     ContentNode,
     ContentNodeHandles,
-    createEdgeId,
-    FullConnection,
-    reverseConnection
+    createEdgeId
 } from "@/mindMap/useMindMap.ts";
 import {toRaw} from "vue";
+import {FullConnection, reverseConnection} from "@/mindMap/edge/connection.ts";
 
 export type MindMapImportData = {
     nodes?: (ContentNode | undefined | null)[],
