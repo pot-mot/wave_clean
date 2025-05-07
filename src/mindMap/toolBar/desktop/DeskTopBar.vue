@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import {MiniMap} from "@vue-flow/minimap";
 import {Panel} from "@vue-flow/core";
 import {useMindMap} from "@/mindMap/useMindMap.ts";
 
@@ -15,11 +14,6 @@ const {
 </script>
 
 <template>
-    <MiniMap
-        pannable zoomable
-        style="background-color: var(--background-color); border: var(--border);"
-    />
-
     <Panel position="top-left">
         <button :disabled="!canUndo" @click="undo">undo</button>
         <button :disabled="!canRedo" @click="redo">redo</button>
