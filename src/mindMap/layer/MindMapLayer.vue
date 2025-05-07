@@ -4,11 +4,13 @@ import ContentNode from "@/mindMap/node/ContentNode.vue";
 import ContentEdge from "@/mindMap/edge/ContentEdge.vue";
 import {MindMapLayer, useMindMap} from "@/mindMap/useMindMap.ts";
 
-defineProps<{
+const props = defineProps<{
     layer: MindMapLayer,
 }>()
 
-const {currentLayer} = useMindMap()
+const {currentLayer, initLayer} = useMindMap()
+
+initLayer(props.layer)
 </script>
 
 <template>

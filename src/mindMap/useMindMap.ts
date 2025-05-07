@@ -677,11 +677,10 @@ const initMindMap = () => {
         })
     }
 
-    initLayer(global.currentLayer.value)
-
     return {
         layers: global.layers,
         currentLayer: global.currentLayer,
+        initLayer,
 
         focus,
 
