@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import {VueFlow} from "@vue-flow/core";
-import ContentNode from "@/mindMap/node/ContentNode.vue";
-import ContentEdge from "@/mindMap/edge/ContentEdge.vue";
 import {MIND_MAP_ID, useMindMap} from "@/mindMap/useMindMap.ts";
 import {Background} from "@vue-flow/background";
 import MobileBar from "@/mindMap/toolBar/mobile/MobileBar.vue";
 import DeskTopBar from "@/mindMap/toolBar/desktop/DeskTopBar.vue";
+import MindMapLayer from "@/mindMap/layer/MindMapLayer.vue";
 
 const {
     isTouchDevice,
@@ -13,23 +11,14 @@ const {
 </script>
 
 <template>
-    <VueFlow
-        :id="MIND_MAP_ID"
+    <div
         tabindex="-1"
         style="width: 100%; height: 100%;"
         :style="{ backgroundColor: 'var(--background-color)' }"
-        :zoom-on-pinch="false"
-        :zoom-on-double-click="false"
     >
         <Background pattern-color="var(--border-color)"/>
 
-        <template #node-CONTENT_NODE="nodeProps">
-            <ContentNode v-bind="nodeProps"/>
-        </template>
-
-        <template #edge-CONTENT_EDGE="edgeProps">
-            <ContentEdge v-bind="edgeProps"/>
-        </template>
+        <MindMapLayer :id="MIND_MAP_ID"/>
 
         <template v-if="isTouchDevice">
             <MobileBar/>
@@ -37,25 +26,5 @@ const {
         <template v-else>
             <DeskTopBar/>
         </template>
-    </VueFlow>
+    </div>
 </template>
-
-<style scoped>
-:deep(.vue-flow__nodesselection-rect) {
-    box-sizing: content-box;
-    border-radius: var(--border-radius);
-    border-style: solid;
-    border-color: var(--primary-color);
-    padding: 1rem;
-    transform: translateX(-1rem) translateY(-1rem);
-}
-
-:deep(.vue-flow__pane.draggable) {
-    cursor: default;
-}
-
-
-:deep(.vue-flow__pane.dragging) {
-    cursor: default;
-}
-</style>
