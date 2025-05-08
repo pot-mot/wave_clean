@@ -110,6 +110,8 @@ const initMindMap = () => {
     }
 
     const removeLayer = (layerId: string) => {
+        if (layerId === global.currentLayer.value.id) return
+        if (global.layers.length === 1) return
         history.executeCommand("layer:remove", layerId)
     }
 
