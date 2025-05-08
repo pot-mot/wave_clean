@@ -220,7 +220,7 @@ export const useCommandHistory = <CommandMap extends CustomCommandMap>(): Comman
 
     const undoCommandData = (commandData: CommandData<CommandMap>) => {
         if (Array.isArray(commandData)) {
-            for (const cmd of [...commandData].reverse()) {
+            for (const cmd of commandData.slice().reverse()) {
                 undoCommandData(cmd)
             }
         } else {
