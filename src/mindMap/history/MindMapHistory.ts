@@ -14,6 +14,7 @@ import {ref, shallowReactive, toRaw} from "vue";
 export type MindMapHistoryCommands = {
     "layer:add": CommandDefinition<string, string>,
     "layer:remove": CommandDefinition<string, MindMapLayer>,
+    "layer:visible:change": CommandDefinition<{layerId: string, visible: boolean}>,
 
     "node:add": CommandDefinition<{
         layerId: string,
@@ -124,6 +125,21 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
             global.layers.push(layer)
         }
    })
+
+    history.registerCommand("layer:visible:change", {
+        applyAction: ({layerId, visible}) => {
+            const layer = global.layers.find(layer => layer.id === layerId)
+            if (layer === undefined) throw new Error("layer is undefined")
+            const currentVisible = toRaw(layer.visible)
+            layer.visible = visible
+            return {layerId, visible: currentVisible}
+        },
+        revertAction: ({layerId, visible}) => {
+            const layer = global.layers.find(layer => layer.id === layerId)
+            if (layer === undefined) throw new Error("layer is undefined")
+            layer.visible = visible
+        }
+    })
 
     history.registerCommand("node:add", {
         applyAction: ({layerId, node}) => {

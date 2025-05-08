@@ -120,11 +120,17 @@ const initMindMap = () => {
         if (targetLayer === undefined) throw new Error("layer is undefined")
 
         const currentViewport = toRaw(getCurrentVueFlow().viewport.value)
+        blurActiveElement()
         cleanSelection()
         global.currentLayer.value = targetLayer
         await nextTick()
         await global.currentLayer.value.vueFlow.setViewport(currentViewport)
         setLayerConfigDefault()
+        focus()
+    }
+
+    const changeLayerVisible = (layerId: string, visible: boolean) => {
+        history.executeCommand("layer:visible:change", {layerId, visible})
     }
 
     const addNode = (position: XYPosition) => {
@@ -723,6 +729,7 @@ const initMindMap = () => {
         addLayer,
         removeLayer,
         toggleLayer,
+        changeLayerVisible,
 
         focus,
 
