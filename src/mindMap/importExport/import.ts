@@ -160,7 +160,7 @@ export const clearImportData = (
  */
 const justifyNodes = (
     nodes: ContentNode[],
-    leftTop: XYPosition = {x: 0, y: 0},
+    leftTop: XYPosition,
 ) => {
     let minX: number | undefined = undefined
     let minY: number | undefined = undefined
@@ -182,11 +182,12 @@ const justifyNodes = (
 
 /**
  * 向 vueFlow 导入 data
+ * 若 leftTop 为 undefined，则不重对齐 nodes 位置
  */
 export const prepareImportIntoMindMap = (
     vueFlow: VueFlowStore,
     data: MindMapImportData,
-    leftTop: XYPosition,
+    leftTop: XYPosition | undefined = undefined,
 ): MindMapImportDataCleanResult => {
     const nodes = toRaw(vueFlow.getNodes.value)
     const edges = toRaw(vueFlow.getEdges.value)
@@ -207,7 +208,9 @@ export const prepareImportIntoMindMap = (
         nodeHandleIdsMap
     )
 
-    justifyNodes(clearResult.newNodes, leftTop)
+    if (leftTop !== undefined) {
+        justifyNodes(clearResult.newNodes, leftTop)
+    }
 
     return clearResult
 }
