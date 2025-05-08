@@ -5,11 +5,22 @@ import {
     GraphNode,
     Node,
     Position,
-    useVueFlow,
+    useVueFlow, ViewportTransform,
     VueFlowStore,
     XYPosition,
 } from "@vue-flow/core";
-import {computed, nextTick, readonly, ref, ShallowReactive, shallowReactive, ShallowRef, shallowRef, toRaw} from "vue";
+import {
+    computed,
+    nextTick,
+    readonly,
+    ref,
+    ShallowReactive,
+    shallowReactive,
+    ShallowRef,
+    shallowRef,
+    toRaw,
+    watch
+} from "vue";
 import {blurActiveElement, judgeTargetIsInteraction} from "@/mindMap/clickUtils.ts";
 import {jsonSortPropStringify} from "@/json/jsonStringify.ts";
 import {MindMapImportData, prepareImportIntoMindMap} from "@/mindMap/importExport/import.ts";
@@ -19,22 +30,23 @@ import {checkFullConnection, FullConnection, reverseConnection} from "@/mindMap/
 import {useMindMapHistory} from "@/mindMap/history/MindMapHistory.ts";
 import {useClipBoard} from "@/clipBoard/useClipBoard.ts";
 
-export const MIND_MAP_ID = "mind_map" as const
-
 export type MindMapGlobal = {
     zIndexIncrement: number,
-    layerIdIncrement: number,
     nodeIdIncrement: number,
     layers: ShallowReactive<MindMapLayer[]>,
     currentLayer: ShallowRef<MindMapLayer>,
     toggleCurrentLayer: (layerId: string) => void,
 }
 
-export type MindMapLayer = ShallowReactive<{
+export type RawMindMapLayer = {
     readonly id: string,
     readonly vueFlow: VueFlowStore,
+    name: string,
     visible: boolean,
-}>
+    opacity: number,
+}
+
+export type MindMapLayer = ShallowReactive<RawMindMapLayer>
 
 export const CONTENT_NODE_TYPE = "CONTENT_NODE" as const
 export type ContentNodeData = {
@@ -58,6 +70,16 @@ export type ContentEdge = Pick<Edge, 'id' | 'source' | 'target'> & {
     targetHandle: string,
 }
 
+let layerIdIncrement = 0
+export const createLayerId = () => {
+    return `layer-${layerIdIncrement++}`
+}
+
+let vueFlowIdIncrement = 0
+export const createVueFlowId = () => {
+    return `vueflow-${vueFlowIdIncrement++}`
+}
+
 export const createEdgeId = (connection: Connection) => {
     return `vueflow__edge-${connection.source}${connection.sourceHandle ?? ''}-${connection.target}${connection.targetHandle ?? ''}`
 }
@@ -66,14 +88,15 @@ export type MouseAction = "panDrag" | "selectionRect"
 
 const initMindMap = () => {
     const defaultLayer: MindMapLayer = shallowReactive({
-        id: MIND_MAP_ID,
-        vueFlow: useVueFlow(MIND_MAP_ID),
+        id: createLayerId(),
+        vueFlow: useVueFlow(createVueFlowId()),
+        name: "layer",
         visible: true,
+        opacity: 1,
     })
 
     const global: MindMapGlobal = {
         zIndexIncrement: 0,
-        layerIdIncrement: 0,
         nodeIdIncrement: 0,
         layers: shallowReactive<MindMapLayer[]>([
             defaultLayer
@@ -84,20 +107,18 @@ const initMindMap = () => {
 
         toggleCurrentLayer: async (layerId: string) => {
             const targetLayer = global.layers.find(layer => layer.id === layerId)
-            if (targetLayer === undefined) throw new Error("layer is undefined")
+            if (targetLayer === undefined) throw new Error(`layer [${layerId}] is undefined`)
 
-            const currentViewport = toRaw(getCurrentVueFlow().viewport.value)
             blurActiveElement()
             cleanSelection()
             global.currentLayer.value = targetLayer
             await nextTick()
-            await global.currentLayer.value.vueFlow.setViewport(currentViewport)
             setLayerConfigDefault()
             focus()
         }
     }
 
-    const layerId = computed(() => global.currentLayer.value.id)
+    const currentLayerId = computed(() => global.currentLayer.value.id)
 
     const isTouchDevice = ref('ontouchstart' in document.documentElement)
     const screenPosition = ref<XYPosition>({x: 0, y: 0})
@@ -118,9 +139,19 @@ const initMindMap = () => {
         vueFlow.vueFlowRef.value?.focus()
     }
 
+    let currentViewport: ViewportTransform | undefined = undefined
+    watch(() => currentLayerId.value, async (_, oldValue) => {
+        if (oldValue !== undefined) {
+            const oldCurrent = global.layers.find(layer => layer.id === oldValue)
+            if (oldCurrent !== undefined) {
+                currentViewport = toRaw(oldCurrent.vueFlow.viewport.value)
+            }
+        }
+    })
+
     const addLayer = () => {
         history.executeBatch(Symbol("layer:add"), () => {
-            const layerId = `layer-${global.layerIdIncrement++}`
+            const layerId = createVueFlowId()
             history.executeCommand("layer:add", layerId)
             toggleLayer(layerId)
         })
@@ -148,7 +179,7 @@ const initMindMap = () => {
 
     const addNode = (position: XYPosition) => {
         return history.executeCommand("node:add", {
-            layerId: layerId.value,
+            layerId: currentLayerId.value,
             node: {
                 id: `node-${global.nodeIdIncrement++}`,
                 position,
@@ -173,7 +204,7 @@ const initMindMap = () => {
         const id = createEdgeId(connection)
 
         history.executeCommand('edge:add', {
-            layerId: layerId.value,
+            layerId: currentLayerId.value,
             edge: {
                 ...connection,
                 id,
@@ -196,7 +227,7 @@ const initMindMap = () => {
 
         blurActiveElement()
         const {newNodes, newEdges} = prepareImportIntoMindMap(vueFlow, data, leftTop)
-        history.executeCommand("import", {layerId: layerId.value, nodes: newNodes, edges: newEdges})
+        history.executeCommand("import", {layerId: currentLayerId.value, nodes: newNodes, edges: newEdges})
 
         const currentMultiSelectionActive = vueFlow.multiSelectionActive.value
         vueFlow.multiSelectionActive.value = true
@@ -213,7 +244,7 @@ const initMindMap = () => {
         const vueFlow = getCurrentVueFlow()
 
         blurActiveElement()
-        history.executeCommand('remove', {...data, layerId: layerId.value})
+        history.executeCommand('remove', {...data, layerId: currentLayerId.value})
         focus()
         vueFlow.vueFlowRef.value?.addEventListener('blur', () => {
             focus()
@@ -351,9 +382,9 @@ const initMindMap = () => {
     }
     setLayerConfigDefault()
 
-
     const initLayer = (layer: MindMapLayer) => {
         const {id, vueFlow} = layer
+
         const {
             vueFlowRef,
             onInit,
@@ -372,114 +403,123 @@ const initMindMap = () => {
             getSelectedEdges,
         } = vueFlow
 
-        onViewportChange((viewport) => {
-            for (const layer of global.layers) {
-                if (layer.id !== id) {
-                    layer.vueFlow.viewport.value = viewport
-                }
-            }
-        })
-
-        /**
-         * 剪切板
-         */
-        const {handleKeyDownEvent} = useClipBoard<MindMapImportData, MindMapExportData>({
-            exportData: (): MindMapExportData => {
-                return exportMindMapSelection(vueFlow)
-            },
-            importData: (data: MindMapImportData) => {
-                importData(data, screenToFlowCoordinate(screenPosition.value))
-            },
-            removeData: (data: MindMapExportData) => {
-                remove({nodes: data.nodes?.map(it => it.id), edges: data.edges?.map(it => it.id)})
-            },
-            stringifyData: (data: MindMapExportData): string => {
-                return jsonSortPropStringify(data)
-            },
-            validateInput: validateMindMapImportData
-        })
-
-        /**
-         * 节点移动
-         */
-        const nodeMoveMap = new Map<string, XYPosition>
-
-        onNodeDragStart(({nodes}) => {
-            for (const node of nodes) {
-                nodeMoveMap.set(node.id, node.position)
-            }
-        })
-
-        onNodeDragStop(({nodes}) => {
-            history.executeBatch(Symbol("node:move"), () => {
-                for (const node of nodes) {
-                    const oldPosition = nodeMoveMap.get(node.id)
-                    nodeMoveMap.delete(node.id)
-                    if (oldPosition !== undefined) {
-                        const newPosition = node.position
-                        if (jsonSortPropStringify(oldPosition) !== jsonSortPropStringify(newPosition)) {
-                            history.executeCommand('node:move', {layerId: layerId.value, id: node.id, newPosition, oldPosition})
-                        }
-                    }
-                }
-            })
-        })
-
-        /**
-         * 添加边
-         */
-        onConnect((connectData) => {
-            addEdge(connectData)
-        })
-
-        /**
-         * 边重连接
-         */
-        const edgeReconnectMap = new Map<string, FullConnection>
-        const stopSelectStart = (e: Event) => {
-            e.preventDefault()
-        }
-
-        onEdgeUpdateStart(({edge}) => {
-            vueFlowRef.value?.addEventListener('selectstart', stopSelectStart)
-            const connection: Connection = {
-                source: edge.source,
-                sourceHandle: edge.sourceHandle,
-                target: edge.target,
-                targetHandle: edge.targetHandle,
-            }
-            if (checkFullConnection(connection)) {
-                edgeReconnectMap.set(edge.id, connection)
-            }
-        })
-
-        onEdgeUpdate(({edge, connection}) => {
-            history.executeBatch(Symbol("edge:reconnect"), () => {
-                const oldConnection = edgeReconnectMap.get(edge.id)
-                edgeReconnectMap.delete(edge.id)
-                if (oldConnection !== undefined && checkFullConnection(connection)) {
-                    if (jsonSortPropStringify(oldConnection) !== jsonSortPropStringify(connection) && !checkConnectionExist(connection)) {
-                        history.executeCommand('edge:reconnect', {layerId: layerId.value, id: edge.id, newConnection: connection, oldConnection})
-                    }
-                }
-            })
-            vueFlowRef.value?.removeEventListener('selectstart', stopSelectStart)
-        })
-
-        /**
-         * 初始化添加事件
-         */
         onInit(() => {
             const el = vueFlowRef.value
             const viewportEl = vueFlowRef.value
             const paneEl = el?.querySelector('div.vue-flow__pane') as HTMLDivElement | null
 
             if (el === null || viewportEl === null || paneEl === null) {
-                throw new Error("vueFlow Ref is undefined in onInit")
+                throw new Error(`Layer [${id}] Ref is undefined in onInit`)
             }
 
+            /**
+             * 同步视口
+             */
+            if (currentViewport !== undefined) {
+                vueFlow.viewport.value = currentViewport
+            }
+
+            onViewportChange(async () => {
+                if (id === currentLayerId.value) {
+                    currentViewport = toRaw(vueFlow.viewport.value)
+                    await nextTick()
+                    for (const layer of global.layers) {
+                        if (layer.id === id) continue
+                        layer.vueFlow.setViewport(currentViewport)
+                    }
+                }
+            })
+
+            /**
+             * 剪切板
+             */
+            const {handleKeyDownEvent} = useClipBoard<MindMapImportData, MindMapExportData>({
+                exportData: (): MindMapExportData => {
+                    return exportMindMapSelection(vueFlow)
+                },
+                importData: (data: MindMapImportData) => {
+                    importData(data, screenToFlowCoordinate(screenPosition.value))
+                },
+                removeData: (data: MindMapExportData) => {
+                    remove({nodes: data.nodes?.map(it => it.id), edges: data.edges?.map(it => it.id)})
+                },
+                stringifyData: (data: MindMapExportData): string => {
+                    return jsonSortPropStringify(data)
+                },
+                validateInput: validateMindMapImportData
+            })
             el.addEventListener("keydown", handleKeyDownEvent)
 
+            /**
+             * 节点移动
+             */
+            const nodeMoveMap = new Map<string, XYPosition>
+
+            onNodeDragStart(({nodes}) => {
+                for (const node of nodes) {
+                    nodeMoveMap.set(node.id, node.position)
+                }
+            })
+
+            onNodeDragStop(({nodes}) => {
+                history.executeBatch(Symbol("node:move"), () => {
+                    for (const node of nodes) {
+                        const oldPosition = nodeMoveMap.get(node.id)
+                        nodeMoveMap.delete(node.id)
+                        if (oldPosition !== undefined) {
+                            const newPosition = node.position
+                            if (jsonSortPropStringify(oldPosition) !== jsonSortPropStringify(newPosition)) {
+                                history.executeCommand('node:move', {layerId: currentLayerId.value, id: node.id, newPosition, oldPosition})
+                            }
+                        }
+                    }
+                })
+            })
+
+            /**
+             * 添加边
+             */
+            onConnect((connectData) => {
+                addEdge(connectData)
+            })
+
+            /**
+             * 边重连接
+             */
+            const edgeReconnectMap = new Map<string, FullConnection>
+            const stopSelectStart = (e: Event) => {
+                e.preventDefault()
+            }
+
+            onEdgeUpdateStart(({edge}) => {
+                vueFlowRef.value?.addEventListener('selectstart', stopSelectStart)
+                const connection: Connection = {
+                    source: edge.source,
+                    sourceHandle: edge.sourceHandle,
+                    target: edge.target,
+                    targetHandle: edge.targetHandle,
+                }
+                if (checkFullConnection(connection)) {
+                    edgeReconnectMap.set(edge.id, connection)
+                }
+            })
+
+            onEdgeUpdate(({edge, connection}) => {
+                history.executeBatch(Symbol("edge:reconnect"), () => {
+                    const oldConnection = edgeReconnectMap.get(edge.id)
+                    edgeReconnectMap.delete(edge.id)
+                    if (oldConnection !== undefined && checkFullConnection(connection)) {
+                        if (jsonSortPropStringify(oldConnection) !== jsonSortPropStringify(connection) && !checkConnectionExist(connection)) {
+                            history.executeCommand('edge:reconnect', {layerId: currentLayerId.value, id: edge.id, newConnection: connection, oldConnection})
+                        }
+                    }
+                })
+                vueFlowRef.value?.removeEventListener('selectstart', stopSelectStart)
+            })
+
+            /**
+             * 键盘事件监听
+             */
             el.addEventListener('keydown', (e) => {
                 // 按下 Delete 键删除选中的节点和边
                 if (e.key === "Delete") {
@@ -508,21 +548,8 @@ const initMindMap = () => {
                         }
                     }, {once: true})
                 } else if (e.ctrlKey) {
-                    // 按下 Ctrl + z 键，进行历史记录的撤回重做
-                    if ((e.key === "z" || e.key === "Z")) {
-                        if (judgeTargetIsInteraction(e)) return
-
-                        if (e.shiftKey) {
-                            e.preventDefault()
-                            history.redo()
-                        } else {
-                            e.preventDefault()
-                            history.undo()
-                        }
-                    }
-
                     // 按下 Ctrl + a 键，全选
-                    else if (e.key === "a" || e.key === "A") {
+                    if (e.key === "a" || e.key === "A") {
                         if (judgeTargetIsInteraction(e)) return
 
                         const isCurrentMultiSelect = isMultiSelected.value
@@ -794,7 +821,7 @@ const initMindMap = () => {
             }
         },
         updateNodeData: (id: string, data: ContentNodeData) => {
-            history.executeCommand('node:data:change', {layerId: layerId.value, id, data})
+            history.executeCommand('node:data:change', {layerId: currentLayerId.value, id, data})
         },
         selectEdge: (id: string) => {
             const vueFlow = getCurrentVueFlow()
@@ -805,7 +832,7 @@ const initMindMap = () => {
             }
         },
         updateEdgeData: (id: string, data: ContentEdgeData) => {
-            history.executeCommand('edge:data:change', {layerId: layerId.value, id, data})
+            history.executeCommand('edge:data:change', {layerId: currentLayerId.value, id, data})
         },
     }
 }

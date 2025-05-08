@@ -3,6 +3,7 @@ import {VueFlow} from "@vue-flow/core";
 import ContentNode from "@/mindMap/node/ContentNode.vue";
 import ContentEdge from "@/mindMap/edge/ContentEdge.vue";
 import {MindMapLayer, useMindMap} from "@/mindMap/useMindMap.ts";
+import {computed} from "vue";
 
 const props = defineProps<{
     layer: MindMapLayer,
@@ -10,12 +11,14 @@ const props = defineProps<{
 
 const {currentLayer, initLayer} = useMindMap()
 
+const layerOpacity = computed(() => props.layer.opacity)
+
 initLayer(props.layer)
 </script>
 
 <template>
     <VueFlow
-        :id="layer.id"
+        :id="layer.vueFlow.id"
         :class="{
             current: layer.id === currentLayer.id,
             notCurrent: layer.id !== currentLayer.id,
@@ -55,11 +58,11 @@ initLayer(props.layer)
 }
 
 .vue-flow.current.visible {
-    opacity: 1;
+    opacity: calc(1 * v-bind(layerOpacity));
 }
 
 .vue-flow.notCurrent.visible {
-    opacity: 0.5;
+    opacity: calc(0.6 * v-bind(layerOpacity));
 }
 
 :deep(.vue-flow__nodesselection-rect) {

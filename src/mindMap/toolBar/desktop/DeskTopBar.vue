@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import {Panel} from "@vue-flow/core";
-import {MindMapLayer, useMindMap} from "@/mindMap/useMindMap.ts";
+import {useMindMap} from "@/mindMap/useMindMap.ts";
+import LayerMenu from "@/mindMap/layer/LayerMenu.vue";
 
 const {
     canUndo,
@@ -10,34 +10,19 @@ const {
     fitView,
     defaultMouseAction,
     toggleDefaultMouseAction,
-
-    currentLayer,
-    layers,
-    addLayer,
-    removeLayer,
-    toggleLayer,
 } = useMindMap()
-
-const toggleLayerVisible = (layer: MindMapLayer) => {
-    layer.visible = !layer.visible
-    toggleLayer(layer.id)
-}
 </script>
 
 <template>
-    <Panel position="top-left">
+    <div style="z-index: 5; position: absolute; top: 0; left: 0; height: 3rem; line-height: 3rem; vertical-align: center; display: flex; justify-content: space-around;">
         <button :disabled="!canUndo" @click="undo">undo</button>
         <button :disabled="!canRedo" @click="redo">redo</button>
         <button @click="fitView()">fit</button>
         <button @click="toggleDefaultMouseAction">{{ defaultMouseAction }}</button>
+    </div>
 
-        {{ currentLayer.id }}
-        <template v-for="layer in layers">
-            <button @click="toggleLayer(layer.id)">{{ layer.id }}</button>
-            <button @click="toggleLayerVisible(layer)">{{ layer.visible ? 'show' : 'hide' }}</button>
-            <button @click="removeLayer(layer.id)">delete</button>
-        </template>
-        <button @click="addLayer">add</button>
-    </Panel>
+    <div style="z-index: 5; position: absolute; top: 0; right: 0; max-height: 100%; overflow-y: scroll;">
+        <LayerMenu/>
+    </div>
 </template>
 

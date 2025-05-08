@@ -6,18 +6,24 @@ import {
     ContentEdgeData,
     ContentNode,
     ContentNodeData,
-    createEdgeId, MindMapGlobal,
-    MindMapLayer
+    createEdgeId, createVueFlowId,
+    MindMapGlobal, MindMapLayer,
+    RawMindMapLayer
 } from "@/mindMap/useMindMap.ts";
 import {ref, shallowReactive, toRaw} from "vue";
 import {exportMindMap, MindMapExportData} from "@/mindMap/importExport/export.ts";
 import {prepareImportIntoMindMap} from "@/mindMap/importExport/import.ts";
 
 export type MindMapHistoryCommands = {
-    "layer:add": CommandDefinition<string, string>,
-    "layer:remove": CommandDefinition<string, Pick<MindMapLayer, "id" | "visible"> & { data: MindMapExportData }>,
-    "layer:visible:change": CommandDefinition<{layerId: string, visible: boolean}>,
-    "layer:toggle": CommandDefinition<string, string>,
+    "layer:add": CommandDefinition<string>,
+    "layer:remove": CommandDefinition<
+        string,
+        Omit<RawMindMapLayer, "vueFlow"> & { data: MindMapExportData, index: number }
+    >,
+    "layer:visible:change": CommandDefinition<
+        { layerId: string, visible: boolean }
+    >,
+    "layer:toggle": CommandDefinition<string>,
 
     "node:add": CommandDefinition<{
         layerId: string,
@@ -86,10 +92,20 @@ export type MindMapHistoryCommands = {
 }
 
 export const useMindMapHistory = (global: MindMapGlobal) => {
+    const getLayer = (layerId: string): MindMapLayer => {
+        const layer = global.layers.find(layer => layer.id === layerId)
+        if (layer === undefined) throw new Error(`layer [${layerId}] is undefined`)
+        return layer
+    }
+
+    const getLayerIndex = (layerId: string): number => {
+        const layerIndex = global.layers.findIndex(layer => layer.id === layerId)
+        if (layerIndex === -1) throw new Error(`layer [${layerId}] is undefined`)
+        return layerIndex
+    }
+
     const getVueFlow = (layerId: string): VueFlowStore => {
-        const vueFlow = global.layers.find(layer => layer.id === layerId)?.vueFlow
-        if (vueFlow === undefined) throw new Error("vueFlow is undefined")
-        return vueFlow
+        return getLayer(layerId).vueFlow
     }
 
     const history = useCommandHistory<MindMapHistoryCommands>()
@@ -104,20 +120,18 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
     history.registerCommand("layer:add", {
         applyAction: (layerId) => {
             const vueFlow = useVueFlow(layerId)
-            vueFlow.onInit(() => {
-                vueFlow.setViewport(global.currentLayer.value.vueFlow.viewport.value).then()
-            })
-            const layer = shallowReactive({
+            const layer: MindMapLayer = shallowReactive({
                 id: layerId,
                 vueFlow,
+                name: layerId,
                 visible: true,
+                opacity: 1,
             })
             global.layers.push(layer)
             return layerId
         },
         revertAction: (layerId) => {
-            const layerIndex = global.layers.findIndex(layer => layer.id === layerId)
-            if (layerIndex === -1) throw new Error("layer is undefined")
+            const layerIndex = getLayerIndex(layerId)
             const layer = global.layers.splice(layerIndex, 1)[0]
             layer.vueFlow.$destroy()
         }
@@ -125,37 +139,34 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
 
     history.registerCommand("layer:remove", {
         applyAction: (layerId) => {
-            const layerIndex = global.layers.findIndex(layer => layer.id === layerId)
-            if (layerIndex === -1) throw new Error("layer is undefined")
-            const layer = global.layers.splice(layerIndex, 1)[0]
-            const data = exportMindMap(layer.vueFlow)
-            layer.vueFlow.$destroy()
-            return {id: layerId, data, visible: layer.visible}
+            const index = getLayerIndex(layerId)
+            const {vueFlow, ...layerPart} = global.layers.splice(index, 1)[0]
+            const data = exportMindMap(vueFlow)
+            vueFlow.$destroy()
+            return {...layerPart, data, index}
         },
-        revertAction: ({id, visible, data}) => {
-            const vueFlow = useVueFlow(id)
-            vueFlow.onInit(() => {
-                vueFlow.setViewport(global.currentLayer.value.vueFlow.viewport.value).then()
+        revertAction: ({data, index, ...layerPart}) => {
+            const vueFlow = useVueFlow(createVueFlowId())
+            const layer: MindMapLayer = shallowReactive({
+                ...layerPart,
+                vueFlow,
             })
-            const layer = shallowReactive({id, vueFlow, visible})
             const {newNodes, newEdges} = prepareImportIntoMindMap(vueFlow, data)
             vueFlow.addNodes(newNodes)
             vueFlow.addEdges(newEdges)
-            global.layers.push(layer)
+            global.layers.splice(index, 0, layer)
         }
-   })
+    })
 
     history.registerCommand("layer:visible:change", {
         applyAction: ({layerId, visible}) => {
-            const layer = global.layers.find(layer => layer.id === layerId)
-            if (layer === undefined) throw new Error("layer is undefined")
+            const layer = getLayer(layerId)
             const currentVisible = toRaw(layer.visible)
             layer.visible = visible
             return {layerId, visible: currentVisible}
         },
         revertAction: ({layerId, visible}) => {
-            const layer = global.layers.find(layer => layer.id === layerId)
-            if (layer === undefined) throw new Error("layer is undefined")
+            const layer = getLayer(layerId)
             layer.visible = visible
         }
     })
@@ -213,7 +224,7 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
         applyAction: ({layerId, id, data}) => {
             const vueFlow = getVueFlow(layerId)
             const node = vueFlow.findNode(id) as ContentNode | undefined
-            if (node === undefined) throw new Error("node is undefined")
+            if (node === undefined) throw new Error(`node [${id}] is undefined`)
 
             const previousData = toRaw(node.data)
             vueFlow.updateNodeData(id, data, {replace: true})
@@ -222,7 +233,7 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
         revertAction: ({layerId, id, data}) => {
             const vueFlow = getVueFlow(layerId)
             const node = vueFlow.findNode(id) as ContentNode | undefined
-            if (node === undefined) throw new Error("node is undefined")
+            if (node === undefined) throw new Error(`node [${id}] is undefined`)
 
             const currentData = toRaw(node.data)
             vueFlow.updateNodeData(id, data, {replace: true})
@@ -251,18 +262,16 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
         applyAction: ({layerId, id, oldConnection, newConnection}) => {
             const vueFlow = getVueFlow(layerId)
             const edge = vueFlow.findEdge(id)
-            if (edge === undefined) {
-                throw new Error("edge is undefined")
-            }
+            if (edge === undefined) throw new Error(`edge [${id}] is undefined`)
+
             vueFlow.updateEdge(edge, newConnection, true)
             return {layerId, id: createEdgeId(newConnection), oldConnection}
         },
         revertAction: ({layerId, id, oldConnection}) => {
             const vueFlow = getVueFlow(layerId)
             const edge = vueFlow.findEdge(id)
-            if (edge === undefined) {
-                throw new Error("edge is undefined")
-            }
+            if (edge === undefined) throw new Error(`edge [${id}] is undefined`)
+
             vueFlow.updateEdge(edge, oldConnection, true)
         }
     })
@@ -271,7 +280,7 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
         applyAction: ({layerId, id, data}) => {
             const vueFlow = getVueFlow(layerId)
             const edge = vueFlow.findEdge(id) as ContentEdge | undefined
-            if (edge === undefined) throw new Error("edge is undefined")
+            if (edge === undefined) throw new Error(`edge [${id}] is undefined`)
 
             const previousData = toRaw(edge.data)
             vueFlow.updateEdgeData(id, data, {replace: true})
@@ -280,7 +289,7 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
         revertAction: ({layerId, id, data}) => {
             const vueFlow = getVueFlow(layerId)
             const edge = vueFlow.findEdge(id) as ContentEdge | undefined
-            if (edge === undefined) throw new Error("edge is undefined")
+            if (edge === undefined) throw new Error(`edge [${id}] is undefined`)
 
             const currentData = toRaw(edge.data)
             vueFlow.updateEdgeData(id, data, {replace: true})
@@ -295,7 +304,7 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
             vueFlow.addEdges(edges)
             return {layerId, nodeIds: nodes.map(it => it.id), edgeIds: edges.map(it => it.id)}
         },
-        revertAction: ({layerId, nodeIds, edgeIds} ) => {
+        revertAction: ({layerId, nodeIds, edgeIds}) => {
             const vueFlow = getVueFlow(layerId)
 
             const removedNodes: GraphNode[] = []
