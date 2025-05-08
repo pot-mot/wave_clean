@@ -122,6 +122,81 @@ const initMindMap = () => {
         global.currentLayer.value = targetLayer
         await nextTick()
         await global.currentLayer.value.vueFlow.setViewport(currentViewport)
+        setLayerConfigDefault()
+    }
+
+    const addNode = (position: XYPosition) => {
+        return history.executeCommand("node:add", {
+            layerId: layerId.value,
+            node: {
+                id: `node-${global.nodeIdIncrement++}`,
+                position,
+                type: CONTENT_NODE_TYPE,
+                data: {
+                    content: ""
+                },
+            }
+        })
+    }
+
+    const checkConnectionExist = (connection: Connection): boolean => {
+        const vueFlow = getCurrentVueFlow()
+        return vueFlow.findEdge(createEdgeId(connection)) !== undefined ||
+            vueFlow.findEdge(createEdgeId(reverseConnection(connection))) !== undefined
+    }
+
+    const addEdge = (connection: Connection) => {
+        if (checkConnectionExist(connection)) return
+        if (!checkFullConnection(connection)) return
+
+        const id = createEdgeId(connection)
+
+        history.executeCommand('edge:add', {
+            layerId: layerId.value,
+            edge: {
+                ...connection,
+                id,
+                type: CONTENT_EDGE_TYPE,
+                data: {
+                    content: ""
+                },
+            }
+        })
+    }
+
+
+    const getCenterPosition = () => {
+        const vueFlow = getCurrentVueFlow()
+        return vueFlow.screenToFlowCoordinate({x: window.innerWidth / 2, y: window.innerHeight / 2})
+    }
+
+    const importData = (data: MindMapImportData, leftTop: XYPosition = getCenterPosition()) => {
+        const vueFlow = getCurrentVueFlow()
+
+        blurActiveElement()
+        const {newNodes, newEdges} = prepareImportIntoMindMap(vueFlow, data, leftTop)
+        history.executeCommand("import", {layerId: layerId.value, nodes: newNodes, edges: newEdges})
+
+        const currentMultiSelectionActive = vueFlow.multiSelectionActive.value
+        vueFlow.multiSelectionActive.value = true
+        cleanSelection()
+        const graphNodes = newNodes.map(it => vueFlow.findNode(it.id)).filter(it => it !== undefined)
+        const graphEdges = newEdges.map(it => vueFlow.findEdge(it.id)).filter(it => it !== undefined)
+        vueFlow.addSelectedNodes(graphNodes)
+        vueFlow.addSelectedEdges(graphEdges)
+        vueFlow.multiSelectionActive.value = currentMultiSelectionActive
+    }
+
+
+    const remove = (data: { nodes?: (GraphNode | string)[], edges?: (GraphEdge | string)[] }) => {
+        const vueFlow = getCurrentVueFlow()
+
+        blurActiveElement()
+        history.executeCommand('remove', {...data, layerId: layerId.value})
+        focus()
+        vueFlow.vueFlowRef.value?.addEventListener('blur', () => {
+            focus()
+        }, {once: true})
     }
 
     /**
@@ -150,8 +225,6 @@ const initMindMap = () => {
             enableMultiSelect()
         }
     }
-    disableMultiSelect()
-
 
     /**
      * 框选相关配置
@@ -236,7 +309,6 @@ const initMindMap = () => {
             setDefaultPanDrag()
         }
     }
-    setDefaultPanDrag()
 
     const canDrag = computed(() => {
         const vueFlow = getCurrentVueFlow()
@@ -250,81 +322,14 @@ const initMindMap = () => {
         const vueFlow = getCurrentVueFlow()
         vueFlow.nodesDraggable.value = true
     }
-    enableDrag()
 
-    const addNode = (position: XYPosition) => {
-        return history.executeCommand("node:add", {
-            layerId: layerId.value,
-            node: {
-                id: `node-${global.nodeIdIncrement++}`,
-                position,
-                type: CONTENT_NODE_TYPE,
-                data: {
-                    content: ""
-                },
-            }
-        })
+    const setLayerConfigDefault = () => {
+        disableMultiSelect()
+        setDefaultPanDrag()
+        enableDrag()
     }
+    setLayerConfigDefault()
 
-    const checkConnectionExist = (connection: Connection): boolean => {
-        const vueFlow = getCurrentVueFlow()
-        return vueFlow.findEdge(createEdgeId(connection)) !== undefined ||
-            vueFlow.findEdge(createEdgeId(reverseConnection(connection))) !== undefined
-    }
-
-    const addEdge = (connection: Connection) => {
-        if (checkConnectionExist(connection)) return
-        if (!checkFullConnection(connection)) return
-
-        const id = createEdgeId(connection)
-
-        history.executeCommand('edge:add', {
-            layerId: layerId.value,
-            edge: {
-                ...connection,
-                id,
-                type: CONTENT_EDGE_TYPE,
-                data: {
-                    content: ""
-                },
-            }
-        })
-    }
-
-
-    const getCenterPosition = () => {
-        const vueFlow = getCurrentVueFlow()
-        return vueFlow.screenToFlowCoordinate({x: window.innerWidth / 2, y: window.innerHeight / 2})
-    }
-
-    const importData = (data: MindMapImportData, leftTop: XYPosition = getCenterPosition()) => {
-        const vueFlow = getCurrentVueFlow()
-
-        blurActiveElement()
-        const {newNodes, newEdges} = prepareImportIntoMindMap(vueFlow, data, leftTop)
-        history.executeCommand("import", {layerId: layerId.value, nodes: newNodes, edges: newEdges})
-
-        const currentMultiSelectionActive = vueFlow.multiSelectionActive.value
-        vueFlow.multiSelectionActive.value = true
-        cleanSelection()
-        const graphNodes = newNodes.map(it => vueFlow.findNode(it.id)).filter(it => it !== undefined)
-        const graphEdges = newEdges.map(it => vueFlow.findEdge(it.id)).filter(it => it !== undefined)
-        vueFlow.addSelectedNodes(graphNodes)
-        vueFlow.addSelectedEdges(graphEdges)
-        vueFlow.multiSelectionActive.value = currentMultiSelectionActive
-    }
-
-
-    const remove = (data: { nodes?: (GraphNode | string)[], edges?: (GraphEdge | string)[] }) => {
-        const vueFlow = getCurrentVueFlow()
-
-        blurActiveElement()
-        history.executeCommand('remove', {...data, layerId: layerId.value})
-        focus()
-        vueFlow.vueFlowRef.value?.addEventListener('blur', () => {
-            focus()
-        }, {once: true})
-    }
 
     const initLayer = (layer: MindMapLayer) => {
         const {id, vueFlow} = layer
@@ -523,11 +528,11 @@ const initMindMap = () => {
                     addNode(screenToFlowCoordinate({x: e.clientX, y: e.clientY}))
                 })
 
-                let currentPanOnDrag = vueFlow.panOnDrag.value
+                let currentPanOnDrag = toRaw(vueFlow.panOnDrag.value)
                 // 鼠标移入非交互元素时，允许拖拽，否则禁止画布拖拽
                 paneEl.addEventListener('mouseover', (e) => {
                     if (judgeTargetIsInteraction(e)) {
-                        currentPanOnDrag = vueFlow.panOnDrag.value
+                        currentPanOnDrag = toRaw(vueFlow.panOnDrag.value)
                         vueFlow.panOnDrag.value = false
                     } else {
                         vueFlow.panOnDrag.value = currentPanOnDrag
