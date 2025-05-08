@@ -10,7 +10,7 @@ export type ClipBoardTarget<INPUT, OUTPUT> = {
     stringifyData: (data: OUTPUT) => string
 }
 
-const useClipBoard = <INPUT, OUTPUT>(target: ClipBoardTarget<INPUT, OUTPUT>) => {
+export const useClipBoard = <INPUT, OUTPUT>(target: ClipBoardTarget<INPUT, OUTPUT>) => {
     const copy = async (): Promise<OUTPUT> => {
         const data: OUTPUT = await target.exportData()
         await navigator.clipboard.writeText(target.stringifyData(data))
@@ -38,19 +38,6 @@ const useClipBoard = <INPUT, OUTPUT>(target: ClipBoardTarget<INPUT, OUTPUT>) => 
         }
     }
 
-    return {
-        copy,
-        cut,
-        paste,
-    }
-}
-
-export const useClipBoardWithKeyboard = <INPUT, OUTPUT>(
-    el: () => HTMLElement | null | undefined,
-    target: ClipBoardTarget<INPUT, OUTPUT>
-) => {
-    const {copy, cut, paste} = useClipBoard(target)
-
     const handleKeyDownEvent = async (e: KeyboardEvent) => {
         if (judgeTargetIsInteraction(e)) return
 
@@ -65,6 +52,21 @@ export const useClipBoardWithKeyboard = <INPUT, OUTPUT>(
             await paste()
         }
     }
+
+    return {
+        copy,
+        cut,
+        paste,
+
+        handleKeyDownEvent,
+    }
+}
+
+export const useClipBoardWithKeyboard = <INPUT, OUTPUT>(
+    el: () => HTMLElement | null | undefined,
+    target: ClipBoardTarget<INPUT, OUTPUT>
+) => {
+    const {copy, cut, paste, handleKeyDownEvent} = useClipBoard(target)
 
     onMounted(() => {
         el()?.addEventListener("keydown", handleKeyDownEvent)
