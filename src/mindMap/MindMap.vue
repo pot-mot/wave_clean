@@ -3,11 +3,22 @@ import {useMindMap} from "@/mindMap/useMindMap.ts";
 import MobileBar from "@/mindMap/toolBar/mobile/MobileBar.vue";
 import DeskTopBar from "@/mindMap/toolBar/desktop/DeskTopBar.vue";
 import MindMapLayer from "@/mindMap/layer/MindMapLayer.vue";
+import {nextTick, ref, watch} from "vue";
+import BackGround from "@/mindMap/background/BackGround.vue";
 
 const {
     isTouchDevice,
     layers,
+    currentLayer,
 } = useMindMap()
+
+const backgroundKey = ref(true)
+
+watch(() => currentLayer.value, async () => {
+    backgroundKey.value = false
+    await nextTick()
+    backgroundKey.value = true
+})
 </script>
 
 <template>
@@ -16,6 +27,8 @@ const {
         style="width: 100%; height: 100%;"
         :style="{ backgroundColor: 'var(--background-color)' }"
     >
+        <BackGround :viewport="currentLayer.vueFlow.viewport.value"/>
+
         <template v-for="layer in layers" :key="layer.id">
             <MindMapLayer :layer="layer"/>
         </template>
