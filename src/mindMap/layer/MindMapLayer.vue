@@ -16,9 +16,11 @@ initLayer(props.layer)
 <template>
     <VueFlow
         :id="layer.id"
-        :style="{
-            pointerEvents: (layer.id === currentLayer.id && layer.visible) ? undefined : 'none',
-            opacity: layer.visible ? (layer.id === currentLayer.id ? 1 : 0.6) : 0
+        :class="{
+            current: layer.id === currentLayer.id,
+            notCurrent: layer.id !== currentLayer.id,
+            visible: layer.visible,
+            invisible: !layer.visible,
         }"
 
         tabindex="-1"
@@ -42,6 +44,25 @@ initLayer(props.layer)
 </template>
 
 <style scoped>
+.vue-flow.notCurrent,
+.vue-flow.invisible,
+.vue-flow.notCurrent *,
+.vue-flow.invisible * {
+    pointer-events: none !important;
+}
+
+.vue-flow.invisible {
+    opacity: 0;
+}
+
+.vue-flow.current.visible {
+    opacity: 1;
+}
+
+.vue-flow.notCurrent.visible {
+    opacity: 0.5;
+}
+
 :deep(.vue-flow__nodesselection-rect) {
     box-sizing: content-box;
     border-radius: var(--border-radius);
