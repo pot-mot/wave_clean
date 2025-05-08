@@ -3,6 +3,7 @@ import {VueFlow} from "@vue-flow/core";
 import ContentNode from "@/mindMap/node/ContentNode.vue";
 import ContentEdge from "@/mindMap/edge/ContentEdge.vue";
 import {MindMapLayer, useMindMap} from "@/mindMap/useMindMap.ts";
+import {Background} from "@vue-flow/background";
 
 const props = defineProps<{
     layer: MindMapLayer,
@@ -33,6 +34,8 @@ initLayer(props.layer)
         :select-nodes-on-drag="false"
         :selection-key-code="false"
     >
+        <Background v-if="layer.id === currentLayer.id" :id="layer.id" pattern-color="var(--border-color)"/>
+
         <template #node-CONTENT_NODE="nodeProps">
             <ContentNode v-bind="nodeProps"/>
         </template>
