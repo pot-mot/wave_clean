@@ -38,7 +38,7 @@ export type CommandData<CommandMap extends CustomCommandMap> =
 
 type BatchKey<CommandMap extends CustomCommandMap> = { key: symbol, batch: BatchCommandData<CommandMap> }
 
-type CommandChangeInputType = 'apply' | 'revert'
+type CommandChangeInputType = 'apply' | 'revert' | 'push'
 
 export type CommandChangeInput<CommandMap extends CustomCommandMap, Key extends keyof CommandMap = keyof CommandMap> = {
     type: CommandChangeInputType,
@@ -207,16 +207,20 @@ export const useCommandHistory = <CommandMap extends CustomCommandMap>(): Comman
         options: Parameters<CommandMap[Key]["applyAction"]>[0],
         revertOptions: Parameters<CommandMap[Key]["revertAction"]>[0],
     ) => {
+        const type = 'push'
+        eventBus.emit("beforeChange", {key, type})
+
         const command = commandMap[key]
         if (command !== undefined) {
-            push({command, options, revertOptions})
-
+            const commandData = {command, options, revertOptions}
+            push(commandData)
+            eventBus.emit("change", {type, ...commandData})
         }
     }
 
     const undoCommandData = (commandData: CommandData<CommandMap>) => {
         if (Array.isArray(commandData)) {
-            for (const cmd of commandData.reverse()) {
+            for (const cmd of [...commandData].reverse()) {
                 undoCommandData(cmd)
             }
         } else {
