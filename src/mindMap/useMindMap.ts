@@ -13,11 +13,11 @@ import {computed, nextTick, readonly, ref, ShallowReactive, shallowReactive, Sha
 import {blurActiveElement, judgeTargetIsInteraction} from "@/mindMap/clickUtils.ts";
 import {jsonSortPropStringify} from "@/json/jsonStringify.ts";
 import {MindMapImportData, prepareImportIntoMindMap} from "@/mindMap/importExport/import.ts";
-import {useClipBoardWithKeyboard} from "@/clipBoard/useClipBoard.ts";
 import {exportMindMapSelection, MindMapExportData} from "@/mindMap/importExport/export.ts";
 import {validateMindMapImportData} from "@/mindMap/clipBoard/inputParse.ts";
 import {checkFullConnection, FullConnection, reverseConnection} from "@/mindMap/edge/connection.ts";
 import {useMindMapHistory} from "@/mindMap/history/MindMapHistory.ts";
+import {useClipBoard} from "@/clipBoard/useClipBoard.ts";
 
 export const MIND_MAP_ID = "mind_map" as const
 
@@ -27,6 +27,7 @@ export type MindMapGlobal = {
     nodeIdIncrement: number,
     layers: ShallowReactive<MindMapLayer[]>,
     currentLayer: ShallowRef<MindMapLayer>,
+    toggleCurrentLayer: (layerId: string) => void,
 }
 
 export type MindMapLayer = ShallowReactive<{
@@ -80,6 +81,20 @@ const initMindMap = () => {
         currentLayer: shallowRef<MindMapLayer>(
             defaultLayer
         ),
+
+        toggleCurrentLayer: async (layerId: string) => {
+            const targetLayer = global.layers.find(layer => layer.id === layerId)
+            if (targetLayer === undefined) throw new Error("layer is undefined")
+
+            const currentViewport = toRaw(getCurrentVueFlow().viewport.value)
+            blurActiveElement()
+            cleanSelection()
+            global.currentLayer.value = targetLayer
+            await nextTick()
+            await global.currentLayer.value.vueFlow.setViewport(currentViewport)
+            setLayerConfigDefault()
+            focus()
+        }
     }
 
     const layerId = computed(() => global.currentLayer.value.id)
@@ -103,10 +118,12 @@ const initMindMap = () => {
         vueFlow.vueFlowRef.value?.focus()
     }
 
-    const addLayer = async () => {
-        const layerId = `layer-${global.layerIdIncrement++}`
-        history.executeCommand("layer:add", layerId)
-        await toggleLayer(layerId)
+    const addLayer = () => {
+        history.executeBatch(Symbol("layer:add"), () => {
+            const layerId = `layer-${global.layerIdIncrement++}`
+            history.executeCommand("layer:add", layerId)
+            toggleLayer(layerId)
+        })
     }
 
     const removeLayer = (layerId: string) => {
@@ -115,21 +132,17 @@ const initMindMap = () => {
         history.executeCommand("layer:remove", layerId)
     }
 
-    const toggleLayer = async (layerId: string) => {
-        const targetLayer = global.layers.find(layer => layer.id === layerId)
-        if (targetLayer === undefined) throw new Error("layer is undefined")
-
-        const currentViewport = toRaw(getCurrentVueFlow().viewport.value)
-        blurActiveElement()
-        cleanSelection()
-        global.currentLayer.value = targetLayer
-        await nextTick()
-        await global.currentLayer.value.vueFlow.setViewport(currentViewport)
-        setLayerConfigDefault()
-        focus()
+    const toggleLayer = (layerId: string) => {
+        if (layerId === global.currentLayer.value.id) return
+        const layer = global.layers.find(layer => layer.id === layerId)
+        if (layer === undefined) return
+        history.executeCommand("layer:toggle", layerId)
     }
 
     const changeLayerVisible = (layerId: string, visible: boolean) => {
+        const layer = global.layers.find(layer => layer.id === layerId)
+        if (layer === undefined) return
+        if (layer.visible === visible) return
         history.executeCommand("layer:visible:change", {layerId, visible})
     }
 
@@ -370,7 +383,7 @@ const initMindMap = () => {
         /**
          * 剪切板
          */
-        useClipBoardWithKeyboard<MindMapImportData, MindMapExportData>(() => vueFlowRef.value, {
+        const {handleKeyDownEvent} = useClipBoard<MindMapImportData, MindMapExportData>({
             exportData: (): MindMapExportData => {
                 return exportMindMapSelection(vueFlow)
             },
@@ -464,6 +477,8 @@ const initMindMap = () => {
             if (el === null || viewportEl === null || paneEl === null) {
                 throw new Error("vueFlow Ref is undefined in onInit")
             }
+
+            el.addEventListener("keydown", handleKeyDownEvent)
 
             el.addEventListener('keydown', (e) => {
                 // 按下 Delete 键删除选中的节点和边

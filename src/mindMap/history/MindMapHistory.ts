@@ -10,11 +10,14 @@ import {
     MindMapLayer
 } from "@/mindMap/useMindMap.ts";
 import {ref, shallowReactive, toRaw} from "vue";
+import {exportMindMap, MindMapExportData} from "@/mindMap/importExport/export.ts";
+import {prepareImportIntoMindMap} from "@/mindMap/importExport/import.ts";
 
 export type MindMapHistoryCommands = {
     "layer:add": CommandDefinition<string, string>,
-    "layer:remove": CommandDefinition<string, MindMapLayer>,
+    "layer:remove": CommandDefinition<string, Pick<MindMapLayer, "id" | "visible"> & { data: MindMapExportData }>,
     "layer:visible:change": CommandDefinition<{layerId: string, visible: boolean}>,
+    "layer:toggle": CommandDefinition<string, string>,
 
     "node:add": CommandDefinition<{
         layerId: string,
@@ -100,9 +103,13 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
 
     history.registerCommand("layer:add", {
         applyAction: (layerId) => {
+            const vueFlow = useVueFlow(layerId)
+            vueFlow.onInit(() => {
+                vueFlow.setViewport(global.currentLayer.value.vueFlow.viewport.value).then()
+            })
             const layer = shallowReactive({
                 id: layerId,
-                vueFlow: useVueFlow(layerId),
+                vueFlow,
                 visible: true,
             })
             global.layers.push(layer)
@@ -111,7 +118,8 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
         revertAction: (layerId) => {
             const layerIndex = global.layers.findIndex(layer => layer.id === layerId)
             if (layerIndex === -1) throw new Error("layer is undefined")
-            global.layers.splice(layerIndex, 1)
+            const layer = global.layers.splice(layerIndex, 1)[0]
+            layer.vueFlow.$destroy()
         }
     })
 
@@ -119,9 +127,20 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
         applyAction: (layerId) => {
             const layerIndex = global.layers.findIndex(layer => layer.id === layerId)
             if (layerIndex === -1) throw new Error("layer is undefined")
-            return global.layers.splice(layerIndex, 1)[0]
+            const layer = global.layers.splice(layerIndex, 1)[0]
+            const data = exportMindMap(layer.vueFlow)
+            layer.vueFlow.$destroy()
+            return {id: layerId, data, visible: layer.visible}
         },
-        revertAction: (layer) => {
+        revertAction: ({id, visible, data}) => {
+            const vueFlow = useVueFlow(id)
+            vueFlow.onInit(() => {
+                vueFlow.setViewport(global.currentLayer.value.vueFlow.viewport.value).then()
+            })
+            const layer = shallowReactive({id, vueFlow, visible})
+            const {newNodes, newEdges} = prepareImportIntoMindMap(vueFlow, data)
+            vueFlow.addNodes(newNodes)
+            vueFlow.addEdges(newEdges)
             global.layers.push(layer)
         }
    })
@@ -139,6 +158,17 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
             if (layer === undefined) throw new Error("layer is undefined")
             layer.visible = visible
         }
+    })
+
+    history.registerCommand("layer:toggle", {
+        applyAction: (layerId) => {
+            const currentId = global.currentLayer.value.id
+            global.toggleCurrentLayer(layerId)
+            return currentId
+        },
+        revertAction: (layerId) => {
+            global.toggleCurrentLayer(layerId)
+        },
     })
 
     history.registerCommand("node:add", {
