@@ -38,7 +38,10 @@ export type CommandData<CommandMap extends CustomCommandMap> =
 
 type BatchKey<CommandMap extends CustomCommandMap> = { key: symbol, batch: BatchCommandData<CommandMap> }
 
-type CommandChangeInputType = 'apply' | 'revert' | 'push'
+const applyType = 'apply'
+const revertType = 'revert'
+const pushType = 'push'
+type CommandChangeInputType = typeof applyType | typeof revertType | typeof pushType
 
 export type CommandChangeInput<CommandMap extends CustomCommandMap, Key extends keyof CommandMap = keyof CommandMap> = {
     type: CommandChangeInputType,
@@ -57,6 +60,8 @@ export type CommandHistoryEvents<CommandMap extends CustomCommandMap> =
     {
         registerCommand: { key: keyof CommandMap }
         unregisterCommand: { key: keyof CommandMap }
+        batchStart: undefined,
+        batchStop: undefined,
     }
 
 export type CommandHistory<CommandMap extends CustomCommandMap> =
@@ -185,8 +190,7 @@ export const useCommandHistory = <CommandMap extends CustomCommandMap>(): Comman
         key: Key,
         options: Parameters<CommandMap[Key]["applyAction"]>[0],
     ): ReturnType<CommandMap[Key]["applyAction"]> => {
-        const type = 'apply'
-        eventBus.emit("beforeChange", {key, type})
+        eventBus.emit("beforeChange", {key, type: applyType})
 
         const command = commandMap[key]
         if (command === undefined) {
@@ -197,7 +201,7 @@ export const useCommandHistory = <CommandMap extends CustomCommandMap>(): Comman
         const commandData = {command, options, revertOptions}
         push(commandData)
 
-        eventBus.emit("change", {type, ...commandData})
+        eventBus.emit("change", {type: applyType, ...commandData})
 
         return revertOptions
     }
@@ -207,14 +211,13 @@ export const useCommandHistory = <CommandMap extends CustomCommandMap>(): Comman
         options: Parameters<CommandMap[Key]["applyAction"]>[0],
         revertOptions: Parameters<CommandMap[Key]["revertAction"]>[0],
     ) => {
-        const type = 'push'
-        eventBus.emit("beforeChange", {key, type})
+        eventBus.emit("beforeChange", {key, type: pushType})
 
         const command = commandMap[key]
         if (command !== undefined) {
             const commandData = {command, options, revertOptions}
             push(commandData)
-            eventBus.emit("change", {type, ...commandData})
+            eventBus.emit("change", {type: pushType, ...commandData})
         }
     }
 
@@ -226,13 +229,12 @@ export const useCommandHistory = <CommandMap extends CustomCommandMap>(): Comman
         } else {
             const {command, revertOptions} = commandData
 
-            const type = 'revert'
-            eventBus.emit("beforeChange", {key: command.key, type})
+            eventBus.emit("beforeChange", {key: command.key, type: revertType})
             const newOptions = command.revertAction(revertOptions)
             if (newOptions !== undefined) {
                 commandData.options = newOptions
             }
-            eventBus.emit("change", {type, ...commandData})
+            eventBus.emit("change", {type: revertType, ...commandData})
         }
     };
 
@@ -244,10 +246,9 @@ export const useCommandHistory = <CommandMap extends CustomCommandMap>(): Comman
         } else {
             const {command, options} = commandData
 
-            const type = 'apply'
-            eventBus.emit("beforeChange", {key: command.key, type})
+            eventBus.emit("beforeChange", {key: command.key, type: applyType})
             command.applyAction(options)
-            eventBus.emit("change", {type, ...commandData})
+            eventBus.emit("change", {type: applyType, ...commandData})
         }
     };
 
@@ -290,6 +291,8 @@ export const useCommandHistory = <CommandMap extends CustomCommandMap>(): Comman
     }
 
     const startBatch = (key: symbol) => {
+        eventBus.emit('batchStart')
+
         const newBatchKey: BatchKey<CommandMap> = {key, batch: []}
         batchKeyStack.push(newBatchKey)
         currentBatchKey = newBatchKey
@@ -305,6 +308,8 @@ export const useCommandHistory = <CommandMap extends CustomCommandMap>(): Comman
             if (batch.length > 0) {
                 push(batch)
             }
+
+            eventBus.emit('batchStop')
         } else {
             throw new Error('stopBatch key is not match')
         }
