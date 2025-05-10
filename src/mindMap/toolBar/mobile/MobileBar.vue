@@ -11,6 +11,10 @@ const {
     toggleDefaultMouseAction,
     canMultiSelect,
     toggleMultiSelect,
+
+    copy,
+    cut,
+    paste,
 } = useMindMap()
 </script>
 
@@ -22,5 +26,9 @@ const {
 
         <button :disabled="!canUndo" @click="undo">undo</button>
         <button :disabled="!canRedo" @click="redo">redo</button>
+
+        <button @click="copy">copy</button>
+        <button @click="cut">cut</button>
+        <button @click="paste">paste</button>
     </div>
 </template>

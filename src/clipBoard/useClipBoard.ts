@@ -1,5 +1,4 @@
 import {SchemaValidator} from "@/type/typeGuard.ts";
-import {onBeforeUnmount, onMounted} from "vue";
 import {judgeTargetIsInteraction} from "@/mindMap/clickUtils.ts";
 
 export type ClipBoardTarget<INPUT, OUTPUT> = {
@@ -62,23 +61,20 @@ export const useClipBoard = <INPUT, OUTPUT>(target: ClipBoardTarget<INPUT, OUTPU
     }
 }
 
-export const useClipBoardWithKeyboard = <INPUT, OUTPUT>(
-    el: () => HTMLElement | null | undefined,
-    target: ClipBoardTarget<INPUT, OUTPUT>
-) => {
-    const {copy, cut, paste, handleKeyDownEvent} = useClipBoard(target)
+export type CustomClipBoard<INPUT, OUTPUT> = ReturnType<typeof useClipBoard<INPUT, OUTPUT>>
 
-    onMounted(() => {
-        el()?.addEventListener("keydown", handleKeyDownEvent)
-    })
+export const unimplementedClipBoard: CustomClipBoard<any, any> = {
+    copy: async () => {
+        throw new Error("Unimplemented")
+    },
+    cut: async () => {
+        throw new Error("Unimplemented")
+    },
+    paste: async () => {
+        throw new Error("Unimplemented")
+    },
 
-    onBeforeUnmount(() => {
-        el()?.removeEventListener("keydown", handleKeyDownEvent)
-    })
-
-    return {
-        copy,
-        cut,
-        paste,
+    handleKeyDownEvent: async () => {
+        throw new Error("Unimplemented")
     }
 }

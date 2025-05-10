@@ -28,7 +28,7 @@ import {exportMindMapSelection, MindMapExportData} from "@/mindMap/importExport/
 import {validateMindMapImportData} from "@/mindMap/clipBoard/inputParse.ts";
 import {checkFullConnection, FullConnection, reverseConnection} from "@/mindMap/edge/connection.ts";
 import {useMindMapHistory} from "@/mindMap/history/MindMapHistory.ts";
-import {useClipBoard} from "@/clipBoard/useClipBoard.ts";
+import {CustomClipBoard, unimplementedClipBoard, useClipBoard} from "@/clipBoard/useClipBoard.ts";
 
 export type MindMapGlobal = {
     zIndexIncrement: number,
@@ -44,7 +44,7 @@ export type RawMindMapLayer = {
     name: string,
     visible: boolean,
     opacity: number,
-}
+} & CustomClipBoard<MindMapImportData, MindMapExportData>
 
 export type MindMapLayer = ShallowReactive<RawMindMapLayer>
 
@@ -93,6 +93,8 @@ const initMindMap = () => {
         name: "layer",
         visible: true,
         opacity: 1,
+
+        ...unimplementedClipBoard,
     })
 
     const global: MindMapGlobal = {
@@ -433,7 +435,7 @@ const initMindMap = () => {
             /**
              * 剪切板
              */
-            const {handleKeyDownEvent} = useClipBoard<MindMapImportData, MindMapExportData>({
+            const clipBoard = useClipBoard<MindMapImportData, MindMapExportData>({
                 exportData: (): MindMapExportData => {
                     return exportMindMapSelection(vueFlow)
                 },
@@ -448,7 +450,10 @@ const initMindMap = () => {
                 },
                 validateInput: validateMindMapImportData
             })
-            el.addEventListener("keydown", handleKeyDownEvent)
+
+            Object.assign(layer, clipBoard)
+
+            el.addEventListener("keydown", clipBoard.handleKeyDownEvent)
 
             /**
              * 节点移动
@@ -833,6 +838,16 @@ const initMindMap = () => {
         },
         updateEdgeData: (id: string, data: ContentEdgeData) => {
             history.executeCommand('edge:data:change', {layerId: currentLayerId.value, id, data})
+        },
+
+        copy: async () => {
+            return await global.currentLayer.value.copy()
+        },
+        paste: async () => {
+            return await global.currentLayer.value.paste()
+        },
+        cut: async () => {
+            return await global.currentLayer.value.cut()
         },
     }
 }

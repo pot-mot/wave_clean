@@ -13,6 +13,7 @@ import {
 import {ref, shallowReactive, toRaw} from "vue";
 import {exportMindMap, MindMapExportData} from "@/mindMap/importExport/export.ts";
 import {prepareImportIntoMindMap} from "@/mindMap/importExport/import.ts";
+import {unimplementedClipBoard} from "@/clipBoard/useClipBoard.ts";
 
 export type MindMapHistoryCommands = {
     "layer:add": CommandDefinition<string>,
@@ -130,6 +131,8 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
                 name: layerId,
                 visible: true,
                 opacity: 1,
+
+                ...unimplementedClipBoard,
             })
             global.layers.push(layer)
             return layerId
