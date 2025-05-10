@@ -151,7 +151,7 @@ const initMindMap = () => {
 
     const addLayer = () => {
         history.executeBatch(Symbol("layer:add"), () => {
-            const layerId = createVueFlowId()
+            const layerId = createLayerId()
             history.executeCommand("layer:add", layerId)
             toggleLayer(layerId)
         })

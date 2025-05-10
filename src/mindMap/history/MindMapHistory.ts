@@ -123,7 +123,7 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
 
     history.registerCommand("layer:add", {
         applyAction: (layerId) => {
-            const vueFlow = useVueFlow(layerId)
+            const vueFlow = useVueFlow(createVueFlowId())
             const layer: MindMapLayer = shallowReactive({
                 id: layerId,
                 vueFlow,
