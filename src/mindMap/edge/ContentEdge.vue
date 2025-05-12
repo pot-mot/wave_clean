@@ -4,13 +4,18 @@ import {BezierEdge, EdgeProps} from "@vue-flow/core";
 import {ContentEdgeData, useMindMap} from "@/mindMap/useMindMap.ts";
 import FitSizeBlockInput from "@/input/FitSizeBlockInput.vue";
 import {useEdgeUpdaterTouch} from "@/mindMap/touchToMouse/useEdgeUpdaterTouch.ts";
+import AutoResizeForeignObject from "@/mindMap/svg/AutoResizeForeignObject.vue";
 
-const {updateEdgeData, isMultiSelected, canMultiSelect, selectEdge} = useMindMap()
+const {updateEdgeData, isMultiSelected, canMultiSelect, selectEdge, remove} = useMindMap()
 
 const props = defineProps<EdgeProps & {
     id: string,
     data: ContentEdgeData,
 }>()
+
+const handleDelete = () => {
+    remove({edges: [props.id]})
+}
 
 useEdgeUpdaterTouch(props.id)
 
@@ -23,10 +28,18 @@ const innerValue = computed<string>({
     }
 })
 
+const toolBarWidth = ref(0)
+const toolBarHeight = ref(0)
+
+const handleToolBarResize = (size: { width: number, height: number }) => {
+    toolBarWidth.value = size.width
+    toolBarHeight.value = size.height
+}
+
 const inputWidth = ref(0)
 const inputHeight = ref(0)
 
-const handleResize = (size: { width: number, height: number }) => {
+const handleInputResize = (size: { width: number, height: number }) => {
     inputWidth.value = size.width
     inputHeight.value = size.height
 }
@@ -85,25 +98,34 @@ const handleBlur = () => {
         @click.capture="handleClick"
     >
         <BezierEdge ref="bezierRef" v-bind.prop="props" :style="{stroke: selected ? 'var(--primary-color)' : undefined}"/>
-        <g :transform="`translate(${curveMidpoint.x - inputWidth / 2} ${curveMidpoint.y - inputHeight / 2})`">
-            <foreignObject x="0" y="0" :width="inputWidth" :height="inputHeight">
-                <div xmlns="http://www.w3.org/1999/xhtml" style="width: 100%; height: 100%;">
-                    <FitSizeBlockInput
-                        ref="inputRef"
-                        v-show="innerValue.length > 0 || inputShow"
-                        :class="{untouchable: !inputShow}"
-                        :font-size="12"
-                        :padding="2"
-                        :style="{
-                            borderColor: selected ? 'var(--primary-color)' : 'transparent',
-                        }"
-                        v-model="innerValue"
-                        @resize="handleResize"
-                        @blur="handleBlur"
-                    />
-                </div>
-            </foreignObject>
-        </g>
+
+        <AutoResizeForeignObject
+            @resize="handleInputResize"
+            :transform="`translate(${curveMidpoint.x - inputWidth / 2} ${curveMidpoint.y - inputHeight / 2})`"
+        >
+            <FitSizeBlockInput
+                ref="inputRef"
+                v-show="innerValue.length > 0 || inputShow"
+                :class="{untouchable: !inputShow}"
+                :font-size="12"
+                :padding="2"
+                :style="{
+                    borderColor: selected ? 'var(--primary-color)' : 'transparent',
+                }"
+                v-model="innerValue"
+                @blur="handleBlur"
+            />
+        </AutoResizeForeignObject>
+
+        <AutoResizeForeignObject
+            v-if="selected && inputShow"
+            @resize="handleToolBarResize"
+            :transform="`translate(${curveMidpoint.x - toolBarWidth / 2} ${curveMidpoint.y - toolBarHeight * 3 / 2})`"
+        >
+            <div style="padding: 0.2rem;">
+                <button @mousedown.capture="handleDelete">delete</button>
+            </div>
+        </AutoResizeForeignObject>
     </g>
 </template>
 
