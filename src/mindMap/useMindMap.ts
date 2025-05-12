@@ -141,12 +141,12 @@ const initMindMap = () => {
         vueFlow.vueFlowRef.value?.focus()
     }
 
-    let currentViewport: ViewportTransform | undefined = undefined
+    const currentViewport = shallowRef<ViewportTransform>()
     watch(() => currentLayerId.value, async (_, oldValue) => {
         if (oldValue !== undefined) {
             const oldCurrent = global.layers.find(layer => layer.id === oldValue)
             if (oldCurrent !== undefined) {
-                currentViewport = toRaw(oldCurrent.vueFlow.viewport.value)
+                currentViewport.value = toRaw(oldCurrent.vueFlow.viewport.value)
             }
         }
     })
@@ -417,17 +417,17 @@ const initMindMap = () => {
             /**
              * 同步视口
              */
-            if (currentViewport !== undefined) {
-                vueFlow.setViewport(currentViewport).then()
+            if (currentViewport.value !== undefined) {
+                vueFlow.setViewport(currentViewport.value).then()
             }
 
             onViewportChange(async () => {
                 if (id === currentLayerId.value) {
-                    currentViewport = toRaw(vueFlow.viewport.value)
+                    currentViewport.value = toRaw(vueFlow.viewport.value)
                     await nextTick()
                     for (const layer of global.layers) {
                         if (layer.id === id) continue
-                        layer.vueFlow.setViewport(currentViewport)
+                        layer.vueFlow.setViewport(currentViewport.value)
                     }
                 }
             })
@@ -779,6 +779,8 @@ const initMindMap = () => {
         changeLayerVisible,
 
         focus,
+
+        currentViewport: readonly(currentViewport),
 
         isTouchDevice,
 

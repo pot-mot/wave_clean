@@ -6,7 +6,7 @@ import FitSizeBlockInput from "@/input/FitSizeBlockInput.vue";
 import {useEdgeUpdaterTouch} from "@/mindMap/touchToMouse/useEdgeUpdaterTouch.ts";
 import AutoResizeForeignObject from "@/mindMap/svg/AutoResizeForeignObject.vue";
 
-const {updateEdgeData, isMultiSelected, canMultiSelect, selectEdge, remove} = useMindMap()
+const {updateEdgeData, isMultiSelected, canMultiSelect, selectEdge, remove, currentViewport} = useMindMap()
 
 const props = defineProps<EdgeProps & {
     id: string,
@@ -26,6 +26,10 @@ const innerValue = computed<string>({
     set(newVal) {
         updateEdgeData(props.id, {content: newVal})
     }
+})
+
+const zoom = computed(() => {
+    return  currentViewport.value !== undefined ? 1 / currentViewport.value.zoom : 1
 })
 
 const toolBarWidth = ref(0)
@@ -120,9 +124,9 @@ const handleBlur = () => {
         <AutoResizeForeignObject
             v-if="selected && inputShow"
             @resize="handleToolBarResize"
-            :transform="`translate(${curveMidpoint.x - toolBarWidth / 2} ${curveMidpoint.y - toolBarHeight * 3 / 2})`"
+            :transform="`translate(${curveMidpoint.x - (toolBarWidth * zoom) / 2} ${curveMidpoint.y - inputHeight / 2 - (toolBarHeight * zoom)}) scale(${zoom})`"
         >
-            <div style="padding: 0.2rem;">
+            <div style="padding-bottom: 0.3rem;">
                 <button @mousedown.capture="handleDelete">delete</button>
             </div>
         </AutoResizeForeignObject>
