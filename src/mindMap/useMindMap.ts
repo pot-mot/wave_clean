@@ -418,7 +418,7 @@ const initMindMap = () => {
              * 同步视口
              */
             if (currentViewport !== undefined) {
-                vueFlow.viewport.value = currentViewport
+                vueFlow.setViewport(currentViewport).then()
             }
 
             onViewportChange(async () => {
