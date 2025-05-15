@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import {useMindMap} from "@/mindMap/useMindMap.ts";
+import {ref} from "vue";
+import LayerMenu from "@/mindMap/layer/LayerMenu.vue";
 
 const {
     canUndo,
@@ -16,9 +18,17 @@ const {
     cut,
     paste,
 } = useMindMap()
+
+const layersMenuOpen = ref(true)
 </script>
 
 <template>
+    <div style="z-index: 5; max-width: 100%; position: absolute; top: 0; left: 0;">
+        <button @click="copy">copy</button>
+        <button @click="cut">cut</button>
+        <button @click="paste">paste</button>
+    </div>
+
     <div style="z-index: 5; width: 100%; position: absolute; bottom: 0; height: 3rem; line-height: 3rem; vertical-align: center; display: flex; justify-content: space-around;">
         <button @click="fitView()">fit</button>
         <button @click="toggleDefaultMouseAction">{{ defaultMouseAction }}</button>
@@ -27,8 +37,10 @@ const {
         <button :disabled="!canUndo" @click="undo">undo</button>
         <button :disabled="!canRedo" @click="redo">redo</button>
 
-        <button @click="copy">copy</button>
-        <button @click="cut">cut</button>
-        <button @click="paste">paste</button>
+        <button @click="layersMenuOpen = !layersMenuOpen">layers</button>
+    </div>
+
+    <div v-if="layersMenuOpen" style="z-index: 5; position: absolute; bottom: 3rem; right: 0; height: calc(100% - 3rem); width: max(40vw, 20rem);">
+        <LayerMenu/>
     </div>
 </template>

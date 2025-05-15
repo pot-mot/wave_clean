@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {useMindMap} from "@/mindMap/useMindMap.ts";
 import LayerMenu from "@/mindMap/layer/LayerMenu.vue";
+import {ref} from "vue";
 
 const {
     canUndo,
@@ -11,6 +12,8 @@ const {
     defaultMouseAction,
     toggleDefaultMouseAction,
 } = useMindMap()
+
+const layersMenuOpen = ref(false)
 </script>
 
 <template>
@@ -21,7 +24,11 @@ const {
         <button @click="toggleDefaultMouseAction">{{ defaultMouseAction }}</button>
     </div>
 
-    <div style="z-index: 5; position: absolute; top: 0; right: 0; max-height: 100%; overflow-y: scroll;">
+    <div style="z-index: 5; position: absolute; top: 0; right: 0; height: 3rem;">
+        <button @click="layersMenuOpen = !layersMenuOpen">layers</button>
+    </div>
+
+    <div v-if="layersMenuOpen" style="z-index: 5; position: absolute; top: 3rem; right: 0; height: calc(100% - 3rem); width: max(20vw, 20rem);">
         <LayerMenu/>
     </div>
 </template>
