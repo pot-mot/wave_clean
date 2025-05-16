@@ -8,6 +8,10 @@ export const isString = (arg: any): arg is string => {
     return typeof arg === 'string';
 }
 
+export const getKeys = <T extends object>(data: T): (keyof T)[] => {
+    return Object.keys(data) as (keyof T)[]
+}
+
 import Ajv, {ErrorObject} from "ajv";
 const ajv = new Ajv({ allErrors: true }); // 启用所有错误信息
 

@@ -1,6 +1,6 @@
 import {GraphEdge, GraphNode, VueFlowStore} from "@vue-flow/core";
 import {CONTENT_EDGE_TYPE, CONTENT_NODE_TYPE, ContentEdge, ContentNode} from "@/mindMap/useMindMap.ts";
-import {toRaw} from "vue";
+import {getRaw} from "@/json/getRaw.ts";
 
 export type MindMapExportData = {
     nodes: ContentNode[],
@@ -34,14 +34,14 @@ const toPureContentEdge = (edge: GraphEdge): ContentEdge => {
 
 export const exportMindMap = (vueFlow: VueFlowStore): MindMapExportData => {
     return {
-        nodes: toRaw(vueFlow.getNodes.value.filter(it => it.type === CONTENT_NODE_TYPE).map(toPureContentNode)),
-        edges: toRaw(vueFlow.getEdges.value.filter(it => it.type === CONTENT_EDGE_TYPE).map(toPureContentEdge))
+        nodes: getRaw(vueFlow.getNodes.value.filter(it => it.type === CONTENT_NODE_TYPE).map(toPureContentNode)),
+        edges: getRaw(vueFlow.getEdges.value.filter(it => it.type === CONTENT_EDGE_TYPE).map(toPureContentEdge))
     }
 }
 
 export const exportMindMapSelection = (vueFlow: VueFlowStore): MindMapExportData => {
     return {
-        nodes: toRaw(vueFlow.getSelectedNodes.value.filter(it => it.type === CONTENT_NODE_TYPE).map(toPureContentNode)),
-        edges: toRaw(vueFlow.getSelectedEdges.value.filter(it => it.type === CONTENT_EDGE_TYPE).map(toPureContentEdge))
+        nodes: getRaw(vueFlow.getSelectedNodes.value.filter(it => it.type === CONTENT_NODE_TYPE).map(toPureContentNode)),
+        edges: getRaw(vueFlow.getSelectedEdges.value.filter(it => it.type === CONTENT_EDGE_TYPE).map(toPureContentEdge))
     }
 }

@@ -29,6 +29,7 @@ import {validateMindMapImportData} from "@/mindMap/clipBoard/inputParse.ts";
 import {checkFullConnection, FullConnection, reverseConnection} from "@/mindMap/edge/connection.ts";
 import {useMindMapHistory} from "@/mindMap/history/MindMapHistory.ts";
 import {CustomClipBoard, unimplementedClipBoard, useClipBoard} from "@/clipBoard/useClipBoard.ts";
+import {getKeys} from "@/type/typeGuard.ts";
 
 export type MindMapGlobal = {
     zIndexIncrement: number,
@@ -47,6 +48,9 @@ export type RawMindMapLayer = {
 } & CustomClipBoard<MindMapImportData, MindMapExportData>
 
 export type MindMapLayer = ShallowReactive<RawMindMapLayer>
+
+export const MindMapLayerDataKeys = ['name', 'opacity'] as const
+export type MindMapLayerData = Pick<RawMindMapLayer, typeof MindMapLayerDataKeys[number]>
 
 export const CONTENT_NODE_TYPE = "CONTENT_NODE" as const
 export type ContentNodeData = {
@@ -177,6 +181,20 @@ const initMindMap = () => {
         if (layer === undefined) return
         if (layer.visible === visible) return
         history.executeCommand("layer:visible:change", {layerId, visible})
+    }
+
+    const changeLayerData = (layerId: string, data: Partial<MindMapLayerData>) => {
+        const layer = global.layers.find(layer => layer.id === layerId)
+        if (layer === undefined) return
+        let equalFlag = true
+        for (const key of getKeys(data)) {
+            if (layer[key] !== data[key]) {
+                equalFlag = false
+                break
+            }
+        }
+        if (equalFlag) return
+        history.executeCommand("layer:data:change", {layerId, newData: data})
     }
 
     const addNode = (position: XYPosition) => {
@@ -777,6 +795,7 @@ const initMindMap = () => {
         removeLayer,
         toggleLayer,
         changeLayerVisible,
+        changeLayerData,
 
         focus,
 

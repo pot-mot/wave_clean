@@ -7,13 +7,15 @@ import {
     ContentNode,
     ContentNodeData,
     createEdgeId, createVueFlowId,
-    MindMapGlobal, MindMapLayer,
+    MindMapGlobal, MindMapLayer, MindMapLayerData,
     RawMindMapLayer
 } from "@/mindMap/useMindMap.ts";
-import {ref, shallowReactive, toRaw} from "vue";
+import {ref, shallowReactive} from "vue";
 import {exportMindMap, MindMapExportData} from "@/mindMap/importExport/export.ts";
 import {prepareImportIntoMindMap} from "@/mindMap/importExport/import.ts";
 import {unimplementedClipBoard} from "@/clipBoard/useClipBoard.ts";
+import {getRaw} from "@/json/getRaw.ts";
+import {getKeys} from "@/type/typeGuard.ts";
 
 export type MindMapHistoryCommands = {
     "layer:add": CommandDefinition<string>,
@@ -24,6 +26,13 @@ export type MindMapHistoryCommands = {
     "layer:visible:change": CommandDefinition<
         { layerId: string, visible: boolean }
     >,
+    "layer:data:change": CommandDefinition<{
+        layerId: string,
+        newData: Partial<MindMapLayerData>,
+    }, {
+        layerId: string,
+        oldData: Partial<MindMapLayerData>,
+    }>,
     "layer:toggle": CommandDefinition<string>,
 
     "node:add": CommandDefinition<{
@@ -168,7 +177,7 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
     history.registerCommand("layer:visible:change", {
         applyAction: ({layerId, visible}) => {
             const layer = getLayer(layerId)
-            const currentVisible = toRaw(layer.visible)
+            const currentVisible = layer.visible
             layer.visible = visible
             return {layerId, visible: currentVisible}
         },
@@ -177,6 +186,24 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
             layer.visible = visible
         }
     })
+
+    history.registerCommand("layer:data:change", {
+        applyAction: ({layerId, newData}) => {
+            const layer = getLayer(layerId)
+            const oldData: Partial<MindMapLayerData> = {}
+            for (const key of getKeys(newData)) {
+                const oldValue = layer[key]
+                oldData[key] = oldValue as any
+            }
+            Object.assign(layer, newData)
+            return {layerId, oldData}
+        },
+        revertAction: ({layerId, oldData}) => {
+            const layer = getLayer(layerId)
+            Object.assign(layer, oldData)
+        }
+    })
+
 
     history.registerCommand("layer:toggle", {
         applyAction: (layerId) => {
@@ -233,7 +260,7 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
             const node = vueFlow.findNode(id) as ContentNode | undefined
             if (node === undefined) throw new Error(`node [${id}] is undefined`)
 
-            const previousData = toRaw(node.data)
+            const previousData = getRaw(node.data)
             vueFlow.updateNodeData(id, data, {replace: true})
             return {layerId, id, data: previousData}
         },
@@ -242,7 +269,7 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
             const node = vueFlow.findNode(id) as ContentNode | undefined
             if (node === undefined) throw new Error(`node [${id}] is undefined`)
 
-            const currentData = toRaw(node.data)
+            const currentData = getRaw(node.data)
             vueFlow.updateNodeData(id, data, {replace: true})
             return {layerId, id, data: currentData}
         }
@@ -289,7 +316,7 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
             const edge = vueFlow.findEdge(id) as ContentEdge | undefined
             if (edge === undefined) throw new Error(`edge [${id}] is undefined`)
 
-            const previousData = toRaw(edge.data)
+            const previousData = getRaw(edge.data)
             vueFlow.updateEdgeData(id, data, {replace: true})
             return {layerId, id, data: previousData}
         },
@@ -298,7 +325,7 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
             const edge = vueFlow.findEdge(id) as ContentEdge | undefined
             if (edge === undefined) throw new Error(`edge [${id}] is undefined`)
 
-            const currentData = toRaw(edge.data)
+            const currentData = getRaw(edge.data)
             vueFlow.updateEdgeData(id, data, {replace: true})
             return {layerId, id, data: currentData}
         }

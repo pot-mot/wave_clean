@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import {MindMapLayer, useMindMap} from "@/mindMap/useMindMap.ts";
 import LayerView from "@/mindMap/layer/LayerView.vue";
-import {nextTick, ref, useTemplateRef, watch} from "vue";
 
 const {
     layers,
@@ -10,26 +9,19 @@ const {
     removeLayer,
     toggleLayer,
     changeLayerVisible,
+    changeLayerData,
 } = useMindMap()
 
 const toggleLayerVisible = (layer: MindMapLayer) => {
     changeLayerVisible(layer.id, !layer.visible)
 }
 
-const layerMenuContainer = useTemplateRef<HTMLDivElement>("layerMenuContainer")
-
-const currentLayerEl = ref<HTMLElement>()
-const setCurrentLayerRefKey = (el: HTMLElement, isCurrent: boolean) => {
-    if (isCurrent) {
-        currentLayerEl.value = el
+const handleLayerNameChange = (layer: MindMapLayer, e: Event) => {
+    if (e.target instanceof HTMLInputElement) {
+        changeLayerData(layer.id, {name: e.target.value})
+        e.target.blur()
     }
 }
-watch(() => currentLayer.value, async () => {
-    await nextTick()
-    if (currentLayerEl.value && layerMenuContainer.value) {
-        layerMenuContainer.value.scrollTo(0, currentLayerEl.value.offsetTop)
-    }
-})
 </script>
 
 <template>
@@ -38,17 +30,16 @@ watch(() => currentLayer.value, async () => {
             <button @click="addLayer">add</button>
         </div>
 
-        <div class="layer-menu-container" ref="layerMenuContainer">
-            <div v-for="layer in layers" class="layer-menu-item" :class="{current: currentLayer.id === layer.id}"
-                 :ref="el => setCurrentLayerRefKey(el as any, currentLayer.id === layer.id)"
+        <div class="layer-menu-container">
+            <div v-for="layer in layers.slice().reverse()" class="layer-menu-item" :class="{current: currentLayer.id === layer.id}"
                  @click="toggleLayer(layer.id)">
                 <div class="layer-menu-item-view">
                     <LayerView/>
                 </div>
                 <input
-                    v-model="layer.name"
+                    :value="layer.name"
                     class="layer-menu-item-name"
-                    @keydown.enter="(e) => {(e.target as HTMLElement).blur()}"
+                    @change="(e) => handleLayerNameChange(layer, e)"
                 >
                 <button
                     @click.stop="toggleLayerVisible(layer)"
