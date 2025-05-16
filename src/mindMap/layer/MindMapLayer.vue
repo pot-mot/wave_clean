@@ -78,7 +78,7 @@ initLayer(props.layer)
     cursor: default;
 }
 
-:deep(.vue-flow__pane.dragging) {
+:deep(.vue-flow__pane.dragged-view) {
     cursor: default;
 }
 </style>

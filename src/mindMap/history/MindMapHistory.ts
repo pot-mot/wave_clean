@@ -34,6 +34,14 @@ export type MindMapHistoryCommands = {
         oldData: Partial<MindMapLayerData>,
     }>,
     "layer:toggle": CommandDefinition<string>,
+    "layer:dragged": CommandDefinition<{
+        oldIndex: number,
+        newIndex: number,
+    }>,
+    "layer:swapped": CommandDefinition<{
+        oldIndex: number,
+        newIndex: number,
+    }>,
 
     "node:add": CommandDefinition<{
         layerId: string,
@@ -204,6 +212,42 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
         }
     })
 
+    history.registerCommand("layer:dragged", {
+        applyAction: ({oldIndex, newIndex}) => {
+            console.log("dragged", oldIndex, newIndex)
+            if (oldIndex < newIndex) {
+                const diff = newIndex - oldIndex
+                global.layers.splice(newIndex - diff, 0, global.layers.splice(oldIndex, diff)[0])
+            } else if (oldIndex > newIndex) {
+                const diff = oldIndex - newIndex
+                global.layers.splice(oldIndex - diff, 0, global.layers.splice(newIndex, diff)[0])
+            }
+            return {oldIndex, newIndex}
+        },
+        revertAction: ({oldIndex, newIndex}) => {
+            console.log("dragged revert", oldIndex, newIndex)
+            if (oldIndex < newIndex) {
+                const diff = newIndex - oldIndex
+                global.layers.splice(oldIndex, 0, global.layers.splice(newIndex - diff, diff)[0])
+            } else if (oldIndex > newIndex) {
+                const diff = oldIndex - newIndex
+                global.layers.splice(newIndex, 0, global.layers.splice(oldIndex - diff, diff)[0])
+            }
+        }
+    })
+
+
+    history.registerCommand("layer:swapped", {
+        applyAction: ({oldIndex, newIndex}) => {
+            console.log("swapped", oldIndex, newIndex)
+            global.layers.splice(newIndex, 0, global.layers.splice(oldIndex, 1)[0])
+            return {oldIndex, newIndex}
+        },
+        revertAction: ({oldIndex, newIndex}) => {
+            console.log("swapped revert", oldIndex, newIndex)
+            global.layers.splice(oldIndex, 0, global.layers.splice(newIndex, 1)[0])
+        }
+    })
 
     history.registerCommand("layer:toggle", {
         applyAction: (layerId) => {

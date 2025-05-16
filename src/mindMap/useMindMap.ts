@@ -5,7 +5,8 @@ import {
     GraphNode,
     Node,
     Position,
-    useVueFlow, ViewportTransform,
+    useVueFlow,
+    ViewportTransform,
     VueFlowStore,
     XYPosition,
 } from "@vue-flow/core";
@@ -195,6 +196,24 @@ const initMindMap = () => {
         }
         if (equalFlag) return
         history.executeCommand("layer:data:change", {layerId, newData: data})
+    }
+
+    const dragLayer = (oldIndex: number, newIndex: number) => {
+        if (
+            oldIndex < 0 || oldIndex > global.layers.length ||
+            newIndex < 0 || newIndex > global.layers.length ||
+            newIndex === oldIndex
+        ) return
+        history.executeCommand("layer:dragged", {oldIndex, newIndex})
+    }
+
+    const swapLayer = (oldIndex: number, newIndex: number) => {
+        if (
+            oldIndex < 0 || oldIndex > global.layers.length ||
+            newIndex < 0 || newIndex > global.layers.length ||
+            newIndex === oldIndex
+        ) return
+        history.executeCommand("layer:swapped", {oldIndex, newIndex})
     }
 
     const addNode = (position: XYPosition) => {
@@ -492,7 +511,12 @@ const initMindMap = () => {
                         if (oldPosition !== undefined) {
                             const newPosition = node.position
                             if (jsonSortPropStringify(oldPosition) !== jsonSortPropStringify(newPosition)) {
-                                history.executeCommand('node:move', {layerId: currentLayerId.value, id: node.id, newPosition, oldPosition})
+                                history.executeCommand('node:move', {
+                                    layerId: currentLayerId.value,
+                                    id: node.id,
+                                    newPosition,
+                                    oldPosition
+                                })
                             }
                         }
                     }
@@ -533,7 +557,12 @@ const initMindMap = () => {
                     edgeReconnectMap.delete(edge.id)
                     if (oldConnection !== undefined && checkFullConnection(connection)) {
                         if (jsonSortPropStringify(oldConnection) !== jsonSortPropStringify(connection) && !checkConnectionExist(connection)) {
-                            history.executeCommand('edge:reconnect', {layerId: currentLayerId.value, id: edge.id, newConnection: connection, oldConnection})
+                            history.executeCommand('edge:reconnect', {
+                                layerId: currentLayerId.value,
+                                id: edge.id,
+                                newConnection: connection,
+                                oldConnection
+                            })
                         }
                     }
                 })
@@ -796,6 +825,8 @@ const initMindMap = () => {
         toggleLayer,
         changeLayerVisible,
         changeLayerData,
+        dragLayer,
+        swapLayer,
 
         focus,
 
