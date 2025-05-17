@@ -13,12 +13,14 @@ import {
 import {ref, shallowReactive} from "vue";
 import {exportMindMap, MindMapExportData} from "@/mindMap/importExport/export.ts";
 import {prepareImportIntoMindMap} from "@/mindMap/importExport/import.ts";
-import {unimplementedClipBoard} from "@/clipBoard/useClipBoard.ts";
 import {getRaw} from "@/json/getRaw.ts";
 import {getKeys} from "@/type/typeGuard.ts";
 
 export type MindMapHistoryCommands = {
-    "layer:add": CommandDefinition<string>,
+    "layer:add": CommandDefinition<
+        MindMapLayer,
+        string
+    >,
     "layer:remove": CommandDefinition<
         string,
         Omit<RawMindMapLayer, "vueFlow"> & { data: MindMapExportData, index: number }
@@ -140,19 +142,9 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
     })
 
     history.registerCommand("layer:add", {
-        applyAction: (layerId) => {
-            const vueFlow = useVueFlow(createVueFlowId())
-            const layer: MindMapLayer = shallowReactive({
-                id: layerId,
-                vueFlow,
-                name: layerId,
-                visible: true,
-                opacity: 1,
-
-                ...unimplementedClipBoard,
-            })
+        applyAction: (layer) => {
             global.layers.push(layer)
-            return layerId
+            return layer.id
         },
         revertAction: (layerId) => {
             const layerIndex = getLayerIndex(layerId)
@@ -214,24 +206,22 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
 
     history.registerCommand("layer:dragged", {
         applyAction: ({oldIndex, newIndex}) => {
-            console.log("dragged", oldIndex, newIndex)
             if (oldIndex < newIndex) {
-                const diff = newIndex - oldIndex
-                global.layers.splice(newIndex - diff, 0, global.layers.splice(oldIndex, diff)[0])
+                const removedItems = global.layers.splice(oldIndex, 1)
+                global.layers.splice(newIndex - 1, 0, ...removedItems)
             } else if (oldIndex > newIndex) {
-                const diff = oldIndex - newIndex
-                global.layers.splice(oldIndex - diff, 0, global.layers.splice(newIndex, diff)[0])
+                const removedItems = global.layers.splice(oldIndex, 1)
+                global.layers.splice(newIndex, 0, ...removedItems)
             }
             return {oldIndex, newIndex}
         },
         revertAction: ({oldIndex, newIndex}) => {
-            console.log("dragged revert", oldIndex, newIndex)
             if (oldIndex < newIndex) {
-                const diff = newIndex - oldIndex
-                global.layers.splice(oldIndex, 0, global.layers.splice(newIndex - diff, diff)[0])
+                const removedItems = global.layers.splice(newIndex - 1, 1)
+                global.layers.splice(oldIndex, 0, ...removedItems)
             } else if (oldIndex > newIndex) {
-                const diff = oldIndex - newIndex
-                global.layers.splice(newIndex, 0, global.layers.splice(oldIndex - diff, diff)[0])
+                const removedItems = global.layers.splice(newIndex, 1)
+                global.layers.splice(oldIndex, 0, ...removedItems)
             }
         }
     })
@@ -239,13 +229,15 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
 
     history.registerCommand("layer:swapped", {
         applyAction: ({oldIndex, newIndex}) => {
-            console.log("swapped", oldIndex, newIndex)
-            global.layers.splice(newIndex, 0, global.layers.splice(oldIndex, 1)[0])
+            const tmp = global.layers[oldIndex]
+            global.layers[oldIndex] = global.layers[newIndex]
+            global.layers[newIndex] = tmp
             return {oldIndex, newIndex}
         },
         revertAction: ({oldIndex, newIndex}) => {
-            console.log("swapped revert", oldIndex, newIndex)
-            global.layers.splice(oldIndex, 0, global.layers.splice(newIndex, 1)[0])
+            const tmp = global.layers[oldIndex]
+            global.layers[oldIndex] = global.layers[newIndex]
+            global.layers[newIndex] = tmp
         }
     })
 

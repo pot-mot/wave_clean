@@ -91,16 +91,22 @@ export const createEdgeId = (connection: Connection) => {
 
 export type MouseAction = "panDrag" | "selectionRect"
 
-const initMindMap = () => {
-    const defaultLayer: MindMapLayer = shallowReactive({
-        id: createLayerId(),
-        vueFlow: useVueFlow(createVueFlowId()),
-        name: "layer",
+export const createLayer = () => {
+    const layerId = createLayerId()
+    const vueFlowId = createVueFlowId()
+    return shallowReactive({
+        id: layerId,
+        vueFlow: useVueFlow(vueFlowId),
+        name: layerId,
         visible: true,
         opacity: 1,
 
         ...unimplementedClipBoard,
     })
+}
+
+const initMindMap = () => {
+    const defaultLayer: MindMapLayer = createLayer()
 
     const global: MindMapGlobal = {
         zIndexIncrement: 0,
@@ -125,13 +131,12 @@ const initMindMap = () => {
         }
     }
 
-    const currentLayerId = computed(() => global.currentLayer.value.id)
-
     const isTouchDevice = ref('ontouchstart' in document.documentElement)
     const screenPosition = ref<XYPosition>({x: 0, y: 0})
 
     const {history, canUndo, canRedo} = useMindMapHistory(global)
 
+    const currentLayerId = computed(() => global.currentLayer.value.id)
     const getCurrentVueFlow = () => {
         return global.currentLayer.value.vueFlow
     }
@@ -158,16 +163,29 @@ const initMindMap = () => {
 
     const addLayer = () => {
         history.executeBatch(Symbol("layer:add"), () => {
-            const layerId = createLayerId()
-            history.executeCommand("layer:add", layerId)
-            toggleLayer(layerId)
+            const layer = createLayer()
+            history.executeCommand("layer:add", layer)
+            toggleLayer(layer.id)
         })
     }
 
     const removeLayer = (layerId: string) => {
-        if (layerId === global.currentLayer.value.id) return
-        if (global.layers.length === 1) return
-        history.executeCommand("layer:remove", layerId)
+        if (global.layers.length <= 1) return
+        history.executeBatch(Symbol("layer:remove"), () => {
+            if (layerId === currentLayerId.value) {
+                const currentIndex = global.layers.findIndex(layer => layer.id === currentLayerId.value)
+                if (currentIndex === -1) {
+                    console.error("current layer not in layers")
+                    return
+                }
+                if (currentIndex === 0) {
+                    toggleLayer(global.layers[1].id)
+                } else {
+                    toggleLayer(global.layers[currentIndex - 1].id)
+                }
+            }
+            history.executeCommand("layer:remove", layerId)
+        })
     }
 
     const toggleLayer = (layerId: string) => {
@@ -200,8 +218,8 @@ const initMindMap = () => {
 
     const dragLayer = (oldIndex: number, newIndex: number) => {
         if (
-            oldIndex < 0 || oldIndex > global.layers.length ||
-            newIndex < 0 || newIndex > global.layers.length ||
+            oldIndex < 0 || oldIndex > global.layers.length + 1 ||
+            newIndex < 0 || newIndex > global.layers.length + 1 ||
             newIndex === oldIndex
         ) return
         history.executeCommand("layer:dragged", {oldIndex, newIndex})

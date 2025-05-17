@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {MindMapLayer, useMindMap} from "@/mindMap/useMindMap.ts";
 import LayerView from "@/mindMap/layer/LayerView.vue";
-import {computed, onMounted, ref, useTemplateRef} from "vue";
+import {computed, nextTick, onMounted, ref, useTemplateRef} from "vue";
 import {debounce} from "lodash";
 
 const {
@@ -63,73 +63,83 @@ const reverseIndex = (reversedIndex: number): number => {
     return layers.length - 1 - reversedIndex
 }
 
-const handleDragStartByMouse = (index: number, layer: MindMapLayer, event: MouseEvent) => {
-    if (!scrollWrapper.value) return
-
-    event.preventDefault()
-
+const handleDragStart = (index: number, layer: MindMapLayer, clientXY: { x: number, y: number }, target: HTMLElement) => {
     draggingLayer.value = {index, layer}
     isDragging.value = true
 
-    const target = event.target as HTMLElement
     dragStartElementXY = {
-        x: target.offsetLeft,
-        y: target.offsetTop,
+        x: target.offsetLeft - (scrollWrapper.value?.scrollLeft ?? 0),
+        y: target.offsetTop - (scrollWrapper.value?.scrollTop ?? 0),
     }
     dragStartClientXY = {
-        x: event.clientX + scrollWrapper.value.scrollLeft,
-        y: event.clientY + scrollWrapper.value.scrollTop,
+        x: clientXY.x,
+        y: clientXY.y,
     }
-
-    document.documentElement.addEventListener("mousemove", handleDraggingByMouse)
-    document.documentElement.addEventListener("mouseup", handleDragEndByMouse)
+    dragMoveClientXY.value = {
+        x: dragStartElementXY.x,
+        y: dragStartElementXY.y,
+    }
 }
 
-const handleDraggingByMouse = (event: MouseEvent) => {
+const handleDragMove = (clientXY: { x: number, y: number }) => {
     if (isDragging.value && scrollWrapper.value && dragStartClientXY !== undefined && dragStartElementXY !== undefined) {
         dragMoveClientXY.value = {
-            x: dragStartElementXY.x + event.clientX - dragStartClientXY.x,
-            y: dragStartElementXY.y + event.clientY - dragStartClientXY.y,
+            x: dragStartElementXY.x + clientXY.x - dragStartClientXY.x,
+            y: dragStartElementXY.y + clientXY.y - dragStartClientXY.y,
         }
     }
 }
 
-const handleDragEndByMouse = () => {
-    document.documentElement.removeEventListener("mousemove", handleDraggingByMouse)
-    document.documentElement.removeEventListener("mouseup", handleDragEndByMouse)
-
+const handleDragEnd = () => {
     if (isDragging.value) {
         isDragging.value = false
 
         if (draggingLayer.value && overTarget.value && draggingLayer.value.layer.id !== overTarget.value.layer.id) {
-            // if (overTarget.value.type === 'layer') {
-            //     swapLayer(reverseIndex(draggingLayer.value.index), reverseIndex(overTarget.value.index))
-            // } else if (overTarget.value.type === 'gap') {
-            //     dragLayer(reverseIndex(draggingLayer.value.index), reverseIndex(overTarget.value.index))
-            // }
+            const draggingIndex = draggingLayer.value.index
+            const targetIndex = overTarget.value.index
+            if (overTarget.value.type === 'layer') {
+                swapLayer(reverseIndex(draggingIndex), reverseIndex(targetIndex))
+            } else if (overTarget.value.type === 'gap') {
+                dragLayer(reverseIndex(draggingIndex), reverseIndex(targetIndex))
+            }
+            nextTick(() => {
+                scrollWrapper.value?.scrollBy({
+                    top: draggingIndex > targetIndex ? 50 : -50,
+                    behavior: 'smooth'
+                })
+            })
         }
     }
 
     resetDragState()
 }
 
-const handleDragStartByTouch = (index: number, layer: MindMapLayer, event: TouchEvent) => {
-    if (!scrollWrapper.value) return
-
+const handleDragStartByMouse = (index: number, layer: MindMapLayer, event: MouseEvent) => {
+    if (!(event.target instanceof HTMLElement)) return
     event.preventDefault()
 
-    draggingLayer.value = {index, layer}
-    isDragging.value = true
+    handleDragStart(index, layer, {x: event.clientX, y: event.clientY}, event.target)
 
-    const target = event.target as HTMLElement
-    dragStartElementXY = {
-        x: target.offsetLeft,
-        y: target.offsetTop,
-    }
-    dragStartClientXY = {
-        x: event.touches[0].clientX + scrollWrapper.value.scrollLeft,
-        y: event.touches[0].clientY + scrollWrapper.value.scrollTop,
-    }
+    document.documentElement.addEventListener("mousemove", handleDraggingByMouse)
+    document.documentElement.addEventListener("mouseup", handleDragEndByMouse)
+}
+
+const handleDraggingByMouse = (event: MouseEvent) => {
+    handleDragMove({x: event.clientX, y: event.clientY})
+}
+
+const handleDragEndByMouse = () => {
+    document.documentElement.removeEventListener("mousemove", handleDraggingByMouse)
+    document.documentElement.removeEventListener("mouseup", handleDragEndByMouse)
+
+    handleDragEnd()
+}
+
+const handleDragStartByTouch = (index: number, layer: MindMapLayer, event: TouchEvent) => {
+    if (!(event.target instanceof HTMLElement)) return
+    event.preventDefault()
+
+    handleDragStart(index, layer, {x: event.touches[0].clientX, y:  event.touches[0].clientY}, event.target)
 
     document.documentElement.addEventListener("touchmove", handleDraggingByTouch)
     document.documentElement.addEventListener("touchend", handleDragEndByMouseByTouch)
@@ -137,12 +147,7 @@ const handleDragStartByTouch = (index: number, layer: MindMapLayer, event: Touch
 }
 
 const handleDraggingByTouch = (event: TouchEvent) => {
-    if (isDragging.value && scrollWrapper.value && dragStartClientXY !== undefined && dragStartElementXY !== undefined) {
-        dragMoveClientXY.value = {
-            x: dragStartElementXY.x + event.changedTouches[0].clientX - dragStartClientXY.x,
-            y: dragStartElementXY.y + event.changedTouches[0].clientY - dragStartClientXY.y,
-        }
-    }
+    handleDragMove({x: event.changedTouches[0].clientX, y: event.changedTouches[0].clientY})
 }
 
 const handleDragEndByMouseByTouch = () => {
@@ -150,19 +155,7 @@ const handleDragEndByMouseByTouch = () => {
     document.documentElement.removeEventListener("touchend", handleDragEndByMouseByTouch)
     document.documentElement.removeEventListener("touchcancel", handleDragEndByMouseByTouch)
 
-    if (isDragging.value) {
-        isDragging.value = false
-
-        if (draggingLayer.value && overTarget.value && draggingLayer.value.layer.id !== overTarget.value.layer.id) {
-            // if (overTarget.value.type === 'layer') {
-            //     swapLayer(reverseIndex(draggingLayer.value.index), reverseIndex(overTarget.value.index))
-            // } else if (overTarget.value.type === 'gap') {
-            //     dragLayer(reverseIndex(draggingLayer.value.index), reverseIndex(overTarget.value.index))
-            // }
-        }
-    }
-
-    resetDragState()
+    handleDragEnd()
 }
 
 const handleLayerDragEnter = debounce((index: number, layer: MindMapLayer) => {
@@ -226,14 +219,16 @@ const startDragDown = () => {
 const stopDragDown = () => {
     clearInterval(dragDownTimer)
 }
+
+const handleKeyDownEvent = (e: KeyboardEvent) => {
+    console.log('layer', e.target)
+}
 </script>
 
 <template>
-    <div class="layer-menu">
+    <div class="layer-menu" tabindex="-1" @keydown="handleKeyDownEvent">
         <div class="layer-menu-header">
             <button @click="addLayer">add</button>
-            {{ draggingLayer?.layer.id }}
-            {{ overTarget?.layer.id }}
         </div>
 
         <div
@@ -244,27 +239,31 @@ const stopDragDown = () => {
                 v-if="isDragging && draggingLayer && dragMoveClientXY"
                 class="layer-menu-item dragged-view"
                 :style="{
-                        top: dragMoveClientXY.y + 'px',
-                        left: dragMoveClientXY.x + 'px',
-                    }">
+                    top: dragMoveClientXY.y + 'px',
+                    left: dragMoveClientXY.x + 'px',
+                }">
                 <div class="layer-menu-item-view">
                     <LayerView/>
                 </div>
-                <span
+                <input
                     class="layer-menu-item-name"
-                >
-                        {{ draggingLayer.layer.name }}
-                    </span>
+                    :value="draggingLayer.layer.name"
+                    style="user-focus: none; user-select: none; user-input: none;"
+                />
             </div>
 
-            <div class="layer-menu-item-scroll-wrapper" ref="scrollWrapper" @scroll="handleScroll">
+            <div
+                class="layer-menu-item-scroll-wrapper"
+                ref="scrollWrapper"
+                @scroll="handleScroll"
+            >
                 <div
                     class="layer-menu-item-gap"
                     :class="{
-                        over: overTarget?.index === layers.length && overTarget?.type === 'gap'
+                        over: overTarget?.index === -1 && overTarget?.type === 'gap'
                     }"
-                    @mouseenter="handleGapDragEnter(layers.length, lastLayer)"
-                    @touchmove="handleLayerDragEnter(layers.length, lastLayer)"
+                    @mouseenter="handleGapDragEnter(-1, lastLayer)"
+                    @touchmove="handleLayerDragEnter(-1, lastLayer)"
                 />
 
                 <template v-for="(layer, index) in layers.slice().reverse()" :key="layer.id">
@@ -296,7 +295,6 @@ const stopDragDown = () => {
                             {{ layer.visible ? 'show' : 'hide' }}
                         </button>
                         <button
-                            v-if="currentLayer.id !== layer.id"
                             @click.stop="removeLayer(layer.id)"
                             class="layer-menu-item-delete"
                         >
