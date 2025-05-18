@@ -2,8 +2,11 @@
 import {useMindMap} from "@/mindMap/useMindMap.ts";
 import {computed, onBeforeUnmount, onMounted, ref, shallowRef} from "vue";
 import LayerMenu from "@/mindMap/layer/LayerMenu.vue";
+import {checkElementParent} from "@/mindMap/clickUtils.ts";
 
 const {
+    currentLayer,
+
     canUndo,
     canRedo,
     undo,
@@ -31,8 +34,9 @@ const cleanActiveElement = () => {
     focusTarget.value = null
 }
 
-const isInputFocused = computed(() => {
-    return focusTarget.value instanceof HTMLInputElement || focusTarget.value instanceof HTMLTextAreaElement
+const isVueFlowInputFocused = computed(() => {
+    return (focusTarget.value instanceof HTMLInputElement || focusTarget.value instanceof HTMLTextAreaElement) &&
+        currentLayer.value.vueFlow.vueFlowRef.value && checkElementParent(focusTarget.value, currentLayer.value.vueFlow.vueFlowRef.value)
 })
 
 onMounted(() => {
@@ -46,28 +50,26 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <template v-show="!isInputFocused">
-        <div style="z-index: 5; width: 100%; position: absolute; top: 0; left: 0; height: 2rem; line-height: 2rem; vertical-align: center; display: flex; justify-content: space-around;">
-            <button @click="copy">copy</button>
-            <button @click="cut">cut</button>
-            <button @click="paste">paste</button>
+    <div style="z-index: 5; width: 100%; position: absolute; top: 0; left: 0; height: 2rem; line-height: 2rem; vertical-align: center; display: flex; justify-content: space-around;">
+        <button @click="copy">copy</button>
+        <button @click="cut">cut</button>
+        <button @click="paste">paste</button>
 
-            <button @click="selectAll()">selectAll</button>
-        </div>
+        <button @click="selectAll()">selectAll</button>
+    </div>
 
-        <div style="z-index: 5; width: 100%; position: absolute; bottom: 0; height: 2rem; line-height: 2rem; vertical-align: center; display: flex; justify-content: space-around;">
-            <button @click="fitView()">fit</button>
-            <button @click="toggleDefaultMouseAction">{{ defaultMouseAction }}</button>
-            <button @click="toggleMultiSelect">multiselect: {{ canMultiSelect }}</button>
+    <div v-show="!isVueFlowInputFocused" style="z-index: 5; width: 100%; position: absolute; bottom: 0; height: 2rem; line-height: 2rem; vertical-align: center; display: flex; justify-content: space-around;">
+        <button @click="fitView()">fit</button>
+        <button @click="toggleDefaultMouseAction">{{ defaultMouseAction }}</button>
+        <button @click="toggleMultiSelect">multiselect: {{ canMultiSelect }}</button>
 
-            <button :disabled="!canUndo" @click="undo">undo</button>
-            <button :disabled="!canRedo" @click="redo">redo</button>
+        <button :disabled="!canUndo" @click="undo">undo</button>
+        <button :disabled="!canRedo" @click="redo">redo</button>
 
-            <button @click="layersMenuOpen = !layersMenuOpen">layers</button>
-        </div>
+        <button @click="layersMenuOpen = !layersMenuOpen">layers</button>
+    </div>
 
-        <div v-show="layersMenuOpen" style="z-index: 5; position: absolute; bottom: 3rem; right: 0; height: calc(100% - 3rem); width: min(60vw, 20rem);">
-            <LayerMenu/>
-        </div>
-    </template>
+    <div v-show="!isVueFlowInputFocused && layersMenuOpen" style="z-index: 5; position: absolute; bottom: 3rem; right: 0; height: calc(100% - 3rem); width: min(60vw, 20rem);">
+        <LayerMenu/>
+    </div>
 </template>
