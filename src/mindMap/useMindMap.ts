@@ -464,6 +464,7 @@ const initMindMap = () => {
 
             onViewportChange,
 
+            onNodesChange,
             onNodeDragStart,
             onNodeDragStop,
             onConnect,
@@ -529,7 +530,29 @@ const initMindMap = () => {
              */
             const nodeMoveMap = new Map<string, XYPosition>
 
+            onNodesChange((changes) => {
+                if (nodeMoveMap.size !== 0) return
+
+                history.executeBatch(Symbol("node:move"), () => {
+                    for (const change of changes) {
+                        if (change.type === 'position') {
+                            history.pushCommand('node:move', {
+                                layerId: currentLayerId.value,
+                                id: change.id,
+                                oldPosition: change.from,
+                                newPosition: change.position
+                            }, {
+                                layerId: currentLayerId.value,
+                                id: change.id,
+                                oldPosition: change.from,
+                            })
+                        }
+                    }
+                })
+            })
+
             onNodeDragStart(({nodes}) => {
+                nodeMoveMap.clear()
                 for (const node of nodes) {
                     nodeMoveMap.set(node.id, node.position)
                 }
@@ -553,6 +576,7 @@ const initMindMap = () => {
                         }
                     }
                 })
+                nodeMoveMap.clear()
             })
 
             /**
