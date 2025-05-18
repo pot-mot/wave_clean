@@ -150,7 +150,18 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
         revertAction: (layerId) => {
             const layerIndex = getLayerIndex(layerId)
             const layer = global.layers.splice(layerIndex, 1)[0]
+            const data = exportMindMap(layer.vueFlow)
             layer.vueFlow.$destroy()
+
+            const vueFlow = useVueFlow(createVueFlowId())
+            const {newNodes, newEdges} = prepareImportIntoMindMap(vueFlow, data)
+            vueFlow.addNodes(newNodes)
+            vueFlow.addEdges(newEdges)
+
+            return shallowReactive({
+                ...layer,
+                vueFlow,
+            })
         }
     })
 
