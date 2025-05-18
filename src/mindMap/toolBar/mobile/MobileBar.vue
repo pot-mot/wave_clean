@@ -44,7 +44,7 @@ const layersMenuOpen = ref(false)
         <button @click="layersMenuOpen = !layersMenuOpen">layers</button>
     </div>
 
-    <div v-show="layersMenuOpen" style="z-index: 5; position: absolute; bottom: 3rem; right: 0; height: calc(100% - 3rem); width: max(40vw, 20rem);">
+    <div v-show="layersMenuOpen" style="z-index: 5; position: absolute; bottom: 3rem; right: 0; height: calc(100% - 3rem); width: min(60vw, 20rem);">
         <LayerMenu/>
     </div>
 </template>

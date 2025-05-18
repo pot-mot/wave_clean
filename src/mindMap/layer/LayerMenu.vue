@@ -2,7 +2,6 @@
 import {MindMapLayer, useMindMap} from "@/mindMap/useMindMap.ts";
 import LayerView from "@/mindMap/layer/LayerView.vue";
 import {computed, nextTick, onMounted, ref, useTemplateRef} from "vue";
-import {debounce} from "lodash";
 
 const {
     layers,
@@ -135,18 +134,36 @@ const handleDragEndByMouse = () => {
     handleDragEnd()
 }
 
+const touchDragStartFlag = new Set<number>()
 const handleDragStartByTouch = (index: number, layer: MindMapLayer, event: TouchEvent) => {
     if (!(event.target instanceof HTMLElement)) return
-    event.preventDefault()
+    const target = event.target
 
-    handleDragStart(index, layer, {x: event.touches[0].clientX, y:  event.touches[0].clientY}, event.target)
+    touchDragStartFlag.add(index)
+    const deleteFlag = () => {
+        touchDragStartFlag.delete(index)
+    }
+    setTimeout(() => {
+        if (!touchDragStartFlag.has(index)) {
+            document.documentElement.removeEventListener("touchmove", deleteFlag)
+            document.documentElement.removeEventListener("touchend", deleteFlag)
+            document.documentElement.removeEventListener("touchcancel", deleteFlag)
+            return
+        }
+        handleDragStart(index, layer, {x: event.touches[0].clientX, y:  event.touches[0].clientY}, target)
 
-    document.documentElement.addEventListener("touchmove", handleDraggingByTouch)
-    document.documentElement.addEventListener("touchend", handleDragEndByMouseByTouch)
-    document.documentElement.addEventListener("touchcancel", handleDragEndByMouseByTouch)
+        document.documentElement.addEventListener("touchmove", handleDraggingByTouch, {passive: false})
+        document.documentElement.addEventListener("touchend", handleDragEndByMouseByTouch)
+        document.documentElement.addEventListener("touchcancel", handleDragEndByMouseByTouch)
+    }, 500)
+
+    document.documentElement.addEventListener("touchmove", deleteFlag, {once: true})
+    document.documentElement.addEventListener("touchend", deleteFlag, {once: true})
+    document.documentElement.addEventListener("touchcancel", deleteFlag, {once: true})
 }
 
 const handleDraggingByTouch = (event: TouchEvent) => {
+    event.preventDefault()
     handleDragMove({x: event.changedTouches[0].clientX, y: event.changedTouches[0].clientY})
 }
 
@@ -158,19 +175,19 @@ const handleDragEndByMouseByTouch = () => {
     handleDragEnd()
 }
 
-const handleLayerDragEnter = debounce((index: number, layer: MindMapLayer) => {
+const handleLayerDragEnter = (index: number, layer: MindMapLayer) => {
     if (!isDragging.value) return
     if (overTarget.value?.layer.id !== layer.id) {
         overTarget.value = {index, layer, type: 'layer'}
     }
-}, 100)
+}
 
-const handleGapDragEnter = debounce((index: number, layer: MindMapLayer) => {
+const handleGapDragEnter = (index: number, layer: MindMapLayer) => {
     if (!isDragging.value) return
     if (overTarget.value?.layer.id !== layer.id) {
         overTarget.value = {index, layer, type: 'gap'}
     }
-}, 100)
+}
 
 const handleMouseLeave = () => {
     if (isDragging.value) {
@@ -219,14 +236,10 @@ const startDragDown = () => {
 const stopDragDown = () => {
     clearInterval(dragDownTimer)
 }
-
-const handleKeyDownEvent = (e: KeyboardEvent) => {
-    console.log('layer', e.target)
-}
 </script>
 
 <template>
-    <div class="layer-menu" tabindex="-1" @keydown="handleKeyDownEvent">
+    <div class="layer-menu">
         <div class="layer-menu-header">
             <button @click="addLayer">add</button>
         </div>
@@ -237,7 +250,7 @@ const handleKeyDownEvent = (e: KeyboardEvent) => {
         >
             <div
                 v-if="isDragging && draggingLayer && dragMoveClientXY"
-                class="layer-menu-item dragged-view"
+                class="layer-menu-item-dragged-view"
                 :style="{
                     top: dragMoveClientXY.y + 'px',
                     left: dragMoveClientXY.x + 'px',
@@ -263,7 +276,7 @@ const handleKeyDownEvent = (e: KeyboardEvent) => {
                         over: overTarget?.index === -1 && overTarget?.type === 'gap'
                     }"
                     @mouseenter="handleGapDragEnter(-1, lastLayer)"
-                    @touchmove="handleLayerDragEnter(-1, lastLayer)"
+                    @touchenter="handleLayerDragEnter(-1, lastLayer)"
                 />
 
                 <template v-for="(layer, index) in layers.slice().reverse()" :key="layer.id">
@@ -280,8 +293,14 @@ const handleKeyDownEvent = (e: KeyboardEvent) => {
                         @mouseenter="handleLayerDragEnter(index, layer)"
 
                         @touchstart.self="handleDragStartByTouch(index, layer, $event)"
-                        @touchmove="handleLayerDragEnter(index, layer)"
+                        @touchenter="handleLayerDragEnter(index, layer)"
                     >
+                        <button
+                            @click.stop="toggleLayerVisible(layer)"
+                            class="layer-menu-item-visible"
+                        >
+                            {{ layer.visible ? 'show' : 'hide' }}
+                        </button>
                         <div class="layer-menu-item-view">
                             <LayerView/>
                         </div>
@@ -291,16 +310,10 @@ const handleKeyDownEvent = (e: KeyboardEvent) => {
                             @change="(e) => handleLayerNameChange(layer, e)"
                         >
                         <button
-                            @click.stop="toggleLayerVisible(layer)"
-                            class="layer-menu-item-visible"
-                        >
-                            {{ layer.visible ? 'show' : 'hide' }}
-                        </button>
-                        <button
                             @click.stop="removeLayer(layer.id)"
                             class="layer-menu-item-delete"
                         >
-                            delete
+                            del
                         </button>
                     </div>
 
@@ -310,7 +323,7 @@ const handleKeyDownEvent = (e: KeyboardEvent) => {
                             over: overTarget?.index === index && overTarget?.type === 'gap'
                         }"
                         @mouseenter="handleGapDragEnter(index, layer)"
-                        @touchmove="handleLayerDragEnter(index, layer)"
+                        @touchenter="handleLayerDragEnter(index, layer)"
                     />
                 </template>
             </div>
@@ -324,7 +337,7 @@ const handleKeyDownEvent = (e: KeyboardEvent) => {
                 @mouseleave="stopDragUp"
                 @mouseup="stopDragUp"
 
-                @touchstart="startDragUp"
+                @touchenter="startDragUp"
                 @touchstop="stopDragUp"
                 @touchcancel="stopDragUp"
             >
@@ -340,7 +353,7 @@ const handleKeyDownEvent = (e: KeyboardEvent) => {
                 @mouseleave="stopDragDown"
                 @mouseup="stopDragDown"
 
-                @touchstart="startDragDown"
+                @touchenter="startDragDown"
                 @touchstop="stopDragDown"
                 @touchcancel="stopDragDown"
             >
@@ -363,23 +376,28 @@ const handleKeyDownEvent = (e: KeyboardEvent) => {
 .layer-menu-container {
     position: relative;
     height: calc(100% - 2rem);
-    width: max(100%, 20rem);
 }
 
 .layer-menu-item-scroll-wrapper {
     position: relative;
     height: 100%;
     width: 100%;
-    overflow-x: auto;
-    overflow-y: auto;
+    overflow-x: scroll;
+    overflow-y: scroll;
+    scrollbar-gutter: stable;
 }
 
 .layer-menu-item {
-    position: relative;
     background-color: var(--background-color);
-    height: 6rem;
+    height: 5rem;
     width: 100%;
+    display: grid;
+    grid-template-columns: 1.5rem 4rem calc(100% - 7rem) 1.5rem;
     user-select: none;
+}
+
+.layer-menu-item:hover {
+    background-color: var(--background-color-hover);
 }
 
 .layer-menu-item.current {
@@ -395,31 +413,35 @@ const handleKeyDownEvent = (e: KeyboardEvent) => {
     outline-offset: -2px;
 }
 
-.layer-menu-item.dragged-view {
+.layer-menu-item-dragged-view {
     position: absolute;
+    height: 5rem;
+    width: 100%;
+    padding: 0 1.5rem;
+    display: grid;
+    grid-template-columns: 4rem calc(100% - 7rem);
     opacity: 0.8;
     pointer-events: none;
     z-index: 1000000;
     background-color: var(--primary-color);
 }
 
-.layer-menu-item-visible {
-    position: absolute;
-    top: 2.5rem;
-    left: 0.5rem;
-    height: 1rem;
-    width: 2rem;
+.layer-menu-item-view {
+    height: 4rem;
+    width: 4rem;
+    margin-top: 0.5rem;
 }
 
-.layer-menu-item-view {
-    position: absolute;
-    top: 0.5rem;
-    left: 3rem;
-    height: 5rem;
-    width: 5rem;
+.layer-menu-item-visible,
+.layer-menu-item-delete {
+    height: 1.5rem;
+    width: 1.5rem;
+    margin-top: 1.75rem;
 }
 
 .layer-menu-item-name {
+    height: 1rem;
+    margin-top: 2rem;
     pointer-events: none;
 }
 
@@ -428,11 +450,6 @@ const handleKeyDownEvent = (e: KeyboardEvent) => {
 }
 
 .layer-menu-item-name {
-    position: absolute;
-    top: 2.5rem;
-    left: 8.5rem;
-    height: 1rem;
-    width: 9rem;
     font-size: 0.9rem;
 
     background-color: transparent;
@@ -442,14 +459,6 @@ const handleKeyDownEvent = (e: KeyboardEvent) => {
 .layer-menu-item-name:focus {
     background-color: var(--background-color);
     border: var(--border);
-}
-
-.layer-menu-item-delete {
-    position: absolute;
-    top: 2.5rem;
-    left: 18rem;
-    height: 1rem;
-    width: 2rem;
 }
 
 .layer-menu-item-gap {
