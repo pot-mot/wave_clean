@@ -335,6 +335,20 @@ const initMindMap = () => {
         }
     }
 
+    const selectAll = () => {
+        const vueFlow = getCurrentVueFlow()
+        const isCurrentMultiSelect = isMultiSelected.value
+
+        if (!isCurrentMultiSelect) enableMultiSelect()
+        if (vueFlow.getSelectedNodes.value.length < vueFlow.getNodes.value.length) {
+            vueFlow.addSelectedNodes(vueFlow.getNodes.value)
+        }
+        if (vueFlow.getSelectedEdges.value.length < vueFlow.getEdges.value.length) {
+            vueFlow.addSelectedEdges(vueFlow.getEdges.value)
+        }
+        if (!isCurrentMultiSelect) disableMultiSelect()
+    }
+
     /**
      * 框选相关配置
      */
@@ -622,13 +636,9 @@ const initMindMap = () => {
                     if (e.key === "a" || e.key === "A") {
                         if (judgeTargetIsInteraction(e)) return
 
-                        const isCurrentMultiSelect = isMultiSelected.value
-
                         e.preventDefault()
-                        if (!isCurrentMultiSelect) enableMultiSelect()
-                        vueFlow.addSelectedNodes(vueFlow.getNodes.value)
-                        vueFlow.addSelectedEdges(vueFlow.getEdges.value)
-                        if (!isCurrentMultiSelect) disableMultiSelect()
+
+                        selectAll()
                     }
                 }
             })
@@ -879,6 +889,8 @@ const initMindMap = () => {
         disableMultiSelect,
         enableMultiSelect,
         toggleMultiSelect,
+
+        selectAll,
 
         defaultMouseAction: readonly(defaultMouseAction),
         toggleDefaultMouseAction,

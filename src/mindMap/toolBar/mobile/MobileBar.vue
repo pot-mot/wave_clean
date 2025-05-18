@@ -14,12 +14,14 @@ const {
     canMultiSelect,
     toggleMultiSelect,
 
+    selectAll,
+
     copy,
     cut,
     paste,
 } = useMindMap()
 
-const layersMenuOpen = ref(true)
+const layersMenuOpen = ref(false)
 </script>
 
 <template>
@@ -27,6 +29,8 @@ const layersMenuOpen = ref(true)
         <button @click="copy">copy</button>
         <button @click="cut">cut</button>
         <button @click="paste">paste</button>
+
+        <button @click="selectAll()">selectAll</button>
     </div>
 
     <div style="z-index: 5; width: 100%; position: absolute; bottom: 0; height: 3rem; line-height: 3rem; vertical-align: center; display: flex; justify-content: space-around;">
