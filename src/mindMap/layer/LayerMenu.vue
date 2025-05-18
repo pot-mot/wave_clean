@@ -275,9 +275,11 @@ const handleKeyDownEvent = (e: KeyboardEvent) => {
                             over: overTarget?.index === index && overTarget?.type === 'layer'
                         }"
                         @click="toggleLayer(layer.id)"
-                        @mousedown="handleDragStartByMouse(index, layer, $event)"
+
+                        @mousedown.self="handleDragStartByMouse(index, layer, $event)"
                         @mouseenter="handleLayerDragEnter(index, layer)"
-                        @touchstart="handleDragStartByTouch(index, layer, $event)"
+
+                        @touchstart.self="handleDragStartByTouch(index, layer, $event)"
                         @touchmove="handleLayerDragEnter(index, layer)"
                     >
                         <div class="layer-menu-item-view">
@@ -377,6 +379,7 @@ const handleKeyDownEvent = (e: KeyboardEvent) => {
     background-color: var(--background-color);
     height: 6rem;
     width: 100%;
+    user-select: none;
 }
 
 .layer-menu-item.current {
