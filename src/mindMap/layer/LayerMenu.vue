@@ -18,12 +18,6 @@ const {
     isTouchDevice,
 } = useMindMap()
 
-onMounted(() => {
-    for (let i = 0; i < 20; i++) {
-        addLayer()
-    }
-})
-
 const lastLayer = computed(() => layers[layers.length - 1])
 
 const toggleLayerVisible = (layer: MindMapLayer) => {
@@ -382,7 +376,7 @@ const stopDragDown = () => {
 
             <div
                 v-if="canDragUp"
-                class="layer-menu-item-scroll-handle"
+                class="layer-menu-item-scroll-handle up"
                 style="position: absolute; top: 0; left: 0; right: 0;"
 
                 @mouseenter="startDragUp"
@@ -393,13 +387,11 @@ const stopDragDown = () => {
                 @touchleave="stopDragUp"
                 @touchstop="stopDragUp"
                 @touchcancel="stopDragUp"
-            >
-                <div>上</div>
-            </div>
+            />
 
             <div
                 v-if="canDragDown"
-                class="layer-menu-item-scroll-handle"
+                class="layer-menu-item-scroll-handle down"
                 style="position: absolute; bottom: 0; left: 0; right: 0;"
 
                 @mouseenter="startDragDown"
@@ -410,9 +402,7 @@ const stopDragDown = () => {
                 @touchleave="stopDragDown"
                 @touchstop="stopDragDown"
                 @touchcancel="stopDragDown"
-            >
-                <div>下</div>
-            </div>
+            />
         </div>
     </div>
 </template>
@@ -421,6 +411,8 @@ const stopDragDown = () => {
 .layer-menu {
     height: 100%;
     width: 100%;
+    background-color: var(--background-color);
+    border: var(--border);
 }
 
 .layer-menu-header {
@@ -430,12 +422,14 @@ const stopDragDown = () => {
 .layer-menu-container {
     position: relative;
     height: calc(100% - 2rem);
+    overflow: hidden;
 }
 
 .layer-menu-item-scroll-wrapper {
     position: relative;
     height: 100%;
     width: 100%;
+    padding-bottom: 3rem;
     overflow-x: scroll;
     overflow-y: scroll;
     scrollbar-gutter: stable;
@@ -521,9 +515,19 @@ const stopDragDown = () => {
     z-index: 1000000;
 }
 
+.layer-menu-item-scroll-handle.up {
+    background: linear-gradient(to top, transparent, var(--background-color-hover));
+}
+
+.layer-menu-item-scroll-handle.down {
+    background: linear-gradient(to bottom, transparent, var(--background-color-hover));
+}
+
+
 .layer-menu-item-gap {
-    height: 0.6rem;
+    height: 0.3rem;
     transition: height 0.5s;
+    background-color: var(--background-color-hover);
 }
 
 .layer-menu-item-gap.over {

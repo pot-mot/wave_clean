@@ -58,7 +58,8 @@ onBeforeUnmount(() => {
         <button @click="selectAll()">selectAll</button>
     </div>
 
-    <div v-show="!isVueFlowInputFocused" style="z-index: 5; width: 100%; position: absolute; bottom: 0; height: 2rem; line-height: 2rem; vertical-align: center; display: flex; justify-content: space-around;">
+    <div v-show="!isVueFlowInputFocused"
+         style="z-index: 5; width: 100%; position: absolute; bottom: 0; height: 2rem; line-height: 2rem; vertical-align: center; display: flex; justify-content: space-around;">
         <button @click="fitView()">fit</button>
         <button @click="toggleDefaultMouseAction">{{ defaultMouseAction }}</button>
         <button @click="toggleMultiSelect">multiselect: {{ canMultiSelect }}</button>
@@ -69,7 +70,13 @@ onBeforeUnmount(() => {
         <button @click="layersMenuOpen = !layersMenuOpen">layers</button>
     </div>
 
-    <div v-show="!isVueFlowInputFocused && layersMenuOpen" style="z-index: 5; position: absolute; bottom: 3rem; right: 0; height: calc(100% - 3rem); width: min(60vw, 20rem);">
-        <LayerMenu/>
+    <div
+        v-show="!isVueFlowInputFocused && layersMenuOpen"
+        style="z-index: 5; position: absolute; bottom: 2rem; right: 0; height: calc(100vh - 2rem); width: 100vw;"
+        @click.self = "layersMenuOpen = false"
+    >
+        <div style="position: absolute; top: 0; right: 0; height: 100%; width: min(60vw, 20rem);">
+            <LayerMenu/>
+        </div>
     </div>
 </template>
