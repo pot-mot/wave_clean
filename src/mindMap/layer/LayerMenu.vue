@@ -313,7 +313,7 @@ const stopDragDown = () => {
                     left: dragMoveClientXY.x + 'px',
                 }">
                 <div class="layer-menu-item-view">
-                    <LayerView/>
+                    <LayerView :layer="draggingLayer.layer"/>
                 </div>
                 <input
                     class="layer-menu-item-name"
@@ -360,7 +360,7 @@ const stopDragDown = () => {
                                 {{ layer.visible ? 'show' : 'hide' }}
                             </button>
                             <div class="layer-menu-item-view">
-                                <LayerView/>
+                                <LayerView :layer="layer"/>
                             </div>
                             <input
                                 :value="layer.name"
