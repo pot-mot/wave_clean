@@ -62,7 +62,10 @@ const reverseIndex = (reversedIndex: number): number => {
     return layers.length - 1 - reversedIndex
 }
 
-const handleDragStart = (index: number, layer: MindMapLayer, clientXY: { x: number, y: number }, target: HTMLElement) => {
+const handleDragStart = (index: number, layer: MindMapLayer, clientXY: {
+    x: number,
+    y: number
+}, target: HTMLElement) => {
     draggingLayer.value = {index, layer}
     isDragging.value = true
 
@@ -113,14 +116,29 @@ const handleDragEnd = () => {
     resetDragState()
 }
 
+const mouseDragStartFlag = new Set<number>()
 const handleDragStartByMouse = (index: number, layer: MindMapLayer, event: MouseEvent) => {
     if (!(event.target instanceof HTMLElement)) return
-    event.preventDefault()
+    const target = event.target
 
-    handleDragStart(index, layer, {x: event.clientX, y: event.clientY}, event.target)
+    mouseDragStartFlag.add(index)
+    const deleteFlag = () => {
+        mouseDragStartFlag.delete(index)
+    }
+    setTimeout(() => {
+        if (!mouseDragStartFlag.has(index)) {
+            document.documentElement.removeEventListener("mousemove", deleteFlag)
+            document.documentElement.removeEventListener("mouseup", deleteFlag)
+            return
+        }
+        handleDragStart(index, layer, {x: event.clientX, y: event.clientY}, target)
 
-    document.documentElement.addEventListener("mousemove", handleDraggingByMouse)
-    document.documentElement.addEventListener("mouseup", handleDragEndByMouse)
+        document.documentElement.addEventListener("mousemove", handleDraggingByMouse)
+        document.documentElement.addEventListener("mouseup", handleDragEndByMouse)
+    }, 100)
+
+    document.documentElement.addEventListener("mousemove", deleteFlag, {once: true})
+    document.documentElement.addEventListener("mouseup", deleteFlag, {once: true})
 }
 
 const handleDraggingByMouse = (event: MouseEvent) => {
@@ -150,12 +168,12 @@ const handleDragStartByTouch = (index: number, layer: MindMapLayer, event: Touch
             document.documentElement.removeEventListener("touchcancel", deleteFlag)
             return
         }
-        handleDragStart(index, layer, {x: event.touches[0].clientX, y:  event.touches[0].clientY}, target)
+        handleDragStart(index, layer, {x: event.touches[0].clientX, y: event.touches[0].clientY}, target)
 
         document.documentElement.addEventListener("touchmove", handleDraggingByTouch, {passive: false})
         document.documentElement.addEventListener("touchend", handleDragEndByMouseByTouch)
         document.documentElement.addEventListener("touchcancel", handleDragEndByMouseByTouch)
-    }, 500)
+    }, 100)
 
     document.documentElement.addEventListener("touchmove", deleteFlag, {once: true})
     document.documentElement.addEventListener("touchend", deleteFlag, {once: true})
@@ -442,19 +460,20 @@ const stopDragDown = () => {
 .layer-menu-item-name {
     height: 1rem;
     margin-top: 2rem;
-    pointer-events: none;
-}
-
-.current .layer-menu-item-name {
-    pointer-events: initial;
 }
 
 .layer-menu-item-name {
     font-size: 0.9rem;
-
+    pointer-events: none;
     background-color: transparent;
     border: none;
 }
+
+.current .layer-menu-item-name {
+    pointer-events: initial;
+    cursor: default;
+}
+
 
 .layer-menu-item-name:focus {
     background-color: var(--background-color);
