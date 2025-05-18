@@ -480,16 +480,18 @@ const stopDragDown = () => {
     border: var(--border);
 }
 
-.layer-menu-item-gap {
-    height: 0.6rem;
-}
-
 .layer-menu-item-scroll-handle {
     height: 2rem;
     z-index: 1000000;
 }
 
+.layer-menu-item-gap {
+    height: 0.6rem;
+    transition: height 0.5s;
+}
+
 .layer-menu-item-gap.over {
+    height: 5rem;
     background-color: var(--primary-color);
     opacity: 0.6;
     cursor: default;
