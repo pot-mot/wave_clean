@@ -33,6 +33,25 @@ const handleLayerNameChange = (layer: MindMapLayer, e: Event) => {
 
 const container = useTemplateRef<HTMLDivElement>("container")
 
+const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "Delete") {
+        e.preventDefault()
+        removeLayer(currentLayer.value.id)
+    } else if (e.key === "ArrowUp") {
+        const currentIndex = layers.findIndex(it => it.id === currentLayer.value.id)
+        if (layers.length > 1 && currentIndex !== -1 && currentIndex !== layers.length - 1) {
+            e.preventDefault()
+            swapLayer(currentIndex, currentIndex + 1)
+        }
+    } else if (e.key === "ArrowDown") {
+        const currentIndex = layers.findIndex(it => it.id === currentLayer.value.id)
+        if (layers.length > 1 && currentIndex !== -1 && currentIndex !== 0 && scrollWrapper.value) {
+            e.preventDefault()
+            swapLayer(currentIndex, currentIndex - 1)
+        }
+    }
+}
+
 // 拖拽行为和状态
 const isDragging = ref(false)
 const draggingLayer = ref<{ layer: MindMapLayer, index: number }>()
@@ -275,7 +294,7 @@ const stopDragDown = () => {
 </script>
 
 <template>
-    <div class="layer-menu">
+    <div class="layer-menu" tabindex="-1" @keydown="handleKeyDown">
         <div class="layer-menu-header">
             <button @click="addLayer">add</button>
         </div>
