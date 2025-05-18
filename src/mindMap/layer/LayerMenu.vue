@@ -508,6 +508,7 @@ const stopDragDown = () => {
 .layer-menu-item-name:focus {
     background-color: var(--background-color);
     border: var(--border);
+    cursor: text;
 }
 
 .layer-menu-item-scroll-handle {
