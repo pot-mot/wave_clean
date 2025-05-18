@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import {MindMapLayer, useMindMap} from "@/mindMap/useMindMap.ts";
 import LayerView from "@/mindMap/layer/LayerView.vue";
-import {computed, nextTick, onMounted, ref, useTemplateRef} from "vue";
+import {computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef} from "vue";
+import {useTouchEnterLeave} from "@/event/TouchEnterLeave.ts";
 
 const {
     layers,
@@ -13,6 +14,8 @@ const {
     changeLayerData,
     swapLayer,
     dragLayer,
+
+    isTouchDevice,
 } = useMindMap()
 
 onMounted(() => {
@@ -33,6 +36,8 @@ const handleLayerNameChange = (layer: MindMapLayer, e: Event) => {
         e.target.blur()
     }
 }
+
+const container = useTemplateRef<HTMLDivElement>("container")
 
 // 拖拽行为和状态
 const isDragging = ref(false)
@@ -56,6 +61,12 @@ const resetDragState = () => {
     dragStartElementXY = undefined
     dragStartClientXY = undefined
     dragMoveClientXY.value = undefined
+}
+
+const handleLeaveContainer = () => {
+    if (isDragging.value) {
+        overTarget.value = undefined
+    }
 }
 
 const reverseIndex = (reversedIndex: number): number => {
@@ -99,16 +110,19 @@ const handleDragEnd = () => {
         if (draggingLayer.value && overTarget.value && draggingLayer.value.layer.id !== overTarget.value.layer.id) {
             const draggingIndex = draggingLayer.value.index
             const targetIndex = overTarget.value.index
-            if (overTarget.value.type === 'layer') {
+            const type = overTarget.value.type
+            if (type === 'layer') {
                 swapLayer(reverseIndex(draggingIndex), reverseIndex(targetIndex))
-            } else if (overTarget.value.type === 'gap') {
+            } else if (type === 'gap') {
                 dragLayer(reverseIndex(draggingIndex), reverseIndex(targetIndex))
             }
             nextTick(() => {
-                scrollWrapper.value?.scrollBy({
-                    top: draggingIndex > targetIndex ? 50 : -50,
-                    behavior: 'smooth'
-                })
+                if (type === 'gap') {
+                    scrollWrapper.value?.scrollBy({
+                        top: draggingIndex > targetIndex ? 50 : -50,
+                        behavior: 'smooth'
+                    })
+                }
             })
         }
     }
@@ -151,6 +165,30 @@ const handleDragEndByMouse = () => {
 
     handleDragEnd()
 }
+
+
+const {handleTouchMove} = useTouchEnterLeave()
+
+const handleTouchMoveToEmitTouchEnter = (e: TouchEvent) => {
+    if (container.value) {
+        const clientXY = { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY }
+
+        const handles = container.value.querySelectorAll('.layer-menu-item-scroll-handle')
+        const items = container.value.querySelectorAll('.layer-menu-item')
+        const gaps = container.value.querySelectorAll('.layer-menu-item-gap')
+
+        handleTouchMove([...handles, ...items, ...gaps], clientXY)
+    }
+}
+
+onMounted(() => {
+    if (isTouchDevice.value && container.value) {
+        container.value.addEventListener('touchmove', handleTouchMoveToEmitTouchEnter)
+    }
+})
+onBeforeUnmount(() => {
+    container.value?.removeEventListener('touchmove', handleTouchMoveToEmitTouchEnter)
+})
 
 const touchDragStartFlag = new Set<number>()
 const handleDragStartByTouch = (index: number, layer: MindMapLayer, event: TouchEvent) => {
@@ -207,12 +245,6 @@ const handleGapDragEnter = (index: number, layer: MindMapLayer) => {
     }
 }
 
-const handleMouseLeave = () => {
-    if (isDragging.value) {
-        overTarget.value = undefined
-    }
-}
-
 // 当拖拽至两端时，触发滚动
 const canDragUp = computed(() => {
     if (!scrollWrapper.value) return false
@@ -264,7 +296,9 @@ const stopDragDown = () => {
 
         <div
             class="layer-menu-container"
-            @mouseleave="handleMouseLeave"
+            ref="container"
+            @mouseleave="handleLeaveContainer"
+            @touchleave="handleLeaveContainer"
         >
             <div
                 v-if="isDragging && draggingLayer && dragMoveClientXY"
@@ -294,7 +328,7 @@ const stopDragDown = () => {
                         over: overTarget?.index === -1 && overTarget?.type === 'gap'
                     }"
                     @mouseenter="handleGapDragEnter(-1, lastLayer)"
-                    @touchenter="handleLayerDragEnter(-1, lastLayer)"
+                    @touchenter="handleGapDragEnter(-1, lastLayer)"
                 />
 
                 <template v-for="(layer, index) in layers.slice().reverse()" :key="layer.id">
@@ -341,7 +375,7 @@ const stopDragDown = () => {
                             over: overTarget?.index === index && overTarget?.type === 'gap'
                         }"
                         @mouseenter="handleGapDragEnter(index, layer)"
-                        @touchenter="handleLayerDragEnter(index, layer)"
+                        @touchenter="handleGapDragEnter(index, layer)"
                     />
                 </template>
             </div>
@@ -356,6 +390,7 @@ const stopDragDown = () => {
                 @mouseup="stopDragUp"
 
                 @touchenter="startDragUp"
+                @touchleave="stopDragUp"
                 @touchstop="stopDragUp"
                 @touchcancel="stopDragUp"
             >
@@ -372,6 +407,7 @@ const stopDragDown = () => {
                 @mouseup="stopDragDown"
 
                 @touchenter="startDragDown"
+                @touchleave="stopDragDown"
                 @touchstop="stopDragDown"
                 @touchcancel="stopDragDown"
             >
