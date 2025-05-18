@@ -143,7 +143,8 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
 
     history.registerCommand("layer:add", {
         applyAction: (layer) => {
-            global.layers.push(layer)
+            const currentLayerIndex = getLayerIndex(global.currentLayer.value.id)
+            global.layers.splice(currentLayerIndex + 1, 0, layer)
             return layer.id
         },
         revertAction: (layerId) => {

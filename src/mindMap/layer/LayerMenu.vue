@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {MindMapLayer, useMindMap} from "@/mindMap/useMindMap.ts";
 import LayerView from "@/mindMap/layer/LayerView.vue";
-import {computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef} from "vue";
+import {computed, onBeforeUnmount, onMounted, ref, useTemplateRef} from "vue";
 import {useTouchEnterLeave} from "@/event/TouchEnterLeave.ts";
 
 const {
@@ -110,14 +110,6 @@ const handleDragEnd = () => {
             } else if (type === 'gap') {
                 dragLayer(reverseIndex(draggingIndex), reverseIndex(targetIndex))
             }
-            nextTick(() => {
-                if (type === 'gap') {
-                    scrollWrapper.value?.scrollBy({
-                        top: draggingIndex > targetIndex ? 50 : -50,
-                        behavior: 'smooth'
-                    })
-                }
-            })
         }
     }
 
@@ -325,53 +317,55 @@ const stopDragDown = () => {
                     @touchenter="handleGapDragEnter(-1, lastLayer)"
                 />
 
-                <template v-for="(layer, index) in layers.slice().reverse()" :key="layer.id">
-                    <div
-                        class="layer-menu-item"
-                        :class="{
+                <TransitionGroup name="layers" tag="div">
+                    <template v-for="(layer, index) in layers.slice().reverse()" :key="layer.id">
+                        <div
+                            class="layer-menu-item"
+                            :class="{
                             current: currentLayer.id === layer.id,
                             dragged: draggingLayer?.index === index,
                             over: overTarget?.index === index && overTarget?.type === 'layer'
                         }"
-                        @click="toggleLayer(layer.id)"
+                            @click="toggleLayer(layer.id)"
 
-                        @mousedown.self="handleDragStartByMouse(index, layer, $event)"
-                        @mouseenter="handleLayerDragEnter(index, layer)"
+                            @mousedown.self="handleDragStartByMouse(index, layer, $event)"
+                            @mouseenter="handleLayerDragEnter(index, layer)"
 
-                        @touchstart.self="handleDragStartByTouch(index, layer, $event)"
-                        @touchenter="handleLayerDragEnter(index, layer)"
-                    >
-                        <button
-                            @click.stop="toggleLayerVisible(layer)"
-                            class="layer-menu-item-visible"
+                            @touchstart.self="handleDragStartByTouch(index, layer, $event)"
+                            @touchenter="handleLayerDragEnter(index, layer)"
                         >
-                            {{ layer.visible ? 'show' : 'hide' }}
-                        </button>
-                        <div class="layer-menu-item-view">
-                            <LayerView/>
+                            <button
+                                @click.stop="toggleLayerVisible(layer)"
+                                class="layer-menu-item-visible"
+                            >
+                                {{ layer.visible ? 'show' : 'hide' }}
+                            </button>
+                            <div class="layer-menu-item-view">
+                                <LayerView/>
+                            </div>
+                            <input
+                                :value="layer.name"
+                                class="layer-menu-item-name"
+                                @change="(e) => handleLayerNameChange(layer, e)"
+                            >
+                            <button
+                                @click.stop="removeLayer(layer.id)"
+                                class="layer-menu-item-delete"
+                            >
+                                del
+                            </button>
                         </div>
-                        <input
-                            :value="layer.name"
-                            class="layer-menu-item-name"
-                            @change="(e) => handleLayerNameChange(layer, e)"
-                        >
-                        <button
-                            @click.stop="removeLayer(layer.id)"
-                            class="layer-menu-item-delete"
-                        >
-                            del
-                        </button>
-                    </div>
 
-                    <div
-                        class="layer-menu-item-gap"
-                        :class="{
+                        <div
+                            class="layer-menu-item-gap"
+                            :class="{
                             over: overTarget?.index === index && overTarget?.type === 'gap'
                         }"
-                        @mouseenter="handleGapDragEnter(index, layer)"
-                        @touchenter="handleGapDragEnter(index, layer)"
-                    />
-                </template>
+                            @mouseenter="handleGapDragEnter(index, layer)"
+                            @touchenter="handleGapDragEnter(index, layer)"
+                        />
+                    </template>
+                </TransitionGroup>
             </div>
 
             <div
@@ -442,10 +436,6 @@ const stopDragDown = () => {
     display: grid;
     grid-template-columns: 1.5rem 4rem calc(100% - 7rem) 1.5rem;
     user-select: none;
-}
-
-.layer-menu-item:hover {
-    background-color: var(--background-color-hover);
 }
 
 .layer-menu-item.current {
@@ -536,5 +526,23 @@ const stopDragDown = () => {
     background-color: var(--primary-color);
     opacity: 0.6;
     cursor: default;
+}
+
+
+/* layers 过渡动画 */
+.layers-move,
+.layers-enter-active,
+.layers-leave-active {
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.layers-enter-from,
+.layers-leave-to {
+    opacity: 0;
+    transform: scaleY(0.3);
+}
+
+.layers-leave-active {
+    position: absolute;
 }
 </style>
