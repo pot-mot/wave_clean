@@ -31,6 +31,7 @@ import {checkFullConnection, FullConnection, reverseConnection} from "@/mindMap/
 import {useMindMapHistory} from "@/mindMap/history/MindMapHistory.ts";
 import {CustomClipBoard, unimplementedClipBoard, useClipBoard} from "@/clipBoard/useClipBoard.ts";
 import {getKeys} from "@/type/typeGuard.ts";
+import {useFileStore} from "@/mindMap/file/FileStore.ts";
 
 export type MindMapGlobal = {
     zIndexIncrement: number,
@@ -142,7 +143,7 @@ export const createLayer = (layerId: string = createLayerId()) => {
     })
 }
 
-const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
+const dataToLayers = (data: Pick<MindMapData, 'layers' | 'currentLayerId'>) => {
     // 对 data 进行基本校验
     const currentLayerIndex = data.layers.findIndex(layer => layer.id === data.currentLayerId)
     if (currentLayerIndex === -1) {
@@ -152,7 +153,7 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
     if (layerIdSet.size !== data.layers.length) {
         throw new Error("layers id is not unique")
     }
-    const dataLayers = data.layers.map(it => {
+    const layers = data.layers.map(it => {
         const {id, data, ...other} = it
         const layer = createLayer(id)
         Object.assign(layer, other)
@@ -160,12 +161,21 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
         layer.vueFlow.setEdges(data.edges)
         return layer
     })
-    const currentLayer = dataLayers[currentLayerIndex]
+    const currentLayer = layers[currentLayerIndex]
+
+    return {
+        layers,
+        currentLayer
+    }
+}
+
+const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
+    const {layers, currentLayer} = dataToLayers(data)
 
     const global: MindMapGlobal = {
         zIndexIncrement: data.zIndexIncrement,
         nodeIdIncrement: data.nodeIdIncrement,
-        layers: shallowReactive<MindMapLayer[]>(dataLayers),
+        layers: layers,
         currentLayer: shallowRef<MindMapLayer>(currentLayer),
 
         toggleCurrentLayer: async (layerId: string) => {
@@ -927,6 +937,46 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
         })
     }
 
+
+    const setCurrentData = async (data: MindMapData) => {
+        const {layers, currentLayer} = dataToLayers(data)
+        global.nodeIdIncrement = data.nodeIdIncrement
+        global.zIndexIncrement = data.zIndexIncrement
+        global.layers = layers
+        global.currentLayer.value = currentLayer
+        currentViewport.value = data.transform
+    }
+
+    const exportCurrentData = (): MindMapData => {
+        return {
+            currentLayerId: currentLayerId.value,
+            layers: global.layers.map(layer => ({
+                id: layer.id,
+                name: layer.name,
+                opacity: layer.opacity,
+                visible: layer.visible,
+                data: exportMindMap(layer.vueFlow)
+            })),
+            transform: currentViewport.value,
+            zIndexIncrement: global.zIndexIncrement,
+            nodeIdIncrement: global.nodeIdIncrement,
+        }
+    }
+
+    const fileStore = useFileStore()
+    const currentKey = ref<string>()
+
+    const save = async () => {
+        if (currentKey.value) {
+            await fileStore.update(currentKey.value, exportCurrentData())
+        }
+    }
+
+    const toggleMindMap = async (key: string) => {
+        const mindMap = await fileStore.get(key)
+        await setCurrentData(mindMap)
+    }
+
     return {
         layers: global.layers,
         currentLayer: global.currentLayer,
@@ -1018,21 +1068,8 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
             return await global.currentLayer.value.cut()
         },
 
-        exportJson: (): MindMapData => {
-            return {
-                currentLayerId: currentLayerId.value,
-                layers: global.layers.map(layer => ({
-                    id: layer.id,
-                    name: layer.name,
-                    opacity: layer.opacity,
-                    visible: layer.visible,
-                    data: exportMindMap(layer.vueFlow)
-                })),
-                transform: currentViewport.value,
-                zIndexIncrement: global.zIndexIncrement,
-                nodeIdIncrement: global.nodeIdIncrement,
-            }
-        }
+        save,
+        toggleMindMap,
     }
 }
 

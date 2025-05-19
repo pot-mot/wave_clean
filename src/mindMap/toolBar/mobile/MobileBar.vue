@@ -51,7 +51,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div style="z-index: 5; width: 100%; position: absolute; top: 0; left: 0; height: 2rem; line-height: 2rem; vertical-align: center; display: flex; justify-content: space-around;">
+    <div style="z-index: 5; width: 100%; position: absolute; top: 0; height: 2rem; line-height: 2rem; vertical-align: center; display: flex; justify-content: space-around;">
         <button @click="copy">copy</button>
         <button @click="cut">cut</button>
         <button @click="paste">paste</button>
