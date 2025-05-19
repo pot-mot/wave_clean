@@ -25,7 +25,7 @@ import {
 import {blurActiveElement, judgeTargetIsInteraction} from "@/mindMap/clickUtils.ts";
 import {jsonSortPropStringify} from "@/json/jsonStringify.ts";
 import {MindMapImportData, prepareImportIntoMindMap} from "@/mindMap/importExport/import.ts";
-import {exportMindMapSelection, MindMapExportData} from "@/mindMap/importExport/export.ts";
+import {exportMindMap, exportMindMapSelection, MindMapExportData} from "@/mindMap/importExport/export.ts";
 import {validateMindMapImportData} from "@/mindMap/clipBoard/inputParse.ts";
 import {checkFullConnection, FullConnection, reverseConnection} from "@/mindMap/edge/connection.ts";
 import {useMindMapHistory} from "@/mindMap/history/MindMapHistory.ts";
@@ -47,6 +47,44 @@ export type RawMindMapLayer = {
     visible: boolean,
     opacity: number,
 } & CustomClipBoard<MindMapImportData, MindMapExportData>
+
+export type MindMapData = {
+    currentLayerId: string,
+    layers: {
+        id: string,
+        name: string,
+        visible: boolean,
+        opacity: number,
+        data: MindMapExportData
+    }[],
+    transform: ViewportTransform,
+} & Pick<MindMapGlobal, 'zIndexIncrement' | 'nodeIdIncrement'>
+
+const getDefaultMindMapData = (): MindMapData => {
+    const layerId = createLayerId()
+    return {
+        currentLayerId: layerId,
+        layers: [
+            {
+                id: layerId,
+                name: layerId,
+                visible: true,
+                opacity: 1,
+                data: {
+                    nodes: [],
+                    edges: [],
+                }
+            }
+        ],
+        transform: {
+            x: 0,
+            y: 0,
+            zoom: 1,
+        },
+        zIndexIncrement: 0,
+        nodeIdIncrement: 0,
+    }
+}
 
 export type MindMapLayer = ShallowReactive<RawMindMapLayer>
 
@@ -91,8 +129,7 @@ export const createEdgeId = (connection: Connection) => {
 
 export type MouseAction = "panDrag" | "selectionRect"
 
-export const createLayer = () => {
-    const layerId = createLayerId()
+export const createLayer = (layerId: string = createLayerId()) => {
     const vueFlowId = createVueFlowId()
     return shallowReactive({
         id: layerId,
@@ -105,18 +142,31 @@ export const createLayer = () => {
     })
 }
 
-const initMindMap = () => {
-    const defaultLayer: MindMapLayer = createLayer()
+const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
+    // 对 data 进行基本校验
+    const currentLayerIndex = data.layers.findIndex(layer => layer.id === data.currentLayerId)
+    if (currentLayerIndex === -1) {
+        throw new Error("current layer does not in layers")
+    }
+    const layerIdSet = new Set(data.layers.map(it => it.id))
+    if (layerIdSet.size !== data.layers.length) {
+        throw new Error("layers id is not unique")
+    }
+    const dataLayers = data.layers.map(it => {
+        const {id, data, ...other} = it
+        const layer = createLayer(id)
+        Object.assign(layer, other)
+        layer.vueFlow.setNodes(data.nodes)
+        layer.vueFlow.setEdges(data.edges)
+        return layer
+    })
+    const currentLayer = dataLayers[currentLayerIndex]
 
     const global: MindMapGlobal = {
-        zIndexIncrement: 0,
-        nodeIdIncrement: 0,
-        layers: shallowReactive<MindMapLayer[]>([
-            defaultLayer
-        ]),
-        currentLayer: shallowRef<MindMapLayer>(
-            defaultLayer
-        ),
+        zIndexIncrement: data.zIndexIncrement,
+        nodeIdIncrement: data.nodeIdIncrement,
+        layers: shallowReactive<MindMapLayer[]>(dataLayers),
+        currentLayer: shallowRef<MindMapLayer>(currentLayer),
 
         toggleCurrentLayer: async (layerId: string) => {
             const targetLayer = global.layers.find(layer => layer.id === layerId)
@@ -159,12 +209,12 @@ const initMindMap = () => {
         vueFlow.vueFlowRef.value?.focus()
     }
 
-    const currentViewport = shallowRef<ViewportTransform>()
+    const currentViewport = shallowRef<ViewportTransform>(data.transform)
     watch(() => currentLayerId.value, async (_, oldValue) => {
         if (oldValue !== undefined) {
-            const oldCurrent = global.layers.find(layer => layer.id === oldValue)
-            if (oldCurrent !== undefined) {
-                currentViewport.value = toRaw(oldCurrent.vueFlow.viewport.value)
+            const oldCurrentLayer = global.layers.find(layer => layer.id === oldValue)
+            if (oldCurrentLayer !== undefined) {
+                currentViewport.value = toRaw(oldCurrentLayer.vueFlow.viewport.value)
             }
         }
     })
@@ -499,9 +549,7 @@ const initMindMap = () => {
             /**
              * 同步视口
              */
-            if (currentViewport.value !== undefined) {
-                vueFlow.setViewport(currentViewport.value).then()
-            }
+            vueFlow.setViewport(currentViewport.value).then()
 
             onViewportChange(async () => {
                 if (id === currentLayerId.value) {
@@ -969,6 +1017,22 @@ const initMindMap = () => {
         cut: async () => {
             return await global.currentLayer.value.cut()
         },
+
+        exportJson: (): MindMapData => {
+            return {
+                currentLayerId: currentLayerId.value,
+                layers: global.layers.map(layer => ({
+                    id: layer.id,
+                    name: layer.name,
+                    opacity: layer.opacity,
+                    visible: layer.visible,
+                    data: exportMindMap(layer.vueFlow)
+                })),
+                transform: currentViewport.value,
+                zIndexIncrement: global.zIndexIncrement,
+                nodeIdIncrement: global.nodeIdIncrement,
+            }
+        }
     }
 }
 
