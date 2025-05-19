@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {MindMapLayer} from "@/mindMap/useMindMap.ts";
-import {computed, ref, useTemplateRef, watch} from "vue";
+import {computed, onBeforeUnmount, onMounted, ref, useTemplateRef, watch} from "vue";
 import {GraphNode} from "@vue-flow/core";
 import {debounce} from "lodash";
 
@@ -9,6 +9,23 @@ const props = defineProps<{
 }>()
 
 const container = useTemplateRef<HTMLDivElement>("container")
+
+const size = ref({width: 0, height: 0})
+const resizeOb = new ResizeObserver((entries) => {
+    if (entries.length === 0) return
+
+    size.value.width = entries[0].contentRect.width
+    size.value.height = entries[0].contentRect.height
+})
+
+onMounted(() => {
+    if (container.value) {
+        resizeOb.observe(container.value)
+    }
+})
+onBeforeUnmount(() => {
+    resizeOb.disconnect()
+})
 
 const nodes = computed<GraphNode[]>(() => props.layer.vueFlow.nodes.value)
 
@@ -20,7 +37,7 @@ type ComputedNode = {
 }
 
 const getComputedNodes = (): ComputedNode[] => {
-    if (nodes.value.length === 0 || !container.value) return []
+    if (nodes.value.length === 0 || !container.value || size.value.height === 0 || size.value.width === 0) return []
 
     let minLeft = Number.MAX_VALUE
     let minTop = Number.MAX_VALUE
@@ -47,7 +64,7 @@ const getComputedNodes = (): ComputedNode[] => {
     const width =  maxRight - minLeft
     const height = maxBottom - minTop
 
-    const scale = width > height ? container.value.clientWidth / width : container.value.clientHeight / height
+    const scale = width > height ? size.value.width / width : size.value.height / height
 
     return nodes.value.map(node => ({
         left: (node.position.x - minLeft) * scale + 'px',
@@ -62,7 +79,11 @@ const getComputedNodes = (): ComputedNode[] => {
  */
 const computedNodes = ref<ComputedNode[]>(getComputedNodes())
 
-watch(() => nodes.value, debounce(() => {
+watch(() => [size.value], () => {
+    computedNodes.value = getComputedNodes()
+}, {immediate: true, deep: true})
+
+watch(() => [nodes.value], debounce(() => {
     computedNodes.value = getComputedNodes()
 }, 500), {deep: 2})
 </script>
