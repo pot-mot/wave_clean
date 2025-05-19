@@ -5,6 +5,8 @@ import LayerMenu from "@/mindMap/layer/LayerMenu.vue";
 import {checkElementParent} from "@/mindMap/clickUtils.ts";
 
 const {
+    save,
+
     currentLayer,
 
     canUndo,
@@ -24,6 +26,8 @@ const {
     cut,
     paste,
 } = useMindMap()
+
+const fileMenuOpen = ref(false)
 
 const layersMenuOpen = ref(false)
 
@@ -52,6 +56,9 @@ onBeforeUnmount(() => {
 
 <template>
     <div style="z-index: 5; width: 100%; position: absolute; top: 0; height: 2rem; line-height: 2rem; vertical-align: center; display: flex; justify-content: space-around;">
+        <button @click="fileMenuOpen = !fileMenuOpen">menu</button>
+        <button @click="save">save</button>
+
         <button @click="copy">copy</button>
         <button @click="cut">cut</button>
         <button @click="paste">paste</button>

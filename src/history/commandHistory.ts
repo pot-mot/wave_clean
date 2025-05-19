@@ -58,6 +58,8 @@ export type CommandHistoryEvents<CommandMap extends CustomCommandMap> =
         }
     > &
     {
+        beforeClean: undefined,
+        clean: undefined,
         registerCommand: { key: keyof CommandMap }
         unregisterCommand: { key: keyof CommandMap }
         batchStart: undefined,
@@ -69,6 +71,8 @@ export type CommandHistory<CommandMap extends CustomCommandMap> =
         CommandHistoryEvents<CommandMap>
     > &
     {
+        clean(): void
+
         // 命令注册方法
         registerCommand<Key extends keyof CommandMap>(
             key: Key,
@@ -111,11 +115,22 @@ export const useCommandHistory = <CommandMap extends CustomCommandMap>(): Comman
 
     const eventBus = mitt<CommandHistoryEvents<CommandMap>>()
 
-    const undoStack: CommandData<CommandMap>[] = []
+    let undoStack: CommandData<CommandMap>[] = []
     let redoStack: CommandData<CommandMap>[] = []
 
-    const batchKeyStack: BatchKey<CommandMap>[] = [];
+    let batchKeyStack: BatchKey<CommandMap>[] = [];
     let currentBatchKey: BatchKey<CommandMap> | undefined
+
+    const clean = () => {
+        eventBus.emit('beforeClean')
+
+        undoStack = []
+        redoStack = []
+        batchKeyStack = []
+        currentBatchKey = undefined
+
+        eventBus.emit('clean')
+    }
 
 
     let __executeFlag__ = false
@@ -335,6 +350,8 @@ export const useCommandHistory = <CommandMap extends CustomCommandMap>(): Comman
 
     return {
         eventBus,
+
+        clean,
 
         canUndo,
         undo,

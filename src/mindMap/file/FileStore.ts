@@ -1,7 +1,8 @@
 import {jsonFileOperations} from "@/file/JsonFileOperations.ts";
 import {readonly, ref, watch} from "vue";
-import {MindMapData} from "@/mindMap/useMindMap.ts";
+import {getDefaultMindMapData, MindMapData} from "@/mindMap/useMindMap.ts";
 import {validateMindMapData} from "@/mindMap/clipBoard/inputParse.ts";
+import {jsonSortPropStringify} from "@/json/jsonStringify.ts";
 
 const metaFileName = '[[WAVE_CLEAN_EDIT_META]]'
 
@@ -23,11 +24,9 @@ const initFileStore = () => {
     const add = async (index: number, name: string) => {
         const timestamp = new Date()
         const key = name + Date.now()
-        const fileHandle = await jsonFileOperations.create(key)
-        if (fileHandle === undefined) {
-            return
-        }
-        meta.value.items.splice(index, 0, {key, name, lastEditTime: timestamp.toString()})
+        meta.value.items.splice(index, 0, {key, name, lastEditTime: timestamp.toLocaleString()})
+        await jsonFileOperations.create(key)
+        await jsonFileOperations.set(key, jsonSortPropStringify(getDefaultMindMapData()))
     }
 
     const rename = async (key: string, newName: string) => {
@@ -39,8 +38,8 @@ const initFileStore = () => {
     }
 
     const remove = async (key: string) => {
-        await jsonFileOperations.remove(key)
         meta.value.items = meta.value.items.filter(item => item.key !== key)
+        await jsonFileOperations.remove(key)
     }
 
     const update = async (key: string, mindMapData: MindMapData) => {
@@ -69,7 +68,6 @@ const initFileStore = () => {
             }
         } else {
             await jsonFileOperations.create(metaFileName)
-            console.log("created")
         }
     })()
 

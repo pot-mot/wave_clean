@@ -32,6 +32,7 @@ import {useMindMapHistory} from "@/mindMap/history/MindMapHistory.ts";
 import {CustomClipBoard, unimplementedClipBoard, useClipBoard} from "@/clipBoard/useClipBoard.ts";
 import {getKeys} from "@/type/typeGuard.ts";
 import {useFileStore} from "@/mindMap/file/FileStore.ts";
+import {sendMessage} from "@/message/sendMessage.ts";
 
 export type MindMapGlobal = {
     zIndexIncrement: number,
@@ -61,7 +62,7 @@ export type MindMapData = {
     transform: ViewportTransform,
 } & Pick<MindMapGlobal, 'zIndexIncrement' | 'nodeIdIncrement'>
 
-const getDefaultMindMapData = (): MindMapData => {
+export const getDefaultMindMapData = (): MindMapData => {
     const layerId = createLayerId()
     return {
         currentLayerId: layerId,
@@ -938,16 +939,18 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
     }
 
 
-    const setCurrentData = async (data: MindMapData) => {
+    const setCurrentMindMapData = async (data: MindMapData) => {
         const {layers, currentLayer} = dataToLayers(data)
+        console.log(layers, currentLayer, data)
         global.nodeIdIncrement = data.nodeIdIncrement
         global.zIndexIncrement = data.zIndexIncrement
-        global.layers = layers
+        global.layers.splice(0, global.layers.length, ...layers)
         global.currentLayer.value = currentLayer
         currentViewport.value = data.transform
+        history.clean()
     }
 
-    const exportCurrentData = (): MindMapData => {
+    const exportCurrentMindMapData = (): MindMapData => {
         return {
             currentLayerId: currentLayerId.value,
             layers: global.layers.map(layer => ({
@@ -964,17 +967,20 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
     }
 
     const fileStore = useFileStore()
-    const currentKey = ref<string>()
+    const currentMindMapKey = ref<string>()
 
     const save = async () => {
-        if (currentKey.value) {
-            await fileStore.update(currentKey.value, exportCurrentData())
+        if (currentMindMapKey.value) {
+            await fileStore.update(currentMindMapKey.value, exportCurrentMindMapData())
+        } else {
+            sendMessage("please create a new mindMap")
         }
     }
 
     const toggleMindMap = async (key: string) => {
+        currentMindMapKey.value = key
         const mindMap = await fileStore.get(key)
-        await setCurrentData(mindMap)
+        await setCurrentMindMapData(mindMap)
     }
 
     return {
@@ -1068,6 +1074,7 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
             return await global.currentLayer.value.cut()
         },
 
+        currentMindMapKey,
         save,
         toggleMindMap,
     }

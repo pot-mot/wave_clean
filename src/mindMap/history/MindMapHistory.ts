@@ -132,6 +132,10 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
 
     const canUndo = ref(history.canUndo())
     const canRedo = ref(history.canRedo())
+    history.eventBus.on("clean", () => {
+        canUndo.value = history.canUndo()
+        canRedo.value = history.canRedo()
+    })
     history.eventBus.on("change", () => {
         canUndo.value = history.canUndo()
         canRedo.value = history.canRedo()

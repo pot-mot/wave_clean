@@ -5,6 +5,8 @@ import {ref} from "vue";
 import FileMenu from "@/mindMap/file/FileMenu.vue";
 
 const {
+    save,
+
     canUndo,
     canRedo,
     undo,
@@ -22,6 +24,7 @@ const layersMenuOpen = ref(false)
 <template>
     <div style="z-index: 5; position: absolute; top: 0; height: 3rem; line-height: 3rem; vertical-align: center; display: flex; justify-content: space-around;">
         <button @click="fileMenuOpen = !fileMenuOpen">menu</button>
+        <button @click="save">save</button>
 
         <button :disabled="!canUndo" @click="undo">undo</button>
         <button :disabled="!canRedo" @click="redo">redo</button>

@@ -6,6 +6,7 @@ import {ref} from "vue";
 const fileStore = useFileStore()
 
 const {
+    currentMindMapKey,
     toggleMindMap,
 } = useMindMap()
 
@@ -24,8 +25,17 @@ const handleOpen = (key: string) => {
     <div>
         <input v-model="name">
         <div @click="handleAdd">add</div>
-        <div v-for="item in fileStore.meta.value.items" @click="handleOpen(item.key)">
-            {{ item.name }}
+        <div
+            v-for="item in fileStore.meta.value.items"
+            @click="handleOpen(item.key)"
+            :style="{color: item.key === currentMindMapKey ? 'var(--primary-color)' : undefined}"
+        >
+            <div>
+                {{ item.name }}
+            </div>
+            <div>
+                {{ item.lastEditTime }}
+            </div>
         </div>
     </div>
 </template>
