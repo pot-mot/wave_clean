@@ -79,13 +79,15 @@ const getComputedNodes = (): ComputedNode[] => {
  */
 const computedNodes = ref<ComputedNode[]>(getComputedNodes())
 
-watch(() => [size.value], () => {
+watch(() => size.value, () => {
     computedNodes.value = getComputedNodes()
 }, {immediate: true, deep: true})
 
-watch(() => [nodes.value], debounce(() => {
+watch(() => nodes.value.map(it => {
+    return [it.dimensions, it.position]
+}), debounce(() => {
     computedNodes.value = getComputedNodes()
-}, 500), {deep: 2})
+}, 500))
 </script>
 
 <template>
