@@ -141,6 +141,14 @@ const initMindMap = () => {
         return global.currentLayer.value.vueFlow
     }
 
+    const getSelection = () => {
+        const vueFlow = getCurrentVueFlow()
+        return {
+            nodes: vueFlow.getSelectedNodes.value,
+            edges: vueFlow.getSelectedEdges.value,
+        }
+    }
+
     const cleanSelection = () => {
         const vueFlow = getCurrentVueFlow()
         vueFlow.removeSelectedNodes(vueFlow.getSelectedNodes.value)
@@ -306,6 +314,10 @@ const initMindMap = () => {
         vueFlow.vueFlowRef.value?.addEventListener('blur', () => {
             focus()
         }, {once: true})
+    }
+
+    const removeSelection = () => {
+        remove(getSelection())
     }
 
     /**
@@ -902,6 +914,8 @@ const initMindMap = () => {
         addNode,
         addEdge,
 
+        getSelection,
+        removeSelection,
         remove,
 
         fitView: () => {

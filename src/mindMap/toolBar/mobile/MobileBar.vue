@@ -18,6 +18,7 @@ const {
     toggleMultiSelect,
 
     selectAll,
+    removeSelection,
 
     copy,
     cut,
@@ -56,6 +57,8 @@ onBeforeUnmount(() => {
         <button @click="paste">paste</button>
 
         <button @click="selectAll()">selectAll</button>
+
+        <button @click="removeSelection()">removeSelection</button>
     </div>
 
     <div v-show="!isVueFlowInputFocused"
