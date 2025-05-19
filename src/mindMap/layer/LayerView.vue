@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {MindMapLayer} from "@/mindMap/useMindMap.ts";
 import {computed, ref, useTemplateRef, watch} from "vue";
-import {GraphNode, ViewportTransform} from "@vue-flow/core";
+import {GraphNode} from "@vue-flow/core";
 import {debounce} from "lodash";
 
 const props = defineProps<{
@@ -11,8 +11,6 @@ const props = defineProps<{
 const container = useTemplateRef<HTMLDivElement>("container")
 
 const nodes = computed<GraphNode[]>(() => props.layer.vueFlow.nodes.value)
-
-const viewport = computed<ViewportTransform>(() => props.layer.vueFlow.viewport.value)
 
 type ComputedNode = {
     left: string,
@@ -24,9 +22,19 @@ type ComputedNode = {
 const getComputedNodes = (): ComputedNode[] => {
     if (nodes.value.length === 0 || !container.value) return []
 
-    let maxRight = 0
-    let maxBottom = 0
+    let minLeft = Number.MAX_VALUE
+    let minTop = Number.MAX_VALUE
+    let maxRight = Number.MIN_VALUE
+    let maxBottom = Number.MIN_VALUE
     for (const node of nodes.value) {
+        const left = node.position.x
+        if (left < minLeft) {
+            minLeft = left
+        }
+        const top = node.position.y
+        if (top < minTop) {
+            minTop = top
+        }
         const right = node.position.x + node.dimensions.width
         if (right > maxRight) {
             maxRight = right
@@ -36,14 +44,14 @@ const getComputedNodes = (): ComputedNode[] => {
             maxBottom = bottom
         }
     }
-    const width =  maxRight - viewport.value.x
-    const height = maxBottom - viewport.value.y
+    const width =  maxRight - minLeft
+    const height = maxBottom - minTop
 
     const scale = width > height ? container.value.clientWidth / width : container.value.clientHeight / height
 
     return nodes.value.map(node => ({
-        left: (node.position.x - viewport.value.x) * scale + 'px',
-        top: (node.position.y - viewport.value.y) * scale + 'px',
+        left: (node.position.x - minLeft) * scale + 'px',
+        top: (node.position.y - minTop) * scale + 'px',
         width: node.dimensions.width * scale + 'px',
         height: node.dimensions.height * scale + 'px',
     }))
