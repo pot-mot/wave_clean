@@ -125,7 +125,7 @@ watch(() => nodes.value.map(it => {
 }
 
 .layer-view-node {
-    border: var(--border);
+    background: var(--background-color-hover);
     position: absolute;
 }
 </style>
