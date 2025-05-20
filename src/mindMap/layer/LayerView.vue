@@ -41,8 +41,9 @@ const getComputedNodes = (): ComputedNode[] => {
 
     let minLeft = Number.MAX_VALUE
     let minTop = Number.MAX_VALUE
-    let maxRight = Number.MIN_VALUE
-    let maxBottom = Number.MIN_VALUE
+    let maxRight = -Number.MAX_VALUE
+    let maxBottom = -Number.MAX_VALUE
+
     for (const node of nodes.value) {
         const left = node.position.x
         if (left < minLeft) {
@@ -61,8 +62,11 @@ const getComputedNodes = (): ComputedNode[] => {
             maxBottom = bottom
         }
     }
-    const width =  maxRight - minLeft
+    const width = maxRight - minLeft
+    if (width === 0) return []
+
     const height = maxBottom - minTop
+    if (height === 0) return []
 
     const scale = width > height ? size.value.width / width : size.value.height / height
 
