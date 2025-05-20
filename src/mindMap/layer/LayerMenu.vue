@@ -499,9 +499,6 @@ const stopDragDown = () => {
 .layer-menu-item-name {
     height: 1rem;
     margin-top: 2rem;
-}
-
-.layer-menu-item-name {
     font-size: 0.9rem;
     pointer-events: none;
     background-color: transparent;

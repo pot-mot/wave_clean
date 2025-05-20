@@ -28,7 +28,7 @@ export const jsonFileOperations = {
             const path = `${key}.json`
             const targetExists = await exists(path, {baseDir: BaseDirectory.AppLocalData})
             if (!targetExists) {
-                console.error(`file ${path} not exist`)
+                console.error(new Error(`file ${path} not exist`))
                 return
             }
             return await readTextFile(path, {baseDir: BaseDirectory.AppLocalData})
@@ -43,7 +43,7 @@ export const jsonFileOperations = {
             const path = `${key}.json`
             const targetExists = await exists(path, {baseDir: BaseDirectory.AppLocalData})
             if (targetExists) {
-                console.error(`file ${path} is already exist`)
+                console.error(new Error(`file ${path} not exist`))
                 return
             }
             return await create(path, {baseDir: BaseDirectory.AppLocalData})
@@ -58,7 +58,7 @@ export const jsonFileOperations = {
             const path = `${key}.json`
             const targetExists = await exists(path, {baseDir: BaseDirectory.AppLocalData})
             if (targetExists) {
-                console.error(`file ${path} is already exist`)
+                console.error(new Error(`file ${path} not exist`))
                 return
             }
             const newPath = `/${newKey}.json`
@@ -77,7 +77,7 @@ export const jsonFileOperations = {
             const path = `${key}.json`
             const targetExists = await exists(path, {baseDir: BaseDirectory.AppLocalData})
             if (!targetExists) {
-                console.error(`file ${path} not exist`)
+                console.error(new Error(`file ${path} not exist`))
                 return
             }
             return await writeTextFile(path, value, {baseDir: BaseDirectory.AppLocalData})
@@ -92,7 +92,7 @@ export const jsonFileOperations = {
             const path = `${key}.json`
             const targetExists = await exists(path, {baseDir: BaseDirectory.AppLocalData})
             if (!targetExists) {
-                console.error(`file ${path} not exist`)
+                console.error(new Error(`file ${path} not exist`))
                 return
             }
             return await remove(path, {baseDir: BaseDirectory.AppLocalData})

@@ -17,6 +17,12 @@ const handleDelete = (key: string) => {
 const handleOpen = (key: string) => {
     fileStore.toggle(key)
 }
+
+const handleRename = (key: string, e: Event) => {
+    if (e instanceof InputEvent && e.data !== null) {
+        fileStore.rename(key, e.data)
+    }
+}
 </script>
 
 <template>
@@ -28,9 +34,11 @@ const handleOpen = (key: string) => {
             @click="handleOpen(mindMap.key)"
             :style="{color: mindMap.key === fileStore.meta.value.currentKey ? 'var(--primary-color)' : undefined}"
         >
-            <div>
-                {{ mindMap.name }}
-            </div>
+            <input
+                class="file-name"
+                :value="mindMap.name"
+                @change="handleRename(mindMap.key, $event)"
+            >
             <div>
                 {{ mindMap.lastEditTime }}
             </div>
@@ -47,5 +55,17 @@ const handleOpen = (key: string) => {
     width: 100%;
     background-color: var(--background-color);
     border: var(--border);
+}
+
+.file-name {
+    height: 1rem;
+    background-color: transparent;
+    border: none;
+}
+
+.file-name:focus {
+    background-color: var(--background-color);
+    border: var(--border);
+    cursor: text;
 }
 </style>

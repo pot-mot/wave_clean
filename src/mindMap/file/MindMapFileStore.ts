@@ -129,10 +129,17 @@ const initMindMapFileStore = () => {
             let metaValueStr = await jsonFileOperations.get(metaFileName)
             if (metaValueStr === undefined) {
                 await jsonFileOperations.create(metaFileName)
+                await jsonFileOperations.set(metaFileName, JSON.stringify(meta.value))
                 metaValueStr = (await jsonFileOperations.get(metaFileName))!!
             }
 
-            const metaValue = JSON.parse(metaValueStr)
+            let metaValue: Meta | undefined = undefined
+            try {
+                metaValue = JSON.parse(metaValueStr)
+            } catch (e) {
+                await jsonFileOperations.set(metaFileName, JSON.stringify(meta.value))
+                metaValue = meta.value
+            }
             if (validateMeta(metaValue)) {
                 meta.value = metaValue
             } else {
