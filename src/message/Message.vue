@@ -103,7 +103,11 @@ const close = (index: number) => {
 
 const handleAfterLeave = () => {
     if (messageItems.value.length === 0) {
-        emits("closeAll")
+        setTimeout(() => {
+            if (messageItems.value.length === 0) {
+                emits("closeAll")
+            }
+        }, props.leaveDuration)
     }
 }
 
@@ -158,12 +162,12 @@ defineExpose({
 }
 
 .messages-enter-active {
-    transition: all v-bind(enterDuration+ 'ms') ease;
+    transition: opacity v-bind(enterDuration+ 'ms') ease, transform v-bind(enterDuration+ 'ms') ease;
 }
 
 .messages-move,
 .messages-leave-active {
-    transition: all v-bind(leaveDuration+ 'ms') ease;
+    transition: opacity v-bind(leaveDuration+ 'ms') ease, transform v-bind(enterDuration+ 'ms') linear;
     pointer-events: none;
 }
 
