@@ -1,5 +1,6 @@
 import {SchemaValidator} from "@/type/typeGuard.ts";
 import {judgeTargetIsInteraction} from "@/mindMap/clickUtils.ts";
+import {readText, writeText} from "@tauri-apps/plugin-clipboard-manager";
 
 export type ClipBoardTarget<INPUT, OUTPUT> = {
     importData: (data: INPUT) => void | Promise<void>,
@@ -12,7 +13,7 @@ export type ClipBoardTarget<INPUT, OUTPUT> = {
 export const useClipBoard = <INPUT, OUTPUT>(target: ClipBoardTarget<INPUT, OUTPUT>) => {
     const copy = async (): Promise<OUTPUT> => {
         const data: OUTPUT = await target.exportData()
-        await navigator.clipboard.writeText(target.stringifyData(data))
+        await writeText(target.stringifyData(data))
         return data
     }
 
@@ -23,7 +24,7 @@ export const useClipBoard = <INPUT, OUTPUT>(target: ClipBoardTarget<INPUT, OUTPU
     }
 
     const paste = async (): Promise<INPUT | string> => {
-        const text = await navigator.clipboard.readText()
+        const text = await readText()
         try {
             const data = JSON.parse(text)
             if (target.validateInput(data)) {
