@@ -1,10 +1,17 @@
 <template>
     <div class="message-container">
-        <TransitionGroup tag="div" name="messages" :duration="{enter: enterDuration, leave: leaveDuration}" @after-leave="handleAfterLeave">
+        <TransitionGroup
+            tag="div"
+            name="messages"
+            style="position: relative;"
+            :duration="{enter: enterDuration, leave: leaveDuration}"
+            @after-leave="handleAfterLeave"
+        >
             <div
                 v-for="(item, index) in messageItems"
                 :key="item.id"
                 class="message-wrapper"
+                :ref="el => initSize(el)"
             >
                 <div
                     class="message"
@@ -53,19 +60,27 @@ const setMessageItemTimeout = (messageItem: MessageItem) => {
     }
 
     messageItem.timeout = setTimeout(() => {
-        const index = messageItems.value.indexOf(messageItem)
+        const index = messageItems.value.findIndex(it => it.id === messageItem.id)
         if (index === -1) return
         messageItems.value.splice(index, 1)
         setTimeout(() => {
             emits("close", index)
         }, props.leaveDuration)
-    }, props.timeout)
+    }, props.timeout + props.enterDuration)
 }
 
 const open = (message: string, canClose: boolean = true) => {
     const messageItem = {id: ++messageItemIdIncrement, message, canClose}
     setMessageItemTimeout(messageItem)
     messageItems.value.push(messageItem)
+}
+
+const initSize = (el: Element | any | null) => {
+    if (!el) return
+    if (el instanceof HTMLElement && !el.style.width) {
+        el.style.width = el.scrollWidth + 'px'
+        el.style.height = el.scrollHeight + 'px'
+    }
 }
 
 const handleMouseEnter = (messageItem: MessageItem) => {
@@ -101,12 +116,14 @@ defineExpose({
 .message-container {
     position: fixed;
     top: 1.5rem;
-    left: 50%;
-    transform: translateX(-50%);
+    width: 100%;
+    margin: auto;
+    pointer-events: none;
     z-index: var(--top-z-index);
 }
 
 .message-wrapper {
+    width: 100%;
     margin-bottom: 0.5rem;
 }
 
@@ -121,6 +138,7 @@ defineExpose({
     border: var(--border);
     border-radius: var(--border-radius);
     color: var(--comment-color);
+    pointer-events: all;
 }
 
 .close-icon {
@@ -140,15 +158,16 @@ defineExpose({
 }
 
 .messages-enter-active {
-    transition:
-        opacity v-bind(enterDuration+ "ms") ease,
-        transform v-bind(enterDuration+ "ms") ease;
+    transition: all v-bind(enterDuration+ 'ms') ease;
+}
+
+.messages-move,
+.messages-leave-active {
+    transition: all v-bind(leaveDuration+ 'ms') ease;
+    pointer-events: none;
 }
 
 .messages-leave-active {
-    transition:
-        opacity v-bind(leaveDuration+ "ms") ease,
-        transform v-bind(leaveDuration+ "ms") ease;
-    pointer-events: none;
+    position: absolute;
 }
 </style>
