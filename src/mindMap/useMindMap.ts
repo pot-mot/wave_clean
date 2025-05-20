@@ -215,14 +215,9 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
         vueFlow.vueFlowRef.value?.focus()
     }
 
-    const currentViewport = shallowRef<ViewportTransform>(data.transform)
-    watch(() => currentLayerId.value, async (_, oldValue) => {
-        if (oldValue !== undefined) {
-            const oldCurrentLayer = global.layers.find(layer => layer.id === oldValue)
-            if (oldCurrentLayer !== undefined) {
-                currentViewport.value = toRaw(oldCurrentLayer.vueFlow.viewport.value)
-            }
-        }
+    const currentViewport = shallowRef<ViewportTransform>(global.currentLayer.value.vueFlow.viewport.value)
+    watch(() => global.currentLayer.value.vueFlow.viewport.value, async (_, oldValue) => {
+        currentViewport.value = oldValue
     })
 
     const addLayer = () => {
