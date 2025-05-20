@@ -38,7 +38,7 @@ export type MindMapGlobal = {
     zIndexIncrement: number,
     nodeIdIncrement: number,
     layers: ShallowReactive<MindMapLayer[]>,
-    currentLayer: ShallowRef<MindMapLayer>,
+    currentLayer: ShallowRef<ShallowReactive<MindMapLayer>>,
     toggleCurrentLayer: (layerId: string) => void,
 }
 
@@ -144,8 +144,7 @@ export const createLayer = (layerId: string = createLayerId()) => {
     })
 }
 
-const dataToLayers = (data: Pick<MindMapData, 'layers' | 'currentLayerId'>) => {
-    // 对 data 进行基本校验
+const dataToLayers = (data: Pick<MindMapData, 'layers' | 'currentLayerId'>): Pick<MindMapGlobal, 'layers'> & {currentLayer: ShallowReactive<MindMapLayer>} => {
     const currentLayerIndex = data.layers.findIndex(layer => layer.id === data.currentLayerId)
     if (currentLayerIndex === -1) {
         throw new Error("current layer does not in layers")
@@ -154,14 +153,14 @@ const dataToLayers = (data: Pick<MindMapData, 'layers' | 'currentLayerId'>) => {
     if (layerIdSet.size !== data.layers.length) {
         throw new Error("layers id is not unique")
     }
-    const layers = data.layers.map(it => {
+    const layers = shallowReactive(data.layers.map(it => {
         const {id, data, ...other} = it
         const layer = createLayer(id)
         Object.assign(layer, other)
         layer.vueFlow.setNodes(data.nodes)
         layer.vueFlow.setEdges(data.edges)
         return layer
-    })
+    }))
     const currentLayer = layers[currentLayerIndex]
 
     return {
@@ -241,6 +240,11 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
     const removeLayer = (layerId: string) => {
         if (global.layers.length <= 1) return
         history.executeBatch(Symbol("layer:remove"), () => {
+            const layer = global.layers.find(layer => layer.id === layerId)
+            if (layer === undefined) {
+                console.error(`layer ${layerId} not exist`)
+                return
+            }
             if (layerId === currentLayerId.value) {
                 const currentIndex = global.layers.findIndex(layer => layer.id === currentLayerId.value)
                 if (currentIndex === -1) {
@@ -260,20 +264,29 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
     const toggleLayer = (layerId: string) => {
         if (layerId === global.currentLayer.value.id) return
         const layer = global.layers.find(layer => layer.id === layerId)
-        if (layer === undefined) return
+        if (layer === undefined) {
+            console.error(`layer ${layerId} not exist`)
+            return
+        }
         history.executeCommand("layer:toggle", layerId)
     }
 
     const changeLayerVisible = (layerId: string, visible: boolean) => {
         const layer = global.layers.find(layer => layer.id === layerId)
-        if (layer === undefined) return
+        if (layer === undefined) {
+            console.error(`layer ${layerId} not exist`)
+            return
+        }
         if (layer.visible === visible) return
         history.executeCommand("layer:visible:change", {layerId, visible})
     }
 
     const changeLayerData = (layerId: string, data: Partial<MindMapLayerData>) => {
         const layer = global.layers.find(layer => layer.id === layerId)
-        if (layer === undefined) return
+        if (layer === undefined) {
+            console.error(`layer ${layerId} not exist`)
+            return
+        }
         let equalFlag = true
         for (const key of getKeys(data)) {
             if (layer[key] !== data[key]) {

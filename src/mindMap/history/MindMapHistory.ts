@@ -15,6 +15,7 @@ import {exportMindMap, MindMapExportData} from "@/mindMap/importExport/export.ts
 import {prepareImportIntoMindMap} from "@/mindMap/importExport/import.ts";
 import {getRaw} from "@/json/getRaw.ts";
 import {getKeys} from "@/type/typeGuard.ts";
+import {sendMessage} from "@/message/sendMessage.ts";
 
 export type MindMapHistoryCommands = {
     "layer:add": CommandDefinition<
@@ -143,6 +144,22 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
     history.eventBus.on("batchStop", () => {
         canUndo.value = history.canUndo()
         canRedo.value = history.canRedo()
+    })
+    history.eventBus.on("beforeUndo", () => {
+        if (!canUndo.value) {
+            sendMessage("cannot undo")
+        }
+    })
+    history.eventBus.on("beforeRedo", () => {
+        if (!canRedo.value) {
+            sendMessage("cannot redo")
+        }
+    })
+    history.eventBus.on("undo", () => {
+        sendMessage("undo")
+    })
+    history.eventBus.on("redo", () => {
+        sendMessage("redo")
     })
 
     history.registerCommand("layer:add", {

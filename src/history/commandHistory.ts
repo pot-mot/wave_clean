@@ -272,10 +272,10 @@ export const useCommandHistory = <CommandMap extends CustomCommandMap>(): Comman
     }
 
     const undo = () => {
+        eventBus.emit("beforeUndo")
+
         ifIsExecuteThrow()
         if (!canUndo()) return
-
-        eventBus.emit("beforeUndo")
 
         const commandData = undoStack.pop()
         if (commandData !== undefined) {
@@ -291,10 +291,10 @@ export const useCommandHistory = <CommandMap extends CustomCommandMap>(): Comman
     }
 
     const redo = () => {
+        eventBus.emit("beforeRedo")
+
         ifIsExecuteThrow()
         if (!canRedo()) return
-
-        eventBus.emit("beforeRedo")
 
         const commandData = redoStack.pop()
         if (commandData !== undefined) {

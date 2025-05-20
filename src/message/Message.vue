@@ -1,0 +1,154 @@
+<template>
+    <div class="message-container">
+        <TransitionGroup tag="div" name="messages" :duration="{enter: enterDuration, leave: leaveDuration}" @after-leave="handleAfterLeave">
+            <div
+                v-for="(item, index) in messageItems"
+                :key="item.id"
+                class="message-wrapper"
+            >
+                <div
+                    class="message"
+                    @mouseenter="handleMouseEnter(item)"
+                    @mouseleave="handleMouseLeave(item)"
+                >
+                    <span>{{ item.message }}</span>
+                    <span v-if="item.canClose" class="close-icon" @click="close(index)">×</span>
+                </div>
+            </div>
+        </TransitionGroup>
+    </div>
+</template>
+
+<script setup lang="ts">
+import {ref} from "vue";
+
+const props = withDefaults(defineProps<{
+    timeout?: number,
+    enterDuration?: number,
+    leaveDuration?: number,
+}>(), {
+    timeout: 3000,
+    enterDuration: 500,
+    leaveDuration: 1000,
+})
+
+const emits = defineEmits<{
+    (event: "close", index: number): void,
+    (event: "closeAll"): void
+}>()
+
+let messageItemIdIncrement = 0
+type MessageItem = {
+    id: number,
+    message: string,
+    timeout?: number | undefined,
+    canClose: boolean,
+}
+
+const messageItems = ref<MessageItem[]>([])
+
+const setMessageItemTimeout = (messageItem: MessageItem) => {
+    if (messageItem.timeout) {
+        clearTimeout(messageItem.timeout)
+    }
+
+    messageItem.timeout = setTimeout(() => {
+        const index = messageItems.value.indexOf(messageItem)
+        if (index === -1) return
+        messageItems.value.splice(index, 1)
+        setTimeout(() => {
+            emits("close", index)
+        }, props.leaveDuration)
+    }, props.timeout)
+}
+
+const open = (message: string, canClose: boolean = true) => {
+    const messageItem = {id: ++messageItemIdIncrement, message, canClose}
+    setMessageItemTimeout(messageItem)
+    messageItems.value.push(messageItem)
+}
+
+const handleMouseEnter = (messageItem: MessageItem) => {
+    clearTimeout(messageItem.timeout)
+}
+
+const handleMouseLeave = (messageItem: MessageItem) => {
+    setMessageItemTimeout(messageItem)
+}
+
+const close = (index: number) => {
+    const removedMessages = messageItems.value.splice(index, 1)
+    for (const message of removedMessages) {
+        clearTimeout(message.timeout)
+    }
+    setTimeout(() => {
+        emits("close", index)
+    }, props.leaveDuration)
+}
+
+const handleAfterLeave = () => {
+    if (messageItems.value.length === 0) {
+        emits("closeAll")
+    }
+}
+
+defineExpose({
+    open
+})
+</script>
+
+<style scoped>
+.message-container {
+    position: fixed;
+    top: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: var(--top-z-index);
+}
+
+.message-wrapper {
+    margin-bottom: 0.5rem;
+}
+
+.message {
+    height: fit-content;
+    width: fit-content;
+    margin: auto;
+    padding: 0.2rem 1rem;
+    text-align: center;
+    font-size: 1rem;
+    background-color: var(--background-color);
+    border: var(--border);
+    border-radius: var(--border-radius);
+    color: var(--comment-color);
+}
+
+.close-icon {
+    width: 1rem;
+    height: 1rem;
+    line-height: 1rem;
+    margin-left: 0.6rem;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+/* messages 过渡动画 */
+.messages-enter-from,
+.messages-leave-to {
+    opacity: 0;
+    transform: translateY(-200%);
+}
+
+.messages-enter-active {
+    transition:
+        opacity v-bind(enterDuration+ "ms") ease,
+        transform v-bind(enterDuration+ "ms") ease;
+}
+
+.messages-leave-active {
+    transition:
+        opacity v-bind(leaveDuration+ "ms") ease,
+        transform v-bind(leaveDuration+ "ms") ease;
+    pointer-events: none;
+}
+</style>

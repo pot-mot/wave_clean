@@ -1,4 +1,6 @@
 :root {
+    --top-z-index: 1000000;
+
     --primary-color: dodgerblue;
 
     --text-color: #151515;

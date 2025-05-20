@@ -479,7 +479,7 @@ const stopDragDown = () => {
     grid-template-columns: 4rem calc(100% - 7rem);
     opacity: 0.8;
     pointer-events: none;
-    z-index: 1000000;
+    z-index: var(--top-z-index);
     background-color: var(--primary-color);
 }
 
@@ -522,7 +522,7 @@ const stopDragDown = () => {
 
 .layer-menu-item-scroll-handle {
     height: 2rem;
-    z-index: 1000000;
+    z-index: var(--top-z-index);
 }
 
 .layer-menu-item-scroll-handle.up {
@@ -563,5 +563,6 @@ const stopDragDown = () => {
 
 .layers-leave-active {
     position: absolute;
+    pointer-events: none;
 }
 </style>
