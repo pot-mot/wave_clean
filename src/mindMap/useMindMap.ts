@@ -20,7 +20,6 @@ import {
     ShallowRef,
     shallowRef,
     toRaw,
-    watch
 } from "vue";
 import {blurActiveElement, judgeTargetIsInteraction} from "@/mindMap/clickUtils.ts";
 import {jsonSortPropStringify} from "@/json/jsonStringify.ts";
@@ -216,9 +215,6 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
     }
 
     const currentViewport = shallowRef<ViewportTransform>(global.currentLayer.value.vueFlow.viewport.value)
-    watch(() => global.currentLayer.value.vueFlow.viewport.value, async (_, oldValue) => {
-        currentViewport.value = oldValue
-    })
 
     const addLayer = () => {
         history.executeBatch(Symbol("layer:add"), () => {
