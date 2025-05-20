@@ -30,16 +30,19 @@ const handleRename = (key: string, e: Event) => {
         <input v-model="name">
         <button @click="handleAdd">add</button>
         <div
+            class="file-item"
             v-for="mindMap in fileStore.meta.value.mindMaps"
             @click="handleOpen(mindMap.key)"
-            :style="{color: mindMap.key === fileStore.meta.value.currentKey ? 'var(--primary-color)' : undefined}"
+            :class="{current: mindMap.key === fileStore.meta.value.currentKey}"
         >
             <input
                 class="file-name"
                 :value="mindMap.name"
                 @change="handleRename(mindMap.key, $event)"
             >
-            <div>
+            <div
+                class="last-edit-time"
+            >
                 {{ mindMap.lastEditTime }}
             </div>
             <button @click.stop="handleDelete(mindMap.key)">
@@ -57,15 +60,26 @@ const handleRename = (key: string, e: Event) => {
     border: var(--border);
 }
 
+.file-item.current,
+.file-item.current .file-name {
+    color: var(--primary-color);
+}
+
 .file-name {
     height: 1rem;
     background-color: transparent;
     border: none;
+    font-size: 1rem;
+}
+
+.last-edit-time {
+    font-size: 0.8rem;
 }
 
 .file-name:focus {
     background-color: var(--background-color);
     border: var(--border);
     cursor: text;
+    color: unset;
 }
 </style>
