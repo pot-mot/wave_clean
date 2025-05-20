@@ -1,14 +1,8 @@
 <script setup lang="ts">
-import {useMindMap} from "@/mindMap/useMindMap.ts";
-import {useFileStore} from "@/mindMap/file/FileStore.ts";
+import {useMindMapFileStore} from "@/mindMap/file/MindMapFileStore.ts";
 import {ref} from "vue";
 
-const fileStore = useFileStore()
-
-const {
-    currentMindMapKey,
-    toggleMindMap,
-} = useMindMap()
+const fileStore = useMindMapFileStore()
 
 const name = ref("")
 
@@ -16,26 +10,33 @@ const handleAdd = () => {
     fileStore.add(0, name.value)
 }
 
+const handleDelete = (key: string) => {
+    fileStore.remove(key)
+}
+
 const handleOpen = (key: string) => {
-    toggleMindMap(key)
+    fileStore.toggle(key)
 }
 </script>
 
 <template>
     <div class="file-menu">
         <input v-model="name">
-        <div @click="handleAdd">add</div>
+        <button @click="handleAdd">add</button>
         <div
-            v-for="item in fileStore.meta.value.items"
-            @click="handleOpen(item.key)"
-            :style="{color: item.key === currentMindMapKey ? 'var(--primary-color)' : undefined}"
+            v-for="mindMap in fileStore.meta.value.mindMaps"
+            @click="handleOpen(mindMap.key)"
+            :style="{color: mindMap.key === fileStore.meta.value.currentKey ? 'var(--primary-color)' : undefined}"
         >
             <div>
-                {{ item.name }}
+                {{ mindMap.name }}
             </div>
             <div>
-                {{ item.lastEditTime }}
+                {{ mindMap.lastEditTime }}
             </div>
+            <button @click.stop="handleDelete(mindMap.key)">
+                delete
+            </button>
         </div>
     </div>
 </template>

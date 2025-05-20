@@ -31,8 +31,7 @@ import {checkFullConnection, FullConnection, reverseConnection} from "@/mindMap/
 import {useMindMapHistory} from "@/mindMap/history/MindMapHistory.ts";
 import {CustomClipBoard, unimplementedClipBoard, useClipBoard} from "@/clipBoard/useClipBoard.ts";
 import {getKeys} from "@/type/typeGuard.ts";
-import {useFileStore} from "@/mindMap/file/FileStore.ts";
-import {sendMessage} from "@/message/sendMessage.ts";
+import {useMindMapFileStore} from "@/mindMap/file/MindMapFileStore.ts";
 
 export type MindMapGlobal = {
     zIndexIncrement: number,
@@ -951,52 +950,6 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
         })
     }
 
-
-    const setCurrentMindMapData = async (data: MindMapData) => {
-        const {layers, currentLayer} = dataToLayers(data)
-        console.log(layers, currentLayer, data)
-        global.nodeIdIncrement = data.nodeIdIncrement
-        global.zIndexIncrement = data.zIndexIncrement
-        global.layers.splice(0, global.layers.length, ...layers)
-        global.currentLayer.value = currentLayer
-        currentViewport.value = data.transform
-        history.clean()
-    }
-
-    const exportCurrentMindMapData = (): MindMapData => {
-        return {
-            currentLayerId: currentLayerId.value,
-            layers: global.layers.map(layer => ({
-                id: layer.id,
-                name: layer.name,
-                opacity: layer.opacity,
-                visible: layer.visible,
-                data: exportMindMap(layer.vueFlow)
-            })),
-            transform: currentViewport.value,
-            zIndexIncrement: global.zIndexIncrement,
-            nodeIdIncrement: global.nodeIdIncrement,
-        }
-    }
-
-    const fileStore = useFileStore()
-    const currentMindMapKey = ref<string>()
-
-    const save = async () => {
-        if (currentMindMapKey.value) {
-            await fileStore.update(currentMindMapKey.value, exportCurrentMindMapData())
-            sendMessage("save success")
-        } else {
-            sendMessage("please create a new mindMap")
-        }
-    }
-
-    const toggleMindMap = async (key: string) => {
-        currentMindMapKey.value = key
-        const mindMap = await fileStore.get(key)
-        await setCurrentMindMapData(mindMap)
-    }
-
     return {
         layers: global.layers,
         currentLayer: global.currentLayer,
@@ -1088,9 +1041,33 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
             return await global.currentLayer.value.cut()
         },
 
-        currentMindMapKey,
-        save,
-        toggleMindMap,
+        set: async (data: MindMapData) => {
+            const {layers, currentLayer} = dataToLayers(data)
+            global.nodeIdIncrement = data.nodeIdIncrement
+            global.zIndexIncrement = data.zIndexIncrement
+            global.layers.splice(0, global.layers.length, ...layers)
+            global.currentLayer.value = currentLayer
+            currentViewport.value = data.transform
+            history.clean()
+        },
+        export: (): MindMapData => {
+            return {
+                currentLayerId: currentLayerId.value,
+                layers: global.layers.map(layer => ({
+                    id: layer.id,
+                    name: layer.name,
+                    opacity: layer.opacity,
+                    visible: layer.visible,
+                    data: exportMindMap(layer.vueFlow)
+                })),
+                transform: currentViewport.value,
+                zIndexIncrement: global.zIndexIncrement,
+                nodeIdIncrement: global.nodeIdIncrement,
+            }
+        },
+        save: async () => {
+            await useMindMapFileStore().save()
+        }
     }
 }
 

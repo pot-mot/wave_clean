@@ -117,8 +117,8 @@ const onHandleMouseDown = (e: MouseEvent) => {
 }
 
 :deep(.vue-flow__handle) {
-    width: 0.4em;
-    height: 0.4em;
+    width: 0.4rem;
+    height: 0.4rem;
     background: var(--border-color);
     border-color: var(--background-color);
     border-radius: 100%;
