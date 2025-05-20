@@ -35,6 +35,7 @@ import {useMindMapFileStore} from "@/mindMap/file/MindMapFileStore.ts";
 
 export type MindMapGlobal = {
     zIndexIncrement: number,
+    layerIdIncrement: number,
     nodeIdIncrement: number,
     layers: ShallowReactive<MindMapLayer[]>,
     currentLayer: ShallowRef<ShallowReactive<MindMapLayer>>,
@@ -59,16 +60,15 @@ export type MindMapData = {
         data: MindMapExportData
     }[],
     transform: ViewportTransform,
-} & Pick<MindMapGlobal, 'zIndexIncrement' | 'nodeIdIncrement'>
+} & Pick<MindMapGlobal, 'zIndexIncrement' | 'layerIdIncrement' | 'nodeIdIncrement'>
 
 export const getDefaultMindMapData = (): MindMapData => {
-    const layerId = createLayerId()
     return {
-        currentLayerId: layerId,
+        currentLayerId: "layer-0",
         layers: [
             {
-                id: layerId,
-                name: layerId,
+                id: "layer-0",
+                name: "layer-0",
                 visible: true,
                 opacity: 1,
                 data: {
@@ -82,8 +82,9 @@ export const getDefaultMindMapData = (): MindMapData => {
             y: 0,
             zoom: 1,
         },
-        zIndexIncrement: 0,
-        nodeIdIncrement: 0,
+        zIndexIncrement: 1,
+        nodeIdIncrement: 1,
+        layerIdIncrement: 1,
     }
 }
 
@@ -114,11 +115,6 @@ export type ContentEdge = Pick<Edge, 'id' | 'source' | 'target'> & {
     targetHandle: string,
 }
 
-let layerIdIncrement = 0
-export const createLayerId = () => {
-    return `layer-${layerIdIncrement++}`
-}
-
 let vueFlowIdIncrement = 0
 export const createVueFlowId = () => {
     return `vueflow-${vueFlowIdIncrement++}`
@@ -130,12 +126,12 @@ export const createEdgeId = (connection: Connection) => {
 
 export type MouseAction = "panDrag" | "selectionRect"
 
-export const createLayer = (layerId: string = createLayerId()) => {
+export const createLayer = (id: string, name: string) => {
     const vueFlowId = createVueFlowId()
     return shallowReactive({
-        id: layerId,
+        id,
         vueFlow: useVueFlow(vueFlowId),
-        name: layerId,
+        name,
         visible: true,
         opacity: 1,
 
@@ -153,8 +149,8 @@ const dataToLayers = (data: Pick<MindMapData, 'layers' | 'currentLayerId'>): Pic
         throw new Error("layers id is not unique")
     }
     const layers = shallowReactive(data.layers.map(it => {
-        const {id, data, ...other} = it
-        const layer = createLayer(id)
+        const {id, name, data, ...other} = it
+        const layer = createLayer(id, name)
         Object.assign(layer, other)
         layer.vueFlow.setNodes(data.nodes)
         layer.vueFlow.setEdges(data.edges)
@@ -169,10 +165,11 @@ const dataToLayers = (data: Pick<MindMapData, 'layers' | 'currentLayerId'>): Pic
 }
 
 const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
-    const {layers, currentLayer} = dataToLayers(data)
+    const {currentLayer, layers} = dataToLayers(data)
 
     const global: MindMapGlobal = {
         zIndexIncrement: data.zIndexIncrement,
+        layerIdIncrement: data.layerIdIncrement,
         nodeIdIncrement: data.nodeIdIncrement,
         layers: layers,
         currentLayer: shallowRef<MindMapLayer>(currentLayer),
@@ -230,7 +227,8 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
 
     const addLayer = () => {
         history.executeBatch(Symbol("layer:add"), () => {
-            const layer = createLayer()
+            const id = `layer-${global.layerIdIncrement++}`
+            const layer = createLayer(id, id)
             history.executeCommand("layer:add", layer)
             toggleLayer(layer.id)
         })
@@ -455,12 +453,10 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
         const rightBottom = vueFlow.screenToFlowCoordinate({x: rect.x + rect.width, y: rect.y + rect.height})
 
         for (const node of vueFlow.getNodes.value) {
-            if (typeof node.width !== "number" || typeof node.height !== "number") continue
-
             const nodeLeft = node.position.x
-            const nodeRight = node.position.x + node.width
+            const nodeRight = node.position.x + node.dimensions.width
             const nodeTop = node.position.y
-            const nodeBottom = node.position.y + node.height
+            const nodeBottom = node.position.y + node.dimensions.height
 
             if (
                 nodeRight > leftTop.x &&
@@ -1044,6 +1040,7 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
         set: async (data: MindMapData) => {
             const {layers, currentLayer} = dataToLayers(data)
             global.nodeIdIncrement = data.nodeIdIncrement
+            global.layerIdIncrement = data.layerIdIncrement
             global.zIndexIncrement = data.zIndexIncrement
             global.layers.splice(0, global.layers.length, ...layers)
             global.currentLayer.value = currentLayer
@@ -1062,6 +1059,7 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
                 })),
                 transform: currentViewport.value,
                 zIndexIncrement: global.zIndexIncrement,
+                layerIdIncrement: global.layerIdIncrement,
                 nodeIdIncrement: global.nodeIdIncrement,
             }
         },
