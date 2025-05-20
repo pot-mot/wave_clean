@@ -985,6 +985,7 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
     const save = async () => {
         if (currentMindMapKey.value) {
             await fileStore.update(currentMindMapKey.value, exportCurrentMindMapData())
+            sendMessage("save success")
         } else {
             sendMessage("please create a new mindMap")
         }

@@ -8,6 +8,7 @@
     --border-color: #555;
     --background-color: #fff;
     --background-color-hover: #ddd;
+    --mark-color: rgba(0, 0, 0, 0.1);
     --highlight-color: var(--primary-color);
     --border: 1px solid var(--border-color);
     --border-radius: 0.5em;
@@ -32,6 +33,7 @@
     --border-color: #ccc;
     --background-color: #333;
     --background-color-hover: #444;
+    --mark-color: rgba(255, 255, 255, 0.1);
 
     --scrollbar-track-color: #444;
     --scrollbar-thumb-color: #666;

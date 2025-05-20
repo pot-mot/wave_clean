@@ -36,11 +36,11 @@ const layersMenuOpen = ref(false)
         <button @click="layersMenuOpen = !layersMenuOpen">layers</button>
     </div>
 
-    <div v-show="fileMenuOpen" style="z-index: 5; position: absolute; top: 3rem; left: 0; height: calc(100% - 3rem); width: max(20vw, 20rem);">
+    <div v-show="fileMenuOpen" style="z-index: 5; position: absolute; top: 3rem; left: 0; height: calc(100% - 3rem); width: max(20vw, 20rem);  background-color: var(--mark-color);">
         <FileMenu/>
     </div>
 
-    <div v-show="layersMenuOpen" style="z-index: 5; position: absolute; top: 3rem; right: 0; height: calc(100% - 3rem); width: max(20vw, 20rem);">
+    <div v-show="layersMenuOpen" style="z-index: 5; position: absolute; top: 3rem; right: 0; height: calc(100% - 3rem); width: max(20vw, 20rem);  background-color: var(--mark-color);">
         <LayerMenu/>
     </div>
 </template>

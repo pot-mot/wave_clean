@@ -22,7 +22,7 @@ const handleOpen = (key: string) => {
 </script>
 
 <template>
-    <div>
+    <div class="file-menu">
         <input v-model="name">
         <div @click="handleAdd">add</div>
         <div
@@ -39,3 +39,12 @@ const handleOpen = (key: string) => {
         </div>
     </div>
 </template>
+
+<style scoped>
+.file-menu {
+    height: 100%;
+    width: 100%;
+    background-color: var(--background-color);
+    border: var(--border);
+}
+</style>

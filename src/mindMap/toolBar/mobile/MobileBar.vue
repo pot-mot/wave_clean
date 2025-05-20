@@ -3,6 +3,7 @@ import {useMindMap} from "@/mindMap/useMindMap.ts";
 import {computed, onBeforeUnmount, onMounted, ref, shallowRef} from "vue";
 import LayerMenu from "@/mindMap/layer/LayerMenu.vue";
 import {checkElementParent} from "@/mindMap/clickUtils.ts";
+import FileMenu from "@/mindMap/file/FileMenu.vue";
 
 const {
     save,
@@ -81,8 +82,18 @@ onBeforeUnmount(() => {
     </div>
 
     <div
+        v-show="!isVueFlowInputFocused && fileMenuOpen"
+        style="z-index: 5; position: absolute; top: 0; right: 0; height: 100vh; width: 100vw;"
+        @click.self = "fileMenuOpen = false"
+    >
+        <div style="position: absolute; top: 0; left: 0; height: 100%; width: 20rem; background-color: var(--mark-color);">
+            <FileMenu/>
+        </div>
+    </div>
+
+    <div
         v-show="!isVueFlowInputFocused && layersMenuOpen"
-        style="z-index: 5; position: absolute; bottom: 2rem; right: 0; height: calc(100vh - 2rem); width: 100vw;"
+        style="z-index: 5; position: absolute; bottom: 2rem; right: 0; height: calc(100vh - 2rem); width: 100vw; background-color: var(--mark-color);"
         @click.self = "layersMenuOpen = false"
     >
         <div style="position: absolute; top: 0; right: 0; height: 100%; width: min(60vw, 20rem);">
