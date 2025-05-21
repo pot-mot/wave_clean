@@ -49,7 +49,7 @@ initLayer(props.layer)
 <style scoped>
 .vue-flow.notCurrent,
 .vue-flow.notCurrent *,
-:deep(.vue-flow.invisible .vue-flow__transformationpane *) {
+.vue-flow.invisible :deep(.vue-flow__pane) * {
     pointer-events: none !important;
 }
 
