@@ -10,17 +10,7 @@ import {
     VueFlowStore,
     XYPosition,
 } from "@vue-flow/core";
-import {
-    computed,
-    nextTick,
-    readonly,
-    ref,
-    ShallowReactive,
-    shallowReactive,
-    ShallowRef,
-    shallowRef,
-    toRaw,
-} from "vue";
+import {computed, nextTick, readonly, ref, ShallowReactive, shallowReactive, ShallowRef, shallowRef, toRaw,} from "vue";
 import {blurActiveElement, judgeTargetIsInteraction} from "@/mindMap/clickUtils.ts";
 import {jsonSortPropStringify} from "@/json/jsonStringify.ts";
 import {MindMapImportData, prepareImportIntoMindMap} from "@/mindMap/importExport/import.ts";
@@ -62,11 +52,12 @@ export type MindMapData = {
 } & Pick<MindMapGlobal, 'zIndexIncrement' | 'layerIdIncrement' | 'nodeIdIncrement'>
 
 export const getDefaultMindMapData = (): MindMapData => {
+    const id = `layer-0-${Date.now()}`
     return {
-        currentLayerId: "layer-0",
+        currentLayerId: id,
         layers: [
             {
-                id: "layer-0",
+                id,
                 name: "layer-0",
                 visible: true,
                 opacity: 1,
@@ -138,7 +129,9 @@ export const createLayer = (id: string, name: string) => {
     })
 }
 
-const dataToLayers = (data: Pick<MindMapData, 'layers' | 'currentLayerId'>): Pick<MindMapGlobal, 'layers'> & {currentLayer: ShallowReactive<MindMapLayer>} => {
+const dataToLayers = (data: Pick<MindMapData, 'layers' | 'currentLayerId'>): Pick<MindMapGlobal, 'layers'> & {
+    currentLayer: ShallowReactive<MindMapLayer>
+} => {
     const currentLayerIndex = data.layers.findIndex(layer => layer.id === data.currentLayerId)
     if (currentLayerIndex === -1) {
         throw new Error("current layer does not in layers")
@@ -218,8 +211,10 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
 
     const addLayer = () => {
         history.executeBatch(Symbol("layer:add"), () => {
-            const id = `layer-${global.layerIdIncrement++}`
-            const layer = createLayer(id, id)
+            const id = `layer-${global.layerIdIncrement}-${Date.now()}`
+            const name = `layer-${global.layerIdIncrement}`
+            global.layerIdIncrement++
+            const layer = createLayer(id, name)
             history.executeCommand("layer:add", layer)
             toggleLayer(layer.id)
         })
@@ -393,34 +388,31 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
         const vueFlow = getCurrentVueFlow()
         return vueFlow.multiSelectionActive.value
     })
-    const enableMultiSelect = () => {
-        const vueFlow = getCurrentVueFlow()
+    const enableMultiSelect = (vueFlow: VueFlowStore = getCurrentVueFlow()) => {
         vueFlow.multiSelectionActive.value = true
     }
-    const disableMultiSelect = () => {
-        const vueFlow = getCurrentVueFlow()
+    const disableMultiSelect = (vueFlow: VueFlowStore = getCurrentVueFlow()) => {
         vueFlow.multiSelectionActive.value = false
     }
-    const toggleMultiSelect = () => {
-        if (canMultiSelect.value) {
-            disableMultiSelect()
+    const toggleMultiSelect = (vueFlow: VueFlowStore = getCurrentVueFlow()) => {
+        if (vueFlow.multiSelectionActive.value) {
+            disableMultiSelect(vueFlow)
         } else {
-            enableMultiSelect()
+            enableMultiSelect(vueFlow)
         }
     }
 
-    const selectAll = () => {
-        const vueFlow = getCurrentVueFlow()
+    const selectAll = (vueFlow: VueFlowStore = getCurrentVueFlow()) => {
         const isCurrentMultiSelect = isMultiSelected.value
 
-        if (!isCurrentMultiSelect) enableMultiSelect()
+        if (!isCurrentMultiSelect) enableMultiSelect(vueFlow)
         if (vueFlow.getSelectedNodes.value.length < vueFlow.getNodes.value.length) {
             vueFlow.addSelectedNodes(vueFlow.getNodes.value)
         }
         if (vueFlow.getSelectedEdges.value.length < vueFlow.getEdges.value.length) {
             vueFlow.addSelectedEdges(vueFlow.getEdges.value)
         }
-        if (!isCurrentMultiSelect) disableMultiSelect()
+        if (!isCurrentMultiSelect) disableMultiSelect(vueFlow)
     }
 
     /**
@@ -429,14 +421,15 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
     let selectionRectEnable: boolean = false
     let selectionRectMouseButton: number = 0
 
-    const getByClientRect = (rect: {
-        readonly x: number,
-        readonly y: number,
-        readonly width: number,
-        readonly height: number
-    }) => {
-        const vueFlow = getCurrentVueFlow()
-
+    const getByClientRect = (
+        rect: {
+            readonly x: number,
+            readonly y: number,
+            readonly width: number,
+            readonly height: number
+        },
+        vueFlow: VueFlowStore = getCurrentVueFlow()
+    ) => {
         const innerNodes: GraphNode[] = []
         const innerEdges: GraphEdge[] = []
 
@@ -480,28 +473,30 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
     const defaultMouseAction = ref<MouseAction>('panDrag')
 
     // 默认操作为拖拽
-    const setDefaultPanDrag = () => {
-        const vueFlow = getCurrentVueFlow()
-
+    const setDefaultPanDrag = (
+        vueFlow: VueFlowStore = getCurrentVueFlow()
+    ) => {
         defaultMouseAction.value = 'panDrag'
         vueFlow.panOnDrag.value = isTouchDevice.value ? true : [0, 2]
         selectionRectMouseButton = 2
         selectionRectEnable = false
     }
     // 默认操作为框选，通过鼠标右键拖拽
-    const setDefaultSelectionRect = () => {
-        const vueFlow = getCurrentVueFlow()
-
+    const setDefaultSelectionRect = (
+        vueFlow: VueFlowStore = getCurrentVueFlow()
+    ) => {
         defaultMouseAction.value = 'selectionRect'
         vueFlow.panOnDrag.value = isTouchDevice.value ? false : [2]
         selectionRectMouseButton = 0
         selectionRectEnable = true
     }
-    const toggleDefaultMouseAction = () => {
+    const toggleDefaultMouseAction = (
+        vueFlow: VueFlowStore = getCurrentVueFlow()
+    ) => {
         if (defaultMouseAction.value === 'panDrag') {
-            setDefaultSelectionRect()
+            setDefaultSelectionRect(vueFlow)
         } else {
-            setDefaultPanDrag()
+            setDefaultPanDrag(vueFlow)
         }
     }
 
@@ -509,24 +504,31 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
         const vueFlow = getCurrentVueFlow()
         return vueFlow.nodesDraggable.value
     })
-    const disableDrag = () => {
-        const vueFlow = getCurrentVueFlow()
+    const disableDrag = (
+        vueFlow: VueFlowStore = getCurrentVueFlow()
+    ) => {
         vueFlow.nodesDraggable.value = false
     }
-    const enableDrag = () => {
-        const vueFlow = getCurrentVueFlow()
+    const enableDrag = (
+        vueFlow: VueFlowStore = getCurrentVueFlow()
+    ) => {
         vueFlow.nodesDraggable.value = true
     }
 
-    const setLayerConfigDefault = () => {
-        disableMultiSelect()
-        setDefaultPanDrag()
-        enableDrag()
+    const setLayerConfigDefault = (
+        vueFlow: VueFlowStore = getCurrentVueFlow()
+    ) => {
+        disableMultiSelect(vueFlow)
+        setDefaultPanDrag(vueFlow)
+        enableDrag(vueFlow)
     }
+
     setLayerConfigDefault()
 
     const initLayer = (layer: MindMapLayer) => {
         const {id, vueFlow} = layer
+
+        setLayerConfigDefault(vueFlow)
 
         const {
             vueFlowRef,
@@ -710,19 +712,19 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
 
                 // 按下 Ctrl 键进入多选模式，直到松开 Ctrl 键
                 else if (e.key === "Control") {
-                    enableMultiSelect()
+                    enableMultiSelect(vueFlow)
                     document.documentElement.addEventListener('keyup', (e) => {
                         if (e.key === "Control" || e.ctrlKey) {
-                            disableMultiSelect()
+                            disableMultiSelect(vueFlow)
                         }
                     }, {once: true})
                 } else if (e.key === "Shift") {
                     if (judgeTargetIsInteraction(e)) return
 
-                    toggleDefaultMouseAction()
+                    toggleDefaultMouseAction(vueFlow)
                     document.documentElement.addEventListener('keyup', (e) => {
                         if (e.key === "Shift" || e.shiftKey) {
-                            toggleDefaultMouseAction()
+                            toggleDefaultMouseAction(vueFlow)
                         }
                     }, {once: true})
                 } else if (e.ctrlKey) {
@@ -1034,8 +1036,8 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
             global.layerIdIncrement = data.layerIdIncrement
             global.zIndexIncrement = data.zIndexIncrement
             global.layers.splice(0, global.layers.length, ...layers)
-            global.currentLayer.value = currentLayer
             currentViewport.value = data.transform
+            toggleLayer(currentLayer.id)
             history.clean()
         },
         export: (): MindMapData => {
