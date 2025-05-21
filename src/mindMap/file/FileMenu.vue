@@ -19,16 +19,23 @@ const handleOpen = (key: string) => {
 }
 
 const handleRename = (key: string, e: Event) => {
-    if (e instanceof InputEvent && e.data !== null) {
-        fileStore.rename(key, e.data)
+    if (e.target instanceof HTMLInputElement) {
+        fileStore.rename(key, e.target.value)
+        e.target.blur()
     }
 }
 </script>
 
 <template>
     <div class="file-menu">
-        <input v-model="name">
-        <button @click="handleAdd">add</button>
+        <div>
+            <input
+                class="new-file-name"
+                v-model="name" @keydown.enter="handleAdd"
+            >
+            <button @click="handleAdd">add</button>
+        </div>
+
         <div
             class="file-item"
             v-for="mindMap in fileStore.meta.value.mindMaps"
@@ -38,7 +45,8 @@ const handleRename = (key: string, e: Event) => {
             <input
                 class="file-name"
                 :value="mindMap.name"
-                @change="handleRename(mindMap.key, $event)"
+                @change="(e) => handleRename(mindMap.key, e)"
+                @click.stop
             >
             <div
                 class="last-edit-time"
@@ -65,6 +73,12 @@ const handleRename = (key: string, e: Event) => {
     color: var(--primary-color);
 }
 
+.new-file-name {
+    height: 1rem;
+    background-color: var(--background-color);
+    border: var(--border);
+}
+
 .file-name {
     height: 1rem;
     background-color: transparent;
@@ -74,6 +88,7 @@ const handleRename = (key: string, e: Event) => {
 
 .last-edit-time {
     font-size: 0.8rem;
+    cursor: default;
 }
 
 .file-name:focus {
