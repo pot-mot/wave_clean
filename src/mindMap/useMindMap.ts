@@ -1020,14 +1020,14 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
             history.executeCommand('edge:data:change', {layerId: currentLayerId.value, id, data})
         },
 
-        copy: async () => {
-            return await global.currentLayer.value.copy()
+        copy: async (layer: MindMapLayer = global.currentLayer.value) => {
+            return await layer.copy()
         },
-        paste: async () => {
-            return await global.currentLayer.value.paste()
+        paste: async (layer: MindMapLayer = global.currentLayer.value) => {
+            return await layer.paste()
         },
-        cut: async () => {
-            return await global.currentLayer.value.cut()
+        cut: async (layer: MindMapLayer = global.currentLayer.value) => {
+            return await layer.cut()
         },
 
         set: async (data: MindMapData) => {

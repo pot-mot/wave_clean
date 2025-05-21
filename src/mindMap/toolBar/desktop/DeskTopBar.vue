@@ -24,12 +24,12 @@ const layersMenuOpen = ref(false)
 <template>
     <div style="z-index: 5; position: absolute; top: 0; height: 3rem; line-height: 3rem; vertical-align: center; display: flex; justify-content: space-around;">
         <button @click="fileMenuOpen = !fileMenuOpen">menu</button>
-        <button @click="save">save</button>
+        <button @click="save()">save</button>
 
-        <button :disabled="!canUndo" @click="undo">undo</button>
-        <button :disabled="!canRedo" @click="redo">redo</button>
+        <button :disabled="!canUndo" @click="undo()">undo</button>
+        <button :disabled="!canRedo" @click="redo()">redo</button>
         <button @click="fitView()">fit</button>
-        <button @click="toggleDefaultMouseAction">{{ defaultMouseAction }}</button>
+        <button @click="toggleDefaultMouseAction()">{{ defaultMouseAction }}</button>
     </div>
 
     <div style="z-index: 5; position: absolute; top: 0; right: 0; height: 3rem;">

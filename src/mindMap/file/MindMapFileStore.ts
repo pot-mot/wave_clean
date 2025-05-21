@@ -103,11 +103,15 @@ const initMindMapFileStore = () => {
         return parsedData
     }
 
-    const save = async () => {
-        const key = meta.value.currentKey
+    const save = async (key: string | undefined = meta.value.currentKey) => {
         if (key !== undefined) {
-            await update(key, mindMapStore.export())
-            sendMessage("save success")
+            try {
+                await update(key, mindMapStore.export())
+                sendMessage("save success")
+            } catch (e) {
+                console.error(e)
+                sendMessage(`save fail: ${e}`)
+            }
         } else {
             sendMessage("please create a new mindMap")
         }
@@ -133,7 +137,7 @@ const initMindMapFileStore = () => {
                 metaValueStr = (await jsonFileOperations.get(metaFileName))!!
             }
 
-            let metaValue: Meta | undefined = undefined
+            let metaValue: Meta | undefined
             try {
                 metaValue = JSON.parse(metaValueStr)
             } catch (e) {
