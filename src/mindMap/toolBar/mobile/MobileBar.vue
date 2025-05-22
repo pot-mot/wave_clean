@@ -30,6 +30,7 @@ const {
     fitView,
     defaultMouseAction,
     toggleDefaultMouseAction,
+    isMultiSelected,
     canMultiSelect,
     toggleMultiSelect,
 
@@ -96,7 +97,7 @@ onBeforeUnmount(() => {
                 <IconSelection/>
             </button>
 
-            <button @click="removeSelection()">
+            <button @click="removeSelection()" :class="{disabled: !isMultiSelected}">
                 <IconDelete color="var(--icon-color)"/>
             </button>
         </div>

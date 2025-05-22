@@ -871,6 +871,7 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
 
                     // 如果开启了 selectionRect，则将根据 selectionRectMouseButton 判断并进行拖曳创建选择框
                     if (selectionRectEnable) {
+                        blurActiveElement()
                         e.preventDefault()
                         vueFlow.multiSelectionActive.value = false
 
