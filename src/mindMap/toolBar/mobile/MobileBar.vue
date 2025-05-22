@@ -136,22 +136,21 @@ onBeforeUnmount(() => {
     </div>
 
     <div
-        v-show="!isVueFlowInputFocused && fileMenuOpen"
-        style="z-index: 5; position: absolute; top: 0; right: 0; height: 100vh; width: 100vw; background-color: var(--mask-color);"
+        class="toolbar file-menu"
+        :class="{open: !isVueFlowInputFocused && fileMenuOpen}"
         @click.self="fileMenuOpen = false"
     >
-        <div
-            style="position: absolute; top: 0; left: 0; height: 100%; width: 20rem;">
+        <div style="">
             <FileMenu/>
         </div>
     </div>
 
     <div
-        v-show="!isVueFlowInputFocused && layersMenuOpen"
-        style="z-index: 5; position: absolute; bottom: 2rem; right: 0; height: calc(100vh - 2rem); width: 100vw; background-color: var(--mask-color);"
+        class="toolbar layer-menu"
+        :class="{open: !isVueFlowInputFocused && layersMenuOpen}"
         @click.self="layersMenuOpen = false"
     >
-        <div style="position: absolute; top: 0; right: 0; height: 100%; width: min(60vw, 20rem);">
+        <div>
             <LayerMenu/>
         </div>
     </div>
@@ -213,5 +212,68 @@ onBeforeUnmount(() => {
 .toolbar.bottom > div {
     height: 1.8rem;
     line-height: 1.8rem;
+}
+
+.toolbar.file-menu,
+.toolbar.layer-menu {
+    width: 100vw;
+    background-color: var(--mask-color);
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+}
+.toolbar.file-menu.open,
+.toolbar.layer-menu.open {
+    pointer-events: all;
+}
+
+.toolbar.file-menu > div,
+.toolbar.layer-menu > div {
+    transition: transform 0.5s ease;
+}
+
+.toolbar.file-menu {
+    top: 0;
+    height: 100vh;
+    left: 0;
+    opacity: 0;
+}
+.toolbar.file-menu.open {
+    opacity: 1;
+}
+
+.toolbar.file-menu > div {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 20rem;
+    border-right: var(--border);
+    transform: translateX(-100%);
+}
+.toolbar.file-menu.open > div {
+    transform: translateX(0);
+}
+
+.toolbar.layer-menu {
+    top: 0;
+    height: calc(100vh - 2rem);
+    right: 0;
+    opacity: 0;
+}
+.toolbar.layer-menu.open {
+    opacity: 1;
+}
+
+.toolbar.layer-menu > div {
+    position: absolute;
+    top: 2rem;
+    right: 0;
+    height: calc(100% - 2rem);
+    width: min(60vw, 20rem);
+    border-left: var(--border);
+    transform: translateX(100%);
+}
+.toolbar.layer-menu.open > div {
+    transform: translateX(0);
 }
 </style>

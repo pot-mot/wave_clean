@@ -30,9 +30,7 @@ const layersMenuOpen = ref(false)
 </script>
 
 <template>
-    <div
-        class="toolbar top-left"
-    >
+    <div class="toolbar top-left">
         <button @click="fileMenuOpen = !fileMenuOpen" :class="{enable: fileMenuOpen}">
             <IconMenu/>
         </button>
@@ -55,9 +53,7 @@ const layersMenuOpen = ref(false)
         </button>
     </div>
 
-    <div
-        class="toolbar top-right"
-    >
+    <div class="toolbar top-right">
         <button @click="layersMenuOpen = !layersMenuOpen" :class="{enable: layersMenuOpen}">
             <IconLayer/>
         </button>
@@ -65,7 +61,7 @@ const layersMenuOpen = ref(false)
 
     <div
         class="toolbar file-menu"
-        v-show="fileMenuOpen"
+        :class="{open: fileMenuOpen}"
         tabindex="-1"
         @keydown.esc="fileMenuOpen = false"
     >
@@ -74,7 +70,7 @@ const layersMenuOpen = ref(false)
 
     <div
         class="toolbar layer-menu"
-        v-show="layersMenuOpen"
+        :class="{open: layersMenuOpen}"
         tabindex="-1"
         @keydown.esc="layersMenuOpen = false"
     >
@@ -136,26 +132,41 @@ const layersMenuOpen = ref(false)
     border-bottom: var(--border);
 }
 
-.toolbar.file-menu {
+.toolbar.file-menu,
+.toolbar.layer-menu {
     top: 2.5rem;
-    left: 0;
     height: calc(100% - 3rem);
     width: max(20vw, 20rem);
-    background-color: var(--mask-color);
     border-top: var(--border);
     border-bottom: var(--border);
+    transition: transform 0.5s ease, opacity 0.5s ease;
+    pointer-events: none;
+}
+.toolbar.file-menu.open,
+.toolbar.layer-menu.open {
+    pointer-events: all;
+}
+
+.toolbar.file-menu {
+    left: 0;
     border-right: var(--border);
+    opacity: 0;
+    transform: translateX(-100%);
+}
+.toolbar.file-menu.open {
+    opacity: 1;
+    transform: translateX(0);
 }
 
 .toolbar.layer-menu {
-    top: 2.5rem;
     right: 0;
-    height: calc(100% - 3rem);
-    width: max(20vw, 20rem);
-    background-color: var(--mask-color);
-    border-top: var(--border);
-    border-bottom: var(--border);
     border-left: var(--border);
+    opacity: 0;
+    transform: translateX(100%);
+}
+.toolbar.layer-menu.open {
+    opacity: 1;
+    transform: translateX(0);
 }
 </style>
 

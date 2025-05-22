@@ -494,9 +494,9 @@ const stopDragDown = () => {
     position: absolute;
     height: 5rem;
     width: 100%;
-    padding: 0 1.5rem;
+    padding: 0 2rem;
     display: grid;
-    grid-template-columns: 4rem calc(100% - 7rem);
+    grid-template-columns: 4rem calc(100% - 8.5rem);
     opacity: 0.8;
     pointer-events: none;
     z-index: var(--top-z-index);
