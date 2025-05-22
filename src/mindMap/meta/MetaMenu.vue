@@ -4,8 +4,10 @@ import {ref} from "vue";
 import IconAdd from "@/icons/IconAdd.vue";
 import IconDelete from "@/icons/IconDelete.vue";
 import {sendMessage} from "@/message/sendMessage.ts";
+import {useThemeStore} from "@/store/themeStore.ts";
 
 const metaStore = useMindMapMetaStore()
+const themeStore = useThemeStore()
 
 const name = ref("")
 
@@ -35,58 +37,76 @@ const handleRename = (key: string, e: Event) => {
 </script>
 
 <template>
-    <div class="file-menu">
-        <div class="new-file-wrapper">
-            <input
-                class="new-file-name"
-                v-model="name" @keydown.enter="handleAdd"
-            >
-            <button
-                class="new-file-button"
-                @click="handleAdd"
-            >
-                <IconAdd/>
-            </button>
+    <div class="meta-menu">
+        <div class="theme-menu">
+            <button @click="themeStore.toggleTheme()">{{ themeStore.theme }}</button>
         </div>
 
-        <div class="file-list">
-            <div
-                class="file-item"
-                v-for="mindMap in metaStore.meta.value.mindMaps"
-                @click="handleOpen(mindMap.key)"
-                :class="{current: mindMap.key === metaStore.meta.value.currentKey}"
-            >
-                <div>
-                    <input
-                        class="file-name"
-                        :value="mindMap.name"
-                        @change="(e) => handleRename(mindMap.key, e)"
-                        @click.stop
-                    >
-                    <div
-                        class="last-edit-time"
-                    >
-                        {{ mindMap.lastEditTime }}
-                    </div>
-                </div>
+        <div class="quick-input-menu">
 
-                <button
-                    class="file-delete-button"
-                    @click.stop="handleDelete(mindMap.key)"
+        </div>
+
+        <div class="file-menu">
+            <div class="new-file-wrapper">
+                <input
+                    class="new-file-name"
+                    v-model="name" @keydown.enter="handleAdd"
                 >
-                    <IconDelete/>
+                <button
+                    class="new-file-button"
+                    @click="handleAdd"
+                >
+                    <IconAdd/>
                 </button>
+            </div>
+
+            <div class="file-list">
+                <div
+                    class="file-item"
+                    v-for="mindMap in metaStore.meta.value.mindMaps"
+                    @click="handleOpen(mindMap.key)"
+                    :class="{current: mindMap.key === metaStore.meta.value.currentKey}"
+                >
+                    <div>
+                        <input
+                            class="file-name"
+                            :value="mindMap.name"
+                            @change="(e) => handleRename(mindMap.key, e)"
+                            @click.stop
+                        >
+                        <div
+                            class="last-edit-time"
+                        >
+                            {{ mindMap.lastEditTime }}
+                        </div>
+                    </div>
+
+                    <button
+                        class="file-delete-button"
+                        @click.stop="handleDelete(mindMap.key)"
+                    >
+                        <IconDelete/>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 </template>
 
 <style scoped>
-.file-menu {
+.meta-menu {
     height: 100%;
     width: 100%;
     background-color: var(--background-color);
+    transition: background-color 0.5s;
+}
+
+.file-menu {
+    height: calc(100% - 3rem);
+    width: 100%;
     padding: 0.5rem;
+    background-color: var(--background-color);
+    transition: background-color 0.5s;
 }
 
 .new-file-wrapper {
@@ -111,14 +131,17 @@ const handleRename = (key: string, e: Event) => {
 
 .file-list {
     height: calc(100% - 1.5rem);
+    padding-bottom: 3rem;
+    overflow-x: hidden;
     overflow-y: auto;
-    scrollbar-gutter: stable;
 }
 
 .file-item {
     margin-top: 0.5rem;
     display: grid;
     grid-template-columns: 1fr auto;
+    background-color: var(--background-color);
+    transition: background-color 0.5s;
 }
 
 .file-item.current,

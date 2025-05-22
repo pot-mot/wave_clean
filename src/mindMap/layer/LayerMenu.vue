@@ -432,6 +432,7 @@ const stopDragDown = () => {
     height: 100%;
     width: 100%;
     background-color: var(--background-color);
+    transition: background-color 0.5s;
 }
 
 .layer-menu-header {
@@ -461,9 +462,8 @@ const stopDragDown = () => {
     height: 100%;
     width: 100%;
     padding-bottom: 3rem;
-    overflow-x: scroll;
-    overflow-y: scroll;
-    scrollbar-gutter: stable;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
 .layer-menu-item {
@@ -474,7 +474,7 @@ const stopDragDown = () => {
     grid-gap: 0.5rem;
     grid-template-columns: 1.5rem 4rem calc(100% - 8.5rem) 1.5rem;
     user-select: none;
-    transition: background-color 0.5s ease;
+    transition: background-color 0.5s;
 }
 
 .layer-menu-item.current {
@@ -559,8 +559,8 @@ const stopDragDown = () => {
 
 .layer-menu-item-gap {
     height: 0.3rem;
-    transition: height 0.5s;
     background-color: var(--background-color-hover);
+    transition: height 0.5s, background-color 0.5s;
 }
 
 .layer-menu-item-gap.over {

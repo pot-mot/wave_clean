@@ -4,11 +4,15 @@ import {Theme, getCurrentWindow} from "@tauri-apps/api/window";
 const initThemeStore = () => {
     const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     const theme = ref<Theme>(systemTheme);
-    getCurrentWindow().theme().then(it => {
-        if (it !== null) {
-            theme.value = it
-        }
-    })
+    try {
+        getCurrentWindow().theme().then(it => {
+            if (it !== null) {
+                theme.value = it
+            }
+        })
+    } catch (e) {
+
+    }
 
     // 切换主题色
     const toggleTheme = () => {

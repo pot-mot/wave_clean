@@ -8,8 +8,8 @@
     --text-color: #151515;
     --comment-color: #1f1f1f;
     --border-color: #555;
-    --background-color: #fff;
-    --background-color-hover: #ddd;
+    --background-color: #eee;
+    --background-color-hover: #ccc;
     --mask-color: rgba(0, 0, 0, 0.1);
     --highlight-color: var(--primary-color);
     --border: 1px solid var(--border-color);
@@ -27,7 +27,6 @@
 
     color: var(--text-color);
     background-color: var(--background-color);
-    transition: background-color 0.5s;
 }
 
 :root.dark {

@@ -6,8 +6,15 @@ import {jsonSortPropStringify} from "@/json/jsonStringify.ts";
 import {sendMessage} from "@/message/sendMessage.ts";
 import type {JSONSchemaType} from "ajv/lib/types/json-schema.ts";
 import {createSchemaValidator} from "@/type/typeGuard.ts";
+import {Theme} from "@tauri-apps/api/window";
+import {useThemeStore} from "@/store/themeStore.ts";
 
 const metaFileName = '[[WAVE_CLEAN_EDIT_META]]'
+
+type QuickInputItem = {
+    label: string,
+    value: string,
+}
 
 type Meta = {
     currentKey?: string | undefined,
@@ -15,7 +22,11 @@ type Meta = {
         key: string,
         name: string,
         lastEditTime: string
-    }[]
+    }[],
+
+    currentTheme?: Theme | undefined,
+    primaryColor?: string | undefined,
+    quickInputs: QuickInputItem[],
 }
 
 const Meta_JsonSchema: JSONSchemaType<Meta> = {
@@ -43,16 +54,92 @@ const Meta_JsonSchema: JSONSchemaType<Meta> = {
                 required: ["key", "name", "lastEditTime"],
             },
         },
+        currentTheme: {
+            type: "string",
+            enum: ["light", "dark"],
+            nullable: true,
+        },
+        primaryColor: {
+            type: "string",
+            nullable: true,
+        },
+        quickInputs: {
+            type: "array",
+            items: {
+                type: "object",
+                properties: {
+                    label: { type: "string" },
+                    value: { type: "string" }
+                },
+                required: ["label", "value"]
+            }
+        }
     },
-    required: ["mindMaps"],
+    required: ["mindMaps", "quickInputs"],
 }
 
 const validateMeta = createSchemaValidator<Meta>(Meta_JsonSchema)
 
+const PartialMeta_JsonSchema: JSONSchemaType<Partial<Meta>> = {
+    type: "object",
+    properties: {
+        currentKey: {
+            type: "string",
+            nullable: true
+        },
+        mindMaps: {
+            type: "array",
+            items: {
+                type: "object",
+                properties: {
+                    key: {
+                        type: "string",
+                    },
+                    name: {
+                        type: "string",
+                    },
+                    lastEditTime: {
+                        type: "string",
+                    },
+                },
+                required: ["key", "name", "lastEditTime"],
+            },
+            nullable: true,
+        },
+        currentTheme: {
+            type: "string",
+            enum: ["light", "dark"],
+            nullable: true,
+        },
+        primaryColor: {
+            type: "string",
+            nullable: true,
+        },
+        quickInputs: {
+            type: "array",
+            items: {
+                type: "object",
+                properties: {
+                    label: { type: "string" },
+                    value: { type: "string" }
+                },
+                required: ["label", "value"]
+            },
+            nullable: true,
+        }
+    },
+}
+
+const validatePartialMeta = createSchemaValidator<Partial<Meta>>(PartialMeta_JsonSchema)
+
 const initMindMapMetaStore = () => {
-    const meta = ref<Meta>({mindMaps: []})
+    const meta = ref<Meta>({mindMaps: [], quickInputs: []})
 
     const mindMapStore = useMindMap()
+    const themeStore = useThemeStore()
+    watch(() => themeStore.theme.value, (theme) => {
+        meta.value.currentTheme = theme
+    })
 
     watch(() => meta.value, async () => {
         await jsonFileOperations.set(metaFileName, JSON.stringify(meta.value))
@@ -154,6 +241,9 @@ const initMindMapMetaStore = () => {
             }
             if (validateMeta(metaValue)) {
                 meta.value = metaValue
+            } else if (validatePartialMeta(metaValue)) {
+                Object.assign(meta.value, metaValue)
+                await jsonFileOperations.set(metaFileName, JSON.stringify(meta.value))
             } else {
                 await jsonFileOperations.set(metaFileName, JSON.stringify(meta.value))
             }

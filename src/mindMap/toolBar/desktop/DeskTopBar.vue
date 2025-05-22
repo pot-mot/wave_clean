@@ -98,16 +98,16 @@ const layersMenuOpen = ref(false)
 }
 
 .toolbar button.disabled {
+    color: var(--background-color-hover);
+    --icon-color: var(--background-color-hover);
     background-color: var(--background-color);
-    opacity: 0.6;
     cursor: not-allowed;
 }
 
 .toolbar button.enable {
-    background-color: var(--primary-color);
     color: var(--background-color);
     --icon-color: var(--background-color);
-    border-radius: 0;
+    background-color: var(--primary-color);
 }
 
 .toolbar.top-left,

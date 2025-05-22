@@ -50,7 +50,6 @@ const handleKeyDown = (e: KeyboardEvent) => {
         tabindex="-1"
         @keydown="handleKeyDown"
         style="width: 100%; height: 100%;"
-        :style="{ backgroundColor: 'var(--background-color)' }"
     >
         <BackGround :viewport="currentLayer.vueFlow.viewport.value"/>
 

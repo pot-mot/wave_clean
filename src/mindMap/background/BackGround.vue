@@ -26,7 +26,7 @@ const background = computed(() => {
 </script>
 
 <template>
-    <svg class="vue-flow__background" style="height: 100%; width: 100%;">
+    <svg class="vue-flow__background">
         <pattern
             id="flow__background_pattern"
             :x="viewport.x % background.gapX"
@@ -41,3 +41,12 @@ const background = computed(() => {
         <rect :x="0" :y="0" width="100%" height="100%" fill="url(#flow__background_pattern)"/>
     </svg>
 </template>
+
+<style scoped>
+.vue-flow__background {
+    height: 100%;
+    width: 100%;
+    background-color: var(--background-color);
+    transition: background-color 0.5s;
+}
+</style>

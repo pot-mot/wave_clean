@@ -119,6 +119,7 @@ watch(() => nodes.value.map(it => {
     width: 100%;
     height: 100%;
     background-color: var(--background-color);
+    transition: background-color 0.5s;
     overflow: hidden;
 }
 
@@ -130,6 +131,7 @@ watch(() => nodes.value.map(it => {
 
 .layer-view-node {
     background: var(--background-color-hover);
+    transition: background-color 0.5s;
     position: absolute;
 }
 </style>
