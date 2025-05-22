@@ -99,22 +99,14 @@ const handleRename = (key: string, e: Event) => {
 
 .new-file-name {
     height: 100%;
-    background-color: var(--background-color);
-    border: var(--border);
     border-radius: 0;
     padding: 0 0.5rem;
 }
 
-.new-file-name:focus {
-    outline: none;
-}
-
 .new-file-button {
     width: 2rem;
-    border: var(--border);
     border-left: none;
     border-radius: 0;
-    background-color: var(--background-color);
 }
 
 .file-list {

@@ -1,6 +1,5 @@
 :root {
     --top-z-index: 1000000;
-
     --primary-color: dodgerblue;
     --danger-color: #F56C6C;
     --warning-color: #E6A23C;
@@ -26,6 +25,7 @@
     --icon-color: #666;
     --icon-color-light: #999;
 
+    color: var(--text-color);
     background-color: var(--background-color);
     transition: background-color 0.5s;
 }

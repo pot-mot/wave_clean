@@ -143,6 +143,7 @@ defineExpose({
     font-size: 1rem;
     background-color: var(--background-color);
     border: var(--border);
+    border-color: var(--background-color-hover);
     border-radius: var(--border-radius);
     color: var(--comment-color);
     pointer-events: all;

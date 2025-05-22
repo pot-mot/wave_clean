@@ -524,6 +524,7 @@ const stopDragDown = () => {
     pointer-events: none;
     background-color: transparent;
     border: none;
+    color: var(--text-color);
 }
 
 .current .layer-menu-item-name {
@@ -534,7 +535,7 @@ const stopDragDown = () => {
 
 .layer-menu-item-name:focus {
     background-color: var(--background-color);
-    color: initial;
+    color: var(--text-color);
     border: var(--border);
     padding: 0 0.5rem;
     outline: none;

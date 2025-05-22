@@ -110,26 +110,25 @@ const layersMenuOpen = ref(false)
     border-radius: 0;
 }
 
-.toolbar.top-left {
+.toolbar.top-left,
+.toolbar.top-right {
     top: 0;
-    left: 0;
     height: 2rem;
     line-height: 2rem;
     display: flex;
     justify-content: space-around;
-    border-right: var(--border);
     border-bottom: var(--border);
 }
 
+.toolbar.top-left {
+    left: 0;
+    border-right: var(--border);
+    border-color: var(--background-color-hover);
+}
 .toolbar.top-right {
-    top: 0;
     right: 0;
-    height: 2rem;
-    line-height: 2rem;
-    display: flex;
-    justify-content: space-around;
     border-left: var(--border);
-    border-bottom: var(--border);
+    border-color: var(--background-color-hover);
 }
 
 .toolbar.file-menu,
@@ -150,6 +149,7 @@ const layersMenuOpen = ref(false)
 .toolbar.file-menu {
     left: 0;
     border-right: var(--border);
+    border-color: var(--background-color-hover);
     opacity: 0;
     transform: translateX(-100%);
 }
@@ -161,6 +161,7 @@ const layersMenuOpen = ref(false)
 .toolbar.layer-menu {
     right: 0;
     border-left: var(--border);
+    border-color: var(--background-color-hover);
     opacity: 0;
     transform: translateX(100%);
 }

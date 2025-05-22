@@ -202,11 +202,13 @@ onBeforeUnmount(() => {
 .toolbar.top {
     top: 0;
     border-bottom: var(--border);
+    border-color: var(--background-color-hover);
 }
 
 .toolbar.bottom {
     bottom: 0;
     border-top: var(--border);
+    border-color: var(--background-color-hover);
 }
 
 .toolbar.top > div,
