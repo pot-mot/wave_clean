@@ -210,8 +210,7 @@ onBeforeUnmount(() => {
 
 .toolbar.top > div,
 .toolbar.bottom > div {
-    height: 1.8rem;
-    line-height: 1.8rem;
+    display: flex;
 }
 
 .toolbar.file-menu,
