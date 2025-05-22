@@ -138,10 +138,14 @@ const initMindMapMetaStore = () => {
     const mindMapStore = useMindMap()
     const themeStore = useThemeStore()
     watch(() => themeStore.theme.value, (theme) => {
-        meta.value.currentTheme = theme
+        if (theme !== meta.value.currentTheme) {
+            meta.value.currentTheme = theme
+        }
     }, {immediate: true})
     watch(() => themeStore.primaryColor.value, (color) => {
-        meta.value.primaryColor = color
+        if (color !== meta.value.primaryColor) {
+            meta.value.primaryColor = color
+        }
     }, {immediate: true})
 
     watch(() => meta.value, async () => {
@@ -249,6 +253,12 @@ const initMindMapMetaStore = () => {
                 await jsonFileOperations.set(metaFileName, JSON.stringify(meta.value))
             } else {
                 await jsonFileOperations.set(metaFileName, JSON.stringify(meta.value))
+            }
+            if (meta.value.primaryColor) {
+                themeStore.setPrimaryColor(meta.value.primaryColor)
+            }
+            if (meta.value.currentTheme) {
+                themeStore.setTheme(meta.value.currentTheme)
             }
             if (meta.value.currentKey && meta.value.mindMaps.findIndex(it => it.key === meta.value.currentKey) !== -1) {
                 await toggle(meta.value.currentKey)

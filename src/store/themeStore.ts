@@ -20,9 +20,13 @@ const initThemeStore = () => {
         }
     }, {immediate: true})
 
+    const setTheme = (newTheme: Theme) => {
+        theme.value = newTheme
+    }
+
     const toggleTheme = () => {
         theme.value = theme.value === 'dark' ? 'light' : 'dark';
-    };
+    }
 
     const currentPrimaryColor = window.getComputedStyle(document.documentElement).getPropertyValue("--primary-color").toLowerCase()
     const primaryColor = ref<string>(currentPrimaryColor)
@@ -37,6 +41,7 @@ const initThemeStore = () => {
 
     return {
         theme: readonly(theme),
+        setTheme,
         toggleTheme,
 
         primaryColor: readonly(primaryColor),
