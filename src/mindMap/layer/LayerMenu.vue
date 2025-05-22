@@ -3,6 +3,10 @@ import {MindMapLayer, useMindMap} from "@/mindMap/useMindMap.ts";
 import LayerView from "@/mindMap/layer/LayerView.vue";
 import {computed, onBeforeUnmount, onMounted, ref, useTemplateRef} from "vue";
 import {useTouchEnterLeave} from "@/event/TouchEnterLeave.ts";
+import IconDelete from "@/icons/IconDelete.vue";
+import IconVisible from "@/icons/IconVisible.vue";
+import IconAdd from "@/icons/IconAdd.vue";
+import IconInvisible from "@/icons/IconInvisible.vue";
 
 const {
     layers,
@@ -296,7 +300,9 @@ const stopDragDown = () => {
 <template>
     <div class="layer-menu" tabindex="-1" @keydown="handleKeyDown">
         <div class="layer-menu-header">
-            <button @click="addLayer">add</button>
+            <button @click="addLayer" class="layer-add-button">
+                <IconAdd/>
+            </button>
         </div>
 
         <div
@@ -357,7 +363,8 @@ const stopDragDown = () => {
                                 @click.stop="toggleLayerVisible(layer)"
                                 class="layer-menu-item-visible"
                             >
-                                {{ layer.visible ? 'show' : 'hide' }}
+                                <IconVisible v-if="layer.visible"/>
+                                <IconInvisible v-else/>
                             </button>
                             <div class="layer-menu-item-view">
                                 <LayerView :layer="layer"/>
@@ -371,7 +378,7 @@ const stopDragDown = () => {
                                 @click.stop="removeLayer(layer.id)"
                                 class="layer-menu-item-delete"
                             >
-                                del
+                                <IconDelete/>
                             </button>
                         </div>
 
@@ -425,11 +432,22 @@ const stopDragDown = () => {
     height: 100%;
     width: 100%;
     background-color: var(--background-color);
-    border: var(--border);
 }
 
 .layer-menu-header {
     height: 2rem;
+}
+
+.layer-add-button {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background-color: var(--background-color);
+    transition: background-color 0.5s ease;
+}
+
+.layer-add-button:hover {
+    background-color: var(--background-color-hover);
 }
 
 .layer-menu-container {
@@ -453,8 +471,10 @@ const stopDragDown = () => {
     height: 5rem;
     width: 100%;
     display: grid;
-    grid-template-columns: 1.5rem 4rem calc(100% - 7rem) 1.5rem;
+    grid-gap: 0.5rem;
+    grid-template-columns: 1.5rem 4rem calc(100% - 8.5rem) 1.5rem;
     user-select: none;
+    transition: background-color 0.5s ease;
 }
 
 .layer-menu-item.current {
@@ -497,8 +517,9 @@ const stopDragDown = () => {
 }
 
 .layer-menu-item-name {
-    height: 1rem;
-    margin-top: 2rem;
+    height: 1.5rem;
+    line-height: 1.5rem;
+    margin-top: 1.75rem;
     font-size: 0.9rem;
     pointer-events: none;
     background-color: transparent;
@@ -508,12 +529,15 @@ const stopDragDown = () => {
 .current .layer-menu-item-name {
     pointer-events: initial;
     cursor: default;
+    color: var(--background-color)
 }
-
 
 .layer-menu-item-name:focus {
     background-color: var(--background-color);
+    color: initial;
     border: var(--border);
+    padding: 0 0.5rem;
+    outline: none;
     cursor: text;
 }
 

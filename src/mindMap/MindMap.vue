@@ -13,6 +13,7 @@ const {
     currentLayer,
     undo,
     redo,
+    save,
 } = useMindMap()
 
 const backgroundKey = ref(true)
@@ -36,6 +37,9 @@ const handleKeyDown = (e: KeyboardEvent) => {
                 e.preventDefault()
                 undo()
             }
+        } else if (e.key === "s" || e.key === "S") {
+            e.preventDefault()
+            save()
         }
     }
 }

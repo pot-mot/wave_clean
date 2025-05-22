@@ -19,7 +19,9 @@
                     @mouseleave="handleMouseLeave(item)"
                 >
                     <span>{{ item.message }}</span>
-                    <span v-if="item.canClose" class="close-icon" @click="close(index)">×</span>
+                    <span v-if="item.canClose" class="close-icon" @click="close(index)">
+                        <IconClose/>
+                    </span>
                 </div>
             </div>
         </TransitionGroup>
@@ -28,6 +30,7 @@
 
 <script setup lang="ts">
 import {ref} from "vue";
+import IconClose from "@/icons/IconClose.vue";
 
 const props = withDefaults(defineProps<{
     timeout?: number,

@@ -2,13 +2,16 @@
     --top-z-index: 1000000;
 
     --primary-color: dodgerblue;
+    --danger-color: #F56C6C;
+    --warning-color: #E6A23C;
+    --success-color: #67C23A;
 
     --text-color: #151515;
     --comment-color: #1f1f1f;
     --border-color: #555;
     --background-color: #fff;
     --background-color-hover: #ddd;
-    --mark-color: rgba(0, 0, 0, 0.1);
+    --mask-color: rgba(0, 0, 0, 0.1);
     --highlight-color: var(--primary-color);
     --border: 1px solid var(--border-color);
     --border-radius: 0.5em;
@@ -33,7 +36,7 @@
     --border-color: #ccc;
     --background-color: #333;
     --background-color-hover: #444;
-    --mark-color: rgba(255, 255, 255, 0.1);
+    --mask-color: rgba(255, 255, 255, 0.1);
 
     --scrollbar-track-color: #444;
     --scrollbar-thumb-color: #666;

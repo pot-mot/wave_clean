@@ -751,6 +751,7 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
                 // 双击添加节点
                 paneEl.addEventListener('dblclick', (e) => {
                     if (e.target !== paneEl) return
+                    if (!layer.visible) return
                     addNode(screenToFlowCoordinate({x: e.clientX, y: e.clientY}))
                 })
 
@@ -845,6 +846,7 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
                 let waitTimeout: number | undefined
                 paneEl.addEventListener('touchstart', (e) => {
                     if (e.target !== paneEl) return
+                    if (!layer.visible) return
                     if (waitNextTouchEnd) {
                         addNode(screenToFlowCoordinate({x: e.touches[0].clientX, y: e.touches[0].clientY}))
                         waitNextTouchEnd = false
