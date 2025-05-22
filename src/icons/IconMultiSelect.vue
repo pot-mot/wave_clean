@@ -1,6 +1,9 @@
 <template>
+    <!-- https://tablericons.com/ box-multiple -->
     <BaseIcon>
-        <path d="M 5 8 m 0 1 a 1 1 0 0 1 1 -1 h 7 a 1 1 0 0 1 1 1 v 6 a 1 1 0 0 1 -1 1 h -7 a 1 1 0 0 1 -1 -1 z M 12 11 m 0 1 a 1 1 0 0 1 1 -1 h 7 a 1 1 0 0 1 1 1 v 6 a 1 1 0 0 1 -1 1 h -7 a 1 1 0 0 1 -1 -1 z M 5 4 L 21 4 C 22 4 23 5 23 6 L 23 21 C 23 22 22 23 21 23 L 5 23 C 4 23 3 22 3 21 L 3 6 C 3 5 4 4 5 4"/>
+        <path d="M7 3m0 2a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2z" />
+        <path d="M17 17v2a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-10a2 2 0 0 1 2 -2h2" />
+        <path d="M 11 11 L 14 13 L 18 6"/>
     </BaseIcon>
 </template>
 
