@@ -3,21 +3,14 @@ import {Theme, getCurrentWindow} from "@tauri-apps/api/window";
 
 const initThemeStore = () => {
     const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    const theme = ref<Theme>(systemTheme);
+    const theme = ref<Theme>(systemTheme)
     try {
         getCurrentWindow().theme().then(it => {
             if (it !== null) {
                 theme.value = it
             }
         })
-    } catch (e) {
-
-    }
-
-    // 切换主题色
-    const toggleTheme = () => {
-        theme.value = theme.value === 'dark' ? 'light' : 'dark';
-    };
+    } catch (e) {}
 
     watch(() => theme.value, (newTheme) => {
         if (newTheme === 'dark') {
@@ -27,9 +20,27 @@ const initThemeStore = () => {
         }
     }, {immediate: true})
 
+    const toggleTheme = () => {
+        theme.value = theme.value === 'dark' ? 'light' : 'dark';
+    };
+
+    const currentPrimaryColor = window.getComputedStyle(document.documentElement).getPropertyValue("--primary-color").toLowerCase()
+    const primaryColor = ref<string>(currentPrimaryColor)
+
+    watch(() => primaryColor.value, (newPrimaryColor) => {
+        document.documentElement.style.setProperty("--primary-color", newPrimaryColor)
+    })
+
+    const setPrimaryColor = (newPrimaryColor: string) => {
+        primaryColor.value = newPrimaryColor
+    }
+
     return {
         theme: readonly(theme),
         toggleTheme,
+
+        primaryColor: readonly(primaryColor),
+        setPrimaryColor,
     };
 }
 

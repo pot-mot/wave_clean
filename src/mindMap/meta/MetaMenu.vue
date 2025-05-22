@@ -34,12 +34,19 @@ const handleRename = (key: string, e: Event) => {
         e.target.blur()
     }
 }
+
+const handlePrimaryColorChange = (e: Event) => {
+    if (e.target instanceof HTMLInputElement) {
+        themeStore.setPrimaryColor(e.target.value)
+    }
+}
 </script>
 
 <template>
     <div class="meta-menu">
         <div class="theme-menu">
             <button @click="themeStore.toggleTheme()">{{ themeStore.theme }}</button>
+            <input type="color" :value="themeStore.primaryColor.value" @change="handlePrimaryColorChange">
         </div>
 
         <div class="quick-input-menu">

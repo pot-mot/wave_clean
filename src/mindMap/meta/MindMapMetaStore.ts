@@ -139,7 +139,10 @@ const initMindMapMetaStore = () => {
     const themeStore = useThemeStore()
     watch(() => themeStore.theme.value, (theme) => {
         meta.value.currentTheme = theme
-    })
+    }, {immediate: true})
+    watch(() => themeStore.primaryColor.value, (color) => {
+        meta.value.primaryColor = color
+    }, {immediate: true})
 
     watch(() => meta.value, async () => {
         await jsonFileOperations.set(metaFileName, JSON.stringify(meta.value))
