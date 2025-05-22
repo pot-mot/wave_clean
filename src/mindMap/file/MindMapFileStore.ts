@@ -59,12 +59,17 @@ const initMindMapFileStore = () => {
     }, {deep: true})
 
     const add = async (index: number, name: string) => {
-        const timestamp = new Date()
-        const key = name + Date.now()
-        meta.value.mindMaps.splice(index, 0, {key, name, lastEditTime: timestamp.toLocaleString()})
-        await jsonFileOperations.create(key)
-        await jsonFileOperations.set(key, jsonSortPropStringify(getDefaultMindMapData()))
-        return key
+        try {
+            const timestamp = new Date()
+            const key = name + Date.now()
+            meta.value.mindMaps.splice(index, 0, {key, name, lastEditTime: timestamp.toLocaleString()})
+            await jsonFileOperations.create(key)
+            await jsonFileOperations.set(key, jsonSortPropStringify(getDefaultMindMapData()))
+            return key
+        } catch (e) {
+            sendMessage("create mindmap fail")
+            throw e
+        }
     }
 
     const rename = async (key: string, newName: string) => {
@@ -76,12 +81,13 @@ const initMindMapFileStore = () => {
     }
 
     const remove = async (key: string) => {
-        meta.value.mindMaps = meta.value.mindMaps.filter(item => item.key !== key)
-        await jsonFileOperations.remove(key)
-    }
-
-    const update = async (key: string, mindMapData: MindMapData) => {
-        await jsonFileOperations.set(key, JSON.stringify(mindMapData))
+        try {
+            meta.value.mindMaps = meta.value.mindMaps.filter(item => item.key !== key)
+            await jsonFileOperations.remove(key)
+        } catch (e) {
+            sendMessage("delete mindmap fail")
+            throw e
+        }
     }
 
     const get = async (key: string): Promise<MindMapData> => {
@@ -106,7 +112,7 @@ const initMindMapFileStore = () => {
     const save = async (key: string | undefined = meta.value.currentKey) => {
         if (key !== undefined) {
             try {
-                await update(key, mindMapStore.export())
+                await jsonFileOperations.set(key, JSON.stringify(mindMapStore.export()))
                 sendMessage("save success")
             } catch (e) {
                 console.error(e)
@@ -123,19 +129,21 @@ const initMindMapFileStore = () => {
             sendMessage(`toggle error, MindMap not existed.`)
             return
         }
+        if (meta.value.currentKey !== undefined) {
+            const mindMap = await get(key)
+            await mindMapStore.set(mindMap)
+        }
         meta.value.currentKey = key
-        const mindMap = await get(key)
-        await mindMapStore.set(mindMap)
     }
 
     (async () => {
         try {
-            let metaValueStr = await jsonFileOperations.get(metaFileName)
-            if (metaValueStr === undefined) {
+            const isExisted = await jsonFileOperations.isExisted(metaFileName)
+            if (!isExisted) {
                 await jsonFileOperations.create(metaFileName)
                 await jsonFileOperations.set(metaFileName, JSON.stringify(meta.value))
-                metaValueStr = (await jsonFileOperations.get(metaFileName))!!
             }
+            const metaValueStr = await jsonFileOperations.get(metaFileName)
 
             let metaValue: Meta | undefined
             try {
