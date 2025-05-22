@@ -5,6 +5,7 @@ import {ContentEdgeData, useMindMap} from "@/mindMap/useMindMap.ts";
 import FitSizeBlockInput from "@/input/FitSizeBlockInput.vue";
 import {useEdgeUpdaterTouch} from "@/mindMap/touchToMouse/useEdgeUpdaterTouch.ts";
 import AutoResizeForeignObject from "@/mindMap/svg/AutoResizeForeignObject.vue";
+import IconDelete from "@/icons/IconDelete.vue";
 
 const {updateEdgeData, isMultiSelected, canMultiSelect, selectEdge, remove, currentViewport} = useMindMap()
 
@@ -127,7 +128,9 @@ const handleBlur = () => {
             :transform="`translate(${curveMidpoint.x - (toolBarWidth * zoom) / 2} ${curveMidpoint.y - inputHeight / 2 - (toolBarHeight * zoom)}) scale(${zoom})`"
         >
             <div style="padding-bottom: 0.3rem;">
-                <button @mousedown.capture="handleDelete">delete</button>
+                <button @mousedown.capture="handleDelete" style="padding: 0.3rem;">
+                    <IconDelete/>
+                </button>
             </div>
         </AutoResizeForeignObject>
     </g>

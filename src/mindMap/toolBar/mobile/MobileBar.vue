@@ -114,7 +114,7 @@ onBeforeUnmount(() => {
             <button @click="fitView()">
                 <IconFit/>
             </button>
-            <button @click="toggleMultiSelect()" :class="{disabled: !canMultiSelect}">
+            <button @click="toggleMultiSelect()" :class="{enable: canMultiSelect}">
                 <IconMultiSelect/>
             </button>
         </div>

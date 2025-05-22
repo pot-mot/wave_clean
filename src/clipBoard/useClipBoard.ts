@@ -1,19 +1,30 @@
 import {SchemaValidator} from "@/type/typeGuard.ts";
 import {judgeTargetIsInteraction} from "@/mindMap/clickUtils.ts";
 import {readText, writeText} from "@tauri-apps/plugin-clipboard-manager";
+import {LazyData, lazyDataParse} from "@/type/lazyDataParse.ts";
+import {sendMessage} from "@/message/sendMessage.ts";
 
 export type ClipBoardTarget<INPUT, OUTPUT> = {
     importData: (data: INPUT) => void | Promise<void>,
-    exportData: () => OUTPUT | Promise<OUTPUT>,
+    exportData: LazyData<OUTPUT>,
     removeData: (data: OUTPUT) => void | Promise<void>,
     validateInput: SchemaValidator<INPUT>,
     stringifyData: (data: OUTPUT) => string
 }
 
 export const useClipBoard = <INPUT, OUTPUT>(target: ClipBoardTarget<INPUT, OUTPUT>) => {
-    const copy = async (): Promise<OUTPUT> => {
-        const data: OUTPUT = await target.exportData()
-        await writeText(target.stringifyData(data))
+    const copy = async (lazyData: LazyData<OUTPUT> = target.exportData): Promise<OUTPUT> => {
+        const data = await lazyDataParse(lazyData)
+        try {
+            try {
+                await writeText(target.stringifyData(data))
+            } catch (e) {
+                await window.navigator.clipboard.writeText(target.stringifyData(data))
+            }
+        } catch (e) {
+            sendMessage("copy fail")
+            console.error(e)
+        }
         return data
     }
 
@@ -23,18 +34,29 @@ export const useClipBoard = <INPUT, OUTPUT>(target: ClipBoardTarget<INPUT, OUTPU
         return data
     }
 
-    const paste = async (): Promise<INPUT | string> => {
-        const text = await readText()
+    const paste = async (): Promise<INPUT | string | undefined> => {
+        let text: string | undefined
         try {
+            try {
+                text = await readText()
+            } catch (e) {
+                text = await window.navigator.clipboard.readText()
+            }
+
             const data = JSON.parse(text)
-            if (target.validateInput(data)) {
+            let errors: any
+            if (target.validateInput(data, e => errors = e)) {
                 await target.importData(data)
                 return data
             } else {
+                sendMessage("paste fail")
+                console.error(errors)
                 return text
             }
         } catch (e) {
-            return text
+            sendMessage("paste fail")
+            console.error(e)
+            return
         }
     }
 

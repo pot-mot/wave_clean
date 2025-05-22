@@ -15,14 +15,20 @@ export const getKeys = <T extends object>(data: T): (keyof T)[] => {
 import Ajv, {ErrorObject} from "ajv";
 const ajv = new Ajv({ allErrors: true }); // 启用所有错误信息
 
-export const createSchemaValidator = <T>(schema: JSONSchemaType<T>, errorHandler?: (errors: ErrorObject[] | null | undefined) => void) => {
+export type SchemaValidatorErrorHandler = (errors: ErrorObject[] | null | undefined) => void
+
+export const createSchemaValidator = <T>(schema: JSONSchemaType<T>, baseErrorHandler?: SchemaValidatorErrorHandler) => {
     const validate = ajv.compile(schema)
 
-    return (data: unknown): data is T => {
+    return (data: unknown, errorHandler?: SchemaValidatorErrorHandler): data is T => {
         const valid = validate(data)
 
         if (!valid) {
-            errorHandler?.(validate.errors)
+            if (errorHandler !== undefined) {
+                errorHandler(validate.errors)
+            } else if (baseErrorHandler !== undefined) {
+                baseErrorHandler(validate.errors)
+            }
             return false
         }
 

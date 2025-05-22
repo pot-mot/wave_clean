@@ -21,6 +21,7 @@ import {useMindMapHistory} from "@/mindMap/history/MindMapHistory.ts";
 import {CustomClipBoard, unimplementedClipBoard, useClipBoard} from "@/clipBoard/useClipBoard.ts";
 import {getKeys} from "@/type/typeGuard.ts";
 import {useMindMapFileStore} from "@/mindMap/file/MindMapFileStore.ts";
+import {LazyData} from "@/type/lazyDataParse.ts";
 
 export type MindMapGlobal = {
     zIndexIncrement: number,
@@ -965,13 +966,11 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
         undo: history.undo,
         redo: history.redo,
 
-        findNode: (id: string) => {
-            const vueFlow = getCurrentVueFlow()
-            return vueFlow.findNode(id)
+        findNode: (id: string, layer: MindMapLayer = global.currentLayer.value) => {
+            return layer.vueFlow.findNode(id)
         },
-        findEdge: (id: string) => {
-            const vueFlow = getCurrentVueFlow()
-            return vueFlow.findEdge(id)
+        findEdge: (id: string, layer: MindMapLayer = global.currentLayer.value) => {
+            return layer.vueFlow.findEdge(id)
         },
         addNode,
         addEdge,
@@ -1022,8 +1021,11 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
             history.executeCommand('edge:data:change', {layerId: currentLayerId.value, id, data})
         },
 
-        copy: async (layer: MindMapLayer = global.currentLayer.value) => {
-            return await layer.copy()
+        copy: async (
+            data: LazyData<MindMapExportData> | undefined = undefined,
+            layer: MindMapLayer = global.currentLayer.value,
+        ) => {
+            return await layer.copy(data)
         },
         paste: async (layer: MindMapLayer = global.currentLayer.value) => {
             return await layer.paste()

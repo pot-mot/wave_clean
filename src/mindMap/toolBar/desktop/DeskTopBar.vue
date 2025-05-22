@@ -66,6 +66,8 @@ const layersMenuOpen = ref(false)
     <div
         class="toolbar file-menu"
         v-show="fileMenuOpen"
+        tabindex="-1"
+        @keydown.esc="fileMenuOpen = false"
     >
         <FileMenu/>
     </div>
@@ -73,6 +75,8 @@ const layersMenuOpen = ref(false)
     <div
         class="toolbar layer-menu"
         v-show="layersMenuOpen"
+        tabindex="-1"
+        @keydown.esc="layersMenuOpen = false"
     >
         <LayerMenu/>
     </div>

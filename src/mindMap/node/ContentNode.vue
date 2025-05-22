@@ -1,15 +1,24 @@
 <script setup lang="ts">
 import {Handle, NodeProps} from "@vue-flow/core";
-import {ContentNodeData, ContentNodeHandles, useMindMap} from "@/mindMap/useMindMap.ts";
+import {ContentNode, ContentNodeData, ContentNodeHandles, useMindMap} from "@/mindMap/useMindMap.ts";
 import {computed, ref, useTemplateRef} from "vue";
 import FitSizeBlockInput from "@/input/FitSizeBlockInput.vue";
 import {NodeToolbar} from "@vue-flow/node-toolbar";
+import IconDelete from "@/icons/IconDelete.vue";
+import IconCopy from "@/icons/IconCopy.vue";
 
-const {updateNodeData, disableDrag, enableDrag, isMultiSelected, canMultiSelect, findNode, selectNode, remove} = useMindMap()
+const {updateNodeData, disableDrag, enableDrag, isMultiSelected, canMultiSelect, findNode, selectNode,  copy, remove} = useMindMap()
 
 const props = defineProps<NodeProps & {
     data: ContentNodeData,
 }>()
+
+const handleCopy = () => {
+    const node = findNode(props.id)
+    if (node !== undefined) {
+        copy({nodes: [node] as any as ContentNode[], edges: []})
+    }
+}
 
 const handleDelete = () => {
     remove({nodes: [props.id]})
@@ -73,7 +82,13 @@ const onHandleMouseDown = (e: MouseEvent) => {
 <template>
     <div>
         <NodeToolbar :node-id="id" :is-visible="selected && !inputDisable">
-            <button @mousedown.capture="handleDelete">delete</button>
+            <button @mousedown.capture="handleCopy" style="padding: 0.3rem;">
+                <IconCopy/>
+            </button>
+
+            <button @mousedown.capture="handleDelete" style="padding: 0.3rem;">
+                <IconDelete/>
+            </button>
         </NodeToolbar>
 
         <div
