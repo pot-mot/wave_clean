@@ -31,12 +31,11 @@
 }
 
 :root.dark {
-    --text-color: #eee;
+    --text-color: #ccc;
     --comment-color: #777;
     --border-color: #ccc;
     --background-color: #333;
     --background-color-hover: #444;
-    --mask-color: rgba(255, 255, 255, 0.1);
 
     --scrollbar-track-color: #444;
     --scrollbar-thumb-color: #666;

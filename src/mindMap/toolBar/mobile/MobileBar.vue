@@ -3,7 +3,7 @@ import {useMindMap} from "@/mindMap/useMindMap.ts";
 import {computed, onBeforeUnmount, onMounted, ref, shallowRef} from "vue";
 import LayerMenu from "@/mindMap/layer/LayerMenu.vue";
 import {checkElementParent} from "@/mindMap/clickUtils.ts";
-import FileMenu from "@/mindMap/file/FileMenu.vue";
+import MetaMenu from "@/mindMap/meta/MetaMenu.vue";
 import IconSave from "@/icons/IconSave.vue";
 import IconCopy from "@/icons/IconCopy.vue";
 import IconCut from "@/icons/IconCut.vue";
@@ -42,7 +42,7 @@ const {
     paste,
 } = useMindMap()
 
-const fileMenuOpen = ref(false)
+const metaMenuOpen = ref(false)
 
 const layersMenuOpen = ref(false)
 
@@ -70,9 +70,9 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div class="toolbar top" v-show="!fileMenuOpen">
+    <div class="toolbar top" v-show="!metaMenuOpen">
         <div>
-            <button @click="fileMenuOpen = !fileMenuOpen" :class="{enable: fileMenuOpen}">
+            <button @click="metaMenuOpen = !metaMenuOpen" :class="{enable: metaMenuOpen}">
                 <IconMenu/>
             </button>
             <button @click="save()">
@@ -105,7 +105,7 @@ onBeforeUnmount(() => {
 
     <div
         class="toolbar bottom"
-        v-show="!isVueFlowInputFocused && !fileMenuOpen"
+        v-show="!isVueFlowInputFocused && !metaMenuOpen"
     >
         <div>
             <button @click="toggleDefaultMouseAction()">
@@ -137,12 +137,12 @@ onBeforeUnmount(() => {
     </div>
 
     <div
-        class="toolbar file-menu"
-        :class="{open: !isVueFlowInputFocused && fileMenuOpen}"
-        @click.self="fileMenuOpen = false"
+        class="toolbar meta-menu"
+        :class="{open: !isVueFlowInputFocused && metaMenuOpen}"
+        @click.self="metaMenuOpen = false"
     >
         <div style="">
-            <FileMenu/>
+            <MetaMenu/>
         </div>
     </div>
 
@@ -216,43 +216,44 @@ onBeforeUnmount(() => {
     display: flex;
 }
 
-.toolbar.file-menu,
+.toolbar.meta-menu,
 .toolbar.layer-menu {
     width: 100vw;
     background-color: var(--mask-color);
     transition: opacity 0.5s ease;
     pointer-events: none;
 }
-.toolbar.file-menu.open,
+.toolbar.meta-menu.open,
 .toolbar.layer-menu.open {
     pointer-events: all;
 }
 
-.toolbar.file-menu > div,
+.toolbar.meta-menu > div,
 .toolbar.layer-menu > div {
     transition: transform 0.5s ease;
 }
 
-.toolbar.file-menu {
+.toolbar.meta-menu {
     top: 0;
     height: 100vh;
     left: 0;
     opacity: 0;
 }
-.toolbar.file-menu.open {
+.toolbar.meta-menu.open {
     opacity: 1;
 }
 
-.toolbar.file-menu > div {
+.toolbar.meta-menu > div {
     position: absolute;
     top: 0;
     left: 0;
     height: 100%;
     width: 20rem;
     border-right: var(--border);
+    border-color: var(--background-color-hover);
     transform: translateX(-100%);
 }
-.toolbar.file-menu.open > div {
+.toolbar.meta-menu.open > div {
     transform: translateX(0);
 }
 
@@ -273,6 +274,7 @@ onBeforeUnmount(() => {
     height: calc(100% - 2rem);
     width: min(60vw, 20rem);
     border-left: var(--border);
+    border-color: var(--background-color-hover);
     transform: translateX(100%);
 }
 .toolbar.layer-menu.open > div {

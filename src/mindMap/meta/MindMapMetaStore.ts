@@ -49,7 +49,7 @@ const Meta_JsonSchema: JSONSchemaType<Meta> = {
 
 const validateMeta = createSchemaValidator<Meta>(Meta_JsonSchema)
 
-const initMindMapFileStore = () => {
+const initMindMapMetaStore = () => {
     const meta = ref<Meta>({mindMaps: []})
 
     const mindMapStore = useMindMap()
@@ -179,13 +179,13 @@ const initMindMapFileStore = () => {
     }
 }
 
-type MindMapFileStore = ReturnType<typeof initMindMapFileStore>
+type MindMapMetaStore = ReturnType<typeof initMindMapMetaStore>
 
-let fileStore: MindMapFileStore | undefined = undefined
+let metaStore: MindMapMetaStore | undefined = undefined
 
-export const useMindMapFileStore = () => {
-    if (fileStore === undefined) {
-        fileStore = initMindMapFileStore()
+export const useMindMapMetaStore = () => {
+    if (metaStore === undefined) {
+        metaStore = initMindMapMetaStore()
     }
-    return fileStore
+    return metaStore
 }

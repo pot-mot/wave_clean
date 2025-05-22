@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import {useMindMapFileStore} from "@/mindMap/file/MindMapFileStore.ts";
+import {useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
 import {ref} from "vue";
 import IconAdd from "@/icons/IconAdd.vue";
 import IconDelete from "@/icons/IconDelete.vue";
 import {sendMessage} from "@/message/sendMessage.ts";
 
-const fileStore = useMindMapFileStore()
+const metaStore = useMindMapMetaStore()
 
 const name = ref("")
 
@@ -14,21 +14,21 @@ const handleAdd = () => {
         sendMessage("Please set a name")
         return
     }
-    fileStore.add(0, name.value)
+    metaStore.add(0, name.value)
     name.value = ""
 }
 
 const handleDelete = (key: string) => {
-    fileStore.remove(key)
+    metaStore.remove(key)
 }
 
 const handleOpen = (key: string) => {
-    fileStore.toggle(key)
+    metaStore.toggle(key)
 }
 
 const handleRename = (key: string, e: Event) => {
     if (e.target instanceof HTMLInputElement) {
-        fileStore.rename(key, e.target.value)
+        metaStore.rename(key, e.target.value)
         e.target.blur()
     }
 }
@@ -52,9 +52,9 @@ const handleRename = (key: string, e: Event) => {
         <div class="file-list">
             <div
                 class="file-item"
-                v-for="mindMap in fileStore.meta.value.mindMaps"
+                v-for="mindMap in metaStore.meta.value.mindMaps"
                 @click="handleOpen(mindMap.key)"
-                :class="{current: mindMap.key === fileStore.meta.value.currentKey}"
+                :class="{current: mindMap.key === metaStore.meta.value.currentKey}"
             >
                 <div>
                     <input
@@ -148,7 +148,11 @@ const handleRename = (key: string, e: Event) => {
     border: var(--border);
     outline: none;
     cursor: text;
-    color: unset;
+    color: var(--text-color);
+}
+
+.file-item.current .file-name:focus {
+    color: var(--text-color);
 }
 
 .last-edit-time {

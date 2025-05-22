@@ -2,7 +2,7 @@
 import {useMindMap} from "@/mindMap/useMindMap.ts";
 import LayerMenu from "@/mindMap/layer/LayerMenu.vue";
 import {ref} from "vue";
-import FileMenu from "@/mindMap/file/FileMenu.vue";
+import MetaMenu from "@/mindMap/meta/MetaMenu.vue";
 import IconSave from "@/icons/IconSave.vue";
 import IconUndo from "@/icons/IconUndo.vue";
 import IconRedo from "@/icons/IconRedo.vue";
@@ -24,14 +24,14 @@ const {
     toggleDefaultMouseAction,
 } = useMindMap()
 
-const fileMenuOpen = ref(false)
+const metaMenuOpen = ref(false)
 
 const layersMenuOpen = ref(false)
 </script>
 
 <template>
     <div class="toolbar top-left">
-        <button @click="fileMenuOpen = !fileMenuOpen" :class="{enable: fileMenuOpen}">
+        <button @click="metaMenuOpen = !metaMenuOpen" :class="{enable: metaMenuOpen}">
             <IconMenu/>
         </button>
         <button @click="save()">
@@ -60,12 +60,12 @@ const layersMenuOpen = ref(false)
     </div>
 
     <div
-        class="toolbar file-menu"
-        :class="{open: fileMenuOpen}"
+        class="toolbar meta-menu"
+        :class="{open: metaMenuOpen}"
         tabindex="-1"
-        @keydown.esc="fileMenuOpen = false"
+        @keydown.esc="metaMenuOpen = false"
     >
-        <FileMenu/>
+        <MetaMenu/>
     </div>
 
     <div
@@ -131,7 +131,7 @@ const layersMenuOpen = ref(false)
     border-color: var(--background-color-hover);
 }
 
-.toolbar.file-menu,
+.toolbar.meta-menu,
 .toolbar.layer-menu {
     top: 2.5rem;
     height: calc(100% - 3rem);
@@ -141,19 +141,19 @@ const layersMenuOpen = ref(false)
     transition: transform 0.5s ease, opacity 0.5s ease;
     pointer-events: none;
 }
-.toolbar.file-menu.open,
+.toolbar.meta-menu.open,
 .toolbar.layer-menu.open {
     pointer-events: all;
 }
 
-.toolbar.file-menu {
+.toolbar.meta-menu {
     left: 0;
     border-right: var(--border);
     border-color: var(--background-color-hover);
     opacity: 0;
     transform: translateX(-100%);
 }
-.toolbar.file-menu.open {
+.toolbar.meta-menu.open {
     opacity: 1;
     transform: translateX(0);
 }

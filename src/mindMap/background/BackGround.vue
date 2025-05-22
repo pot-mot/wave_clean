@@ -35,7 +35,7 @@ const background = computed(() => {
             :height="background.gapY"
             patternUnits="userSpaceOnUse"
         >
-            <circle :r="background.r" color="var(--background-color-hover)"/>
+            <circle :r="background.r" fill="var(--comment-color)"/>
         </pattern>
 
         <rect :x="0" :y="0" width="100%" height="100%" fill="url(#flow__background_pattern)"/>

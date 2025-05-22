@@ -20,7 +20,7 @@ import {checkFullConnection, FullConnection, reverseConnection} from "@/mindMap/
 import {useMindMapHistory} from "@/mindMap/history/MindMapHistory.ts";
 import {CustomClipBoard, unimplementedClipBoard, useClipBoard} from "@/clipBoard/useClipBoard.ts";
 import {getKeys} from "@/type/typeGuard.ts";
-import {useMindMapFileStore} from "@/mindMap/file/MindMapFileStore.ts";
+import {useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
 import {LazyData} from "@/type/lazyDataParse.ts";
 
 export type MindMapGlobal = {
@@ -1062,7 +1062,7 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
             }
         },
         save: async () => {
-            await useMindMapFileStore().save()
+            await useMindMapMetaStore().save()
         }
     }
 }
