@@ -5,6 +5,8 @@ import IconAdd from "@/icons/IconAdd.vue";
 import IconDelete from "@/icons/IconDelete.vue";
 import {sendMessage} from "@/message/sendMessage.ts";
 import {useThemeStore} from "@/store/themeStore.ts";
+import IconDark from "@/icons/IconDark.vue";
+import IconLight from "@/icons/IconLight.vue";
 
 const metaStore = useMindMapMetaStore()
 const themeStore = useThemeStore()
@@ -45,7 +47,10 @@ const handlePrimaryColorChange = (e: Event) => {
 <template>
     <div class="meta-menu">
         <div class="theme-menu">
-            <button @click="themeStore.toggleTheme()">{{ themeStore.theme }}</button>
+            <button @click="themeStore.toggleTheme()">
+                <IconLight v-if="themeStore.theme.value === 'light'"/>
+                <IconDark v-else-if="themeStore.theme.value === 'dark'"/>
+            </button>
             <input type="color" :value="themeStore.primaryColor.value" @change="handlePrimaryColorChange">
         </div>
 
