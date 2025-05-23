@@ -4,7 +4,7 @@ import {useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
 import {computed, ref} from "vue";
 import {sendMessage} from "@/message/sendMessage.ts";
 import IconAdd from "@/icons/IconAdd.vue";
-import DragList from "@/list/DragList.vue";
+import DragModelList from "@/list/DragModelList.vue";
 
 const metaStore = useMindMapMetaStore()
 
@@ -54,13 +54,11 @@ const handleRename = (key: string, e: Event) => {
             </button>
         </div>
 
-        <DragList
+        <DragModelList
             class="file-list"
-            :data="metaStore.meta.value.mindMaps"
+            v-model="metaStore.meta.value.mindMaps"
             :current-item="currentFile"
             :to-key="mindMap => mindMap.key"
-            @drag="metaStore.drag"
-            @swap="metaStore.swap"
             @remove="mindMap => metaStore.remove(mindMap.key)"
         >
             <template #default="{item: mindMap}">
@@ -108,7 +106,7 @@ const handleRename = (key: string, e: Event) => {
                     </div>
                 </div>
             </template>
-        </DragList>
+        </DragModelList>
     </div>
 </template>
 

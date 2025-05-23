@@ -1,5 +1,5 @@
 import {jsonFileOperations} from "@/file/JsonFileOperations.ts";
-import {readonly, ref, watch} from "vue";
+import {ref, watch} from "vue";
 import {getDefaultMindMapData, MindMapData, useMindMap} from "@/mindMap/useMindMap.ts";
 import {validateMindMapData} from "@/mindMap/clipBoard/inputParse.ts";
 import {jsonSortPropStringify} from "@/json/jsonStringify.ts";
@@ -232,32 +232,6 @@ const initMindMapMetaStore = () => {
         }
     }
 
-    const drag = (oldIndex: number, newIndex: number) => {
-        if (
-            oldIndex < 0 || oldIndex > meta.value.mindMaps.length + 1 ||
-            newIndex < 0 || newIndex > meta.value.mindMaps.length + 1 ||
-            newIndex === oldIndex
-        ) return
-        if (oldIndex < newIndex) {
-            const removedItems = meta.value.mindMaps.splice(oldIndex, 1)
-            meta.value.mindMaps.splice(newIndex - 1, 0, ...removedItems)
-        } else if (oldIndex > newIndex) {
-            const removedItems = meta.value.mindMaps.splice(oldIndex, 1)
-            meta.value.mindMaps.splice(newIndex, 0, ...removedItems)
-        }
-    }
-
-    const swap = (oldIndex: number, newIndex: number) => {
-        if (
-            oldIndex < 0 || oldIndex > meta.value.mindMaps.length ||
-            newIndex < 0 || newIndex > meta.value.mindMaps.length ||
-            newIndex === oldIndex
-        ) return
-        const tmp = meta.value.mindMaps[oldIndex]
-        meta.value.mindMaps[oldIndex] = meta.value.mindMaps[newIndex]
-        meta.value.mindMaps[newIndex] = tmp
-    }
-
     (async () => {
         try {
             const isExisted = await jsonFileOperations.isExisted(metaFileName)
@@ -301,14 +275,12 @@ const initMindMapMetaStore = () => {
     })()
 
     return {
-        meta: readonly(meta),
+        meta,
         add,
         rename,
         remove,
         save,
         toggle,
-        swap,
-        drag,
     }
 }
 
