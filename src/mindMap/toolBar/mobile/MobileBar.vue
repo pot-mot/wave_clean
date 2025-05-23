@@ -17,6 +17,9 @@ import IconLayer from "@/icons/IconLayer.vue";
 import IconDrag from "@/icons/IconDrag.vue";
 import IconDelete from "@/icons/IconDelete.vue";
 import IconMultiSelect from "@/icons/IconMultiSelect.vue";
+import {QuickInputItem, useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
+
+const metaStore = useMindMapMetaStore()
 
 const {
     save,
@@ -54,9 +57,9 @@ const cleanActiveElement = () => {
     focusTarget.value = null
 }
 
-const isVueFlowInputFocused = computed(() => {
+const isVueFlowInputFocused = computed<boolean>(() => {
     return (focusTarget.value instanceof HTMLInputElement || focusTarget.value instanceof HTMLTextAreaElement) &&
-        currentLayer.value.vueFlow.vueFlowRef.value && checkElementParent(focusTarget.value, currentLayer.value.vueFlow.vueFlowRef.value)
+        currentLayer.value.vueFlow.vueFlowRef.value !== null && checkElementParent(focusTarget.value, currentLayer.value.vueFlow.vueFlowRef.value)
 })
 
 onMounted(() => {
@@ -67,6 +70,23 @@ onBeforeUnmount(() => {
     document.removeEventListener('focusin', setActiveElement)
     document.removeEventListener('focusout', cleanActiveElement)
 })
+
+const handleQuickInput = (quickInput: QuickInputItem) => {
+    if (focusTarget.value instanceof HTMLInputElement || focusTarget.value instanceof HTMLTextAreaElement) {
+        const target = focusTarget.value as HTMLInputElement | HTMLTextAreaElement
+
+        const start = target.selectionStart ?? target.value.length
+        const end = target.selectionEnd ?? target.value.length
+
+        target.setRangeText(quickInput.value, start, end, 'end')
+
+        const inputEvent = new Event('input', { bubbles: true })
+        target.dispatchEvent(inputEvent)
+
+        const changeEvent = new Event('change')
+        target.dispatchEvent(changeEvent)
+    }
+}
 </script>
 
 <template>
@@ -137,6 +157,20 @@ onBeforeUnmount(() => {
     </div>
 
     <div
+        class="toolbar bottom"
+        v-show="isVueFlowInputFocused && !metaMenuOpen"
+    >
+        <button
+            v-for="quickInput in metaStore.meta.value.quickInputs"
+            :key="quickInput.id"
+        >
+            <span @touchstart.prevent.stop="handleQuickInput(quickInput)">
+                {{ quickInput.label }}
+            </span>
+        </button>
+    </div>
+
+    <div
         class="toolbar meta-menu"
         :class="{open: !isVueFlowInputFocused && metaMenuOpen}"
         @click.self="metaMenuOpen = false"
@@ -162,6 +196,7 @@ onBeforeUnmount(() => {
     z-index: 5;
     position: absolute;
     background-color: var(--background-color);
+    overflow-x: auto;
 }
 
 .toolbar button {

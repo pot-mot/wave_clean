@@ -6,7 +6,7 @@ const data = defineModel<T[]>({
     required: true
 })
 
-defineProps<{
+const props = defineProps<{
     currentItem: T | undefined,
     toKey: (item: T) => string
 }>()
@@ -49,7 +49,7 @@ const handleRemove = (item: T) => {
 <template>
     <DragList
         :data="data"
-        :current-item="currentItem"
+        :current-item="props.currentItem"
         :to-key="toKey"
         @remove="handleRemove"
         @swap="handleSwap"

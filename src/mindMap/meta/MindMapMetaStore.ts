@@ -1,5 +1,5 @@
 import {jsonFileOperations} from "@/file/JsonFileOperations.ts";
-import {ref, watch} from "vue";
+import {computed, ref, watch} from "vue";
 import {getDefaultMindMapData, MindMapData, useMindMap} from "@/mindMap/useMindMap.ts";
 import {validateMindMapData} from "@/mindMap/clipBoard/inputParse.ts";
 import {jsonSortPropStringify} from "@/json/jsonStringify.ts";
@@ -12,18 +12,21 @@ import {debounce} from "lodash";
 
 const metaFileName = '[[WAVE_CLEAN_EDIT_META]]'
 
-type QuickInputItem = {
+export type QuickInputItem = {
+    id: string,
     label: string,
     value: string,
 }
 
-type Meta = {
+export type MindMapMetaData = {
+    key: string,
+    name: string,
+    lastEditTime: string
+}
+
+export type Meta = {
     currentKey?: string | undefined,
-    mindMaps: {
-        key: string,
-        name: string,
-        lastEditTime: string
-    }[],
+    mindMaps: MindMapMetaData[],
 
     currentTheme?: Theme | undefined,
     primaryColor?: string | undefined,
@@ -69,8 +72,9 @@ const Meta_JsonSchema: JSONSchemaType<Meta> = {
             items: {
                 type: "object",
                 properties: {
-                    label: { type: "string" },
-                    value: { type: "string" }
+                    id: {type: "string"},
+                    label: {type: "string"},
+                    value: {type: "string"}
                 },
                 required: ["label", "value"]
             }
@@ -79,7 +83,7 @@ const Meta_JsonSchema: JSONSchemaType<Meta> = {
     required: ["mindMaps", "quickInputs"],
 }
 
-const validateMeta = createSchemaValidator<Meta>(Meta_JsonSchema)
+export const validateMeta = createSchemaValidator<Meta>(Meta_JsonSchema)
 
 const PartialMeta_JsonSchema: JSONSchemaType<Partial<Meta>> = {
     type: "object",
@@ -121,8 +125,9 @@ const PartialMeta_JsonSchema: JSONSchemaType<Partial<Meta>> = {
             items: {
                 type: "object",
                 properties: {
-                    label: { type: "string" },
-                    value: { type: "string" }
+                    id: {type: "string"},
+                    label: {type: "string"},
+                    value: {type: "string"}
                 },
                 required: ["label", "value"]
             },
@@ -131,10 +136,28 @@ const PartialMeta_JsonSchema: JSONSchemaType<Partial<Meta>> = {
     },
 }
 
-const validatePartialMeta = createSchemaValidator<Partial<Meta>>(PartialMeta_JsonSchema)
+export const validatePartialMeta = createSchemaValidator<Partial<Meta>>(PartialMeta_JsonSchema)
+
+export const getDefaultMeta = () => {
+    return {
+        mindMaps: [],
+        quickInputs: [
+            {id: "-1", label: 'TAB', value: '    '},
+            {id: "-2", label: '<', value: '<'},
+            {id: "-3", label: '>', value: '>'},
+            {id: "-4", label: '{', value: '{'},
+            {id: "-5", label: '}', value: '}'},
+            {id: "-6", label: '[', value: '['},
+            {id: "-7", label: ']', value: ']'},
+            {id: "-8", label: '^', value: '^'},
+            {id: "-9", label: '\\', value: '\\'},
+            {id: "-10", label: '\'', value: '\''},
+        ],
+    }
+}
 
 const initMindMapMetaStore = () => {
-    const meta = ref<Meta>({mindMaps: [], quickInputs: []})
+    const meta = ref<Meta>(getDefaultMeta())
 
     const mindMapStore = useMindMap()
     const themeStore = useThemeStore()
@@ -232,7 +255,11 @@ const initMindMapMetaStore = () => {
         }
     }
 
-    (async () => {
+    const currentMindMap = computed<MindMapMetaData | undefined>(() => {
+        return meta.value.mindMaps.find(it => it.key === meta.value.currentKey)
+    })
+
+    ;(async () => {
         try {
             const isExisted = await jsonFileOperations.isExisted(metaFileName)
             if (!isExisted) {
@@ -281,6 +308,7 @@ const initMindMapMetaStore = () => {
         remove,
         save,
         toggle,
+        currentMindMap,
     }
 }
 
