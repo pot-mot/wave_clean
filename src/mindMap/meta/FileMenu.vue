@@ -140,7 +140,6 @@ const handleRename = (key: string, e: Event) => {
 .file-list {
     position: relative;
     height: calc(100% - 1.5rem);
-    padding-bottom: 3rem;
     overflow-x: hidden;
     overflow-y: auto;
 }

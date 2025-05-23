@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {useMindMap} from "@/mindMap/useMindMap.ts";
-import {computed, onBeforeUnmount, onMounted, ref, shallowRef} from "vue";
+import {computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef} from "vue";
 import LayerMenu from "@/mindMap/layer/LayerMenu.vue";
 import {checkElementParent} from "@/mindMap/clickUtils.ts";
 import MetaMenu from "@/mindMap/meta/MetaMenu.vue";
@@ -85,6 +85,14 @@ const handleQuickInput = (quickInput: QuickInputItem) => {
 
         const changeEvent = new Event('change')
         target.dispatchEvent(changeEvent)
+
+        nextTick(() => {
+            setTimeout(() => {
+                if (target !== document.activeElement) {
+                    target.focus()
+                }
+            }, 500)
+        })
     }
 }
 </script>
@@ -158,15 +166,15 @@ const handleQuickInput = (quickInput: QuickInputItem) => {
 
     <div
         class="toolbar bottom"
+        style="gap: 0.5rem;"
         v-show="isVueFlowInputFocused && !metaMenuOpen"
     >
         <button
             v-for="quickInput in metaStore.meta.value.quickInputs"
             :key="quickInput.id"
+            @touchstart="handleQuickInput(quickInput)"
         >
-            <span @touchstart.prevent.stop="handleQuickInput(quickInput)">
-                {{ quickInput.label }}
-            </span>
+            {{ quickInput.label }}
         </button>
     </div>
 
@@ -175,7 +183,7 @@ const handleQuickInput = (quickInput: QuickInputItem) => {
         :class="{open: !isVueFlowInputFocused && metaMenuOpen}"
         @click.self="metaMenuOpen = false"
     >
-        <div style="">
+        <div >
             <MetaMenu/>
         </div>
     </div>

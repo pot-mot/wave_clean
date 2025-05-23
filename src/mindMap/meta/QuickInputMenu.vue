@@ -104,7 +104,6 @@ const handleDelete = (item: QuickInputItem) => {
 .quick-input-list {
     position: relative;
     height: calc(100% - 1.5rem);
-    padding-bottom: 3rem;
     overflow-x: hidden;
     overflow-y: auto;
 }
@@ -160,9 +159,23 @@ const handleDelete = (item: QuickInputItem) => {
     cursor: text;
 }
 
+.new-quick-input .label-input,
+.new-quick-input .value-input {
+    background-color: var(--background-color);
+    border: var(--border);
+    border-color: var(--background-color-hover);
+    pointer-events: all;
+}
+
+.new-quick-input .label-input:focus,
+.new-quick-input .value-input:focus {
+    border-color: var(--border-color);
+}
+
 .current .label-input:focus,
 .current .value-input:focus {
     background-color: var(--background-color);
     border: var(--border);
+    pointer-events: all;
 }
 </style>

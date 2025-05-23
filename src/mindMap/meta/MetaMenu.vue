@@ -5,38 +5,74 @@ import IconLight from "@/icons/IconLight.vue";
 import FileMenu from "@/mindMap/meta/FileMenu.vue";
 import QuickInputMenu from "@/mindMap/meta/QuickInputMenu.vue";
 import {useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
+import {ref} from "vue";
+import {useMindMap} from "@/mindMap/useMindMap.ts";
 
 const metaStore = useMindMapMetaStore()
 
 const themeStore = useThemeStore()
+
+const {isTouchDevice} = useMindMap()
 
 const handlePrimaryColorChange = (e: Event) => {
     if (e.target instanceof HTMLInputElement) {
         themeStore.setPrimaryColor(e.target.value)
     }
 }
+
+type SubMenuType = 'file' | 'quick-input'
+
+const subMenuType = ref<SubMenuType>('file')
 </script>
 
 <template>
     <div class="meta-menu">
-        <h2>{{ metaStore.meta.value.currentKey }}</h2>
+        <h1 class="current-title">
+            {{ metaStore.currentMindMap.value?.name ?? 'untitled'}}
+        </h1>
 
         <div class="theme-menu">
-            <button @click="themeStore.toggleTheme()">
-                <IconLight v-if="themeStore.theme.value === 'light'"/>
-                <IconDark v-else-if="themeStore.theme.value === 'dark'"/>
-            </button>
-            <input type="color" :value="themeStore.primaryColor.value" @change="handlePrimaryColorChange">
+            <span>
+                theme
+                <button @click="themeStore.toggleTheme()">
+                    <IconLight v-if="themeStore.theme.value === 'light'"/>
+                    <IconDark v-else-if="themeStore.theme.value === 'dark'"/>
+                </button>
+            </span>
+
+            <span>
+                primary color
+                <input type="color" :value="themeStore.primaryColor.value" @change="handlePrimaryColorChange">
+            </span>
         </div>
 
         <div class="sub-menu-container">
-            <QuickInputMenu/>
-            <FileMenu/>
+            <template v-if="isTouchDevice">
+                <div class="sub-menu-select">
+                    <button @click="subMenuType = 'file'">Files</button>
+                    <button @click="subMenuType = 'quick-input'">Quick Input</button>
+                </div>
+
+                <div class="sub-menu-wrapper">
+                    <FileMenu v-if="subMenuType === 'file'"/>
+                    <QuickInputMenu v-else-if="subMenuType === 'quick-input'"/>
+                </div>
+            </template>
+
+            <FileMenu v-else/>
         </div>
     </div>
 </template>
 
 <style scoped>
+.current-title {
+    height: 2rem;
+    line-height: 2rem;
+    display: block;
+    padding: 0 0.5rem;
+    font-size: 1.1rem;
+}
+
 .meta-menu {
     height: 100%;
     width: 100%;
@@ -44,7 +80,26 @@ const handlePrimaryColorChange = (e: Event) => {
     transition: background-color 0.5s;
 }
 
-.sub-menu-container {
+.theme-menu {
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    height: 2rem;
+    line-height: 2rem;
+}
 
+.sub-menu-container {
+    height: calc(100% - 4rem);
+}
+
+.sub-menu-select {
+    width: 100%;
+    height: 2rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+.sub-menu-wrapper {
+    height: calc(100% - 2rem);
 }
 </style>
