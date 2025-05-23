@@ -283,6 +283,7 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
     }
 
     const dragLayer = (oldIndex: number, newIndex: number) => {
+        console.log(oldIndex, newIndex)
         if (
             oldIndex < 0 || oldIndex > global.layers.length + 1 ||
             newIndex < 0 || newIndex > global.layers.length + 1 ||

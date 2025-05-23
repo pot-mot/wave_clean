@@ -28,15 +28,31 @@ const reversedLayers = computed(() => {
     return layers.slice().reverse()
 })
 
-const reverseIndex = (reversedIndex: number): number => {
-    return layers.length - 1 - reversedIndex
-}
-
 const handleLayerNameChange = (layer: MindMapLayer, e: Event) => {
     if (e.target instanceof HTMLInputElement) {
         changeLayerData(layer.id, {name: e.target.value})
         e.target.blur()
     }
+}
+
+
+const reverseIndex = (index: number): number => {
+    return layers.length - 1 - index
+}
+const reverseDragTargetIndex = (index: number) => {
+    if (index === layers.length) {
+        return 0
+    }
+    return layers.length - index
+}
+
+
+const handleDrag = (a: number, b: number) => {
+    dragLayer(reverseIndex(a), reverseDragTargetIndex(b))
+}
+
+const handleSwap = (a: number, b: number) => {
+    swapLayer(reverseIndex(a), reverseIndex(b))
 }
 </script>
 
@@ -52,8 +68,8 @@ const handleLayerNameChange = (layer: MindMapLayer, e: Event) => {
             :data="reversedLayers"
             :current-item="currentLayer"
             :to-key="layer => layer.id"
-            @drag="(a, b) => dragLayer(reverseIndex(a), reverseIndex(b))"
-            @swap="(a, b) => swapLayer(reverseIndex(a), reverseIndex(b))"
+            @drag="handleDrag"
+            @swap="handleSwap"
             @remove="it => removeLayer(it.id)"
         >
             <template #default="{item: layer}">

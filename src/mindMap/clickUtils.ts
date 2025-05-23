@@ -50,9 +50,19 @@ export const checkElementParent = (el: Element | null, parent: Element) => {
         if (el === parent) {
             return true
         }
-        el = el.parentElement!
+        el = el.parentElement
     }
     return false
+}
+
+export const getMatchedElementOrParent = (el: Element | null, match: (el: Element) => boolean) => {
+    while (el) {
+        if (match(el)) {
+            return el
+        }
+        el = el.parentElement
+    }
+    return null
 }
 
 export const blurActiveElement = () => {

@@ -35,15 +35,15 @@ const handleKeyDown = (e: KeyboardEvent) => {
         emits("remove", props.currentItem)
     } else if (e.key === "ArrowUp") {
         const currentIndex = props.data.findIndex(it => it === props.currentItem)
-        if (props.data.length > 1 && currentIndex !== -1 && currentIndex !== props.data.length - 1) {
+        if (props.data.length > 1 && currentIndex !== -1 && currentIndex !== 0) {
             e.preventDefault()
-            emits("swap", currentIndex, currentIndex + 1)
+            emits("swap", currentIndex, currentIndex - 1)
         }
     } else if (e.key === "ArrowDown") {
         const currentIndex = props.data.findIndex(it => it === props.currentItem)
-        if (props.data.length > 1 && currentIndex !== -1 && currentIndex !== 0 && scrollWrapper.value) {
+        if (props.data.length > 1 && currentIndex !== -1 && currentIndex !== props.data.length - 1) {
             e.preventDefault()
-            emits("swap", currentIndex, currentIndex - 1)
+            emits("swap", currentIndex, currentIndex + 1)
         }
     }
 }
@@ -232,14 +232,20 @@ const handleDragEndByMouseByTouch = () => {
 
 const handleItemDragEnter = (index: number, item: T) => {
     if (!isDragging.value) return
-    if (overTarget.value === undefined || props.toKey(overTarget.value.item) !== props.toKey(item)) {
+    if (overTarget.value === undefined ||
+        props.toKey(overTarget.value.item) !== props.toKey(item) ||
+        overTarget.value.type !== 'item'
+    ) {
         overTarget.value = {index, item: item, type: 'item'}
     }
 }
 
 const handleGapDragEnter = (index: number, item: T) => {
     if (!isDragging.value) return
-    if (overTarget.value === undefined || props.toKey(overTarget.value.item) !== props.toKey(item)) {
+    if (overTarget.value === undefined ||
+        props.toKey(overTarget.value.item) !== props.toKey(item) ||
+        overTarget.value.type !== 'gap'
+    ) {
         overTarget.value = {index, item: item, type: 'gap'}
     }
 }
@@ -310,18 +316,17 @@ const stopDragDown = () => {
             ref="scrollWrapper"
             @scroll="handleScroll"
         >
-            <div
-                v-if="lastItem"
-                class="drag-gap"
-                :class="{
-                    over: overTarget?.index === -1 && overTarget?.type === 'gap'
-                }"
-                @mouseenter="handleGapDragEnter(-1, lastItem)"
-                @touchenter="handleGapDragEnter(-1, lastItem)"
-            />
-
             <TransitionGroup name="drag-list" tag="div">
                 <template v-for="(item, index) in data" :key="toKey(item)">
+                    <div
+                        class="drag-gap"
+                        :class="{
+                            over: overTarget?.index === index && overTarget?.type === 'gap'
+                        }"
+                        @mouseenter="handleGapDragEnter(index, item)"
+                        @touchenter="handleGapDragEnter(index, item)"
+                    />
+
                     <div
                         class="drag-list-item"
                         :class="{
@@ -338,17 +343,18 @@ const stopDragDown = () => {
                     >
                         <slot :item="item"/>
                     </div>
-
-                    <div
-                        class="drag-gap"
-                        :class="{
-                            over: overTarget?.index === index && overTarget?.type === 'gap'
-                        }"
-                        @mouseenter="handleGapDragEnter(index, item)"
-                        @touchenter="handleGapDragEnter(index, item)"
-                    />
                 </template>
             </TransitionGroup>
+
+            <div
+                v-if="lastItem"
+                class="drag-gap"
+                :class="{
+                    over: overTarget?.index === data.length && overTarget?.type === 'gap'
+                }"
+                @mouseenter="handleGapDragEnter(data.length, lastItem)"
+                @touchenter="handleGapDragEnter(data.length, lastItem)"
+            />
         </div>
 
         <div

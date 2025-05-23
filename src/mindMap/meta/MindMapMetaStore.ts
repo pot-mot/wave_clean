@@ -8,6 +8,7 @@ import type {JSONSchemaType} from "ajv/lib/types/json-schema.ts";
 import {createSchemaValidator} from "@/type/typeGuard.ts";
 import {Theme} from "@tauri-apps/api/window";
 import {useThemeStore} from "@/store/themeStore.ts";
+import {debounce} from "lodash";
 
 const metaFileName = '[[WAVE_CLEAN_EDIT_META]]'
 
@@ -148,9 +149,9 @@ const initMindMapMetaStore = () => {
         }
     }, {immediate: true})
 
-    watch(() => meta.value, async () => {
+    watch(() => meta.value, debounce(async () => {
         await jsonFileOperations.set(metaFileName, JSON.stringify(meta.value))
-    }, {deep: true})
+    }, 1000), {deep: true})
 
     const add = async (index: number, name: string) => {
         try {
@@ -218,16 +219,43 @@ const initMindMapMetaStore = () => {
     }
 
     const toggle = async (key: string) => {
-        const item = meta.value.mindMaps.find(it => it.key === key)
-        if (item === undefined) {
-            sendMessage(`toggle error, MindMap not existed.`)
-            return
+        try {
+            const item = meta.value.mindMaps.find(it => it.key === key)
+            if (item !== undefined && meta.value.currentKey !== undefined) {
+                const mindMap = await get(key)
+                await mindMapStore.set(mindMap)
+            }
+            meta.value.currentKey = key
+        } catch (e) {
+            console.error(e)
+            sendMessage(`toggle mindmap error.`)
         }
-        if (meta.value.currentKey !== undefined) {
-            const mindMap = await get(key)
-            await mindMapStore.set(mindMap)
+    }
+
+    const drag = (oldIndex: number, newIndex: number) => {
+        if (
+            oldIndex < 0 || oldIndex > meta.value.mindMaps.length + 1 ||
+            newIndex < 0 || newIndex > meta.value.mindMaps.length + 1 ||
+            newIndex === oldIndex
+        ) return
+        if (oldIndex < newIndex) {
+            const removedItems = meta.value.mindMaps.splice(oldIndex, 1)
+            meta.value.mindMaps.splice(newIndex - 1, 0, ...removedItems)
+        } else if (oldIndex > newIndex) {
+            const removedItems = meta.value.mindMaps.splice(oldIndex, 1)
+            meta.value.mindMaps.splice(newIndex, 0, ...removedItems)
         }
-        meta.value.currentKey = key
+    }
+
+    const swap = (oldIndex: number, newIndex: number) => {
+        if (
+            oldIndex < 0 || oldIndex > meta.value.mindMaps.length ||
+            newIndex < 0 || newIndex > meta.value.mindMaps.length ||
+            newIndex === oldIndex
+        ) return
+        const tmp = meta.value.mindMaps[oldIndex]
+        meta.value.mindMaps[oldIndex] = meta.value.mindMaps[newIndex]
+        meta.value.mindMaps[newIndex] = tmp
     }
 
     (async () => {
@@ -279,6 +307,8 @@ const initMindMapMetaStore = () => {
         remove,
         save,
         toggle,
+        swap,
+        drag,
     }
 }
 
