@@ -2,6 +2,7 @@
 import {computed, onBeforeUnmount, onMounted, ref, useTemplateRef} from "vue";
 import {useTouchEnterLeave} from "@/event/TouchEnterLeave.ts";
 import {getMatchedElementOrParent} from "@/mindMap/clickUtils.ts";
+import {useDeviceStore} from "@/store/deviceStore.ts";
 
 const props = defineProps<{
     data: ReadonlyArray<T>,
@@ -21,7 +22,7 @@ defineSlots<{
     dragView(props: {data: {item: T, index: number}}): any,
 }>()
 
-const isTouchDevice = ref('ontouchstart' in document.documentElement)
+const {isTouchDevice} = useDeviceStore()
 
 const lastItem = computed<T | undefined>(() => props.data[props.data.length - 1])
 

@@ -1,12 +1,12 @@
 import {mapTouchToMouseEvents} from "@/mindMap/touchToMouse/mapTouchToMouseEvent.ts";
 import {onMounted} from "vue";
-import {useMindMap} from "@/mindMap/useMindMap.ts";
+import {useDeviceStore} from "@/store/deviceStore.ts";
 
 export const useEdgeUpdaterTouch = (
     edgeId: string
 ): void => {
     onMounted(() => {
-        const {isTouchDevice} = useMindMap()
+        const {isTouchDevice} = useDeviceStore()
         if (!isTouchDevice.value) return
 
         const edgeEl = document.querySelector(`g[data-id="${edgeId}"]`)

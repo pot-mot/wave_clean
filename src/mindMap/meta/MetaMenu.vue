@@ -6,13 +6,13 @@ import FileMenu from "@/mindMap/meta/FileMenu.vue";
 import QuickInputMenu from "@/mindMap/meta/QuickInputMenu.vue";
 import {useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
 import {ref} from "vue";
-import {useMindMap} from "@/mindMap/useMindMap.ts";
+import {useDeviceStore} from "@/store/deviceStore.ts";
 
 const metaStore = useMindMapMetaStore()
 
 const themeStore = useThemeStore()
 
-const {isTouchDevice} = useMindMap()
+const {isTouchDevice} = useDeviceStore()
 
 const handlePrimaryColorChange = (e: Event) => {
     if (e.target instanceof HTMLInputElement) {

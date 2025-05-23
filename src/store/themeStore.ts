@@ -1,16 +1,25 @@
 import {readonly, ref, watch} from "vue";
 import {Theme, getCurrentWindow} from "@tauri-apps/api/window";
+import {useDeviceStore} from "@/store/deviceStore.ts";
 
 const initThemeStore = () => {
+    const {isTouchDevice} = useDeviceStore()
+
     const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     const theme = ref<Theme>(systemTheme)
-    try {
-        getCurrentWindow().theme().then(it => {
-            if (it !== null) {
-                theme.value = it
+    ;(async () => {
+        try {
+            if (!isTouchDevice.value) {
+                const currentWindow = getCurrentWindow()
+                const currentTheme = await currentWindow.theme()
+
+                if (currentTheme && currentTheme !== systemTheme) {
+                    theme.value = currentTheme
+                }
             }
-        })
-    } catch (e) {}
+        } catch (e) {}
+    })()
+
 
     watch(() => theme.value, (newTheme) => {
         if (newTheme === 'dark') {

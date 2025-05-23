@@ -22,6 +22,7 @@ import {CustomClipBoard, unimplementedClipBoard, useClipBoard} from "@/clipBoard
 import {getKeys} from "@/type/typeGuard.ts";
 import {useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
 import {LazyData} from "@/type/lazyDataParse.ts";
+import {useDeviceStore} from "@/store/deviceStore.ts";
 
 export type MindMapGlobal = {
     zIndexIncrement: number,
@@ -158,6 +159,8 @@ const dataToLayers = (data: Pick<MindMapData, 'layers' | 'currentLayerId'>): Pic
 }
 
 const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
+    const {isTouchDevice} = useDeviceStore()
+
     const {currentLayer, layers} = dataToLayers(data)
 
     const global: MindMapGlobal = {
@@ -180,7 +183,6 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
         }
     }
 
-    const isTouchDevice = ref('ontouchstart' in document.documentElement)
     const screenPosition = ref<XYPosition>({x: 0, y: 0})
 
     const {history, canUndo, canRedo} = useMindMapHistory(global)
@@ -960,8 +962,6 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
         focus,
 
         currentViewport: readonly(currentViewport),
-
-        isTouchDevice,
 
         canUndo: readonly(canUndo),
         canRedo: readonly(canRedo),

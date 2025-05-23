@@ -6,9 +6,11 @@ import MindMapLayer from "@/mindMap/layer/MindMapLayer.vue";
 import {nextTick, ref, watch} from "vue";
 import BackGround from "@/mindMap/background/BackGround.vue";
 import {judgeTargetIsInteraction} from "@/mindMap/clickUtils.ts";
+import {useDeviceStore} from "@/store/deviceStore.ts";
+
+const {isTouchDevice} = useDeviceStore()
 
 const {
-    isTouchDevice,
     layers,
     currentLayer,
     undo,
