@@ -41,6 +41,9 @@ importers:
       vue:
         specifier: ^3.5.13
         version: 3.5.13(typescript@5.6.3)
+      vue-color:
+        specifier: ^3.0.2
+        version: 3.0.2(vue@3.5.13(typescript@5.6.3))
     devDependencies:
       '@tauri-apps/cli':
         specifier: ^2
@@ -1460,6 +1463,9 @@ packages:
   makeerror@1.0.12:
     resolution: {integrity: sha512-JmqCvUhmt43madlpFzG4BQzG2Z3m6tvQDNKdClZnO3VbIudJYmxsT0FNJMeiB2+JTSlTQTSbU8QdesVmwJcmLg==}
 
+  material-colors@1.2.6:
+    resolution: {integrity: sha512-6qE4B9deFBIa9YSpOc9O0Sgc43zTeVYbgDT5veRKSlB2+ZuHNoVVxA1L/ckMUayV9Ay9y7Z/SZCLcGteW9i7bg==}
+
   merge-stream@2.0.0:
     resolution: {integrity: sha512-abv/qOcuPfk3URPfDzmZU1LKmuw8kT+0nIHvKrKgFrwifol/doWcdA4ZqsWQ8ENrFKkd67Mfpo/LovbIUsbt3w==}
 
@@ -1710,6 +1716,9 @@ packages:
     resolution: {integrity: sha512-cAGWPIyOHU6zlmg88jwm7VRyXnMN7iV68OGAbYDk/Mh/xC/pzVPlQtY6ngoIH/5/tciuhGfvESU8GrHrcxD56w==}
     engines: {node: '>=8'}
 
+  tinycolor2@1.6.0:
+    resolution: {integrity: sha512-XPaBkWQJdsf3pLKJV9p4qN/S+fm2Oj8AIPo1BTUhg5oxkvm9+SVEGFdhyOz7tTdUTfvxMiAs4sp6/eZO2Ew+pw==}
+
   tinyglobby@0.2.13:
     resolution: {integrity: sha512-mEwzpUgrLySlveBwEVDMKk5B57bhLPYovRfPAXD5gA/98Opn0rCDj3GtLwFvCvH5RK9uPCExUROW5NjDwvqkxw==}
     engines: {node: '>=12.0.0'}
@@ -1834,6 +1843,11 @@ packages:
 
   vscode-uri@3.1.0:
     resolution: {integrity: sha512-/BpdSx+yCQGnCvecbyXdxHDkuk55/G3xwnC0GqY4gmQ3j+A+g8kzzgB4Nk/SINjqn6+waqw3EgbVF2QKExkRxQ==}
+
+  vue-color@3.0.2:
+    resolution: {integrity: sha512-tfrEdr7b5SwjwW3g3WiqUsHw/XpfXY4TS66m9izD0RVM6/KYCkSs7yFm9qJiCitCTpCWFeXrj/4Wx7nNnWMdVA==}
+    peerDependencies:
+      vue: ^3.5.13
 
   vue-demi@0.14.10:
     resolution: {integrity: sha512-nMZBOwuzabUO0nLgIcc6rycZEebF6eeUfaiQx9+WSk8e29IbLvPU9feI6tqW4kTo3hvoYAJkMh8n8D0fuISphg==}
@@ -3520,6 +3534,8 @@ snapshots:
     dependencies:
       tmpl: 1.0.5
 
+  material-colors@1.2.6: {}
+
   merge-stream@2.0.0: {}
 
   micromatch@4.0.8:
@@ -3745,6 +3761,8 @@ snapshots:
       glob: 7.2.3
       minimatch: 3.1.2
 
+  tinycolor2@1.6.0: {}
+
   tinyglobby@0.2.13:
     dependencies:
       fdir: 6.4.4(picomatch@4.0.2)
@@ -3833,6 +3851,12 @@ snapshots:
       fsevents: 2.3.3
 
   vscode-uri@3.1.0: {}
+
+  vue-color@3.0.2(vue@3.5.13(typescript@5.6.3)):
+    dependencies:
+      material-colors: 1.2.6
+      tinycolor2: 1.6.0
+      vue: 3.5.13(typescript@5.6.3)
 
   vue-demi@0.14.10(vue@3.5.13(typescript@5.6.3)):
     dependencies:

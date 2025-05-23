@@ -5,8 +5,9 @@ import IconLight from "@/icons/IconLight.vue";
 import FileMenu from "@/mindMap/meta/FileMenu.vue";
 import QuickInputMenu from "@/mindMap/meta/QuickInputMenu.vue";
 import {useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
-import {ref} from "vue";
+import {computed, ref} from "vue";
 import {useDeviceStore} from "@/store/deviceStore.ts";
+import ColorInput from "@/input/ColorInput.vue";
 
 const metaStore = useMindMapMetaStore()
 
@@ -14,11 +15,14 @@ const themeStore = useThemeStore()
 
 const {isTouchDevice} = useDeviceStore()
 
-const handlePrimaryColorChange = (e: Event) => {
-    if (e.target instanceof HTMLInputElement) {
-        themeStore.setPrimaryColor(e.target.value)
+const primaryColor = computed({
+    get(): string {
+        return themeStore.primaryColor.value
+    },
+    set(color: string) {
+        themeStore.setPrimaryColor(color)
     }
-}
+})
 
 type SubMenuType = 'file' | 'quick-input'
 
@@ -42,7 +46,7 @@ const subMenuType = ref<SubMenuType>('file')
 
             <span>
                 primary color
-                <input type="color" :value="themeStore.primaryColor.value" @change="handlePrimaryColorChange">
+                <ColorInput v-model="primaryColor"/>
             </span>
         </div>
 
