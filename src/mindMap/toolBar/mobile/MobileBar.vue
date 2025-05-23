@@ -49,6 +49,17 @@ const metaMenuOpen = ref(false)
 
 const layersMenuOpen = ref(false)
 
+const handleBackState = (): boolean => {
+    if (metaMenuOpen.value) {
+        metaMenuOpen.value = false
+        return false
+    } else if (layersMenuOpen.value) {
+        layersMenuOpen.value = false
+        return false
+    }
+    return true
+}
+
 const focusTarget = shallowRef<EventTarget | Element | null>()
 const setActiveElementByActiveElement = () => {
     focusTarget.value = document.activeElement
@@ -66,11 +77,17 @@ const isVueFlowInputFocused = computed<boolean>(() => {
 })
 
 onMounted(() => {
+    // @ts-ignore
+    window.touchBackCallback = handleBackState
+
     document.addEventListener('focusin', setActiveElementByFocusIn)
     document.addEventListener('focusout', cleanActiveElement)
     window.addEventListener('resize', setActiveElementByActiveElement)
 })
 onBeforeUnmount(() => {
+    // @ts-ignore
+    window.touchBackCallback = null
+
     document.removeEventListener('focusin', setActiveElementByFocusIn)
     document.removeEventListener('focusout', cleanActiveElement)
     window.removeEventListener('resize', setActiveElementByActiveElement)
@@ -260,6 +277,7 @@ const handleQuickInput = (quickInput: QuickInputItem) => {
 .toolbar.meta-menu,
 .toolbar.layer-menu {
     width: 100vw;
+    overflow: hidden;
     background-color: var(--mask-color);
     transition: opacity 0.5s ease;
     pointer-events: none;
