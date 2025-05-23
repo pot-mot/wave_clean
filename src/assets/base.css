@@ -8,6 +8,11 @@ body {
     overflow: hidden;
 }
 
+.init-loading,
+.init-loading * {
+    transition: none !important;
+}
+
 /* scrollbar */
 ::-webkit-scrollbar {
     width: 8px;

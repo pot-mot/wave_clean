@@ -260,6 +260,8 @@ const initMindMapMetaStore = () => {
     })
 
     ;(async () => {
+        document.documentElement.classList.add('init-loading')
+
         try {
             const isExisted = await jsonFileOperations.isExisted(metaFileName)
             if (!isExisted) {
@@ -298,6 +300,8 @@ const initMindMapMetaStore = () => {
         } catch (e) {
             console.error(e)
             sendMessage("meta file init fail")
+        } finally {
+            document.documentElement.classList.remove('init-loading')
         }
     })()
 
