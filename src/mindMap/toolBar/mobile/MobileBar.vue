@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {useMindMap} from "@/mindMap/useMindMap.ts";
-import {computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef} from "vue";
+import {computed, onBeforeUnmount, onMounted, ref, shallowRef} from "vue";
 import LayerMenu from "@/mindMap/layer/LayerMenu.vue";
 import {checkElementParent} from "@/mindMap/clickUtils.ts";
 import MetaMenu from "@/mindMap/meta/MetaMenu.vue";
@@ -18,6 +18,7 @@ import IconDrag from "@/icons/IconDrag.vue";
 import IconDelete from "@/icons/IconDelete.vue";
 import IconMultiSelect from "@/icons/IconMultiSelect.vue";
 import {QuickInputItem, useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
+import {sendMessage} from "@/message/sendMessage.ts";
 
 const metaStore = useMindMapMetaStore()
 
@@ -49,11 +50,16 @@ const metaMenuOpen = ref(false)
 
 const layersMenuOpen = ref(false)
 
-const focusTarget = shallowRef<EventTarget | null>()
-const setActiveElement = (e: Event) => {
+const focusTarget = shallowRef<EventTarget | Element | null>()
+const setActiveElementByActiveElement = () => {
+    focusTarget.value = document.activeElement
+}
+const setActiveElementByFocusIn = (e: Event) => {
+    sendMessage(`focusin ${e.target}`)
     focusTarget.value = e.target
 }
 const cleanActiveElement = () => {
+    sendMessage(`focusout`)
     focusTarget.value = null
 }
 
@@ -63,12 +69,14 @@ const isVueFlowInputFocused = computed<boolean>(() => {
 })
 
 onMounted(() => {
-    document.addEventListener('focusin', setActiveElement)
+    document.addEventListener('focusin', setActiveElementByFocusIn)
     document.addEventListener('focusout', cleanActiveElement)
+    window.addEventListener('resize', setActiveElementByActiveElement)
 })
 onBeforeUnmount(() => {
-    document.removeEventListener('focusin', setActiveElement)
+    document.removeEventListener('focusin', setActiveElementByFocusIn)
     document.removeEventListener('focusout', cleanActiveElement)
+    window.removeEventListener('resize', setActiveElementByActiveElement)
 })
 
 const handleQuickInput = (quickInput: QuickInputItem) => {
@@ -85,20 +93,14 @@ const handleQuickInput = (quickInput: QuickInputItem) => {
 
         const changeEvent = new Event('change')
         target.dispatchEvent(changeEvent)
-
-        nextTick(() => {
-            setTimeout(() => {
-                if (target !== document.activeElement) {
-                    target.focus()
-                }
-            }, 500)
-        })
     }
 }
 </script>
 
 <template>
     <div class="toolbar top" v-show="!metaMenuOpen">
+        {{ focusTarget }}
+
         <div>
             <button @click="metaMenuOpen = !metaMenuOpen" :class="{enable: metaMenuOpen}">
                 <IconMenu/>
@@ -172,7 +174,7 @@ const handleQuickInput = (quickInput: QuickInputItem) => {
         <button
             v-for="quickInput in metaStore.meta.value.quickInputs"
             :key="quickInput.id"
-            @touchstart="handleQuickInput(quickInput)"
+            @touchend.prevent="handleQuickInput(quickInput)"
         >
             {{ quickInput.label }}
         </button>
@@ -183,7 +185,7 @@ const handleQuickInput = (quickInput: QuickInputItem) => {
         :class="{open: !isVueFlowInputFocused && metaMenuOpen}"
         @click.self="metaMenuOpen = false"
     >
-        <div >
+        <div>
             <MetaMenu/>
         </div>
     </div>
