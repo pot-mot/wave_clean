@@ -6,6 +6,7 @@ import IconVisible from "@/icons/IconVisible.vue";
 import IconAdd from "@/icons/IconAdd.vue";
 import IconInvisible from "@/icons/IconInvisible.vue";
 import DragList from "@/list/DragList.vue";
+import {computed} from "vue";
 
 const {
     layers,
@@ -21,6 +22,14 @@ const {
 
 const toggleLayerVisible = (layer: MindMapLayer) => {
     changeLayerVisible(layer.id, !layer.visible)
+}
+
+const reversedLayers = computed(() => {
+    return layers.slice().reverse()
+})
+
+const reverseIndex = (reversedIndex: number): number => {
+    return layers.length - 1 - reversedIndex
 }
 
 const handleLayerNameChange = (layer: MindMapLayer, e: Event) => {
@@ -40,10 +49,11 @@ const handleLayerNameChange = (layer: MindMapLayer, e: Event) => {
         </div>
 
         <DragList
-            :data="layers"
+            :data="reversedLayers"
             :current-item="currentLayer"
-            @drag="dragLayer"
-            @swap="swapLayer"
+            :to-key="layer => layer.id"
+            @drag="(a, b) => dragLayer(reverseIndex(a), reverseIndex(b))"
+            @swap="(a, b) => swapLayer(reverseIndex(a), reverseIndex(b))"
             @remove="it => removeLayer(it.id)"
         >
             <template #default="{item: layer}">
@@ -72,14 +82,14 @@ const handleLayerNameChange = (layer: MindMapLayer, e: Event) => {
                 </div>
             </template>
 
-            <template #dragView="{data: draggingLayer}">
+            <template #dragView="{data: {item: layer}}">
                 <div class="layer-menu-item-drag-view">
                     <div class="layer-menu-item-view">
-                        <LayerView :layer="draggingLayer.item"/>
+                        <LayerView :layer="layer"/>
                     </div>
                     <input
                         class="layer-menu-item-name"
-                        :value="draggingLayer.item.name"
+                        :value="layer.name"
                     />
                 </div>
             </template>

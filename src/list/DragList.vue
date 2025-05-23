@@ -1,14 +1,16 @@
-<script setup lang="ts" generic="ID, T extends {id: ID}">
+<script setup lang="ts" generic="T">
 import {computed, onBeforeUnmount, onMounted, ref, useTemplateRef} from "vue";
 import {useTouchEnterLeave} from "@/event/TouchEnterLeave.ts";
+import {getMatchedElementOrParent} from "@/mindMap/clickUtils.ts";
 
 const props = defineProps<{
-    data: T[],
+    data: ReadonlyArray<T>,
     currentItem: T | undefined,
+    toKey: (item: T) => string,
 }>()
+const currentKey = computed(() => props.currentItem ? props.toKey(props.currentItem) : undefined)
 
 const emits = defineEmits<{
-    (e: 'toggle', item: T): void,
     (e: 'remove', item: T): void,
     (e: 'swap', oldIndex: number, newIndex: number): void,
     (e: 'drag', oldIndex: number, newIndex: number): void,
@@ -76,10 +78,6 @@ const handleLeaveContainer = () => {
     }
 }
 
-const reverseIndex = (reversedIndex: number): number => {
-    return props.data.length - 1 - reversedIndex
-}
-
 const handleDragStart = (index: number, item: T, clientXY: {
     x: number,
     y: number
@@ -114,14 +112,14 @@ const handleDragEnd = () => {
     if (isDragging.value) {
         isDragging.value = false
 
-        if (draggingItem.value && overTarget.value && draggingItem.value.item.id !== overTarget.value.item.id) {
+        if (draggingItem.value && overTarget.value && props.toKey(draggingItem.value.item) !== props.toKey(overTarget.value.item)) {
             const draggingIndex = draggingItem.value.index
             const targetIndex = overTarget.value.index
             const type = overTarget.value.type
             if (type === 'item') {
-                emits("swap", reverseIndex(draggingIndex), reverseIndex(targetIndex))
+                emits("swap", draggingIndex, targetIndex)
             } else if (type === 'gap') {
-                emits("drag", reverseIndex(draggingIndex), reverseIndex(targetIndex))
+                emits("drag", draggingIndex, targetIndex)
             }
         }
     }
@@ -132,7 +130,8 @@ const handleDragEnd = () => {
 const mouseDragStartFlag = new Set<number>()
 const handleDragStartByMouse = (index: number, item: T, event: MouseEvent) => {
     if (!(event.target instanceof HTMLElement)) return
-    const target = event.target
+    const target = getMatchedElementOrParent(event.target, el => el.classList.contains('drag-list-item'))
+    if (!target || !(target instanceof HTMLElement)) return
 
     mouseDragStartFlag.add(index)
     const deleteFlag = () => {
@@ -192,7 +191,8 @@ onBeforeUnmount(() => {
 const touchDragStartFlag = new Set<number>()
 const handleDragStartByTouch = (index: number, item: T, event: TouchEvent) => {
     if (!(event.target instanceof HTMLElement)) return
-    const target = event.target
+    const target = getMatchedElementOrParent(event.target, el => el.classList.contains('drag-list-item'))
+    if (!target || !(target instanceof HTMLElement)) return
 
     touchDragStartFlag.add(index)
     const deleteFlag = () => {
@@ -232,14 +232,14 @@ const handleDragEndByMouseByTouch = () => {
 
 const handleItemDragEnter = (index: number, item: T) => {
     if (!isDragging.value) return
-    if (overTarget.value?.item.id !== item.id) {
+    if (overTarget.value === undefined || props.toKey(overTarget.value.item) !== props.toKey(item)) {
         overTarget.value = {index, item: item, type: 'item'}
     }
 }
 
 const handleGapDragEnter = (index: number, item: T) => {
     if (!isDragging.value) return
-    if (overTarget.value?.item.id !== item.id) {
+    if (overTarget.value === undefined || props.toKey(overTarget.value.item) !== props.toKey(item)) {
         overTarget.value = {index, item: item, type: 'gap'}
     }
 }
@@ -321,11 +321,11 @@ const stopDragDown = () => {
             />
 
             <TransitionGroup name="drag-list" tag="div">
-                <template v-for="(item, index) in data.slice().reverse()" :key="item.id">
+                <template v-for="(item, index) in data" :key="toKey(item)">
                     <div
                         class="drag-list-item"
                         :class="{
-                            current: currentItem === item,
+                            current: currentKey === toKey(item),
                             dragged: draggingItem?.index === index,
                             over: overTarget?.index === index && overTarget?.type === 'item'
                         }"
@@ -441,7 +441,6 @@ const stopDragDown = () => {
 
 .drag-gap {
     height: 0.3rem;
-    background-color: var(--background-color-hover);
     transition: height 0.5s, background-color 0.5s;
 }
 
