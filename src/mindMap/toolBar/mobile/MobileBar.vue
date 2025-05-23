@@ -18,7 +18,6 @@ import IconDrag from "@/icons/IconDrag.vue";
 import IconDelete from "@/icons/IconDelete.vue";
 import IconMultiSelect from "@/icons/IconMultiSelect.vue";
 import {QuickInputItem, useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
-import {sendMessage} from "@/message/sendMessage.ts";
 
 const metaStore = useMindMapMetaStore()
 
@@ -55,11 +54,9 @@ const setActiveElementByActiveElement = () => {
     focusTarget.value = document.activeElement
 }
 const setActiveElementByFocusIn = (e: Event) => {
-    sendMessage(`focusin ${e.target}`)
     focusTarget.value = e.target
 }
 const cleanActiveElement = () => {
-    sendMessage(`focusout`)
     focusTarget.value = null
 }
 
@@ -77,6 +74,7 @@ onBeforeUnmount(() => {
     document.removeEventListener('focusin', setActiveElementByFocusIn)
     document.removeEventListener('focusout', cleanActiveElement)
     window.removeEventListener('resize', setActiveElementByActiveElement)
+    cleanActiveElement()
 })
 
 const handleQuickInput = (quickInput: QuickInputItem) => {
@@ -99,8 +97,6 @@ const handleQuickInput = (quickInput: QuickInputItem) => {
 
 <template>
     <div class="toolbar top" v-show="!metaMenuOpen">
-        {{ focusTarget }}
-
         <div>
             <button @click="metaMenuOpen = !metaMenuOpen" :class="{enable: metaMenuOpen}">
                 <IconMenu/>
