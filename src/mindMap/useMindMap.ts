@@ -384,7 +384,11 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
     /**
      * 点击多选相关配置
      */
-    const isMultiSelected = computed(() => {
+    const isSelectionNotEmpty = computed(() => {
+        const vueFlow = getCurrentVueFlow()
+        return vueFlow.getSelectedNodes.value.length + vueFlow.getSelectedEdges.value.length > 0
+    })
+    const isSelectionPlural = computed(() => {
         const vueFlow = getCurrentVueFlow()
         return vueFlow.getSelectedNodes.value.length + vueFlow.getSelectedEdges.value.length > 1
     })
@@ -407,7 +411,7 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
     }
 
     const selectAll = (vueFlow: VueFlowStore = getCurrentVueFlow()) => {
-        const isCurrentMultiSelect = isMultiSelected.value
+        const isCurrentMultiSelect = vueFlow.multiSelectionActive.value
 
         if (!isCurrentMultiSelect) enableMultiSelect(vueFlow)
         if (vueFlow.getSelectedNodes.value.length < vueFlow.getNodes.value.length) {
@@ -415,6 +419,20 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
         }
         if (vueFlow.getSelectedEdges.value.length < vueFlow.getEdges.value.length) {
             vueFlow.addSelectedEdges(vueFlow.getEdges.value)
+        }
+        if (!isCurrentMultiSelect) disableMultiSelect(vueFlow)
+    }
+
+    const toggleSelectAll = (vueFlow: VueFlowStore = getCurrentVueFlow()) => {
+        const isCurrentMultiSelect = vueFlow.multiSelectionActive.value
+
+        if (!isCurrentMultiSelect) enableMultiSelect(vueFlow)
+        if (vueFlow.getSelectedNodes.value.length < vueFlow.getNodes.value.length || vueFlow.getSelectedEdges.value.length < vueFlow.getEdges.value.length) {
+            vueFlow.addSelectedNodes(vueFlow.getNodes.value)
+            vueFlow.addSelectedEdges(vueFlow.getEdges.value)
+        } else {
+            vueFlow.removeSelectedNodes(vueFlow.getNodes.value)
+            vueFlow.removeSelectedEdges(vueFlow.getEdges.value)
         }
         if (!isCurrentMultiSelect) disableMultiSelect(vueFlow)
     }
@@ -990,13 +1008,15 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
             return getCurrentVueFlow().fitView()
         },
 
-        isMultiSelected,
+        isSelectionNotEmpty,
+        isSelectionPlural,
         canMultiSelect,
         disableMultiSelect,
         enableMultiSelect,
         toggleMultiSelect,
 
         selectAll,
+        toggleSelectAll,
 
         defaultMouseAction: readonly(defaultMouseAction),
         toggleDefaultMouseAction,

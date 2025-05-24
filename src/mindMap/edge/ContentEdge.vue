@@ -7,7 +7,7 @@ import {useEdgeUpdaterTouch} from "@/mindMap/touchToMouse/useEdgeUpdaterTouch.ts
 import AutoResizeForeignObject from "@/mindMap/svg/AutoResizeForeignObject.vue";
 import IconDelete from "@/icons/IconDelete.vue";
 
-const {updateEdgeData, isMultiSelected, canMultiSelect, selectEdge, remove, currentViewport} = useMindMap()
+const {updateEdgeData, isSelectionPlural, canMultiSelect, selectEdge, remove, currentViewport} = useMindMap()
 
 const props = defineProps<EdgeProps & {
     id: string,
@@ -76,7 +76,7 @@ onBeforeUnmount(() => {
 })
 
 const handleEdgeMouseDown = () => {
-    if (isMultiSelected.value) return
+    if (isSelectionPlural.value) return
     if (canMultiSelect.value) return
     selectEdge(props.id)
 }

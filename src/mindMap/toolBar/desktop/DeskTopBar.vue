@@ -10,7 +10,7 @@ import IconFit from "@/icons/IconFit.vue";
 import IconMenu from "@/icons/IconMenu.vue";
 import IconLayer from "@/icons/IconLayer.vue";
 import IconDrag from "@/icons/IconDrag.vue";
-import IconSelection from "@/icons/IconSelection.vue";
+import IconSelectRect from "@/icons/IconSelectRect.vue";
 
 const {
     save,
@@ -47,9 +47,9 @@ const layersMenuOpen = ref(false)
         <button @click="fitView()">
             <IconFit/>
         </button>
-        <button @click="toggleDefaultMouseAction()">
+        <button @click="toggleDefaultMouseAction()" :class="{enable: defaultMouseAction === 'selectionRect'}">
             <IconDrag v-if="defaultMouseAction === 'panDrag'"/>
-            <IconSelection v-else-if="defaultMouseAction === 'selectionRect'"/>
+            <IconSelectRect v-else-if="defaultMouseAction === 'selectionRect'"/>
         </button>
     </div>
 

@@ -12,12 +12,13 @@ import IconFit from "@/icons/IconFit.vue";
 import IconUndo from "@/icons/IconUndo.vue";
 import IconRedo from "@/icons/IconRedo.vue";
 import IconMenu from "@/icons/IconMenu.vue";
-import IconSelection from "@/icons/IconSelection.vue";
+import IconSelectRect from "@/icons/IconSelectRect.vue";
 import IconLayer from "@/icons/IconLayer.vue";
 import IconDrag from "@/icons/IconDrag.vue";
 import IconDelete from "@/icons/IconDelete.vue";
 import IconMultiSelect from "@/icons/IconMultiSelect.vue";
 import {QuickInputItem, useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
+import IconSelectAll from "@/icons/IconSelectAll.vue";
 
 const metaStore = useMindMapMetaStore()
 
@@ -33,11 +34,11 @@ const {
     fitView,
     defaultMouseAction,
     toggleDefaultMouseAction,
-    isMultiSelected,
+    isSelectionPlural,
     canMultiSelect,
     toggleMultiSelect,
 
-    selectAll,
+    toggleSelectAll,
     removeSelection,
 
     copy,
@@ -136,12 +137,12 @@ const handleQuickInput = (quickInput: QuickInputItem) => {
         </div>
 
         <div>
-            <button @click="selectAll()">
-                <IconSelection/>
+            <button @click="toggleSelectAll()">
+                <IconSelectAll/>
             </button>
 
-            <button @click="removeSelection()" :class="{disabled: !isMultiSelected}">
-                <IconDelete color="var(--icon-color)"/>
+            <button @click="removeSelection()" :class="{disabled: !isSelectionPlural}">
+                <IconDelete :color="isSelectionPlural ? 'var(--danger-color)' : 'var(--icon-color)'"/>
             </button>
         </div>
     </div>
@@ -151,14 +152,14 @@ const handleQuickInput = (quickInput: QuickInputItem) => {
         v-show="!isVueFlowInputFocused && !metaMenuOpen"
     >
         <div>
-            <button @click="toggleDefaultMouseAction()">
+            <button @click="toggleDefaultMouseAction()" :class="{enable: defaultMouseAction === 'selectionRect'}">
                 <IconDrag v-if="defaultMouseAction === 'panDrag'"/>
-                <IconSelection v-else-if="defaultMouseAction === 'selectionRect'"/>
+                <IconSelectRect v-else-if="defaultMouseAction === 'selectionRect'"/>
             </button>
             <button @click="fitView()">
                 <IconFit/>
             </button>
-            <button @click="toggleMultiSelect()" :class="{enable: canMultiSelect}">
+            <button @click="toggleMultiSelect()" :class="{enable: canMultiSelect && defaultMouseAction !== 'selectionRect'}">
                 <IconMultiSelect/>
             </button>
         </div>
@@ -239,6 +240,7 @@ const handleQuickInput = (quickInput: QuickInputItem) => {
     color: var(--background-color-hover);
     --icon-color: var(--background-color-hover);
     background-color: var(--background-color);
+    pointer-events: none;
     cursor: not-allowed;
 }
 

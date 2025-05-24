@@ -7,7 +7,7 @@ import {NodeToolbar} from "@vue-flow/node-toolbar";
 import IconDelete from "@/icons/IconDelete.vue";
 import IconCopy from "@/icons/IconCopy.vue";
 
-const {updateNodeData, disableDrag, enableDrag, isMultiSelected, canMultiSelect, findNode, selectNode,  copy, remove} = useMindMap()
+const {updateNodeData, disableDrag, enableDrag, isSelectionPlural, canMultiSelect, findNode, selectNode,  copy, remove} = useMindMap()
 
 const props = defineProps<NodeProps & {
     data: ContentNodeData,
@@ -50,7 +50,7 @@ const inputDisable = ref(true)
 const inputRef = useTemplateRef<InstanceType<typeof FitSizeBlockInput>>("inputRef")
 
 const handleNodeMouseDown = () => {
-    if (isMultiSelected.value) return
+    if (isSelectionPlural.value) return
     if (canMultiSelect.value) return
     selectNode(props.id)
 }
