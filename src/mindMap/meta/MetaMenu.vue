@@ -35,21 +35,6 @@ const subMenuType = ref<SubMenuType>('file')
             {{ metaStore.currentMindMap.value?.name ?? 'untitled'}}
         </h1>
 
-        <div class="theme-menu">
-            <span>
-                theme
-                <button @click="themeStore.toggleTheme()">
-                    <IconLight v-if="themeStore.theme.value === 'light'"/>
-                    <IconDark v-else-if="themeStore.theme.value === 'dark'"/>
-                </button>
-            </span>
-
-            <span>
-                primary color
-                <ColorInput v-model="primaryColor"/>
-            </span>
-        </div>
-
         <div class="sub-menu-container">
             <template v-if="isTouchDevice">
                 <div class="sub-menu-select">
@@ -65,6 +50,21 @@ const subMenuType = ref<SubMenuType>('file')
 
             <FileMenu v-else/>
         </div>
+
+        <div class="theme-menu">
+            <span>
+                primary color
+                <ColorInput v-model="primaryColor"/>
+            </span>
+
+            <span>
+                theme
+                <button @click="themeStore.toggleTheme()">
+                    <IconLight v-if="themeStore.theme.value === 'light'"/>
+                    <IconDark v-else-if="themeStore.theme.value === 'dark'"/>
+                </button>
+            </span>
+        </div>
     </div>
 </template>
 
@@ -75,6 +75,9 @@ const subMenuType = ref<SubMenuType>('file')
     display: block;
     padding: 0 0.5rem;
     font-size: 1.1rem;
+    white-space: nowrap;
+    overflow-x: scroll;
+    overflow-y: hidden;
 }
 
 .meta-menu {
@@ -83,15 +86,6 @@ const subMenuType = ref<SubMenuType>('file')
     background-color: var(--background-color);
     transition: background-color 0.5s;
 }
-
-.theme-menu {
-    width: 100%;
-    display: flex;
-    justify-content: space-around;
-    height: 2rem;
-    line-height: 2rem;
-}
-
 .sub-menu-container {
     height: calc(100% - 4rem);
 }
@@ -105,5 +99,13 @@ const subMenuType = ref<SubMenuType>('file')
 
 .sub-menu-wrapper {
     height: calc(100% - 2rem);
+}
+
+.theme-menu {
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    height: 2rem;
+    line-height: 2rem;
 }
 </style>
