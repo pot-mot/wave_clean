@@ -40,6 +40,17 @@ const updateTextSize = () => {
     emits("resize", {width: width.value, height: height.value})
 }
 
+const handleCompositionupdate = (e: CompositionEvent) => {
+    if (!textareaRef.value) return
+    const start = textareaRef.value.selectionStart ?? innerValue.value.length
+    const text = innerValue.value.slice(0, start) + e.data + innerValue.value.slice(start)
+    const expanding = (props.borderWidth + props.padding) * 2
+    const {width: innerWidth, height: innerHeight} = getTextBlockWidth(text, textareaRef.value)
+    width.value = (innerWidth <= 0 ? 1 : innerWidth) + expanding
+    height.value = (innerHeight < props.fontSize ? props.fontSize : innerHeight) + expanding
+    emits("resize", {width: width.value, height: height.value})
+}
+
 onMounted(() => {
     nextTick(() => {
         updateTextSize()
@@ -99,6 +110,8 @@ defineExpose({el: textareaRef, isFocus})
         @change="handleChange"
         @blur="handleBlur"
         v-tap-input
+
+        @compositionupdate="handleCompositionupdate"
     />
 </template>
 
