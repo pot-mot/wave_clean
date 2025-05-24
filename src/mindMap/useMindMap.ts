@@ -848,6 +848,7 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
                 // 双击添加节点
                 let waitNextTouchEnd = false
                 let waitTimeout: number | undefined
+
                 paneEl.addEventListener('touchstart', (e) => {
                     if (e.target !== paneEl) return
                     if (!layer.visible) return
@@ -934,6 +935,10 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
                                 vueFlow.addSelectedNodes(newSelectedNodes)
                                 vueFlow.addSelectedEdges(newSelectedEdges)
                                 vueFlow.multiSelectionActive.value = false
+
+                                // 在框选结束后，在触控端恢复拖拽
+                                toggleDefaultMouseAction()
+                                selectionRectEnable = false
                             })
                         }
 
