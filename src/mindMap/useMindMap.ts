@@ -860,21 +860,45 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
                     screenPosition.value = {x: e.touches[0].clientX, y: e.touches[0].clientY}
                 })
                 paneEl.addEventListener('touchmove', (e) => {
-                    screenPosition.value = {x: e.touches[0].clientX, y: e.touches[0].clientY}
+                    if (e.changedTouches.length > 0) {
+                        screenPosition.value = {x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY}
+                    }
                 })
 
                 // 双击添加节点
                 let waitNextTouchEnd = false
                 let waitTimeout: number | undefined
+                // 记录上一次 touchstart 以避免误触
+                let lastTouchTime = new Date().getTime()
+                let lastTouchPosition: XYPosition | null = null
 
                 paneEl.addEventListener('touchstart', (e) => {
                     if (e.target !== paneEl) return
                     if (!layer.visible) return
+
+                    const currentTime = new Date().getTime()
+                    const currentTouchPosition = {x: e.touches[0].clientX, y: e.touches[0].clientY}
+
                     if (waitNextTouchEnd) {
-                        addNode(screenToFlowCoordinate({x: e.touches[0].clientX, y: e.touches[0].clientY}))
                         waitNextTouchEnd = false
                         clearTimeout(waitTimeout)
-                        e.stopPropagation()
+
+                        const timeDiff = currentTime - lastTouchTime
+                        if (timeDiff > 0 && timeDiff < 300 && lastTouchPosition !== null) {
+                            if (
+                                Math.abs(currentTouchPosition.x - lastTouchPosition.x) < 10 &&
+                                Math.abs(currentTouchPosition.y - lastTouchPosition.y) < 10
+                            ) {
+                                addNode(screenToFlowCoordinate(currentTouchPosition))
+                            }
+
+                            e.stopPropagation()
+                        }
+
+                        lastTouchPosition = null
+                    } else {
+                        lastTouchTime = currentTime
+                        lastTouchPosition = currentTouchPosition
                     }
                 })
                 paneEl.addEventListener('touchend', (e) => {
@@ -883,6 +907,7 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
                         waitNextTouchEnd = true
                         waitTimeout = setTimeout(() => {
                             waitNextTouchEnd = false
+                            lastTouchPosition = null
                         }, 150)
                     }
                 })
