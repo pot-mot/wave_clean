@@ -886,8 +886,8 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
                         const timeDiff = currentTime - lastTouchTime
                         if (timeDiff > 0 && timeDiff < 300 && lastTouchPosition !== null) {
                             if (
-                                Math.abs(currentTouchPosition.x - lastTouchPosition.x) < 10 &&
-                                Math.abs(currentTouchPosition.y - lastTouchPosition.y) < 10
+                                Math.abs(currentTouchPosition.x - lastTouchPosition.x) < 60 &&
+                                Math.abs(currentTouchPosition.y - lastTouchPosition.y) < 60
                             ) {
                                 addNode(screenToFlowCoordinate(currentTouchPosition))
                             }
