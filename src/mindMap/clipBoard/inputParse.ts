@@ -94,15 +94,9 @@ const MindMapData_JsonSchema: JSONSchemaType<MindMapData> = {
         },
         zIndexIncrement: {
             type: "number"
-        },
-        layerIdIncrement: {
-            type: "number"
-        },
-        nodeIdIncrement: {
-            type: "number"
         }
     },
-    required: ["currentLayerId", "layers", "transform", "zIndexIncrement", "layerIdIncrement", "nodeIdIncrement"]
+    required: ["currentLayerId", "layers", "transform", "zIndexIncrement"]
 }
 
 export const validateMindMapData = createSchemaValidator<MindMapData>(MindMapData_JsonSchema)

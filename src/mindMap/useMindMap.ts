@@ -23,11 +23,10 @@ import {getKeys} from "@/type/typeGuard.ts";
 import {useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
 import {LazyData} from "@/type/lazyDataParse.ts";
 import {useDeviceStore} from "@/store/deviceStore.ts";
+import {v7 as uuid} from "uuid"
 
 export type MindMapGlobal = {
     zIndexIncrement: number,
-    layerIdIncrement: number,
-    nodeIdIncrement: number,
     layers: ShallowReactive<MindMapLayer[]>,
     currentLayer: ShallowRef<ShallowReactive<MindMapLayer>>,
     toggleCurrentLayer: (layerId: string) => void,
@@ -51,10 +50,18 @@ export type MindMapData = {
         data: MindMapExportData
     }[],
     transform: ViewportTransform,
-} & Pick<MindMapGlobal, 'zIndexIncrement' | 'layerIdIncrement' | 'nodeIdIncrement'>
+} & Pick<MindMapGlobal, 'zIndexIncrement'>
+
+export const createLayerId = () => {
+    return `layer-${uuid()}`
+}
+
+export const createNodeId = () => {
+    return `node-${uuid()}`
+}
 
 export const getDefaultMindMapData = (): MindMapData => {
-    const id = `layer-0-${Date.now()}`
+    const id = createLayerId()
     return {
         currentLayerId: id,
         layers: [
@@ -75,8 +82,6 @@ export const getDefaultMindMapData = (): MindMapData => {
             zoom: 1,
         },
         zIndexIncrement: 1,
-        nodeIdIncrement: 1,
-        layerIdIncrement: 1,
     }
 }
 
@@ -107,9 +112,8 @@ export type ContentEdge = Pick<Edge, 'id' | 'source' | 'target'> & {
     targetHandle: string,
 }
 
-let vueFlowIdIncrement = 0
 export const createVueFlowId = () => {
-    return `vueflow-${vueFlowIdIncrement++}`
+    return `vueflow-${uuid()}`
 }
 
 export const createEdgeId = (connection: Connection) => {
@@ -165,8 +169,6 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
 
     const global: MindMapGlobal = {
         zIndexIncrement: data.zIndexIncrement,
-        layerIdIncrement: data.layerIdIncrement,
-        nodeIdIncrement: data.nodeIdIncrement,
         layers: layers,
         currentLayer: shallowRef<MindMapLayer>(currentLayer),
 
@@ -214,9 +216,14 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
 
     const addLayer = () => {
         history.executeBatch(Symbol("layer:add"), () => {
-            const id = `layer-${global.layerIdIncrement}-${Date.now()}`
-            const name = `layer-${global.layerIdIncrement}`
-            global.layerIdIncrement++
+            const id = createLayerId()
+
+            let increment = global.layers.length
+            let name =  `layer-${increment}`
+            const layerNameSet = new Set(global.layers.map(it => it.name))
+            while (layerNameSet.has(name)) {
+                name =  `layer-${++increment}`
+            }
             const layer = createLayer(id, name)
             history.executeCommand("layer:add", layer)
             toggleLayer(layer.id)
@@ -307,7 +314,7 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
         return history.executeCommand("node:add", {
             layerId: currentLayerId.value,
             node: {
-                id: `node-${global.nodeIdIncrement++}`,
+                id: createNodeId(),
                 position,
                 type: CONTENT_NODE_TYPE,
                 data: {
@@ -1088,8 +1095,6 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
 
         set: async (data: MindMapData) => {
             const {layers, currentLayer} = dataToLayers(data)
-            global.nodeIdIncrement = data.nodeIdIncrement
-            global.layerIdIncrement = data.layerIdIncrement
             global.zIndexIncrement = data.zIndexIncrement
             global.layers.splice(0, global.layers.length, ...layers)
             currentViewport.value = data.transform
@@ -1108,8 +1113,6 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
                 })),
                 transform: currentViewport.value,
                 zIndexIncrement: global.zIndexIncrement,
-                layerIdIncrement: global.layerIdIncrement,
-                nodeIdIncrement: global.nodeIdIncrement,
             }
         },
         save: async () => {

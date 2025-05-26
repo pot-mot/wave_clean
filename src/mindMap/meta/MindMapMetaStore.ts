@@ -9,6 +9,7 @@ import {createSchemaValidator} from "@/type/typeGuard.ts";
 import {Theme} from "@tauri-apps/api/window";
 import {useThemeStore} from "@/store/themeStore.ts";
 import {debounce} from "lodash";
+import {v7 as uuid} from "uuid";
 
 const metaFileName = '[[WAVE_CLEAN_EDIT_META]]'
 
@@ -179,7 +180,7 @@ const initMindMapMetaStore = () => {
     const add = async (index: number, name: string) => {
         try {
             const timestamp = new Date()
-            const key = name + Date.now()
+            const key = `${name}-${uuid()}`
             meta.value.mindMaps.splice(index, 0, {key, name, lastEditTime: timestamp.toLocaleString()})
             await jsonFileOperations.create(key)
             await jsonFileOperations.set(key, jsonSortPropStringify(getDefaultMindMapData()))

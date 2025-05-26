@@ -3,7 +3,8 @@ import {
     ContentEdge,
     ContentNode,
     ContentNodeHandles,
-    createEdgeId
+    createEdgeId,
+    createNodeId
 } from "@/mindMap/useMindMap.ts";
 import {toRaw} from "vue";
 import {FullConnection, reverseConnection} from "@/mindMap/edge/connection.ts";
@@ -31,7 +32,7 @@ export type MindMapImportDataCleanResult = {
 
 /**
  * 将对导入数据进行清理，保证：
- *      data.nodes id 与当前 vueStore nodes id 以及自身的其他 id 不存在重复。若存在重复则根据顺序在 data.nodes id 后追加 -1 -2 直至不会重复。
+ *      data.nodes id 与当前 vueStore nodes id 以及自身的其他 id 不存在重复。若存在重复则生成新的 id。
  *          若出现 id 修改，返回 nodeIdChangeMap: Map<oldId, newId>。
  *      data.edges id 与当前 vueStore nodes id 以及自身的其他 id 不存在重复。若存在重复则根据新的关联重置 id。
  *          若出现 id 修改，返回 edgeIdChangeMap: Map<oldId, newId>。
@@ -59,14 +60,12 @@ export const clearImportData = (
     for (const node of nodes) {
         const {id, ...other} = node
         let newId = id
-        let suffix = 0;
 
         while (usedNodeIds.has(newId)) {
-            suffix++;
-            newId = `${node.id}-${suffix}`
+            newId = createNodeId()
         }
 
-        if (suffix > 0) {
+        if (id !== newId) {
             nodeIdChangeMap.set(id, newId)
         }
 
