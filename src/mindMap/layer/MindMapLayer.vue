@@ -28,6 +28,8 @@ initLayer(props.layer)
 
         tabindex="-1"
         style="width: 100%; height: 100%; background-color: transparent; position: absolute; top: 0; left: 0; overflow: hidden;"
+        :min-zoom="0.1"
+        :max-zoom="10"
         :zoom-on-pinch="false"
         :zoom-on-double-click="false"
         :edges-updatable="true"

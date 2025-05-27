@@ -65,7 +65,9 @@ const layersMenuOpen = ref(false)
         tabindex="-1"
         @keydown.esc="metaMenuOpen = false"
     >
-        <MetaMenu/>
+        <div>
+            <MetaMenu/>
+        </div>
     </div>
 
     <div
@@ -74,7 +76,9 @@ const layersMenuOpen = ref(false)
         tabindex="-1"
         @keydown.esc="layersMenuOpen = false"
     >
-        <LayerMenu/>
+        <div>
+            <LayerMenu/>
+        </div>
     </div>
 </template>
 
@@ -136,37 +140,50 @@ const layersMenuOpen = ref(false)
     top: 2.5rem;
     height: calc(100% - 3rem);
     width: max(20vw, 20rem);
-    border-top: var(--border);
-    border-bottom: var(--border);
-    transition: transform 0.5s ease, opacity 0.5s ease;
+    overflow: hidden;
     pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s ease;
 }
 .toolbar.meta-menu.open,
 .toolbar.layer-menu.open {
     pointer-events: all;
+    opacity: 1;
 }
 
 .toolbar.meta-menu {
     left: 0;
+}
+.toolbar.layer-menu {
+    right: 0;
+}
+
+.toolbar.meta-menu > div,
+.toolbar.layer-menu > div {
+    height: 100%;
+    width: 100%;
+    transition: transform 0.5s ease;
+}
+
+.toolbar.meta-menu > div {
+    border-top: var(--border);
+    border-bottom: var(--border);
     border-right: var(--border);
     border-color: var(--background-color-hover);
-    opacity: 0;
     transform: translateX(-100%);
 }
-.toolbar.meta-menu.open {
-    opacity: 1;
+.toolbar.meta-menu.open > div {
     transform: translateX(0);
 }
 
-.toolbar.layer-menu {
-    right: 0;
+.toolbar.layer-menu > div{
+    border-top: var(--border);
+    border-bottom: var(--border);
     border-left: var(--border);
     border-color: var(--background-color-hover);
-    opacity: 0;
     transform: translateX(100%);
 }
-.toolbar.layer-menu.open {
-    opacity: 1;
+.toolbar.layer-menu.open > div {
     transform: translateX(0);
 }
 </style>

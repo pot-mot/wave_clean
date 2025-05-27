@@ -26,27 +26,35 @@ const background = computed(() => {
 </script>
 
 <template>
-    <svg class="vue-flow__background">
-        <pattern
-            id="flow__background_pattern"
-            :x="viewport.x % background.gapX"
-            :y="viewport.y % background.gapY"
-            :width="background.gapX"
-            :height="background.gapY"
-            patternUnits="userSpaceOnUse"
-        >
-            <circle :r="background.r" fill="var(--comment-color)"/>
-        </pattern>
+    <div class="vue-flow__background">
+        <svg class="vue-flow__background_container">
+            <pattern
+                id="flow__background_pattern"
+                :x="viewport.x % background.gapX"
+                :y="viewport.y % background.gapY"
+                :width="background.gapX"
+                :height="background.gapY"
+                patternUnits="userSpaceOnUse"
+            >
+                <circle :r="background.r" fill="var(--comment-color)"/>
+            </pattern>
 
-        <rect :x="0" :y="0" width="100%" height="100%" fill="url(#flow__background_pattern)"/>
-    </svg>
+            <rect :x="0" :y="0" width="100%" height="100%" fill="url(#flow__background_pattern)"/>
+        </svg>
+    </div>
 </template>
 
 <style scoped>
 .vue-flow__background {
     height: 100%;
     width: 100%;
+    overflow: hidden;
     background-color: var(--background-color);
     transition: background-color 0.5s;
+}
+
+.vue-flow__background_container {
+    height: 100%;
+    width: 100%;
 }
 </style>

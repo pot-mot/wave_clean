@@ -281,12 +281,14 @@ const handleQuickInput = (quickInput: QuickInputItem) => {
     width: 100vw;
     overflow: hidden;
     background-color: var(--mask-color);
-    transition: opacity 0.5s ease;
     pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s ease;
 }
 .toolbar.meta-menu.open,
 .toolbar.layer-menu.open {
     pointer-events: all;
+    opacity: 1;
 }
 
 .toolbar.meta-menu > div,
@@ -298,10 +300,6 @@ const handleQuickInput = (quickInput: QuickInputItem) => {
     top: 0;
     height: 100vh;
     left: 0;
-    opacity: 0;
-}
-.toolbar.meta-menu.open {
-    opacity: 1;
 }
 
 .toolbar.meta-menu > div {
@@ -322,10 +320,6 @@ const handleQuickInput = (quickInput: QuickInputItem) => {
     top: 0;
     height: calc(100vh - 2rem);
     right: 0;
-    opacity: 0;
-}
-.toolbar.layer-menu.open {
-    opacity: 1;
 }
 
 .toolbar.layer-menu > div {

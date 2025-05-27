@@ -3,8 +3,13 @@ const context = canvas.getContext('2d')!
 
 const lineHeightComputeSpan = document.createElement('span');
 lineHeightComputeSpan.innerText = 'a'
-lineHeightComputeSpan.style.position = 'absolute'
+lineHeightComputeSpan.style.position = 'fixed'
+lineHeightComputeSpan.style.top = "0"
+lineHeightComputeSpan.style.left = "0"
+lineHeightComputeSpan.style.overflow = 'hidden'
 lineHeightComputeSpan.style.visibility = 'hidden'
+lineHeightComputeSpan.style.pointerEvents = 'none'
+
 document.body.appendChild(lineHeightComputeSpan)
 
 export const getLineHeight = (style: CSSStyleDeclaration): number => {
