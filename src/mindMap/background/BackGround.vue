@@ -36,10 +36,10 @@ const background = computed(() => {
                 :height="background.gapY"
                 patternUnits="userSpaceOnUse"
             >
-                <circle :r="background.r" fill="var(--comment-color)"/>
+                <circle :r="background.r" :cx="background.r" :cy="background.r" fill="var(--background-color-hover)"/>
             </pattern>
 
-            <rect :x="0" :y="0" width="100%" height="100%" fill="url(#flow__background_pattern)"/>
+            <rect :x="-background.r" :y="-background.r" width="100%" height="100%" fill="url(#flow__background_pattern)"/>
         </svg>
     </div>
 </template>
