@@ -124,7 +124,6 @@ textarea {
     overflow: hidden;
     overflow-wrap: normal;
     background-color: transparent;
-    font: inherit;
     tab-size: 4;
 }
 </style>
