@@ -6,19 +6,15 @@ import FitSizeBlockInput from "@/input/FitSizeBlockInput.vue";
 import {useEdgeUpdaterTouch} from "@/mindMap/touchToMouse/useEdgeUpdaterTouch.ts";
 import AutoResizeForeignObject from "@/mindMap/svg/AutoResizeForeignObject.vue";
 import IconDelete from "@/icons/IconDelete.vue";
+import IconFocus from "@/icons/IconFocus.vue";
+import {blurActiveElement} from "@/mindMap/clickUtils.ts";
 
-const {updateEdgeData, isSelectionPlural, canMultiSelect, selectEdge, remove, currentViewport} = useMindMap()
+const {updateEdgeData, isSelectionPlural, canMultiSelect, selectEdge, fitRect, remove, currentViewport} = useMindMap()
 
 const props = defineProps<EdgeProps & {
     id: string,
     data: ContentEdgeData,
 }>()
-
-const handleDelete = () => {
-    remove({edges: [props.id]})
-}
-
-useEdgeUpdaterTouch(props.id)
 
 const innerValue = computed<string>({
     get() {
@@ -52,10 +48,14 @@ const handleInputResize = (size: { width: number, height: number }) => {
 const inputShow = ref(false)
 const inputRef = useTemplateRef<InstanceType<typeof FitSizeBlockInput>>("inputRef")
 
-const bezierRef = useTemplateRef<InstanceType<typeof BezierEdge>>("bezierRef");
-let pathObserver: MutationObserver | undefined = undefined
+useEdgeUpdaterTouch(props.id)
 
+// 贝塞尔曲线中点控制 input 位置
+const bezierRef = useTemplateRef<InstanceType<typeof BezierEdge>>("bezierRef")
 const curveMidpoint = ref<{ x: number; y: number }>({ x: 0, y: 0 });
+
+// 监听 svg 路径变化
+let pathObserver: MutationObserver | undefined = undefined
 
 onMounted(() => {
     const path = bezierRef.value?.$el?.nextElementSibling as SVGPathElement | undefined
@@ -93,6 +93,22 @@ const handleClick = () => {
 const handleBlur = () => {
     inputShow.value = false
 }
+
+// 聚焦
+const handleFocus = () => {
+    fitRect({
+        x: curveMidpoint.value.x - inputWidth.value / 2,
+        y: curveMidpoint.value.y - inputHeight.value / 2,
+        width: inputWidth.value,
+        height: inputHeight.value,
+    })
+}
+
+// 删除
+const handleDelete = () => {
+    blurActiveElement()
+    remove({edges: [props.id]})
+}
 </script>
 
 <template>
@@ -125,10 +141,15 @@ const handleBlur = () => {
         <AutoResizeForeignObject
             v-if="selected && inputShow"
             @resize="handleToolBarResize"
+            style="z-index: var(--top-z-index);"
             :transform="`translate(${curveMidpoint.x - (toolBarWidth * zoom) / 2} ${curveMidpoint.y - inputHeight / 2 - (toolBarHeight * zoom)}) scale(${zoom})`"
         >
-            <div style="padding-bottom: 0.3rem;">
-                <button @mousedown.capture="handleDelete" style="padding: 0.3rem;">
+            <div class="toolbar">
+                <button @mousedown.capture.stop="handleFocus">
+                    <IconFocus/>
+                </button>
+
+                <button @mousedown.capture.stop="handleDelete">
                     <IconDelete/>
                 </button>
             </div>
@@ -143,5 +164,19 @@ const handleBlur = () => {
     -ms-user-select: none;
     user-select: none;
     pointer-events: none;
+}
+
+.toolbar {
+    display: flex;
+}
+
+.toolbar > button {
+    padding: 0.3rem;
+    margin-right: 0.3rem;
+    transition: background-color 0.5s ease;
+}
+
+.toolbar > button:hover {
+    background-color: var(--background-color-hover);
 }
 </style>

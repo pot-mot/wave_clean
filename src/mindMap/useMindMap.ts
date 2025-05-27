@@ -5,6 +5,7 @@ import {
     GraphNode,
     Node,
     Position,
+    Rect,
     useVueFlow,
     ViewportTransform,
     VueFlowStore,
@@ -1036,8 +1037,11 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
         removeSelection,
         remove,
 
-        fitView: () => {
-            return getCurrentVueFlow().fitView()
+        fitView: (layer: MindMapLayer = global.currentLayer.value) => {
+            return layer.vueFlow.fitView({duration: 600, padding: 0.4})
+        },
+        fitRect: (rect: Rect, layer: MindMapLayer = global.currentLayer.value) => {
+            return layer.vueFlow.fitBounds(rect, {duration: 600, padding: 0.4})
         },
 
         isSelectionNotEmpty,

@@ -6,23 +6,18 @@ import FitSizeBlockInput from "@/input/FitSizeBlockInput.vue";
 import {NodeToolbar} from "@vue-flow/node-toolbar";
 import IconDelete from "@/icons/IconDelete.vue";
 import IconCopy from "@/icons/IconCopy.vue";
+import IconFocus from "@/icons/IconFocus.vue";
+import {sendMessage} from "@/message/sendMessage.ts";
+import {useDeviceStore} from "@/store/deviceStore.ts";
+import {blurActiveElement} from "@/mindMap/clickUtils.ts";
 
-const {updateNodeData, disableDrag, enableDrag, isSelectionPlural, canMultiSelect, findNode, selectNode,  copy, remove} = useMindMap()
+const {isTouchDevice} = useDeviceStore()
+
+const {updateNodeData, disableDrag, enableDrag, isSelectionPlural, canMultiSelect, findNode, selectNode,  copy, paste, fitRect, remove, currentLayer} = useMindMap()
 
 const props = defineProps<NodeProps & {
     data: ContentNodeData,
 }>()
-
-const handleCopy = () => {
-    const node = findNode(props.id)
-    if (node !== undefined) {
-        copy({nodes: [node] as any as ContentNode[], edges: []})
-    }
-}
-
-const handleDelete = () => {
-    remove({nodes: [props.id]})
-}
 
 const innerValue = computed<string>({
     get() {
@@ -77,16 +72,56 @@ const onHandleMouseDown = (e: MouseEvent) => {
         }, {once: true})
     }
 }
+
+// 复制
+const executeCopy = () => {
+    blurActiveElement()
+    const node = findNode(props.id)
+    if (node !== undefined) {
+        copy({nodes: [node] as any as ContentNode[], edges: []})
+        sendMessage("copy success")
+
+        // 在复制后的下一次点击中执行粘贴
+        if (isTouchDevice.value) {
+            currentLayer.value.vueFlow.vueFlowRef.value?.addEventListener('click', () => {
+                paste()
+            }, {once: true})
+        }
+    }
+}
+
+// 聚焦
+const executeFocus = () => {
+    const node = findNode(props.id)
+    if (node !== undefined) {
+        fitRect({
+            x: node.position.x,
+            y: node.position.y,
+            width: node.dimensions.width,
+            height: node.dimensions.height,
+        })
+    }
+}
+
+// 删除
+const executeDelete = () => {
+    blurActiveElement()
+    remove({nodes: [props.id]})
+}
 </script>
 
 <template>
     <div>
-        <NodeToolbar :node-id="id" :is-visible="selected && !inputDisable">
-            <button @mousedown.capture="handleCopy" style="padding: 0.3rem;">
+        <NodeToolbar :node-id="id" :is-visible="selected && !inputDisable" class="toolbar">
+            <button @mousedown.capture.stop="executeCopy">
                 <IconCopy/>
             </button>
 
-            <button @mousedown.capture="handleDelete" style="padding: 0.3rem;">
+            <button @mousedown.capture.stop="executeFocus">
+                <IconFocus/>
+            </button>
+
+            <button @mousedown.capture.stop="executeDelete">
                 <IconDelete/>
             </button>
         </NodeToolbar>
@@ -132,9 +167,10 @@ const onHandleMouseDown = (e: MouseEvent) => {
 }
 
 :deep(.vue-flow__handle) {
-    width: 0.4rem;
-    height: 0.4rem;
+    width: 8px;
+    height: 8px;
     background: var(--border-color);
+    border-width: 2px;
     border-color: var(--background-color);
     border-radius: 100%;
 }
@@ -145,5 +181,15 @@ const onHandleMouseDown = (e: MouseEvent) => {
 
 :deep(.vue-flow__handle.connecting) {
     background: var(--primary-color);
+}
+
+.toolbar > button {
+    padding: 0.3rem;
+    margin-right: 0.3rem;
+    transition: background-color 0.5s ease;
+}
+
+.toolbar > button:hover {
+    background-color: var(--background-color-hover);
 }
 </style>
