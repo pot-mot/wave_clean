@@ -1,5 +1,4 @@
 import {SchemaValidator} from "@/type/typeGuard.ts";
-import {judgeTargetIsInteraction} from "@/mindMap/clickUtils.ts";
 import {readText, writeText} from "@tauri-apps/plugin-clipboard-manager";
 import {LazyData, lazyDataParse} from "@/type/lazyDataParse.ts";
 import {sendMessage} from "@/message/sendMessage.ts";
@@ -60,27 +59,10 @@ export const useClipBoard = <INPUT, OUTPUT>(target: ClipBoardTarget<INPUT, OUTPU
         }
     }
 
-    const handleKeyDownEvent = async (e: KeyboardEvent) => {
-        if (judgeTargetIsInteraction(e)) return
-
-        if (e.ctrlKey && (e.key === "c" || e.key === "C")) {
-            e.preventDefault()
-            await copy()
-        } else if (e.ctrlKey && (e.key === "x" || e.key === "X")) {
-            e.preventDefault()
-            await cut()
-        } else if (e.ctrlKey && (e.key === "v" || e.key === "V")) {
-            e.preventDefault()
-            await paste()
-        }
-    }
-
     return {
         copy,
         cut,
         paste,
-
-        handleKeyDownEvent,
     }
 }
 
@@ -96,8 +78,4 @@ export const unimplementedClipBoard: CustomClipBoard<any, any> = {
     paste: async () => {
         throw new Error("Unimplemented")
     },
-
-    handleKeyDownEvent: async () => {
-        throw new Error("Unimplemented")
-    }
 }

@@ -16,6 +16,9 @@ const {
     undo,
     redo,
     save,
+    copy,
+    cut,
+    paste,
 } = useMindMap()
 
 const backgroundKey = ref(true)
@@ -26,7 +29,7 @@ watch(() => currentLayer.value, async () => {
     backgroundKey.value = true
 })
 
-const handleKeyDown = (e: KeyboardEvent) => {
+const handleKeyDown = async (e: KeyboardEvent) => {
     if (e.ctrlKey) {
         // 按下 Ctrl + z 键，进行历史记录的撤回重做
         if ((e.key === "z" || e.key === "Z")) {
@@ -41,7 +44,22 @@ const handleKeyDown = (e: KeyboardEvent) => {
             }
         } else if (e.key === "s" || e.key === "S") {
             e.preventDefault()
-            save()
+            await save()
+        } else if (e.key === "c" || e.key === "C") {
+            if (judgeTargetIsInteraction(e)) return
+
+            e.preventDefault()
+            await copy()
+        } else if (e.key === "x" || e.key === "X") {
+            if (judgeTargetIsInteraction(e)) return
+
+            e.preventDefault()
+            await cut()
+        } else if (e.key === "v" || e.key === "V") {
+            if (judgeTargetIsInteraction(e)) return
+
+            e.preventDefault()
+            await paste()
         }
     }
 }

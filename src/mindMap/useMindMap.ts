@@ -25,6 +25,7 @@ import {useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
 import {LazyData} from "@/type/lazyDataParse.ts";
 import {useDeviceStore} from "@/store/deviceStore.ts";
 import {v7 as uuid} from "uuid"
+import {sendMessage} from "@/message/sendMessage.ts";
 
 export type MindMapGlobal = {
     zIndexIncrement: number,
@@ -94,6 +95,7 @@ export type MindMapLayerData = Pick<RawMindMapLayer, typeof MindMapLayerDataKeys
 export const CONTENT_NODE_TYPE = "CONTENT_NODE" as const
 export type ContentNodeData = {
     content: string,
+    color?: string | undefined
 }
 export type ContentNode = Pick<Node, 'id' | 'position'> & {
     data: ContentNodeData,
@@ -105,6 +107,7 @@ export const ContentNodeHandles: Position[] = [Position.Left, Position.Right, Po
 export const CONTENT_EDGE_TYPE = "CONTENT_EDGE" as const
 export type ContentEdgeData = {
     content: string,
+    arrowType?: 'one-way' | 'two-way' | 'none' | undefined
 }
 export type ContentEdge = Pick<Edge, 'id' | 'source' | 'target'> & {
     data: ContentEdgeData,
@@ -356,9 +359,7 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
         return vueFlow.screenToFlowCoordinate({x: window.innerWidth / 2, y: window.innerHeight / 2})
     }
 
-    const importData = (data: MindMapImportData, leftTop: XYPosition = getCenterPosition()) => {
-        const vueFlow = getCurrentVueFlow()
-
+    const importData = (data: MindMapImportData, leftTop: XYPosition = getCenterPosition(), vueFlow = getCurrentVueFlow()) => {
         blurActiveElement()
         const {newNodes, newEdges} = prepareImportIntoMindMap(vueFlow, data, leftTop)
         history.executeCommand("import", {layerId: currentLayerId.value, nodes: newNodes, edges: newEdges})
@@ -624,8 +625,6 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
             })
 
             Object.assign(layer, clipBoard)
-
-            el.addEventListener("keydown", clipBoard.handleKeyDownEvent)
 
             /**
              * 节点移动
@@ -1021,8 +1020,16 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
 
         canUndo: readonly(canUndo),
         canRedo: readonly(canRedo),
-        undo: history.undo,
-        redo: history.redo,
+        undo: () => {
+            history.undo()
+            sendMessage("undo")
+            focus()
+        },
+        redo: () => {
+            history.redo()
+            sendMessage("redo")
+            focus()
+        },
 
         findNode: (id: string, layer: MindMapLayer = global.currentLayer.value) => {
             return layer.vueFlow.findNode(id)
@@ -1069,7 +1076,7 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
                 vueFlow.addSelectedNodes([node])
             }
         },
-        updateNodeData: (id: string, data: ContentNodeData) => {
+        updateNodeData: (id: string, data: Partial<ContentNodeData>) => {
             history.executeCommand('node:data:change', {layerId: currentLayerId.value, id, data})
         },
         selectEdge: (id: string) => {
@@ -1080,7 +1087,7 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
                 vueFlow.addSelectedEdges([edge])
             }
         },
-        updateEdgeData: (id: string, data: ContentEdgeData) => {
+        updateEdgeData: (id: string, data: Partial<ContentEdgeData>) => {
             history.executeCommand('edge:data:change', {layerId: currentLayerId.value, id, data})
         },
 
@@ -1088,13 +1095,22 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
             data: LazyData<MindMapExportData> | undefined = undefined,
             layer: MindMapLayer = global.currentLayer.value,
         ) => {
-            return await layer.copy(data)
+            const result = await layer.copy(data)
+            sendMessage("copy")
+            focus()
+            return result
         },
         paste: async (layer: MindMapLayer = global.currentLayer.value) => {
-            return await layer.paste()
+            const result = await layer.paste()
+            sendMessage("paste")
+            focus()
+            return result
         },
         cut: async (layer: MindMapLayer = global.currentLayer.value) => {
-            return await layer.cut()
+            const result = await layer.cut()
+            sendMessage("cut")
+            focus()
+            return result
         },
 
         set: async (data: MindMapData) => {

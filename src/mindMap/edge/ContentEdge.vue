@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef} from "vue";
-import {BezierEdge, EdgeProps} from "@vue-flow/core";
+import {BaseEdge, BezierEdge, EdgeProps} from "@vue-flow/core";
 import {ContentEdgeData, useMindMap} from "@/mindMap/useMindMap.ts";
 import FitSizeBlockInput from "@/input/FitSizeBlockInput.vue";
 import {useEdgeUpdaterTouch} from "@/mindMap/touchToMouse/useEdgeUpdaterTouch.ts";
@@ -8,6 +8,11 @@ import AutoResizeForeignObject from "@/mindMap/svg/AutoResizeForeignObject.vue";
 import IconDelete from "@/icons/IconDelete.vue";
 import IconFocus from "@/icons/IconFocus.vue";
 import {blurActiveElement} from "@/mindMap/clickUtils.ts";
+import IconArrowNone from "@/icons/IconArrowNone.vue";
+import IconArrowTwoWay from "@/icons/IconArrowTwoWay.vue";
+import {getPaddingBezierPath} from "@/mindMap/edge/paddingBezierPath.ts";
+import IconArrowOneWayLeft from "@/icons/IconArrowOneWayLeft.vue";
+import IconArrowOneWayRight from "@/icons/IconArrowOneWayRight.vue";
 
 const {updateEdgeData, isSelectionPlural, canMultiSelect, selectEdge, fitRect, remove, currentViewport} = useMindMap()
 
@@ -49,6 +54,19 @@ const inputShow = ref(false)
 const inputRef = useTemplateRef<InstanceType<typeof FitSizeBlockInput>>("inputRef")
 
 useEdgeUpdaterTouch(props.id)
+
+// 贝塞尔曲线 path
+const bezierPath = computed(() => {
+    return getPaddingBezierPath(props)
+})
+
+// 两头的 marker 样式
+const markerStart = computed<string | undefined>(() => {
+    return props.data.arrowType === 'two-way' ? "url(#arrow)" : undefined
+})
+const markerEnd = computed<string | undefined>(() => {
+    return props.data.arrowType === 'two-way' || props.data.arrowType === 'one-way' ? "url(#arrow)" : undefined
+})
 
 // 贝塞尔曲线中点控制 input 位置
 const bezierRef = useTemplateRef<InstanceType<typeof BezierEdge>>("bezierRef")
@@ -104,6 +122,21 @@ const handleFocus = () => {
     })
 }
 
+// 切换箭头类型
+const handleToggleArrowType = () => {
+    switch (props.data.arrowType) {
+        case 'one-way':
+            updateEdgeData(props.id, {arrowType: 'two-way'})
+            break
+        case 'two-way':
+            updateEdgeData(props.id, {arrowType: 'none'})
+            break
+        default:
+            updateEdgeData(props.id, {arrowType: 'one-way'})
+            break
+    }
+}
+
 // 删除
 const handleDelete = () => {
     blurActiveElement()
@@ -118,7 +151,28 @@ const handleDelete = () => {
         @touchstart.capture="handleEdgeMouseDown"
         @click.capture="handleClick"
     >
-        <BezierEdge ref="bezierRef" v-bind.prop="props" :style="{stroke: selected ? 'var(--primary-color)' : undefined}"/>
+        <defs>
+            <marker id="arrow" class="vue-flow__arrowhead" viewBox="-10 -10 20 20" refX="0" refY="0" markerWidth="12.5"
+                    markerHeight="12.5" markerUnits="strokeWidth" orient="auto-start-reverse">
+                <polyline
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    points="-6,-4 2,0 -6,4"
+                    :style="{
+                        fill: selected ? 'var(--primary-color)' : 'var(--border-color)'
+                    }"
+                />
+            </marker>
+        </defs>
+
+        <BaseEdge
+            ref="bezierRef"
+            v-bind.prop="props"
+            :style="{stroke: selected ? 'var(--primary-color)' : 'var(--border-color)'}"
+            :path="bezierPath"
+            :marker-start="markerStart"
+            :marker-end="markerEnd"
+        />
 
         <AutoResizeForeignObject
             @resize="handleInputResize"
@@ -142,14 +196,23 @@ const handleDelete = () => {
             v-if="selected && inputShow"
             @resize="handleToolBarResize"
             style="z-index: var(--top-z-index);"
-            :transform="`translate(${curveMidpoint.x - (toolBarWidth * zoom) / 2} ${curveMidpoint.y - inputHeight / 2 - (toolBarHeight * zoom)}) scale(${zoom})`"
+            :transform="`translate(${curveMidpoint.x - (toolBarWidth * zoom) / 2} ${curveMidpoint.y - inputHeight / 2 - (toolBarHeight + 10) * zoom}) scale(${zoom})`"
         >
             <div class="toolbar">
-                <button @mousedown.capture.stop="handleFocus">
+                <button @mousedown.capture.prevent.stop="handleFocus">
                     <IconFocus/>
                 </button>
 
-                <button @mousedown.capture.stop="handleDelete">
+                <button @mousedown.capture.prevent.stop="handleToggleArrowType">
+                    <template v-if="data.arrowType === 'one-way'">
+                        <IconArrowOneWayLeft v-if="sourceX < targetX"/>
+                        <IconArrowOneWayRight v-else/>
+                    </template>
+                    <IconArrowTwoWay v-else-if="data.arrowType === 'two-way'"/>
+                    <IconArrowNone v-else/>
+                </button>
+
+                <button @mousedown.capture.prevent.stop="handleDelete">
                     <IconDelete/>
                 </button>
             </div>
@@ -174,6 +237,11 @@ const handleDelete = () => {
     padding: 0.3rem;
     margin-right: 0.3rem;
     transition: background-color 0.5s ease;
+}
+
+.toolbar > button svg {
+    /* 阻止点击按钮导致外部无法拖拽问题 */
+    pointer-events: none !important;
 }
 
 .toolbar > button:hover {

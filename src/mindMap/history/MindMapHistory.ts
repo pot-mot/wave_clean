@@ -66,7 +66,7 @@ export type MindMapHistoryCommands = {
     "node:data:change": CommandDefinition<{
         layerId: string,
         id: string,
-        data: ContentNodeData,
+        data: Partial<ContentNodeData>,
     }>,
 
     "edge:add": CommandDefinition<{
@@ -89,7 +89,7 @@ export type MindMapHistoryCommands = {
     "edge:data:change": CommandDefinition<{
         layerId: string,
         id: string,
-        data: ContentEdgeData
+        data: Partial<ContentEdgeData>
     }>,
 
     "import": CommandDefinition<{
@@ -154,12 +154,6 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
         if (!canRedo.value) {
             sendMessage("cannot redo")
         }
-    })
-    history.eventBus.on("undo", () => {
-        sendMessage("undo")
-    })
-    history.eventBus.on("redo", () => {
-        sendMessage("redo")
     })
 
     history.registerCommand("layer:add", {
@@ -330,7 +324,7 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
             if (node === undefined) throw new Error(`node [${id}] is undefined`)
 
             const previousData = getRaw(node.data)
-            vueFlow.updateNodeData(id, data, {replace: true})
+            vueFlow.updateNodeData(id, Object.assign({}, previousData, data), {replace: true})
             return {layerId, id, data: previousData}
         },
         revertAction: ({layerId, id, data}) => {
@@ -386,7 +380,7 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
             if (edge === undefined) throw new Error(`edge [${id}] is undefined`)
 
             const previousData = getRaw(edge.data)
-            vueFlow.updateEdgeData(id, data, {replace: true})
+            vueFlow.updateEdgeData(id, Object.assign({}, previousData, data), {replace: true})
             return {layerId, id, data: previousData}
         },
         revertAction: ({layerId, id, data}) => {

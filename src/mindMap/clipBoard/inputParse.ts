@@ -10,7 +10,14 @@ const ContentNode_JsonSchema: JSONSchemaType<ContentNode> = {
         id: {type: "string"},
         type: {type: "string", enum: ["CONTENT_NODE"]},
         position: {type: "object", properties: {x: {type: "number"}, y: {type: "number"}}, required: ["x", "y"]},
-        data: {type: "object", properties: {content: {type: "string"}}, required: ["content"]}
+        data: {
+            type: "object",
+            properties: {
+                content: {type: "string"},
+                color: {type: "string", nullable: true},
+            },
+            required: ["content"]
+        }
     }
 }
 
@@ -26,7 +33,18 @@ const ContentEdge_JsonSchema: JSONSchemaType<ContentEdge> = {
         target: {type: "string"},
         sourceHandle: {type: "string"},
         targetHandle: {type: "string"},
-        data: {type: "object", properties: {content: {type: "string"}}, required: ["content"]}
+        data: {
+            type: "object",
+            properties: {
+                content: {type: "string"},
+                arrowType: {
+                    type: "string",
+                    enum: ["one-way", "two-way", "none"],
+                    nullable: true
+                }
+            },
+            required: ["content"]
+        }
     }
 }
 

@@ -7,7 +7,6 @@ import {NodeToolbar} from "@vue-flow/node-toolbar";
 import IconDelete from "@/icons/IconDelete.vue";
 import IconCopy from "@/icons/IconCopy.vue";
 import IconFocus from "@/icons/IconFocus.vue";
-import {sendMessage} from "@/message/sendMessage.ts";
 import {useDeviceStore} from "@/store/deviceStore.ts";
 import {blurActiveElement} from "@/mindMap/clickUtils.ts";
 
@@ -75,11 +74,10 @@ const onHandleMouseDown = (e: MouseEvent) => {
 
 // 复制
 const executeCopy = () => {
-    blurActiveElement()
     const node = findNode(props.id)
     if (node !== undefined) {
+        blurActiveElement()
         copy({nodes: [node] as any as ContentNode[], edges: []})
-        sendMessage("copy success")
 
         // 在复制后的下一次点击中执行粘贴
         if (isTouchDevice.value) {
@@ -113,15 +111,15 @@ const executeDelete = () => {
 <template>
     <div>
         <NodeToolbar :node-id="id" :is-visible="selected && !inputDisable" class="toolbar">
-            <button @mousedown.capture.stop="executeCopy">
+            <button @mousedown.capture.prevent.stop="executeCopy">
                 <IconCopy/>
             </button>
 
-            <button @mousedown.capture.stop="executeFocus">
+            <button @mousedown.capture.prevent.stop="executeFocus">
                 <IconFocus/>
             </button>
 
-            <button @mousedown.capture.stop="executeDelete">
+            <button @mousedown.capture.prevent.stop="executeDelete">
                 <IconDelete/>
             </button>
         </NodeToolbar>
@@ -187,6 +185,11 @@ const executeDelete = () => {
     padding: 0.3rem;
     margin-right: 0.3rem;
     transition: background-color 0.5s ease;
+}
+
+.toolbar > button svg {
+    /* 阻止点击按钮导致外部无法拖拽问题 */
+    pointer-events: none !important;
 }
 
 .toolbar > button:hover {
