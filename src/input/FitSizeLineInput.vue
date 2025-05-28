@@ -96,13 +96,6 @@ defineExpose({el: inputRef, isFocus})
     <input
         ref="inputRef"
         :style="{
-            color: 'var(--text-color)',
-            backgroundColor: 'var(--background-color)',
-            border: 'var(--border)',
-            borderRadius: 'var(--border-radius)',
-
-            verticalAlign: 'top',
-            outline: 'none',
             padding: `${props.padding}px`,
             borderWidth: `${props.borderWidth}px`,
             fontSize: `${props.fontSize}px`,
@@ -119,3 +112,17 @@ defineExpose({el: inputRef, isFocus})
         @compositionupdate="handleCompositionupdate"
     />
 </template>
+
+<style scoped>
+input {
+    color: var(--text-color);
+    background-color: var(--background-color);
+    border: var(--border);
+    border-radius: var(--border-radius);
+
+    vertical-align: top;
+    outline: none;
+
+    transition: color 0.5s ease, background-color 0.5s ease, border-color 0.5s ease;
+}
+</style>

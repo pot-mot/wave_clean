@@ -25,6 +25,12 @@ body {
     transition: none !important;
 }
 
+/* 选中元素 */
+::selection {
+    background-color: var(--primary-color);
+    opacity: 0.8;
+}
+
 /* scrollbar */
 ::-webkit-scrollbar {
     width: 8px;

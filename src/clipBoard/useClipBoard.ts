@@ -1,7 +1,6 @@
 import {SchemaValidator} from "@/type/typeGuard.ts";
 import {readText, writeText} from "@tauri-apps/plugin-clipboard-manager";
 import {LazyData, lazyDataParse} from "@/type/lazyDataParse.ts";
-import {sendMessage} from "@/message/sendMessage.ts";
 
 export type ClipBoardTarget<INPUT, OUTPUT> = {
     importData: (data: INPUT) => void | Promise<void>,
@@ -15,14 +14,9 @@ export const useClipBoard = <INPUT, OUTPUT>(target: ClipBoardTarget<INPUT, OUTPU
     const copy = async (lazyData: LazyData<OUTPUT> = target.exportData): Promise<OUTPUT> => {
         const data = await lazyDataParse(lazyData)
         try {
-            try {
-                await writeText(target.stringifyData(data))
-            } catch (e) {
-                await window.navigator.clipboard.writeText(target.stringifyData(data))
-            }
+            await writeText(target.stringifyData(data))
         } catch (e) {
-            sendMessage("copy fail")
-            console.error(e)
+            await window.navigator.clipboard.writeText(target.stringifyData(data))
         }
         return data
     }
@@ -36,26 +30,18 @@ export const useClipBoard = <INPUT, OUTPUT>(target: ClipBoardTarget<INPUT, OUTPU
     const paste = async (): Promise<INPUT | string | undefined> => {
         let text: string | undefined
         try {
-            try {
-                text = await readText()
-            } catch (e) {
-                text = await window.navigator.clipboard.readText()
-            }
-
-            const data = JSON.parse(text)
-            let errors: any
-            if (target.validateInput(data, e => errors = e)) {
-                await target.importData(data)
-                return data
-            } else {
-                sendMessage("paste fail")
-                console.error(errors)
-                return text
-            }
+            text = await readText()
         } catch (e) {
-            sendMessage("paste fail")
-            console.error(e)
-            return
+            text = await window.navigator.clipboard.readText()
+        }
+
+        const data = JSON.parse(text)
+        let errors: any
+        if (target.validateInput(data, e => errors = e)) {
+            await target.importData(data)
+            return data
+        } else {
+            throw errors
         }
     }
 

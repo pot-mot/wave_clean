@@ -114,7 +114,7 @@ const handleQuickInput = (quickInput: QuickInputItem) => {
 </script>
 
 <template>
-    <div class="toolbar top" v-show="!metaMenuOpen">
+    <div class="toolbar top" :class="{open: !metaMenuOpen}">
         <div>
             <button @click="metaMenuOpen = !metaMenuOpen" :class="{enable: metaMenuOpen}">
                 <IconMenu/>
@@ -149,7 +149,9 @@ const handleQuickInput = (quickInput: QuickInputItem) => {
 
     <div
         class="toolbar bottom"
-        v-show="!isVueFlowInputFocused && !metaMenuOpen"
+        :class="{
+            open: !isVueFlowInputFocused && !metaMenuOpen
+        }"
     >
         <div>
             <button @click="toggleSelectAll()">
@@ -183,7 +185,9 @@ const handleQuickInput = (quickInput: QuickInputItem) => {
     <div
         class="toolbar bottom"
         style="gap: 0.5rem;"
-        v-show="isVueFlowInputFocused && !metaMenuOpen"
+        :class="{
+            open: isVueFlowInputFocused && !metaMenuOpen
+        }"
     >
         <button
             v-for="quickInput in metaStore.meta.value.quickInputs"
@@ -257,6 +261,15 @@ const handleQuickInput = (quickInput: QuickInputItem) => {
     line-height: 2rem;
     display: flex;
     justify-content: space-between;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+}
+
+.toolbar.top.open,
+.toolbar.bottom.open {
+    opacity: 1;
+    pointer-events: all;
 }
 
 .toolbar.top {

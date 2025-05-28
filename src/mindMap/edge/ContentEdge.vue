@@ -31,7 +31,7 @@ const innerValue = computed<string>({
 })
 
 const zoom = computed(() => {
-    return  currentViewport.value !== undefined ? 1 / currentViewport.value.zoom : 1
+    return currentViewport.value !== undefined ? 1 / currentViewport.value.zoom : 1
 })
 
 const toolBarWidth = ref(0)
@@ -70,7 +70,7 @@ const markerEnd = computed<string | undefined>(() => {
 
 // 贝塞尔曲线中点控制 input 位置
 const bezierRef = useTemplateRef<InstanceType<typeof BezierEdge>>("bezierRef")
-const curveMidpoint = ref<{ x: number; y: number }>({ x: 0, y: 0 });
+const curveMidpoint = ref<{ x: number; y: number }>({x: 0, y: 0});
 
 // 监听 svg 路径变化
 let pathObserver: MutationObserver | undefined = undefined
@@ -152,12 +152,16 @@ const handleDelete = () => {
         @click.capture="handleClick"
     >
         <defs>
-            <marker id="arrow" class="vue-flow__arrowhead" viewBox="-10 -10 20 20" refX="0" refY="0" markerWidth="12.5"
-                    markerHeight="12.5" markerUnits="strokeWidth" orient="auto-start-reverse">
+            <marker
+                id="arrow" viewBox="-10 -10 20 20" refX="0" refY="0"
+                markerWidth="12.5" markerHeight="12.5" markerUnits="strokeWidth"
+                orient="auto-start-reverse"
+            >
                 <polyline
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     points="-6,-4 2,0 -6,4"
+                    style="transition: fill 0.5s ease;"
                     :style="{
                         fill: selected ? 'var(--primary-color)' : 'var(--border-color)'
                     }"
@@ -168,6 +172,7 @@ const handleDelete = () => {
         <BaseEdge
             ref="bezierRef"
             v-bind.prop="props"
+            style="transition: stroke 0.5s ease;"
             :style="{stroke: selected ? 'var(--primary-color)' : 'var(--border-color)'}"
             :path="bezierPath"
             :marker-start="markerStart"

@@ -38,8 +38,8 @@ const subMenuType = ref<SubMenuType>('file')
         <div class="sub-menu-container">
             <template v-if="isTouchDevice">
                 <div class="sub-menu-select">
-                    <button @click="subMenuType = 'file'">Files</button>
-                    <button @click="subMenuType = 'quick-input'">Quick Input</button>
+                    <button @click="subMenuType = 'file'" :class="{enable: subMenuType === 'file'}">Files</button>
+                    <button @click="subMenuType = 'quick-input'" :class="{enable: subMenuType === 'quick-input'}">Quick Input</button>
                 </div>
 
                 <div class="sub-menu-wrapper">
@@ -95,6 +95,14 @@ const subMenuType = ref<SubMenuType>('file')
     height: 2rem;
     display: grid;
     grid-template-columns: 1fr 1fr;
+}
+
+.sub-menu-select > button {
+    transition: background-color 0.5s ease;
+}
+
+.sub-menu-select > button.enable {
+    background-color: var(--background-color-hover);
 }
 
 .sub-menu-wrapper {

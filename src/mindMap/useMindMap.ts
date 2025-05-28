@@ -1095,22 +1095,37 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
             data: LazyData<MindMapExportData> | undefined = undefined,
             layer: MindMapLayer = global.currentLayer.value,
         ) => {
-            const result = await layer.copy(data)
-            sendMessage("copy")
-            focus()
-            return result
+            try {
+                const result = await layer.copy(data)
+                sendMessage("copy")
+                focus()
+                return result
+            } catch (e) {
+                sendMessage("copy fail")
+                throw e
+            }
         },
         paste: async (layer: MindMapLayer = global.currentLayer.value) => {
-            const result = await layer.paste()
-            sendMessage("paste")
-            focus()
-            return result
+            try {
+                const result = await layer.paste()
+                sendMessage("paste")
+                focus()
+                return result
+            } catch (e) {
+                sendMessage("paste fail")
+                throw e
+            }
         },
         cut: async (layer: MindMapLayer = global.currentLayer.value) => {
-            const result = await layer.cut()
-            sendMessage("cut")
-            focus()
-            return result
+            try {
+                const result = await layer.cut()
+                sendMessage("cut")
+                focus()
+                return result
+            } catch (e) {
+                sendMessage("cut fail")
+                throw e
+            }
         },
 
         set: async (data: MindMapData) => {
