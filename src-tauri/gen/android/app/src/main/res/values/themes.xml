@@ -1,6 +1,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="Theme.wave_clean" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-      <item name="android:statusBarColor">@color/color_primary</item>
+        <item name="android:statusBarColor">@color/black</item>
     </style>
 </resources>
