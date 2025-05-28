@@ -137,8 +137,8 @@ const handleQuickInput = (quickInput: QuickInputItem) => {
         </div>
 
         <div>
-            <button @click="toggleSelectAll()">
-                <IconSelectAll/>
+            <button @click="fitView()">
+                <IconFit/>
             </button>
 
             <button @click="removeSelection()" :class="{disabled: !isSelectionPlural}">
@@ -152,13 +152,15 @@ const handleQuickInput = (quickInput: QuickInputItem) => {
         v-show="!isVueFlowInputFocused && !metaMenuOpen"
     >
         <div>
+            <button @click="toggleSelectAll()">
+                <IconSelectAll/>
+            </button>
+
             <button @click="toggleDefaultMouseAction()" :class="{enable: defaultMouseAction === 'selectionRect'}">
                 <IconDrag v-if="defaultMouseAction === 'panDrag'"/>
                 <IconSelectRect v-else-if="defaultMouseAction === 'selectionRect'"/>
             </button>
-            <button @click="fitView()">
-                <IconFit/>
-            </button>
+
             <button @click="toggleMultiSelect()" :class="{enable: canMultiSelect && defaultMouseAction !== 'selectionRect'}">
                 <IconMultiSelect/>
             </button>
@@ -171,9 +173,7 @@ const handleQuickInput = (quickInput: QuickInputItem) => {
             <button :disabled="!canRedo" @click="redo()" :class="{disabled: !canRedo}">
                 <IconRedo/>
             </button>
-        </div>
 
-        <div>
             <button @click="layersMenuOpen = !layersMenuOpen" :class="{enable: layersMenuOpen}">
                 <IconLayer/>
             </button>
