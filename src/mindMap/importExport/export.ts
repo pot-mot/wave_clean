@@ -14,6 +14,7 @@ const toPureContentNode = (node: GraphNode): ContentNode => {
         position: node.position,
         data: {
             content: node.data.content,
+            color: node.data.color,
         },
     }
 }
@@ -27,7 +28,8 @@ const toPureContentEdge = (edge: GraphEdge): ContentEdge => {
         target: edge.target,
         targetHandle: edge.targetHandle!!,
         data: {
-            content: edge.data.content
+            content: edge.data.content,
+            arrowType: edge.data.arrowType,
         }
     }
 }

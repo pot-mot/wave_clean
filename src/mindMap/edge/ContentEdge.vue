@@ -13,6 +13,7 @@ import IconArrowTwoWay from "@/icons/IconArrowTwoWay.vue";
 import {getPaddingBezierPath} from "@/mindMap/edge/paddingBezierPath.ts";
 import IconArrowOneWayLeft from "@/icons/IconArrowOneWayLeft.vue";
 import IconArrowOneWayRight from "@/icons/IconArrowOneWayRight.vue";
+import {v7 as uuid} from "uuid"
 
 const {updateEdgeData, isSelectionPlural, canMultiSelect, selectEdge, fitRect, remove, currentViewport} = useMindMap()
 
@@ -61,11 +62,13 @@ const bezierPath = computed(() => {
 })
 
 // 两头的 marker 样式
+const currentArrowId = uuid()
+
 const markerStart = computed<string | undefined>(() => {
-    return props.data.arrowType === 'two-way' ? `url(#arrow${props.id})` : undefined
+    return props.data.arrowType === 'two-way' ? `url(#arrow-${currentArrowId})` : undefined
 })
 const markerEnd = computed<string | undefined>(() => {
-    return props.data.arrowType === 'two-way' || props.data.arrowType === 'one-way' ? `url(#arrow${props.id})` : undefined
+    return props.data.arrowType === 'two-way' || props.data.arrowType === 'one-way' ? `url(#arrow-${currentArrowId})` : undefined
 })
 
 // 贝塞尔曲线中点控制 input 位置
@@ -147,13 +150,14 @@ const handleDelete = () => {
 <template>
     <g
         class="content-edge"
+        :class="{selected: props.selected}"
         @mousedown.capture="handleEdgeMouseDown"
         @touchstart.capture="handleEdgeMouseDown"
         @click.capture="handleClick"
     >
         <defs>
             <marker
-                :id="`arrow${props.id}`"
+                :id="`arrow-${currentArrowId}`"
                 viewBox="-10 -10 20 20" refX="0" refY="0"
                 markerWidth="12.5" markerHeight="12.5" markerUnits="strokeWidth"
                 orient="auto-start-reverse"
@@ -162,10 +166,7 @@ const handleDelete = () => {
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     points="-6,-4 2,0 -6,4"
-                    style="transition: fill 0.5s ease;"
-                    :style="{
-                        fill: selected ? 'var(--primary-color)' : 'var(--border-color)'
-                    }"
+                    style="fill: var(--edge-color); transition: fill 0.5s ease;"
                 />
             </marker>
         </defs>
@@ -173,8 +174,7 @@ const handleDelete = () => {
         <BaseEdge
             ref="bezierRef"
             v-bind.prop="props"
-            style="transition: stroke 0.5s ease;"
-            :style="{stroke: selected ? 'var(--primary-color)' : 'var(--border-color)'}"
+            style="stroke: var(--edge-color); transition: stroke 0.5s ease;"
             :path="bezierPath"
             :marker-start="markerStart"
             :marker-end="markerEnd"
@@ -227,6 +227,14 @@ const handleDelete = () => {
 </template>
 
 <style scoped>
+.content-edge {
+    --edge-color: var(--border-color);
+}
+
+.content-edge.selected {
+    --edge-color: var(--primary-color);
+}
+
 .untouchable {
     -webkit-user-select: none;
     -moz-user-select: none;
