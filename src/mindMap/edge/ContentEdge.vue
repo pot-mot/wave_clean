@@ -62,10 +62,10 @@ const bezierPath = computed(() => {
 
 // 两头的 marker 样式
 const markerStart = computed<string | undefined>(() => {
-    return props.data.arrowType === 'two-way' ? "url(#arrow)" : undefined
+    return props.data.arrowType === 'two-way' ? `url(#arrow${props.id})` : undefined
 })
 const markerEnd = computed<string | undefined>(() => {
-    return props.data.arrowType === 'two-way' || props.data.arrowType === 'one-way' ? "url(#arrow)" : undefined
+    return props.data.arrowType === 'two-way' || props.data.arrowType === 'one-way' ? `url(#arrow${props.id})` : undefined
 })
 
 // 贝塞尔曲线中点控制 input 位置
@@ -153,7 +153,8 @@ const handleDelete = () => {
     >
         <defs>
             <marker
-                id="arrow" viewBox="-10 -10 20 20" refX="0" refY="0"
+                :id="`arrow${props.id}`"
+                viewBox="-10 -10 20 20" refX="0" refY="0"
                 markerWidth="12.5" markerHeight="12.5" markerUnits="strokeWidth"
                 orient="auto-start-reverse"
             >
