@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import {Handle, NodeProps} from "@vue-flow/core";
-import {ContentNode, ContentNodeData, ContentNodeHandles, useMindMap} from "@/mindMap/useMindMap.ts";
+import {
+    ContentNode,
+    ContentNodeData,
+    ContentNodeHandles,
+    RawMindMapLayer,
+    useMindMap
+} from "@/mindMap/useMindMap.ts";
 import {computed, ref, useTemplateRef} from "vue";
 import FitSizeBlockInput from "@/input/FitSizeBlockInput.vue";
 import {NodeToolbar} from "@vue-flow/node-toolbar";
@@ -8,14 +14,15 @@ import IconDelete from "@/icons/IconDelete.vue";
 import IconCopy from "@/icons/IconCopy.vue";
 import IconFocus from "@/icons/IconFocus.vue";
 import {useDeviceStore} from "@/store/deviceStore.ts";
-import {blurActiveElement} from "@/mindMap/clickUtils.ts";
+import {blurActiveElement, getMatchedElementOrParent} from "@/mindMap/clickUtils.ts";
 
 const {isTouchDevice} = useDeviceStore()
 
-const {updateNodeData, disableDrag, enableDrag, isSelectionPlural, canMultiSelect, findNode, selectNode,  copy, paste, fitRect, remove, currentLayer} = useMindMap()
+const {updateNodeData, disableDrag, enableDrag, isSelectionPlural, canMultiSelect, findNode, selectNode,  copy, paste, fitRect, remove} = useMindMap()
 
 const props = defineProps<NodeProps & {
     data: ContentNodeData,
+    layer: RawMindMapLayer,
 }>()
 
 const innerValue = computed<string>({
@@ -31,7 +38,7 @@ const inputWidth = ref(0)
 const inputHeight = ref(0)
 
 const handleResize = (size: { width: number, height: number }) => {
-    const node = findNode(props.id)
+    const node = findNode(props.id, props.layer.vueFlow)
     if (node) {
         node.width = size.width
         node.height = size.height
@@ -46,20 +53,20 @@ const inputRef = useTemplateRef<InstanceType<typeof FitSizeBlockInput>>("inputRe
 const handleNodeMouseDown = () => {
     if (isSelectionPlural.value) return
     if (canMultiSelect.value) return
-    selectNode(props.id)
+    selectNode(props.id, props.layer.vueFlow)
 }
 
 const handleNodeWrapperClick = () => {
     if (canMultiSelect.value) return
     if (!props.selected) return
-    disableDrag()
+    disableDrag(props.layer.vueFlow)
     inputDisable.value = false
     inputRef.value?.el?.focus()
 }
 
 const handleBlur = () => {
     inputDisable.value = true
-    enableDrag()
+    enableDrag(props.layer.vueFlow)
 }
 
 const onHandleMouseDown = (e: MouseEvent) => {
@@ -74,23 +81,37 @@ const onHandleMouseDown = (e: MouseEvent) => {
 
 // 复制
 const executeCopy = () => {
-    const node = findNode(props.id)
+    const node = findNode(props.id, props.layer.vueFlow)
     if (node !== undefined) {
         blurActiveElement()
-        copy({nodes: [node] as any as ContentNode[], edges: []})
+        copy({nodes: [node] as any as ContentNode[], edges: []}, props.layer)
 
         // 在复制后的下一次点击中执行粘贴
         if (isTouchDevice.value) {
-            currentLayer.value.vueFlow.vueFlowRef.value?.addEventListener('click', () => {
-                paste()
-            }, {once: true})
+            // 一段时间后移除粘贴动作
+            let timeout = setTimeout(() => {
+                document.documentElement.removeEventListener('click', handleNextClick)
+                clearTimeout(timeout)
+            }, 10000)
+            const handleNextClick = (e: MouseEvent) => {
+                if (e.target instanceof HTMLElement) {
+                    if (getMatchedElementOrParent(e.target, (el) => el.classList.contains("vue-flow__nodes") || el.classList.contains("vue-flow__edges")) !== null) {
+                        return
+                    } else if (getMatchedElementOrParent(e.target, (el) => el.classList.contains("vue-flow__pane")) !== null) {
+                        paste()
+                        document.documentElement.removeEventListener('click', handleNextClick)
+                        clearTimeout(timeout)
+                    }
+                }
+            }
+            document.documentElement.addEventListener('click', handleNextClick)
         }
     }
 }
 
 // 聚焦
 const executeFocus = () => {
-    const node = findNode(props.id)
+    const node = findNode(props.id, props.layer.vueFlow)
     if (node !== undefined) {
         fitRect({
             x: node.position.x,

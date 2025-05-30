@@ -11,9 +11,11 @@ import IconMenu from "@/icons/IconMenu.vue";
 import IconLayer from "@/icons/IconLayer.vue";
 import IconDrag from "@/icons/IconDrag.vue";
 import IconSelectRect from "@/icons/IconSelectRect.vue";
+import IconDownload from "@/icons/IconDownload.vue";
 
 const {
     save,
+    exportAsPng,
 
     canUndo,
     canRedo,
@@ -36,6 +38,10 @@ const layersMenuOpen = ref(false)
         </button>
         <button @click="save()">
             <IconSave/>
+        </button>
+
+        <button @click="exportAsPng()">
+            <IconDownload/>
         </button>
 
         <button :disabled="!canUndo" @click="undo()" :class="{disabled: !canUndo}">
@@ -122,6 +128,8 @@ const layersMenuOpen = ref(false)
     display: flex;
     justify-content: space-around;
     border-bottom: var(--border);
+    max-width: 100%;
+    overflow-x: auto;
 }
 
 .toolbar.top-left {

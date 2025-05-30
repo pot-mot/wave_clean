@@ -19,11 +19,13 @@ import IconDelete from "@/icons/IconDelete.vue";
 import IconMultiSelect from "@/icons/IconMultiSelect.vue";
 import {QuickInputItem, useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
 import IconSelectAll from "@/icons/IconSelectAll.vue";
+import IconDownload from "@/icons/IconDownload.vue";
 
 const metaStore = useMindMapMetaStore()
 
 const {
     save,
+    exportAsPng,
 
     currentLayer,
 
@@ -121,6 +123,10 @@ const handleQuickInput = (quickInput: QuickInputItem) => {
             </button>
             <button @click="save()">
                 <IconSave/>
+            </button>
+
+            <button @click="exportAsPng()">
+                <IconDownload/>
             </button>
         </div>
 
@@ -229,7 +235,7 @@ const handleQuickInput = (quickInput: QuickInputItem) => {
 
 .toolbar button {
     height: 100%;
-    padding: 0 1rem;
+    padding: 0 0.6rem;
     background-color: var(--background-color);
     border: none;
     cursor: pointer;
@@ -320,7 +326,7 @@ const handleQuickInput = (quickInput: QuickInputItem) => {
     top: 0;
     left: 0;
     height: 100%;
-    width: 20rem;
+    width: min(80vw, 20rem);
     border-right: var(--border);
     border-color: var(--background-color-hover);
     transform: translateX(-100%);

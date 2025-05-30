@@ -129,6 +129,7 @@ const handleRename = (key: string, e: Event) => {
     height: 100%;
     border-radius: 0;
     padding: 0 0.5rem;
+    width: 100%;
 }
 
 .new-file-button {

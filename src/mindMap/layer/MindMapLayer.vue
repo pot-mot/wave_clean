@@ -40,11 +40,11 @@ initLayer(props.layer)
         :selection-key-code="false"
     >
         <template #node-CONTENT_NODE="nodeProps">
-            <ContentNode v-bind="nodeProps"/>
+            <ContentNode v-bind="nodeProps" :layer="layer"/>
         </template>
 
         <template #edge-CONTENT_EDGE="edgeProps">
-            <ContentEdge v-bind="edgeProps"/>
+            <ContentEdge v-bind="edgeProps" :layer="layer"/>
         </template>
     </VueFlow>
 </template>

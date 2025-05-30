@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import {computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef} from "vue";
-import {BaseEdge, BezierEdge, EdgeProps} from "@vue-flow/core";
-import {ContentEdgeData, useMindMap} from "@/mindMap/useMindMap.ts";
+import {computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch} from "vue";
+import {BaseEdge, EdgeProps} from "@vue-flow/core";
+import {ContentEdgeData, RawMindMapLayer, SizePositionEdgePartial, useMindMap} from "@/mindMap/useMindMap.ts";
 import FitSizeBlockInput from "@/input/FitSizeBlockInput.vue";
 import {useEdgeUpdaterTouch} from "@/mindMap/touchToMouse/useEdgeUpdaterTouch.ts";
 import AutoResizeForeignObject from "@/mindMap/svg/AutoResizeForeignObject.vue";
@@ -14,12 +14,14 @@ import {getPaddingBezierPath} from "@/mindMap/edge/paddingBezierPath.ts";
 import IconArrowOneWayLeft from "@/icons/IconArrowOneWayLeft.vue";
 import IconArrowOneWayRight from "@/icons/IconArrowOneWayRight.vue";
 import {v7 as uuid} from "uuid"
+import {debounce, throttle} from "lodash";
 
-const {updateEdgeData, isSelectionPlural, canMultiSelect, selectEdge, fitRect, remove, currentViewport} = useMindMap()
+const {updateEdgeData, isSelectionPlural, canMultiSelect, findEdge, selectEdge, fitRect, remove, currentViewport} = useMindMap()
 
 const props = defineProps<EdgeProps & {
     id: string,
     data: ContentEdgeData,
+    layer: RawMindMapLayer,
 }>()
 
 const innerValue = computed<string>({
@@ -31,6 +33,37 @@ const innerValue = computed<string>({
     }
 })
 
+const inputWidth = ref(0)
+const inputHeight = ref(0)
+
+const handleInputResize = (size: { width: number, height: number }) => {
+    inputWidth.value = size.width
+    inputHeight.value = size.height
+}
+
+const inputShow = ref(false)
+const inputRef = useTemplateRef<InstanceType<typeof FitSizeBlockInput>>("inputRef")
+
+const handleEdgeMouseDown = () => {
+    if (isSelectionPlural.value) return
+    if (canMultiSelect.value) return
+    selectEdge(props.id, props.layer.vueFlow)
+}
+
+const handleClick = () => {
+    if (canMultiSelect.value) return
+    if (!props.selected) return
+    inputShow.value = true
+    nextTick(() => {
+        inputRef.value?.el?.focus()
+    })
+}
+
+const handleBlur = () => {
+    inputShow.value = false
+}
+
+// 工具栏
 const zoom = computed(() => {
     return currentViewport.value !== undefined ? 1 / currentViewport.value.zoom : 1
 })
@@ -42,17 +75,6 @@ const handleToolBarResize = (size: { width: number, height: number }) => {
     toolBarWidth.value = size.width
     toolBarHeight.value = size.height
 }
-
-const inputWidth = ref(0)
-const inputHeight = ref(0)
-
-const handleInputResize = (size: { width: number, height: number }) => {
-    inputWidth.value = size.width
-    inputHeight.value = size.height
-}
-
-const inputShow = ref(false)
-const inputRef = useTemplateRef<InstanceType<typeof FitSizeBlockInput>>("inputRef")
 
 useEdgeUpdaterTouch(props.id)
 
@@ -72,17 +94,55 @@ const markerEnd = computed<string | undefined>(() => {
 })
 
 // 贝塞尔曲线中点控制 input 位置
-const bezierRef = useTemplateRef<InstanceType<typeof BezierEdge>>("bezierRef")
+const bezierRef = useTemplateRef<InstanceType<typeof BaseEdge>>("bezierRef")
 const curveMidpoint = ref<{ x: number; y: number }>({x: 0, y: 0});
 
 // 监听 svg 路径变化
 let pathObserver: MutationObserver | undefined = undefined
 
+// 计算贝塞尔曲线中点
+const calculateMidPoint = (path: SVGPathElement) => {
+    curveMidpoint.value = path.getPointAtLength(path.getTotalLength() / 2)
+}
+
+// 同步 edge size position
+const boundingClientRect = ref<DOMRect>()
+
+watch(() => [boundingClientRect.value, inputWidth.value, inputHeight.value], debounce(() => {
+    const edge = findEdge(props.id, props.layer.vueFlow)
+    if (edge !== undefined && boundingClientRect.value !== undefined) {
+        let {width, height, top, left} = boundingClientRect.value
+        if (inputWidth.value > width) {
+            left -= (inputWidth.value - width) / 2
+            width = inputWidth.value
+        }
+        if (inputHeight.value > height) {
+            top -= (inputHeight.value - height) / 2
+            height = inputHeight.value
+        }
+
+        const sizePositionData: SizePositionEdgePartial["data"] = {
+            position: {left, top},
+            size: {width, height}
+        }
+
+        updateEdgeData(props.id, sizePositionData)
+    }
+}, 500), {immediate: true})
+
+// 计算 edge 外部尺寸
+const calculateBoundingBox = throttle((path: SVGPathElement) => {
+    boundingClientRect.value = path.getBoundingClientRect()
+}, 500)
+
 onMounted(() => {
     const path = bezierRef.value?.$el?.nextElementSibling as SVGPathElement | undefined
     if (path === undefined) return
+    calculateMidPoint(path)
+    calculateBoundingBox(path)
     pathObserver = new MutationObserver(() => {
-        curveMidpoint.value = path.getPointAtLength(path.getTotalLength() / 2)
+        calculateMidPoint(path)
+        calculateBoundingBox(path)
     })
     pathObserver.observe(path, {
         attributes: true,
@@ -96,27 +156,8 @@ onBeforeUnmount(() => {
     pathObserver?.disconnect()
 })
 
-const handleEdgeMouseDown = () => {
-    if (isSelectionPlural.value) return
-    if (canMultiSelect.value) return
-    selectEdge(props.id)
-}
-
-const handleClick = () => {
-    if (canMultiSelect.value) return
-    if (!props.selected) return
-    inputShow.value = true
-    nextTick(() => {
-        inputRef.value?.el?.focus()
-    })
-}
-
-const handleBlur = () => {
-    inputShow.value = false
-}
-
 // 聚焦
-const handleFocus = () => {
+const executeFocus = () => {
     fitRect({
         x: curveMidpoint.value.x - inputWidth.value / 2,
         y: curveMidpoint.value.y - inputHeight.value / 2,
@@ -126,7 +167,7 @@ const handleFocus = () => {
 }
 
 // 切换箭头类型
-const handleToggleArrowType = () => {
+const executeToggleArrowType = () => {
     switch (props.data.arrowType) {
         case 'one-way':
             updateEdgeData(props.id, {arrowType: 'two-way'})
@@ -141,7 +182,7 @@ const handleToggleArrowType = () => {
 }
 
 // 删除
-const handleDelete = () => {
+const executeDelete = () => {
     blurActiveElement()
     remove({edges: [props.id]})
 }
@@ -205,11 +246,11 @@ const handleDelete = () => {
             :transform="`translate(${curveMidpoint.x - (toolBarWidth * zoom) / 2} ${curveMidpoint.y - inputHeight / 2 - (toolBarHeight + 10) * zoom}) scale(${zoom})`"
         >
             <div class="toolbar">
-                <button @mousedown.capture.prevent.stop="handleFocus">
+                <button @mousedown.capture.prevent.stop="executeFocus">
                     <IconFocus/>
                 </button>
 
-                <button @mousedown.capture.prevent.stop="handleToggleArrowType">
+                <button @mousedown.capture.prevent.stop="executeToggleArrowType">
                     <template v-if="data.arrowType === 'one-way'">
                         <IconArrowOneWayLeft v-if="sourceX < targetX"/>
                         <IconArrowOneWayRight v-else/>
@@ -218,7 +259,7 @@ const handleDelete = () => {
                     <IconArrowNone v-else/>
                 </button>
 
-                <button @mousedown.capture.prevent.stop="handleDelete">
+                <button @mousedown.capture.prevent.stop="executeDelete">
                     <IconDelete/>
                 </button>
             </div>

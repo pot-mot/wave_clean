@@ -115,5 +115,12 @@ const subMenuType = ref<SubMenuType>('file')
     justify-content: space-around;
     height: 2rem;
     line-height: 2rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 1rem;
+}
+
+.theme-menu > span {
+    white-space: nowrap;
 }
 </style>

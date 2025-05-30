@@ -69,13 +69,16 @@ const handleKeyDown = async (e: KeyboardEvent) => {
     <div
         tabindex="-1"
         @keydown="handleKeyDown"
-        style="width: 100%; height: 100%;"
+        id="mind-map-wrapper"
+        style="width: 100%; height: 100%; position: relative;"
     >
         <BackGround :viewport="currentLayer.vueFlow.viewport.value"/>
 
-        <template v-for="layer in layers" :key="layer.id">
-            <MindMapLayer :layer="layer"/>
-        </template>
+        <MindMapLayer
+            v-for="layer in layers"
+            :key="layer.id"
+            :layer="layer"
+        />
 
         <template v-if="isTouchDevice">
             <MobileBar/>

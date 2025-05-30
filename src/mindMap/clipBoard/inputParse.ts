@@ -1,5 +1,5 @@
 import {createSchemaValidator} from "@/type/typeGuard.ts";
-import {ContentEdge, ContentNode, MindMapData} from "@/mindMap/useMindMap.ts";
+import {ContentEdge, ContentNode, MindMapData, SizePositionEdgePartial} from "@/mindMap/useMindMap.ts";
 import type {JSONSchemaType} from "ajv/lib/types/json-schema.ts";
 import type {MindMapImportData} from "@/mindMap/importExport/import.ts";
 
@@ -23,6 +23,46 @@ const ContentNode_JsonSchema: JSONSchemaType<ContentNode> = {
 
 export const validateContentNode = createSchemaValidator<ContentNode>(ContentNode_JsonSchema)
 
+const SizePositionEdgePartial_JsonSchema: JSONSchemaType<SizePositionEdgePartial> = {
+    type: "object",
+    required: ["data"],
+    properties: {
+        data: {
+            type: "object",
+            properties: {
+                size: {
+                    type: "object",
+                    required: ["width", "height"],
+                    properties: {
+                        width: {
+                            type: "number"
+                        },
+                        height: {
+                            type: "number"
+                        }
+                    },
+                    nullable: true,
+                },
+                position: {
+                    type: "object",
+                    required: ["top", "left"],
+                    properties: {
+                        left: {
+                            type: "number"
+                        },
+                        top: {
+                            type: "number"
+                        }
+                    },
+                    nullable: true,
+                }
+            }
+        }
+    }
+}
+
+export const validateSizePositionEdgePartial = createSchemaValidator<SizePositionEdgePartial>(SizePositionEdgePartial_JsonSchema)
+
 const ContentEdge_JsonSchema: JSONSchemaType<ContentEdge> = {
     type: "object",
     required: ["id", "type", "source", "target", "sourceHandle", "targetHandle", "data"],
@@ -36,6 +76,32 @@ const ContentEdge_JsonSchema: JSONSchemaType<ContentEdge> = {
         data: {
             type: "object",
             properties: {
+                size: {
+                    type: "object",
+                    required: ["width", "height"],
+                    properties: {
+                        width: {
+                            type: "number"
+                        },
+                        height: {
+                            type: "number"
+                        }
+                    },
+                    nullable: true,
+                },
+                position: {
+                    type: "object",
+                    required: ["top", "left"],
+                    properties: {
+                        left: {
+                            type: "number"
+                        },
+                        top: {
+                            type: "number"
+                        }
+                    },
+                    nullable: true,
+                },
                 content: {type: "string"},
                 arrowType: {
                     type: "string",

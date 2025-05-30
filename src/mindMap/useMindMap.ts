@@ -16,7 +16,7 @@ import {blurActiveElement, judgeTargetIsInteraction} from "@/mindMap/clickUtils.
 import {jsonSortPropStringify} from "@/json/jsonStringify.ts";
 import {MindMapImportData, prepareImportIntoMindMap} from "@/mindMap/importExport/import.ts";
 import {exportMindMap, exportMindMapSelection, MindMapExportData} from "@/mindMap/importExport/export.ts";
-import {validateMindMapImportData} from "@/mindMap/clipBoard/inputParse.ts";
+import {validateMindMapImportData, validateSizePositionEdgePartial} from "@/mindMap/clipBoard/inputParse.ts";
 import {checkFullConnection, FullConnection, reverseConnection} from "@/mindMap/edge/connection.ts";
 import {useMindMapHistory} from "@/mindMap/history/MindMapHistory.ts";
 import {CustomClipBoard, unimplementedClipBoard, useClipBoard} from "@/clipBoard/useClipBoard.ts";
@@ -26,6 +26,7 @@ import {LazyData} from "@/type/lazyDataParse.ts";
 import {useDeviceStore} from "@/store/deviceStore.ts";
 import {v7 as uuid} from "uuid"
 import {sendMessage} from "@/message/sendMessage.ts";
+import {exportAsPng} from "@/file/htmlExport.ts";
 
 export type MindMapGlobal = {
     zIndexIncrement: number,
@@ -104,11 +105,28 @@ export type ContentNode = Pick<Node, 'id' | 'position'> & {
 
 export const ContentNodeHandles: Position[] = [Position.Left, Position.Right, Position.Top, Position.Bottom] as const
 
+export type SizePositionEdge = {
+    data: {
+        position: {
+            left: number,
+            top: number,
+        },
+        size: {
+            width: number,
+            height: number,
+        }
+    }
+}
+
+export type SizePositionEdgePartial = {
+    data: Partial<SizePositionEdge["data"]>
+}
+
 export const CONTENT_EDGE_TYPE = "CONTENT_EDGE" as const
 export type ContentEdgeData = {
     content: string,
     arrowType?: 'one-way' | 'two-way' | 'none' | undefined
-}
+} & SizePositionEdgePartial["data"]
 export type ContentEdge = Pick<Edge, 'id' | 'source' | 'target'> & {
     data: ContentEdgeData,
     type: typeof CONTENT_EDGE_TYPE,
@@ -314,9 +332,9 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
         history.executeCommand("layer:swapped", {oldIndex, newIndex})
     }
 
-    const addNode = (position: XYPosition) => {
+    const addNode = (position: XYPosition, layerId: string = currentLayerId.value) => {
         return history.executeCommand("node:add", {
-            layerId: currentLayerId.value,
+            layerId,
             node: {
                 id: createNodeId(),
                 position,
@@ -334,14 +352,14 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
             vueFlow.findEdge(createEdgeId(reverseConnection(connection))) !== undefined
     }
 
-    const addEdge = (connection: Connection) => {
+    const addEdge = (connection: Connection, layerId: string = currentLayerId.value) => {
         if (checkConnectionExist(connection)) return
         if (!checkFullConnection(connection)) return
 
         const id = createEdgeId(connection)
 
         history.executeCommand('edge:add', {
-            layerId: currentLayerId.value,
+            layerId,
             edge: {
                 ...connection,
                 id,
@@ -1031,15 +1049,6 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
             focus()
         },
 
-        findNode: (id: string, layer: MindMapLayer = global.currentLayer.value) => {
-            return layer.vueFlow.findNode(id)
-        },
-        findEdge: (id: string, layer: MindMapLayer = global.currentLayer.value) => {
-            return layer.vueFlow.findEdge(id)
-        },
-        addNode,
-        addEdge,
-
         getSelection,
         removeSelection,
         remove,
@@ -1068,27 +1077,34 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
         disableDrag,
         enableDrag,
 
-        selectNode: (id: string) => {
-            const vueFlow = getCurrentVueFlow()
+        addNode,
+        findNode: (id: string, vueFlow: VueFlowStore = getCurrentVueFlow()) => {
+            return vueFlow.findNode(id)
+        },
+        selectNode: (id: string, vueFlow: VueFlowStore = getCurrentVueFlow()) => {
             const node = vueFlow.findNode(id)
             if (node !== undefined) {
                 node.zIndex = global.zIndexIncrement++
                 vueFlow.addSelectedNodes([node])
             }
         },
-        updateNodeData: (id: string, data: Partial<ContentNodeData>) => {
-            history.executeCommand('node:data:change', {layerId: currentLayerId.value, id, data})
+        updateNodeData: (id: string, data: Partial<ContentNodeData>, layerId: string = currentLayerId.value) => {
+            history.executeCommand('node:data:change', {layerId, id, data})
         },
-        selectEdge: (id: string) => {
-            const vueFlow = getCurrentVueFlow()
+
+        addEdge,
+        findEdge: (id: string, vueFlow: VueFlowStore = getCurrentVueFlow()) => {
+            return vueFlow.findEdge(id)
+        },
+        selectEdge: (id: string, vueFlow: VueFlowStore = getCurrentVueFlow()) => {
             const edge = vueFlow.findEdge(id)
             if (edge !== undefined) {
                 edge.zIndex = global.zIndexIncrement++
                 vueFlow.addSelectedEdges([edge])
             }
         },
-        updateEdgeData: (id: string, data: Partial<ContentEdgeData>) => {
-            history.executeCommand('edge:data:change', {layerId: currentLayerId.value, id, data})
+        updateEdgeData: (id: string, data: Partial<ContentEdgeData>, layerId: string = currentLayerId.value) => {
+            history.executeCommand('edge:data:change', {layerId, id, data})
         },
 
         copy: async (
@@ -1152,7 +1168,129 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
         },
         save: async () => {
             await useMindMapMetaStore().save()
+        },
+
+        exportAsPng: async (padding: number = 32) => {
+            const removeTransitionStyle = document.createElement('style')
+            removeTransitionStyle.textContent = `* {
+    transition: none !important;
+    -webkit-transition: none !important;
+    -moz-transition: none !important;
+    -o-transition: none !important;
+  }`
+            document.head.appendChild(removeTransitionStyle)
+
+            cleanSelection()
+            blurActiveElement()
+
+            await nextTick()
+
+            document.head.removeChild(removeTransitionStyle)
+
+            const el = document.createElement('div')
+            el.style.position = 'absolute'
+            el.style.left = "0"
+            el.style.top = "0"
+
+            let left = Infinity
+            let top = Infinity
+            let right = -Infinity
+            let bottom = -Infinity
+
+            const nodeEdgeEls: HTMLElement[] = []
+
+            for (const layer of global.layers) {
+                if (layer.visible && layer.vueFlow.vueFlowRef.value) {
+                    for (const nodeContainer of layer.vueFlow.vueFlowRef.value.querySelectorAll('.vue-flow__nodes')) {
+                        const clone = nodeContainer.cloneNode(true) as HTMLElement
+                        nodeEdgeEls.push(clone)
+                    }
+                    for (const edgeContainer of layer.vueFlow.vueFlowRef.value.querySelectorAll('.vue-flow__edges')) {
+                        const clone = edgeContainer.cloneNode(true) as HTMLElement
+                        nodeEdgeEls.push(clone)
+                    }
+                    const rect = getCombinedBounds(layer.vueFlow)
+                    if (rect) {
+                        left = Math.min(left, rect.left)
+                        top = Math.min(top, rect.top)
+                        right = Math.max(right, rect.right)
+                        bottom = Math.max(bottom, rect.bottom)
+                    }
+                }
+            }
+
+            if (left === Infinity || top === Infinity || right === -Infinity || bottom === -Infinity) {
+                sendMessage("cannot export empty")
+                return;
+            }
+
+            const width = Math.max(right - left + padding * 2, 1)
+            const height = Math.max(bottom - top + padding * 2, 1)
+
+            el.style.width = `${width}px`
+            el.style.height = `${height}px`
+
+            for (const nodeEdgeEl of nodeEdgeEls) {
+                nodeEdgeEl.style.position = 'absolute'
+                nodeEdgeEl.style.left = `${-left + padding}px`
+                nodeEdgeEl.style.top = `${-top + padding}px`
+                nodeEdgeEl.style.width = `${width}px`
+                nodeEdgeEl.style.height = `${height}px`
+                nodeEdgeEl.style.overflow = 'visible'
+            }
+
+            el.append(...nodeEdgeEls)
+
+            document.documentElement.appendChild(el)
+
+            await exportAsPng(el);
+
+            el.remove()
         }
+    }
+}
+
+const getCombinedBounds = (vueFlow: VueFlowStore) => {
+    const nodes = vueFlow.getNodes.value
+    const edges = vueFlow.getEdges.value
+
+    if (nodes.length === 0 && edges.length === 0) return;
+
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+
+    for (const node of nodes) {
+        const { x, y } = node.position;
+        const width = node.dimensions.width;
+        const height = node.dimensions.height;
+
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x + width);
+        maxY = Math.max(maxY, y + height);
+    }
+
+    for (const edge of edges) {
+        if (validateSizePositionEdgePartial(edge)) {
+            const left = edge.data.position?.left ?? 0
+            const top = edge.data.position?.top ?? 0
+            const width = edge.data.size?.width ?? 0
+            const height = edge.data.size?.height ?? 0
+
+            minX = Math.min(minX, left);
+            minY = Math.min(minY, top);
+            maxX = Math.max(maxX, left + width);
+            maxY = Math.max(maxY, top + height);
+        }
+    }
+
+    return {
+        left: minX,
+        top: minY,
+        right: maxX,
+        bottom: maxY,
     }
 }
 

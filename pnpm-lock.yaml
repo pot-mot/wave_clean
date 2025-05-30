@@ -29,6 +29,9 @@ importers:
       ajv:
         specifier: ^8.17.1
         version: 8.17.1
+      html-to-image:
+        specifier: ^1.11.11
+        version: 1.11.11
       immer:
         specifier: ^10.1.1
         version: 10.1.1
@@ -1214,6 +1217,9 @@ packages:
 
   html-escaper@2.0.2:
     resolution: {integrity: sha512-H2iMtd0I4Mt5eYiapRdIDjp+XzelXQ0tFE4JS7YFwFevXXMmOp9myNrUvCg0D6ws8iqkRPBfKHgbwig1SmlLfg==}
+
+  html-to-image@1.11.11:
+    resolution: {integrity: sha512-9gux8QhvjRO/erSnDPv28noDZcPZmYE7e1vFsBLKLlRlKDSqNJYebj6Qz1TGd5lsRV+X+xYyjCKjuZdABinWjA==}
 
   human-signals@2.1.0:
     resolution: {integrity: sha512-B4FFZ6q/T2jhhksgkbEW3HBvWIfDW85snkQgawt07S7J5QXTk6BkNV+0yAeZrM5QpMAdYlocGoljn0sJ/WQkFw==}
@@ -3118,6 +3124,8 @@ snapshots:
   he@1.2.0: {}
 
   html-escaper@2.0.2: {}
+
+  html-to-image@1.11.11: {}
 
   human-signals@2.1.0: {}
 
