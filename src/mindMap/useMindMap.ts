@@ -1019,6 +1019,125 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
     }
 
     const exportFileType = ref<ExportType>("PNG")
+    // 判断当前是否正在下载
+    let isDownload = false
+
+    const exportFile = async (type: ExportType = exportFileType.value, padding: number = 32) => {
+        if (isDownload) {
+            sendMessage("downloading now, please wait")
+            return
+        }
+
+        isDownload = true
+
+        const id = `export-container-${uuid()}`
+
+        const removeTransitionStyle = document.createElement('style')
+        removeTransitionStyle.textContent = `
+* {
+    transition: none !important;
+    -webkit-transition: none !important;
+    -moz-transition: none !important;
+    -o-transition: none !important;
+}
+
+:root {
+    overflow: hidden !important;
+}
+
+#${id} {
+    background-color: var(--background-color);
+    z-index: -100;
+}
+
+#${id} input,
+#${id} textarea {
+    pointer-events: all !important;
+    cursor: text !important;
+}  
+`
+        document.head.appendChild(removeTransitionStyle)
+
+        try {
+            cleanSelection()
+            blurActiveElement()
+
+            await nextTick()
+
+            const el = document.createElement('div')
+            el.id = id
+            el.style.position = 'absolute'
+            el.style.left = "0"
+            el.style.top = "0"
+
+            let left = Infinity
+            let top = Infinity
+            let right = -Infinity
+            let bottom = -Infinity
+
+            const nodeEdgeEls: HTMLElement[] = []
+
+            for (const layer of global.layers) {
+                if (layer.visible && layer.vueFlow.vueFlowRef.value) {
+                    for (const edgeContainer of layer.vueFlow.vueFlowRef.value.querySelectorAll('.vue-flow__edges')) {
+                        const clone = edgeContainer.cloneNode(true) as HTMLElement
+                        nodeEdgeEls.push(clone)
+                    }
+                    for (const nodeContainer of layer.vueFlow.vueFlowRef.value.querySelectorAll('.vue-flow__nodes')) {
+                        const clone = nodeContainer.cloneNode(true) as HTMLElement
+                        nodeEdgeEls.push(clone)
+                    }
+                    const rect = getCombinedBounds(layer.vueFlow)
+                    if (rect) {
+                        left = Math.min(left, rect.left)
+                        top = Math.min(top, rect.top)
+                        right = Math.max(right, rect.right)
+                        bottom = Math.max(bottom, rect.bottom)
+                    }
+                }
+            }
+
+            if (left === Infinity || top === Infinity || right === -Infinity || bottom === -Infinity) {
+                sendMessage("cannot export empty")
+                return;
+            }
+
+            const width = Math.max(right - left + padding * 2, 1)
+            const height = Math.max(bottom - top + padding * 2, 1)
+
+            el.style.width = `${width}px`
+            el.style.height = `${height}px`
+            el.style.overflow = 'hidden'
+
+            for (const nodeEdgeEl of nodeEdgeEls) {
+                nodeEdgeEl.style.position = 'absolute'
+                nodeEdgeEl.style.left = `${-left + padding}px`
+                nodeEdgeEl.style.top = `${-top + padding}px`
+                nodeEdgeEl.style.overflow = 'visible'
+            }
+
+            el.append(...nodeEdgeEls)
+
+            document.body.appendChild(el)
+
+            sendMessage("download start")
+            const savePath = await exportAs(el,  `${useMindMapMetaStore().currentMindMap.value?.name ?? 'untitled'}-${new Date().getTime()}`, type)
+
+            el.remove()
+
+            if (!savePath) {
+                sendMessage("export fail")
+            } else {
+                sendMessage(`export success, file in ${savePath}`)
+            }
+        } catch(e) {
+            console.error(e)
+            sendMessage("export fail")
+        } finally {
+            document.head.removeChild(removeTransitionStyle)
+            isDownload = false
+        }
+    }
 
     return {
         layers: global.layers,
@@ -1172,114 +1291,7 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
         },
 
         exportFileType,
-        exportFile: async (type: ExportType = exportFileType.value, padding: number = 32) => {
-            const id = `export-container-${uuid()}`
-
-            const removeTransitionStyle = document.createElement('style')
-            removeTransitionStyle.textContent = `
-* {
-    transition: none !important;
-    -webkit-transition: none !important;
-    -moz-transition: none !important;
-    -o-transition: none !important;
-}
-
-:root {
-    overflow: hidden !important;
-}
-
-#${id} {
-    background-color: var(--background-color);
-    z-index: -100;
-}
-
-#${id} input,
-#${id} textarea {
-    pointer-events: all !important;
-    cursor: text !important;
-}  
-`
-            document.head.appendChild(removeTransitionStyle)
-
-            try {
-                cleanSelection()
-                blurActiveElement()
-
-                await nextTick()
-
-                const el = document.createElement('div')
-                el.id = id
-                el.style.position = 'absolute'
-                el.style.left = "0"
-                el.style.top = "0"
-
-                let left = Infinity
-                let top = Infinity
-                let right = -Infinity
-                let bottom = -Infinity
-
-                const nodeEdgeEls: HTMLElement[] = []
-
-                for (const layer of global.layers) {
-                    if (layer.visible && layer.vueFlow.vueFlowRef.value) {
-                        for (const edgeContainer of layer.vueFlow.vueFlowRef.value.querySelectorAll('.vue-flow__edges')) {
-                            const clone = edgeContainer.cloneNode(true) as HTMLElement
-                            nodeEdgeEls.push(clone)
-                        }
-                        for (const nodeContainer of layer.vueFlow.vueFlowRef.value.querySelectorAll('.vue-flow__nodes')) {
-                            const clone = nodeContainer.cloneNode(true) as HTMLElement
-                            nodeEdgeEls.push(clone)
-                        }
-                        const rect = getCombinedBounds(layer.vueFlow)
-                        if (rect) {
-                            left = Math.min(left, rect.left)
-                            top = Math.min(top, rect.top)
-                            right = Math.max(right, rect.right)
-                            bottom = Math.max(bottom, rect.bottom)
-                        }
-                    }
-                }
-
-                if (left === Infinity || top === Infinity || right === -Infinity || bottom === -Infinity) {
-                    sendMessage("cannot export empty")
-                    return;
-                }
-
-                const width = Math.max(right - left + padding * 2, 1)
-                const height = Math.max(bottom - top + padding * 2, 1)
-
-                el.style.width = `${width}px`
-                el.style.height = `${height}px`
-                el.style.overflow = 'hidden'
-
-                for (const nodeEdgeEl of nodeEdgeEls) {
-                    nodeEdgeEl.style.position = 'absolute'
-                    nodeEdgeEl.style.left = `${-left + padding}px`
-                    nodeEdgeEl.style.top = `${-top + padding}px`
-                    nodeEdgeEl.style.overflow = 'visible'
-                }
-
-                el.append(...nodeEdgeEls)
-
-                document.body.appendChild(el)
-
-                sendMessage("download start")
-                const savePath = await exportAs(el,  `${useMindMapMetaStore().currentMindMap.value?.name ?? 'untitled'}-${new Date().getTime()}`, type)
-
-                el.remove()
-
-                if (savePath === undefined) {
-                    sendMessage("export fail")
-                } else {
-                    sendMessage(`export success, file in ${savePath}`)
-                }
-            } catch(e) {
-                console.error(e)
-                sendMessage("export fail")
-            } finally {
-                document.head.removeChild(removeTransitionStyle)
-            }
-        }
+        exportFile,
     }
 }
 
