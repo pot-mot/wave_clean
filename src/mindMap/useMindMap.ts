@@ -1057,6 +1057,7 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
 }  
 `
         document.head.appendChild(removeTransitionStyle)
+        let el: HTMLElement | null = null
 
         try {
             cleanSelection()
@@ -1064,7 +1065,7 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
 
             await nextTick()
 
-            const el = document.createElement('div')
+            el = document.createElement('div')
             el.id = id
             el.style.position = 'absolute'
             el.style.left = "0"
@@ -1123,17 +1124,16 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
             sendMessage("download start")
             const savePath = await exportAs(el,  `${useMindMapMetaStore().currentMindMap.value?.name ?? 'untitled'}-${new Date().getTime()}`, type)
 
-            el.remove()
-
             if (!savePath) {
                 sendMessage("export fail")
             } else {
                 sendMessage(`export success, file in ${savePath}`)
             }
-        } catch(e) {
+        } catch (e) {
             console.error(e)
             sendMessage("export fail")
         } finally {
+            el?.remove()
             document.head.removeChild(removeTransitionStyle)
             isDownload = false
         }

@@ -44,12 +44,12 @@ type DownloadOptions = {
  * @param filename
  */
 const downloadFileUsingAnchor = (dataUrl: string, filename: string) => {
-    const a = document.createElement('a');
-    a.href = dataUrl;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    const a = document.createElement('a')
+    a.href = dataUrl
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
 }
 
 /**
@@ -84,8 +84,8 @@ export const downloadImageFile = async (dataUrl: string, options: DownloadOption
     const data = new Uint8Array(arrayBuffer)
 
     try {
-        return downloadFile(data, filename)
-    } catch {
+        return await downloadFile(data, filename)
+    } catch (e) {
         downloadFileUsingAnchor(dataUrl, filename)
         return "download path"
     }
@@ -103,8 +103,8 @@ const downloadSvgFile = async (dataUrl: string, options: DownloadOptions): Promi
     const data = encoder.encode(decodedSvgContent);
 
     try {
-        return downloadFile(data, filename)
-    } catch {
+        return await downloadFile(data, filename)
+    } catch (e) {
         downloadFileUsingAnchor(dataUrl, filename)
         return "download path"
     }

@@ -8,7 +8,9 @@ const {exportFileType, exportFile} = useMindMap()
 
 <template>
     <div class="download-select-wrapper">
-        <IconDownload class="icon" @click="exportFile()"/>
+        <button class="download-button" @click="exportFile()">
+            <IconDownload class="icon"/>
+        </button>
 
         <select v-model="exportFileType" @change="exportFile()">
             <option v-for="type in ExportType_CONSTANT">
@@ -20,23 +22,22 @@ const {exportFileType, exportFile} = useMindMap()
 
 <style scoped>
 .download-select-wrapper {
-    position: relative;
     display: flex;
+}
+
+.download-select-wrapper > .download-button {
+    padding: 0 0.3rem;
+    border: none;
+    height: 100%;
     background-color: var(--background-color);
     transition: background-color 0.5s ease;
 }
 
-.download-select-wrapper:hover {
+.download-select-wrapper > .download-button:hover {
     background-color: var(--background-color-hover);
 }
 
-.download-select-wrapper > .icon {
-    position: relative;
-    top: 50%;
-    transform: translateY(-50%);
-}
-
-.download-select-wrapper select {
+.download-select-wrapper > select {
     border: none;
     cursor: pointer;
     background-color: var(--background-color);
@@ -44,7 +45,7 @@ const {exportFileType, exportFile} = useMindMap()
     font-size: 0.8rem;
 }
 
-.download-select-wrapper select:hover {
+.download-select-wrapper > select:hover {
     background-color: var(--background-color-hover);
 }
 </style>
