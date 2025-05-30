@@ -133,7 +133,8 @@ watch(() => [boundingClientRect.value, inputWidth.value, inputHeight.value], deb
             size: {width, height}
         }
 
-        updateEdgeData(props.id, sizePositionData)
+        // edge size position change never emit history change
+        Object.assign(edge.data, sizePositionData)
     }
 }, 500), {immediate: true})
 
