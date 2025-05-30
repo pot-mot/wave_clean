@@ -19,13 +19,12 @@ import IconDelete from "@/icons/IconDelete.vue";
 import IconMultiSelect from "@/icons/IconMultiSelect.vue";
 import {QuickInputItem, useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
 import IconSelectAll from "@/icons/IconSelectAll.vue";
-import IconDownload from "@/icons/IconDownload.vue";
+import DownloadSelect from "@/mindMap/toolBar/DownloadSelect.vue";
 
 const metaStore = useMindMapMetaStore()
 
 const {
     save,
-    exportAsPng,
 
     currentLayer,
 
@@ -125,9 +124,7 @@ const handleQuickInput = (quickInput: QuickInputItem) => {
                 <IconSave/>
             </button>
 
-            <button @click="exportAsPng()">
-                <IconDownload/>
-            </button>
+            <DownloadSelect/>
         </div>
 
         <div>

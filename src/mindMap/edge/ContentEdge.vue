@@ -121,8 +121,15 @@ watch(() => [boundingClientRect.value, inputWidth.value, inputHeight.value], deb
             height = inputHeight.value
         }
 
+        const {
+            x: flowLeft,
+            y: flowTop,
+        } = props.layer.vueFlow.screenToFlowCoordinate({
+            x: left,
+            y: top,
+        })
         const sizePositionData: SizePositionEdgePartial["data"] = {
-            position: {left, top},
+            position: {left: flowLeft, top: flowTop},
             size: {width, height}
         }
 

@@ -26,7 +26,7 @@ import {LazyData} from "@/type/lazyDataParse.ts";
 import {useDeviceStore} from "@/store/deviceStore.ts";
 import {v7 as uuid} from "uuid"
 import {sendMessage} from "@/message/sendMessage.ts";
-import {exportAsPng} from "@/file/htmlExport.ts";
+import {exportAs, ExportType} from "@/file/htmlExport.ts";
 
 export type MindMapGlobal = {
     zIndexIncrement: number,
@@ -314,7 +314,6 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
     }
 
     const dragLayer = (oldIndex: number, newIndex: number) => {
-        console.log(oldIndex, newIndex)
         if (
             oldIndex < 0 || oldIndex > global.layers.length + 1 ||
             newIndex < 0 || newIndex > global.layers.length + 1 ||
@@ -1019,6 +1018,8 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
         })
     }
 
+    const exportFileType = ref<ExportType>("PNG")
+
     return {
         layers: global.layers,
         currentLayer: global.currentLayer,
@@ -1054,10 +1055,10 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
         remove,
 
         fitView: (layer: MindMapLayer = global.currentLayer.value) => {
-            return layer.vueFlow.fitView({duration: 600, padding: 0.4})
+            return layer.vueFlow.fitView({duration: 600, padding: 0.1})
         },
         fitRect: (rect: Rect, layer: MindMapLayer = global.currentLayer.value) => {
-            return layer.vueFlow.fitBounds(rect, {duration: 600, padding: 0.4})
+            return layer.vueFlow.fitBounds(rect, {duration: 800, padding: 0.4})
         },
 
         isSelectionNotEmpty,
@@ -1170,82 +1171,114 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
             await useMindMapMetaStore().save()
         },
 
-        exportAsPng: async (padding: number = 32) => {
+        exportFileType,
+        exportFile: async (type: ExportType = exportFileType.value, padding: number = 32) => {
+            const id = `export-container-${uuid()}`
+
             const removeTransitionStyle = document.createElement('style')
-            removeTransitionStyle.textContent = `* {
+            removeTransitionStyle.textContent = `
+* {
     transition: none !important;
     -webkit-transition: none !important;
     -moz-transition: none !important;
     -o-transition: none !important;
-  }`
+}
+
+:root {
+    overflow: hidden !important;
+}
+
+#${id} {
+    background-color: var(--background-color);
+    z-index: -100;
+}
+
+#${id} input,
+#${id} textarea {
+    pointer-events: all !important;
+    cursor: text !important;
+}  
+`
             document.head.appendChild(removeTransitionStyle)
 
-            cleanSelection()
-            blurActiveElement()
+            try {
+                cleanSelection()
+                blurActiveElement()
 
-            await nextTick()
+                await nextTick()
 
-            document.head.removeChild(removeTransitionStyle)
+                const el = document.createElement('div')
+                el.id = id
+                el.style.position = 'absolute'
+                el.style.left = "0"
+                el.style.top = "0"
 
-            const el = document.createElement('div')
-            el.style.position = 'absolute'
-            el.style.left = "0"
-            el.style.top = "0"
+                let left = Infinity
+                let top = Infinity
+                let right = -Infinity
+                let bottom = -Infinity
 
-            let left = Infinity
-            let top = Infinity
-            let right = -Infinity
-            let bottom = -Infinity
+                const nodeEdgeEls: HTMLElement[] = []
 
-            const nodeEdgeEls: HTMLElement[] = []
-
-            for (const layer of global.layers) {
-                if (layer.visible && layer.vueFlow.vueFlowRef.value) {
-                    for (const nodeContainer of layer.vueFlow.vueFlowRef.value.querySelectorAll('.vue-flow__nodes')) {
-                        const clone = nodeContainer.cloneNode(true) as HTMLElement
-                        nodeEdgeEls.push(clone)
-                    }
-                    for (const edgeContainer of layer.vueFlow.vueFlowRef.value.querySelectorAll('.vue-flow__edges')) {
-                        const clone = edgeContainer.cloneNode(true) as HTMLElement
-                        nodeEdgeEls.push(clone)
-                    }
-                    const rect = getCombinedBounds(layer.vueFlow)
-                    if (rect) {
-                        left = Math.min(left, rect.left)
-                        top = Math.min(top, rect.top)
-                        right = Math.max(right, rect.right)
-                        bottom = Math.max(bottom, rect.bottom)
+                for (const layer of global.layers) {
+                    if (layer.visible && layer.vueFlow.vueFlowRef.value) {
+                        for (const edgeContainer of layer.vueFlow.vueFlowRef.value.querySelectorAll('.vue-flow__edges')) {
+                            const clone = edgeContainer.cloneNode(true) as HTMLElement
+                            nodeEdgeEls.push(clone)
+                        }
+                        for (const nodeContainer of layer.vueFlow.vueFlowRef.value.querySelectorAll('.vue-flow__nodes')) {
+                            const clone = nodeContainer.cloneNode(true) as HTMLElement
+                            nodeEdgeEls.push(clone)
+                        }
+                        const rect = getCombinedBounds(layer.vueFlow)
+                        if (rect) {
+                            left = Math.min(left, rect.left)
+                            top = Math.min(top, rect.top)
+                            right = Math.max(right, rect.right)
+                            bottom = Math.max(bottom, rect.bottom)
+                        }
                     }
                 }
+
+                if (left === Infinity || top === Infinity || right === -Infinity || bottom === -Infinity) {
+                    sendMessage("cannot export empty")
+                    return;
+                }
+
+                const width = Math.max(right - left + padding * 2, 1)
+                const height = Math.max(bottom - top + padding * 2, 1)
+
+                el.style.width = `${width}px`
+                el.style.height = `${height}px`
+                el.style.overflow = 'hidden'
+
+                for (const nodeEdgeEl of nodeEdgeEls) {
+                    nodeEdgeEl.style.position = 'absolute'
+                    nodeEdgeEl.style.left = `${-left + padding}px`
+                    nodeEdgeEl.style.top = `${-top + padding}px`
+                    nodeEdgeEl.style.overflow = 'visible'
+                }
+
+                el.append(...nodeEdgeEls)
+
+                document.body.appendChild(el)
+
+                sendMessage("download start")
+                const savePath = await exportAs(el, currentLayer.name + '-' + new Date().getTime(), type)
+
+                el.remove()
+
+                if (savePath === undefined) {
+                    sendMessage("export fail")
+                } else {
+                    sendMessage(`export success, file in ${savePath}`)
+                }
+            } catch(e) {
+                console.error(e)
+                sendMessage("export fail")
+            } finally {
+                document.head.removeChild(removeTransitionStyle)
             }
-
-            if (left === Infinity || top === Infinity || right === -Infinity || bottom === -Infinity) {
-                sendMessage("cannot export empty")
-                return;
-            }
-
-            const width = Math.max(right - left + padding * 2, 1)
-            const height = Math.max(bottom - top + padding * 2, 1)
-
-            el.style.width = `${width}px`
-            el.style.height = `${height}px`
-
-            for (const nodeEdgeEl of nodeEdgeEls) {
-                nodeEdgeEl.style.position = 'absolute'
-                nodeEdgeEl.style.left = `${-left + padding}px`
-                nodeEdgeEl.style.top = `${-top + padding}px`
-                nodeEdgeEl.style.width = `${width}px`
-                nodeEdgeEl.style.height = `${height}px`
-                nodeEdgeEl.style.overflow = 'visible'
-            }
-
-            el.append(...nodeEdgeEls)
-
-            document.documentElement.appendChild(el)
-
-            await exportAsPng(el);
-
-            el.remove()
         }
     }
 }
@@ -1270,6 +1303,8 @@ const getCombinedBounds = (vueFlow: VueFlowStore) => {
         minY = Math.min(minY, y);
         maxX = Math.max(maxX, x + width);
         maxY = Math.max(maxY, y + height);
+
+        console.log(`node ${node.id}`, x, y, width, height)
     }
 
     for (const edge of edges) {
@@ -1283,6 +1318,8 @@ const getCombinedBounds = (vueFlow: VueFlowStore) => {
             minY = Math.min(minY, top);
             maxX = Math.max(maxX, left + width);
             maxY = Math.max(maxY, top + height);
+
+            console.log(`edge ${edge.id}`, left, top, width, height)
         }
     }
 

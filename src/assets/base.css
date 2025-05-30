@@ -93,7 +93,8 @@ a {
 }
 
 input,
-textarea {
+textarea,
+select {
     outline: none;
     color: var(--text-color);
     border: var(--border);
@@ -106,7 +107,8 @@ textarea {
 }
 
 input:focus,
-textarea:focus {
+textarea:focus,
+select:focus {
     border-color: var(--border-color);
 }
 

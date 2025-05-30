@@ -11,11 +11,10 @@ import IconMenu from "@/icons/IconMenu.vue";
 import IconLayer from "@/icons/IconLayer.vue";
 import IconDrag from "@/icons/IconDrag.vue";
 import IconSelectRect from "@/icons/IconSelectRect.vue";
-import IconDownload from "@/icons/IconDownload.vue";
+import DownloadSelect from "@/mindMap/toolBar/DownloadSelect.vue";
 
 const {
     save,
-    exportAsPng,
 
     canUndo,
     canRedo,
@@ -40,9 +39,7 @@ const layersMenuOpen = ref(false)
             <IconSave/>
         </button>
 
-        <button @click="exportAsPng()">
-            <IconDownload/>
-        </button>
+        <DownloadSelect/>
 
         <button :disabled="!canUndo" @click="undo()" :class="{disabled: !canUndo}">
             <IconUndo/>

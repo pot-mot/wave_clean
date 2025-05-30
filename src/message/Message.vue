@@ -147,6 +147,8 @@ defineExpose({
     border-radius: var(--border-radius);
     color: var(--comment-color);
     pointer-events: all;
+    max-width: 80%;
+    overflow: auto;
 }
 
 .close-icon {
