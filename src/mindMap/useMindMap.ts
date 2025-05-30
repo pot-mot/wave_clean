@@ -1264,7 +1264,7 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
                 document.body.appendChild(el)
 
                 sendMessage("download start")
-                const savePath = await exportAs(el, currentLayer.name + '-' + new Date().getTime(), type)
+                const savePath = await exportAs(el,  `${useMindMapMetaStore().currentMindMap.value?.name ?? 'untitled'}-${new Date().getTime()}`, type)
 
                 el.remove()
 
@@ -1303,8 +1303,6 @@ const getCombinedBounds = (vueFlow: VueFlowStore) => {
         minY = Math.min(minY, y);
         maxX = Math.max(maxX, x + width);
         maxY = Math.max(maxY, y + height);
-
-        console.log(`node ${node.id}`, x, y, width, height)
     }
 
     for (const edge of edges) {
@@ -1318,8 +1316,6 @@ const getCombinedBounds = (vueFlow: VueFlowStore) => {
             minY = Math.min(minY, top);
             maxX = Math.max(maxX, left + width);
             maxY = Math.max(maxY, top + height);
-
-            console.log(`edge ${edge.id}`, left, top, width, height)
         }
     }
 
