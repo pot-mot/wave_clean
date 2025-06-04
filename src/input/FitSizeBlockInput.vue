@@ -104,9 +104,9 @@ defineExpose({el: textareaRef, isFocus})
         @blur="handleBlur"
         v-tap-input
 
-        @compositionstart="handleComposition"
+        @compositionstart="updateTextSize"
         @compositionupdate="handleComposition"
-        @compositionend="handleComposition"
+        @compositionend="updateTextSize"
     />
 </template>
 

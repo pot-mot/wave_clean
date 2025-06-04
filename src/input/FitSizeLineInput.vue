@@ -109,9 +109,9 @@ defineExpose({el: inputRef, isFocus})
         @keydown.enter="handleEnterKeyDown"
         @blur="handleBlur"
 
-        @compositionstart="handleComposition"
+        @compositionstart="updateTextSize"
         @compositionupdate="handleComposition"
-        @compositionend="handleComposition"
+        @compositionend="updateTextSize"
     />
 </template>
 
