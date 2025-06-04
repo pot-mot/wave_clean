@@ -40,7 +40,7 @@ const updateTextSize = () => {
     emits("resize", {width: width.value, height: height.value})
 }
 
-const handleCompositionupdate = (e: CompositionEvent) => {
+const handleComposition = (e: CompositionEvent) => {
     if (!textareaRef.value) return
     const start = textareaRef.value.selectionStart ?? innerValue.value.length
     const text = innerValue.value.slice(0, start) + e.data + innerValue.value.slice(start)
@@ -104,7 +104,9 @@ defineExpose({el: textareaRef, isFocus})
         @blur="handleBlur"
         v-tap-input
 
-        @compositionupdate="handleCompositionupdate"
+        @compositionstart="handleComposition"
+        @compositionupdate="handleComposition"
+        @compositionend="handleComposition"
     />
 </template>
 
