@@ -1051,7 +1051,7 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
         sendMessage("download start")
 
         try {
-            const savePath = await exportMindMapToFile(currentLayer.name, exportJson(), global.layers, type)
+            const savePath = await exportMindMapToFile(useMindMapMetaStore().currentMindMap.value?.name, exportJson(), global.layers, type)
 
             if (!savePath) {
                 sendMessage("export fail")
