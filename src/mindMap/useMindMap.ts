@@ -1319,15 +1319,18 @@ const getCombinedBounds = (vueFlow: VueFlowStore) => {
 
     for (const edge of edges) {
         if (validateSizePositionEdgePartial(edge)) {
-            const left = edge.data.position?.left ?? 0
-            const top = edge.data.position?.top ?? 0
-            const width = edge.data.size?.width ?? 0
-            const height = edge.data.size?.height ?? 0
+            if (edge.data.position !== undefined && edge.data.size !== undefined) {
+                const left = edge.data.position.left
+                const top = edge.data.position.top
 
-            minX = Math.min(minX, left);
-            minY = Math.min(minY, top);
-            maxX = Math.max(maxX, left + width);
-            maxY = Math.max(maxY, top + height);
+                const width = edge.data.size.width
+                const height = edge.data.size.height
+
+                minX = Math.min(minX, left);
+                minY = Math.min(minY, top);
+                maxX = Math.max(maxX, left + width);
+                maxY = Math.max(maxY, top + height);
+            }
         }
     }
 
