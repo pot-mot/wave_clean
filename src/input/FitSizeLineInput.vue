@@ -39,7 +39,7 @@ const updateTextSize = () => {
     emits("resize", {width: width.value, height: height.value})
 }
 
-const handleCompositionupdate = (e: CompositionEvent) => {
+const handleComposition = (e: CompositionEvent) => {
     if (!inputRef.value) return
     const start = inputRef.value.selectionStart ?? innerValue.value.length
     const text = innerValue.value.slice(0, start) + e.data + innerValue.value.slice(start)
@@ -109,7 +109,9 @@ defineExpose({el: inputRef, isFocus})
         @keydown.enter="handleEnterKeyDown"
         @blur="handleBlur"
 
-        @compositionupdate="handleCompositionupdate"
+        @compositionstart="updateTextSize"
+        @compositionupdate="handleComposition"
+        @compositionend="updateTextSize"
     />
 </template>
 
