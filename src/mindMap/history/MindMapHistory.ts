@@ -11,8 +11,8 @@ import {
     RawMindMapLayer
 } from "@/mindMap/useMindMap.ts";
 import {ref, shallowReactive} from "vue";
-import {exportMindMap, MindMapExportData} from "@/mindMap/importExport/export.ts";
-import {prepareImportIntoMindMap} from "@/mindMap/importExport/import.ts";
+import {exportMindMapData, MindMapExportData} from "@/mindMap/export/export.ts";
+import {prepareImportIntoMindMap} from "@/mindMap/import/import.ts";
 import {getRaw} from "@/json/getRaw.ts";
 import {getKeys} from "@/type/typeGuard.ts";
 import {sendMessage} from "@/message/sendMessage.ts";
@@ -165,7 +165,7 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
         revertAction: (layerId) => {
             const layerIndex = getLayerIndex(layerId)
             const layer = global.layers.splice(layerIndex, 1)[0]
-            const data = exportMindMap(layer.vueFlow)
+            const data = exportMindMapData(layer.vueFlow)
             layer.vueFlow.$destroy()
 
             const vueFlow = useVueFlow(createVueFlowId())
@@ -184,7 +184,7 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
         applyAction: (layerId) => {
             const index = getLayerIndex(layerId)
             const {vueFlow, ...layerPart} = global.layers.splice(index, 1)[0]
-            const data = exportMindMap(vueFlow)
+            const data = exportMindMapData(vueFlow)
             vueFlow.$destroy()
             return {...layerPart, data, index}
         },

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import {ExportType_CONSTANT} from "@/file/htmlExport.ts";
 import {useMindMap} from "@/mindMap/useMindMap.ts";
 import IconDownload from "@/icons/IconDownload.vue";
+import {ExportFileType_CONSTANTS} from "@/mindMap/export/export.ts";
 
 const {exportFileType, exportFile} = useMindMap()
 </script>
@@ -12,8 +12,8 @@ const {exportFileType, exportFile} = useMindMap()
             <IconDownload class="icon"/>
         </button>
 
-        <select v-model="exportFileType" @change="exportFile()">
-            <option v-for="type in ExportType_CONSTANT">
+        <select v-model="exportFileType">
+            <option v-for="type in ExportFileType_CONSTANTS">
                 {{ type }}
             </option>
         </select>

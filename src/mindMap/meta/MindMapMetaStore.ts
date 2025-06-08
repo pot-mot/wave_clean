@@ -231,7 +231,7 @@ const initMindMapMetaStore = () => {
     const save = async (key: string | undefined = meta.value.currentKey) => {
         if (key !== undefined) {
             try {
-                await jsonFileOperations.set(key, JSON.stringify(mindMapStore.export()))
+                await jsonFileOperations.set(key, JSON.stringify(mindMapStore.exportJson()))
                 sendMessage("save success")
             } catch (e) {
                 console.error(e)

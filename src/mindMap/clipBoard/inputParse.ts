@@ -1,7 +1,7 @@
 import {createSchemaValidator} from "@/type/typeGuard.ts";
 import {ContentEdge, ContentNode, MindMapData, SizePositionEdgePartial} from "@/mindMap/useMindMap.ts";
 import type {JSONSchemaType} from "ajv/lib/types/json-schema.ts";
-import type {MindMapImportData} from "@/mindMap/importExport/import.ts";
+import type {MindMapImportData} from "@/mindMap/import/import.ts";
 
 const ContentNode_JsonSchema: JSONSchemaType<ContentNode> = {
     type: "object",

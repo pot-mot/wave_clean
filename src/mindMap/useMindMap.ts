@@ -14,9 +14,14 @@ import {
 import {computed, nextTick, readonly, ref, ShallowReactive, shallowReactive, ShallowRef, shallowRef, toRaw,} from "vue";
 import {blurActiveElement, judgeTargetIsInteraction} from "@/mindMap/clickUtils.ts";
 import {jsonSortPropStringify} from "@/json/jsonStringify.ts";
-import {MindMapImportData, prepareImportIntoMindMap} from "@/mindMap/importExport/import.ts";
-import {exportMindMap, exportMindMapSelection, MindMapExportData} from "@/mindMap/importExport/export.ts";
-import {validateMindMapImportData, validateSizePositionEdgePartial} from "@/mindMap/clipBoard/inputParse.ts";
+import {MindMapImportData, prepareImportIntoMindMap} from "@/mindMap/import/import.ts";
+import {
+    ExportFileType,
+    exportMindMapData,
+    exportMindMapSelectionData, exportMindMapToFile,
+    MindMapExportData
+} from "@/mindMap/export/export.ts";
+import {validateMindMapImportData} from "@/mindMap/clipBoard/inputParse.ts";
 import {checkFullConnection, FullConnection, reverseConnection} from "@/mindMap/edge/connection.ts";
 import {useMindMapHistory} from "@/mindMap/history/MindMapHistory.ts";
 import {CustomClipBoard, unimplementedClipBoard, useClipBoard} from "@/clipBoard/useClipBoard.ts";
@@ -26,7 +31,6 @@ import {LazyData} from "@/type/lazyDataParse.ts";
 import {useDeviceStore} from "@/store/deviceStore.ts";
 import {v7 as uuid} from "uuid"
 import {sendMessage} from "@/message/sendMessage.ts";
-import {exportAs, ExportType} from "@/file/htmlExport.ts";
 
 export type MindMapGlobal = {
     zIndexIncrement: number,
@@ -241,10 +245,10 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
             const id = createLayerId()
 
             let increment = global.layers.length
-            let name =  `layer-${increment}`
+            let name = `layer-${increment}`
             const layerNameSet = new Set(global.layers.map(it => it.name))
             while (layerNameSet.has(name)) {
-                name =  `layer-${++increment}`
+                name = `layer-${++increment}`
             }
             const layer = createLayer(id, name)
             history.executeCommand("layer:add", layer)
@@ -627,7 +631,7 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
              */
             const clipBoard = useClipBoard<MindMapImportData, MindMapExportData>({
                 exportData: (): MindMapExportData => {
-                    return exportMindMapSelection(vueFlow)
+                    return exportMindMapSelectionData(vueFlow)
                 },
                 importData: (data: MindMapImportData) => {
                     importData(data, screenToFlowCoordinate(screenPosition.value))
@@ -1018,111 +1022,36 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
         })
     }
 
-    const exportFileType = ref<ExportType>("PNG")
-    // 判断当前是否正在下载
-    let isDownload = false
+    const exportFileType = ref<ExportFileType>("PNG")
+    const isExportFile = ref(false)
 
-    const exportFile = async (type: ExportType = exportFileType.value, padding: number = 32) => {
-        if (isDownload) {
+    const exportJson = (): MindMapData => {
+        return {
+            currentLayerId: currentLayerId.value,
+            layers: global.layers.map(layer => ({
+                id: layer.id,
+                name: layer.name,
+                opacity: layer.opacity,
+                visible: layer.visible,
+                data: exportMindMapData(layer.vueFlow)
+            })),
+            transform: currentViewport.value,
+            zIndexIncrement: global.zIndexIncrement,
+        }
+    }
+
+    const exportFile = async (type: ExportFileType = exportFileType.value) => {
+        if (isExportFile.value) {
             sendMessage("downloading now, please wait")
             return
         }
 
-        isDownload = true
+        isExportFile.value = true
 
-        const id = `export-container-${uuid()}`
-
-        const removeTransitionStyle = document.createElement('style')
-        removeTransitionStyle.textContent = `
-* {
-    transition: none !important;
-    -webkit-transition: none !important;
-    -moz-transition: none !important;
-    -o-transition: none !important;
-}
-
-:root {
-    overflow: hidden !important;
-}
-
-#${id} {
-    background-color: var(--background-color);
-    z-index: -100;
-}
-
-#${id} input,
-#${id} textarea {
-    pointer-events: all !important;
-    cursor: text !important;
-}  
-`
-        document.head.appendChild(removeTransitionStyle)
-        let el: HTMLElement | null = null
+        sendMessage("download start")
 
         try {
-            cleanSelection()
-            blurActiveElement()
-
-            await nextTick()
-
-            el = document.createElement('div')
-            el.id = id
-            el.style.position = 'absolute'
-            el.style.left = "0"
-            el.style.top = "0"
-
-            let left = Infinity
-            let top = Infinity
-            let right = -Infinity
-            let bottom = -Infinity
-
-            const nodeEdgeEls: HTMLElement[] = []
-
-            for (const layer of global.layers) {
-                if (layer.visible && layer.vueFlow.vueFlowRef.value) {
-                    for (const edgeContainer of layer.vueFlow.vueFlowRef.value.querySelectorAll('.vue-flow__edges')) {
-                        const clone = edgeContainer.cloneNode(true) as HTMLElement
-                        nodeEdgeEls.push(clone)
-                    }
-                    for (const nodeContainer of layer.vueFlow.vueFlowRef.value.querySelectorAll('.vue-flow__nodes')) {
-                        const clone = nodeContainer.cloneNode(true) as HTMLElement
-                        nodeEdgeEls.push(clone)
-                    }
-                    const rect = getCombinedBounds(layer.vueFlow)
-                    if (rect) {
-                        left = Math.min(left, rect.left)
-                        top = Math.min(top, rect.top)
-                        right = Math.max(right, rect.right)
-                        bottom = Math.max(bottom, rect.bottom)
-                    }
-                }
-            }
-
-            if (left === Infinity || top === Infinity || right === -Infinity || bottom === -Infinity) {
-                sendMessage("cannot export empty")
-                return;
-            }
-
-            const width = Math.max(right - left + padding * 2, 1)
-            const height = Math.max(bottom - top + padding * 2, 1)
-
-            el.style.width = `${width}px`
-            el.style.height = `${height}px`
-            el.style.overflow = 'hidden'
-
-            for (const nodeEdgeEl of nodeEdgeEls) {
-                nodeEdgeEl.style.position = 'absolute'
-                nodeEdgeEl.style.left = `${-left + padding}px`
-                nodeEdgeEl.style.top = `${-top + padding}px`
-                nodeEdgeEl.style.overflow = 'visible'
-            }
-
-            el.append(...nodeEdgeEls)
-
-            document.body.appendChild(el)
-
-            sendMessage("download start")
-            const savePath = await exportAs(el,  `${useMindMapMetaStore().currentMindMap.value?.name ?? 'untitled'}-${new Date().getTime()}`, type)
+            const savePath = await exportMindMapToFile(currentLayer.name, exportJson(), global.layers, type)
 
             if (!savePath) {
                 sendMessage("export fail")
@@ -1130,13 +1059,10 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
                 sendMessage(`export success, file in ${savePath}`)
             }
         } catch (e) {
-            console.error(e)
             sendMessage("export fail")
-        } finally {
-            el?.remove()
-            document.head.removeChild(removeTransitionStyle)
-            isDownload = false
         }
+
+        isExportFile.value = false
     }
 
     return {
@@ -1272,73 +1198,14 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
             toggleLayer(currentLayer.id)
             history.clean()
         },
-        export: (): MindMapData => {
-            return {
-                currentLayerId: currentLayerId.value,
-                layers: global.layers.map(layer => ({
-                    id: layer.id,
-                    name: layer.name,
-                    opacity: layer.opacity,
-                    visible: layer.visible,
-                    data: exportMindMap(layer.vueFlow)
-                })),
-                transform: currentViewport.value,
-                zIndexIncrement: global.zIndexIncrement,
-            }
-        },
+
+        exportFileType,
+        exportJson,
+        exportFile,
+
         save: async () => {
             await useMindMapMetaStore().save()
         },
-
-        exportFileType,
-        exportFile,
-    }
-}
-
-const getCombinedBounds = (vueFlow: VueFlowStore) => {
-    const nodes = vueFlow.getNodes.value
-    const edges = vueFlow.getEdges.value
-
-    if (nodes.length === 0 && edges.length === 0) return;
-
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
-
-    for (const node of nodes) {
-        const { x, y } = node.position;
-        const width = node.dimensions.width;
-        const height = node.dimensions.height;
-
-        minX = Math.min(minX, x);
-        minY = Math.min(minY, y);
-        maxX = Math.max(maxX, x + width);
-        maxY = Math.max(maxY, y + height);
-    }
-
-    for (const edge of edges) {
-        if (validateSizePositionEdgePartial(edge)) {
-            if (edge.data.position !== undefined && edge.data.size !== undefined) {
-                const left = edge.data.position.left
-                const top = edge.data.position.top
-
-                const width = edge.data.size.width
-                const height = edge.data.size.height
-
-                minX = Math.min(minX, left);
-                minY = Math.min(minY, top);
-                maxX = Math.max(maxX, left + width);
-                maxY = Math.max(maxY, top + height);
-            }
-        }
-    }
-
-    return {
-        left: minX,
-        top: minY,
-        right: maxX,
-        bottom: maxY,
     }
 }
 
