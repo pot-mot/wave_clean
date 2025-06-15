@@ -14,7 +14,6 @@ import IconRedo from "@/icons/IconRedo.vue";
 import IconMenu from "@/icons/IconMenu.vue";
 import IconSelectRect from "@/icons/IconSelectRect.vue";
 import IconLayer from "@/icons/IconLayer.vue";
-import IconDrag from "@/icons/IconDrag.vue";
 import IconDelete from "@/icons/IconDelete.vue";
 import IconMultiSelect from "@/icons/IconMultiSelect.vue";
 import {QuickInputItem, useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
