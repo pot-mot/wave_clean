@@ -162,8 +162,7 @@ const handleQuickInput = (quickInput: QuickInputItem) => {
             </button>
 
             <button @click="toggleDefaultMouseAction()" :class="{enable: defaultMouseAction === 'selectionRect'}">
-                <IconDrag v-if="defaultMouseAction === 'panDrag'"/>
-                <IconSelectRect v-else-if="defaultMouseAction === 'selectionRect'"/>
+                <IconSelectRect/>
             </button>
 
             <button @click="toggleMultiSelect()" :class="{enable: canMultiSelect && defaultMouseAction !== 'selectionRect'}">
