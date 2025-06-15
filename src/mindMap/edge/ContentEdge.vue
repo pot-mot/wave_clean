@@ -3,7 +3,7 @@ import {computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, wat
 import {BaseEdge, EdgeProps} from "@vue-flow/core";
 import {ContentEdgeData, RawMindMapLayer, SizePositionEdgePartial, useMindMap} from "@/mindMap/useMindMap.ts";
 import FitSizeBlockInput from "@/input/FitSizeBlockInput.vue";
-import {useEdgeUpdaterTouch} from "@/mindMap/touchToMouse/useEdgeUpdaterTouch.ts";
+import {useEdgeUpdaterTouch} from "@/mindMap/edge/useEdgeUpdaterTouch.ts";
 import AutoResizeForeignObject from "@/mindMap/svg/AutoResizeForeignObject.vue";
 import IconDelete from "@/icons/IconDelete.vue";
 import IconFocus from "@/icons/IconFocus.vue";

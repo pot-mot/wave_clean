@@ -1,4 +1,4 @@
-import {mapTouchToMouseEvents} from "@/mindMap/touchToMouse/mapTouchToMouseEvent.ts";
+import {mapTouchToMouseEvents} from "@/event/mapTouchToMouseEvent.ts";
 import {onMounted} from "vue";
 import {useDeviceStore} from "@/store/deviceStore.ts";
 
