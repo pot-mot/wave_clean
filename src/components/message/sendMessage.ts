@@ -1,10 +1,14 @@
 import {createApp} from "vue";
 import Message from "@/components/message/Message.vue";
+import {MessageContent, MessageOpenOptions} from "@/components/message/MessageItem.ts";
 
 type MessageInstance = InstanceType<typeof Message>
 let newInstance: MessageInstance | null = null
 
-export const sendMessage = (message: string) => {
+export const sendMessage = (
+    message: MessageContent,
+    options?: Partial<MessageOpenOptions>,
+) => {
     if (newInstance === null) {
         const el = document.createElement("div");
         const app = createApp(Message, {
@@ -16,8 +20,8 @@ export const sendMessage = (message: string) => {
         })
         newInstance = app.mount(el) as MessageInstance;
         document.body.appendChild(el);
-        newInstance.open(message);
+        newInstance.open(message, options);
     } else {
-        newInstance.open(message);
+        newInstance.open(message, options);
     }
 }

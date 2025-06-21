@@ -14,11 +14,12 @@
                 :ref="el => initSize(el)"
             >
                 <div
-                    class="message"
+                    class="message" :class="item.type"
                     @mouseenter="handleMouseEnter(item)"
                     @mouseleave="handleMouseLeave(item)"
                 >
-                    <span>{{ item.message }}</span>
+                    <Component v-if="typeof item.content !== 'string'" :is="item.content"/>
+                    <span v-else>{{ item.content }}</span>
                     <span v-if="item.canClose" class="close-icon" @click="close(index)">
                         <IconClose/>
                     </span>
@@ -31,6 +32,12 @@
 <script setup lang="ts">
 import {ref} from "vue";
 import IconClose from "@/components/icons/IconClose.vue";
+import {
+    MessageContent,
+    MessageItem,
+    messageOpenDefaultOptions,
+    MessageOpenOptions,
+} from "@/components/message/MessageItem.ts";
 
 const props = withDefaults(defineProps<{
     timeout?: number,
@@ -48,12 +55,6 @@ const emits = defineEmits<{
 }>()
 
 let messageItemIdIncrement = 0
-type MessageItem = {
-    id: number,
-    message: string,
-    timeout?: number | undefined,
-    canClose: boolean,
-}
 
 const messageItems = ref<MessageItem[]>([])
 
@@ -72,8 +73,15 @@ const setMessageItemTimeout = (messageItem: MessageItem) => {
     }, props.timeout + props.enterDuration)
 }
 
-const open = (message: string, canClose: boolean = true) => {
-    const messageItem = {id: ++messageItemIdIncrement, message, canClose}
+const open = (
+    content: MessageContent,
+    options?: Partial<MessageOpenOptions>
+) => {
+    const {
+        type,
+        canClose
+    } = Object.assign({}, options, messageOpenDefaultOptions)
+    const messageItem: MessageItem = {id: ++messageItemIdIncrement, content, type, canClose}
     setMessageItemTimeout(messageItem)
     messageItems.value.push(messageItem)
 }
@@ -143,12 +151,35 @@ defineExpose({
     font-size: 1rem;
     background-color: var(--background-color);
     border: var(--border);
-    border-color: var(--background-color-hover);
     border-radius: var(--border-radius);
-    color: var(--comment-color);
     pointer-events: all;
     max-width: 80%;
     overflow: auto;
+}
+
+.message.primary {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.message.success {
+    color: var(--success-color);
+    border-color: var(--success-color);
+}
+
+.message.error {
+    color: var(--danger-color);
+    border-color: var(--danger-color);
+}
+
+.message.warning {
+    color: var(--warning-color);
+    border-color: var(--warning-color);
+}
+
+.message.info {
+    color: var(--comment-color);
+    border-color: var(--comment-color);
 }
 
 .close-icon {
