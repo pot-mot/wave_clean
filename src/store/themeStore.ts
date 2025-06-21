@@ -1,8 +1,9 @@
 import {readonly, ref, watch} from "vue";
 import {Theme, getCurrentWindow} from "@tauri-apps/api/window";
 import {useDeviceStore} from "@/store/deviceStore.ts";
+import {createStore} from "@/store/createStore.ts";
 
-const initThemeStore = () => {
+export const useThemeStore = createStore(() => {
     const {isTouchDevice} = useDeviceStore()
 
     const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -56,15 +57,4 @@ const initThemeStore = () => {
         primaryColor: readonly(primaryColor),
         setPrimaryColor,
     };
-}
-
-type ThemeStore = ReturnType<typeof initThemeStore>
-
-let themeStore: ThemeStore | undefined
-
-export const useThemeStore = (): ThemeStore => {
-    if (themeStore === undefined) {
-        themeStore = initThemeStore()
-    }
-    return themeStore
-}
+})

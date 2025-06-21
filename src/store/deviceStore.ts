@@ -1,20 +1,10 @@
 import {readonly, ref} from "vue";
+import {createStore} from "@/store/createStore.ts";
 
-const initDeviceStore = () => {
+export const useDeviceStore = createStore(() => {
     const isTouchDevice = ref('ontouchstart' in document.documentElement)
 
     return {
         isTouchDevice: readonly(isTouchDevice),
     }
-}
-
-type DeviceStore = ReturnType<typeof initDeviceStore>
-
-let deviceStore: DeviceStore | undefined
-
-export const useDeviceStore = (): DeviceStore => {
-    if (deviceStore === undefined) {
-        deviceStore = initDeviceStore()
-    }
-    return deviceStore
-}
+})

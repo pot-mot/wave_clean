@@ -32,6 +32,7 @@ import {useDeviceStore} from "@/store/deviceStore.ts";
 import {v7 as uuid} from "uuid"
 import {sendMessage} from "@/components/message/sendMessage.ts";
 import {getTouchRect} from "@/utils/event/getTouchRect.ts";
+import {createStore} from "@/store/createStore.ts";
 
 export type MindMapGlobal = {
     zIndexIncrement: number,
@@ -189,7 +190,7 @@ const dataToLayers = (data: Pick<MindMapData, 'layers' | 'currentLayerId'>): Pic
     }
 }
 
-const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
+export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData()) => {
     const {isTouchDevice} = useDeviceStore()
 
     const {currentLayer, layers} = dataToLayers(data)
@@ -622,7 +623,7 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
                     await nextTick()
                     for (const layer of global.layers) {
                         if (layer.id === id) continue
-                        layer.vueFlow.setViewport(currentViewport.value)
+                        await layer.vueFlow.setViewport(currentViewport.value)
                     }
                 }
             })
@@ -1196,15 +1197,4 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
             await useMindMapMetaStore().save()
         },
     }
-}
-
-export type MindMapStore = ReturnType<typeof initMindMap>
-
-let mindMap: MindMapStore | undefined = undefined
-
-export const useMindMap = () => {
-    if (mindMap === undefined) {
-        mindMap = initMindMap()
-    }
-    return mindMap
-}
+})
