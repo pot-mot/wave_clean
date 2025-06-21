@@ -7,15 +7,15 @@ import {
     MindMapData,
     MindMapLayer
 } from "@/mindMap/useMindMap.ts";
-import {getRaw} from "@/json/getRaw.ts";
+import {getRaw} from "@/utils/json/getRaw.ts";
 import {v7 as uuid} from "uuid";
 import {blurActiveElement} from "@/mindMap/clickUtils.ts";
 import {nextTick} from "vue";
-import {sendMessage} from "@/message/sendMessage.ts";
-import {exportAsJpg, exportAsPng, exportAsSvg} from "@/file/htmlExport.ts";
+import {sendMessage} from "@/components/message/sendMessage.ts";
+import {exportAsJpg, exportAsPng, exportAsSvg} from "@/utils/file/htmlExport.ts";
 import {validateSizePositionEdgePartial} from "@/mindMap/clipBoard/inputParse.ts";
-import {downloadTextFile} from "@/file/fileSave.ts";
-import {jsonPrettyFormat} from "@/json/jsonStringify.ts";
+import {downloadTextFile} from "@/utils/file/fileSave.ts";
+import {jsonPrettyFormat} from "@/utils/json/jsonStringify.ts";
 
 export type MindMapExportData = {
     nodes: ContentNode[],

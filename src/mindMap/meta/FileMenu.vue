@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import IconDelete from "@/icons/IconDelete.vue";
+import IconDelete from "@/components/icons/IconDelete.vue";
 import {useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
 import {computed, ref} from "vue";
-import {sendMessage} from "@/message/sendMessage.ts";
-import IconAdd from "@/icons/IconAdd.vue";
-import DragModelList from "@/list/DragModelList.vue";
+import {sendMessage} from "@/components/message/sendMessage.ts";
+import IconAdd from "@/components/icons/IconAdd.vue";
+import DragModelList from "@/components/list/DragModelList.vue";
 
 const metaStore = useMindMapMetaStore()
 

@@ -1,4 +1,4 @@
-import {createSchemaValidator} from "@/type/typeGuard.ts";
+import {createSchemaValidator} from "@/utils/type/typeGuard.ts";
 import {ContentEdge, ContentNode, MindMapData, SizePositionEdgePartial} from "@/mindMap/useMindMap.ts";
 import type {JSONSchemaType} from "ajv/lib/types/json-schema.ts";
 import type {MindMapImportData} from "@/mindMap/import/import.ts";

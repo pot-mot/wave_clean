@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import {useThemeStore} from "@/store/themeStore.ts";
-import IconDark from "@/icons/IconDark.vue";
-import IconLight from "@/icons/IconLight.vue";
+import IconDark from "@/components/icons/IconDark.vue";
+import IconLight from "@/components/icons/IconLight.vue";
 import FileMenu from "@/mindMap/meta/FileMenu.vue";
 import QuickInputMenu from "@/mindMap/meta/QuickInputMenu.vue";
 import {useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
 import {computed, ref} from "vue";
 import {useDeviceStore} from "@/store/deviceStore.ts";
-import ColorInput from "@/input/ColorInput.vue";
+import ColorInput from "@/components/input/ColorInput.vue";
 
 const metaStore = useMindMapMetaStore()
 

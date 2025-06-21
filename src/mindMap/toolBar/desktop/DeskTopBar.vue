@@ -3,14 +3,14 @@ import {useMindMap} from "@/mindMap/useMindMap.ts";
 import LayerMenu from "@/mindMap/layer/LayerMenu.vue";
 import {ref} from "vue";
 import MetaMenu from "@/mindMap/meta/MetaMenu.vue";
-import IconSave from "@/icons/IconSave.vue";
-import IconUndo from "@/icons/IconUndo.vue";
-import IconRedo from "@/icons/IconRedo.vue";
-import IconFit from "@/icons/IconFit.vue";
-import IconMenu from "@/icons/IconMenu.vue";
-import IconLayer from "@/icons/IconLayer.vue";
-import IconDrag from "@/icons/IconDrag.vue";
-import IconSelectRect from "@/icons/IconSelectRect.vue";
+import IconSave from "@/components/icons/IconSave.vue";
+import IconUndo from "@/components/icons/IconUndo.vue";
+import IconRedo from "@/components/icons/IconRedo.vue";
+import IconFit from "@/components/icons/IconFit.vue";
+import IconMenu from "@/components/icons/IconMenu.vue";
+import IconLayer from "@/components/icons/IconLayer.vue";
+import IconDrag from "@/components/icons/IconDrag.vue";
+import IconSelectRect from "@/components/icons/IconSelectRect.vue";
 import DownloadSelect from "@/mindMap/toolBar/DownloadSelect.vue";
 
 const {

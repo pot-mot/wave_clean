@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import {MindMapLayer, useMindMap} from "@/mindMap/useMindMap.ts";
 import LayerView from "@/mindMap/layer/LayerView.vue";
-import IconDelete from "@/icons/IconDelete.vue";
-import IconVisible from "@/icons/IconVisible.vue";
-import IconAdd from "@/icons/IconAdd.vue";
-import IconInvisible from "@/icons/IconInvisible.vue";
-import DragList from "@/list/DragList.vue";
+import IconDelete from "@/components/icons/IconDelete.vue";
+import IconVisible from "@/components/icons/IconVisible.vue";
+import IconAdd from "@/components/icons/IconAdd.vue";
+import IconInvisible from "@/components/icons/IconInvisible.vue";
+import DragList from "@/components/list/DragList.vue";
 import {computed} from "vue";
 
 const {

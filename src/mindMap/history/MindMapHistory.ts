@@ -13,9 +13,9 @@ import {
 import {ref, shallowReactive} from "vue";
 import {exportMindMapData, MindMapExportData} from "@/mindMap/export/export.ts";
 import {prepareImportIntoMindMap} from "@/mindMap/import/import.ts";
-import {getRaw} from "@/json/getRaw.ts";
-import {getKeys} from "@/type/typeGuard.ts";
-import {sendMessage} from "@/message/sendMessage.ts";
+import {getRaw} from "@/utils/json/getRaw.ts";
+import {getKeys} from "@/utils/type/typeGuard.ts";
+import {sendMessage} from "@/components/message/sendMessage.ts";
 
 export type MindMapHistoryCommands = {
     "layer:add": CommandDefinition<

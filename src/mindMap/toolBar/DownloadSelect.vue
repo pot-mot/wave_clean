@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {useMindMap} from "@/mindMap/useMindMap.ts";
-import IconDownload from "@/icons/IconDownload.vue";
+import IconDownload from "@/components/icons/IconDownload.vue";
 import {ExportFileType_CONSTANTS} from "@/mindMap/export/export.ts";
 
 const {exportFileType, exportFile} = useMindMap()

@@ -13,7 +13,7 @@ import {
 } from "@vue-flow/core";
 import {computed, nextTick, readonly, ref, ShallowReactive, shallowReactive, ShallowRef, shallowRef, toRaw,} from "vue";
 import {blurActiveElement, judgeTargetIsInteraction} from "@/mindMap/clickUtils.ts";
-import {jsonSortPropStringify} from "@/json/jsonStringify.ts";
+import {jsonSortPropStringify} from "@/utils/json/jsonStringify.ts";
 import {MindMapImportData, prepareImportIntoMindMap} from "@/mindMap/import/import.ts";
 import {
     ExportFileType,
@@ -24,13 +24,13 @@ import {
 import {validateMindMapImportData} from "@/mindMap/clipBoard/inputParse.ts";
 import {checkFullConnection, FullConnection, reverseConnection} from "@/mindMap/edge/connection.ts";
 import {useMindMapHistory} from "@/mindMap/history/MindMapHistory.ts";
-import {CustomClipBoard, unimplementedClipBoard, useClipBoard} from "@/clipBoard/useClipBoard.ts";
-import {getKeys} from "@/type/typeGuard.ts";
+import {CustomClipBoard, unimplementedClipBoard, useClipBoard} from "@/utils/clipBoard/useClipBoard.ts";
+import {getKeys} from "@/utils/type/typeGuard.ts";
 import {useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
-import {LazyData} from "@/type/lazyDataParse.ts";
+import {LazyData} from "@/utils/type/lazyDataParse.ts";
 import {useDeviceStore} from "@/store/deviceStore.ts";
 import {v7 as uuid} from "uuid"
-import {sendMessage} from "@/message/sendMessage.ts";
+import {sendMessage} from "@/components/message/sendMessage.ts";
 
 export type MindMapGlobal = {
     zIndexIncrement: number,

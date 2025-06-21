@@ -8,11 +8,11 @@ import {
     useMindMap
 } from "@/mindMap/useMindMap.ts";
 import {computed, ref, useTemplateRef} from "vue";
-import FitSizeBlockInput from "@/input/FitSizeBlockInput.vue";
+import FitSizeBlockInput from "@/components/input/FitSizeBlockInput.vue";
 import {NodeToolbar} from "@vue-flow/node-toolbar";
-import IconDelete from "@/icons/IconDelete.vue";
-import IconCopy from "@/icons/IconCopy.vue";
-import IconFocus from "@/icons/IconFocus.vue";
+import IconDelete from "@/components/icons/IconDelete.vue";
+import IconCopy from "@/components/icons/IconCopy.vue";
+import IconFocus from "@/components/icons/IconFocus.vue";
 import {useDeviceStore} from "@/store/deviceStore.ts";
 import {blurActiveElement, getMatchedElementOrParent} from "@/mindMap/clickUtils.ts";
 

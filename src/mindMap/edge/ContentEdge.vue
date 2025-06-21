@@ -2,17 +2,17 @@
 import {computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch} from "vue";
 import {BaseEdge, EdgeProps} from "@vue-flow/core";
 import {ContentEdgeData, RawMindMapLayer, SizePositionEdgePartial, useMindMap} from "@/mindMap/useMindMap.ts";
-import FitSizeBlockInput from "@/input/FitSizeBlockInput.vue";
+import FitSizeBlockInput from "@/components/input/FitSizeBlockInput.vue";
 import {useEdgeUpdaterTouch} from "@/mindMap/edge/useEdgeUpdaterTouch.ts";
 import AutoResizeForeignObject from "@/mindMap/svg/AutoResizeForeignObject.vue";
-import IconDelete from "@/icons/IconDelete.vue";
-import IconFocus from "@/icons/IconFocus.vue";
+import IconDelete from "@/components/icons/IconDelete.vue";
+import IconFocus from "@/components/icons/IconFocus.vue";
 import {blurActiveElement} from "@/mindMap/clickUtils.ts";
-import IconArrowNone from "@/icons/IconArrowNone.vue";
-import IconArrowTwoWay from "@/icons/IconArrowTwoWay.vue";
+import IconArrowNone from "@/components/icons/IconArrowNone.vue";
+import IconArrowTwoWay from "@/components/icons/IconArrowTwoWay.vue";
 import {getPaddingBezierPath} from "@/mindMap/edge/paddingBezierPath.ts";
-import IconArrowOneWayLeft from "@/icons/IconArrowOneWayLeft.vue";
-import IconArrowOneWayRight from "@/icons/IconArrowOneWayRight.vue";
+import IconArrowOneWayLeft from "@/components/icons/IconArrowOneWayLeft.vue";
+import IconArrowOneWayRight from "@/components/icons/IconArrowOneWayRight.vue";
 import {v7 as uuid} from "uuid"
 import {debounce, throttle} from "lodash";
 
