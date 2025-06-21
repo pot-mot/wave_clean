@@ -801,10 +801,44 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                 })
 
                 // 双击添加节点
-                paneEl.addEventListener('dblclick', (e) => {
+                let waitNextMouseDown = false
+                let waitTimeout: number | undefined
+                // 记录上一次 mousedown 以避免误触
+                let lastMouseTime = new Date().getTime()
+                let lastMousePosition: XYPosition | null = null
+
+                paneEl.addEventListener('mousedown', (e) => {
                     if (e.target !== paneEl) return
                     if (!layer.visible) return
-                    addNode(screenToFlowCoordinate({x: e.clientX, y: e.clientY}))
+
+                    const currentTime = new Date().getTime()
+                    const currentMousePosition = {x: e.clientX, y: e.clientY}
+
+                    if (waitNextMouseDown) {
+                        waitNextMouseDown = false
+                        clearTimeout(waitTimeout)
+
+                        const timeDiff = currentTime - lastMouseTime
+                        if (timeDiff > 0 && timeDiff < 300 && lastMousePosition !== null) {
+                            if (
+                                Math.abs(currentMousePosition.x - lastMousePosition.x) < 10 &&
+                                Math.abs(currentMousePosition.y - lastMousePosition.y) < 10
+                            ) {
+                                addNode(screenToFlowCoordinate(currentMousePosition))
+                            }
+                        }
+
+                        lastMousePosition = null
+                    } else {
+                        waitNextMouseDown = true
+                        waitTimeout = setTimeout(() => {
+                            waitNextMouseDown = false
+                            lastMousePosition = null
+                        }, 300)
+
+                        lastMouseTime = currentTime
+                        lastMousePosition = currentMousePosition
+                    }
                 })
 
                 let currentPanOnDrag = toRaw(vueFlow.panOnDrag.value)
@@ -828,6 +862,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                         vueFlow.multiSelectionActive.value = false
 
                         cleanSelection()
+                        blurActiveElement()
 
                         if (e.button === selectionRectMouseButton) {
                             vueFlow.userSelectionActive.value = true
@@ -953,6 +988,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                         vueFlow.multiSelectionActive.value = false
 
                         cleanSelection()
+                        blurActiveElement()
 
                         vueFlow.userSelectionActive.value = true
                         vueFlow.multiSelectionActive.value = true
