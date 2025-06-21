@@ -31,6 +31,7 @@ import {LazyData} from "@/utils/type/lazyDataParse.ts";
 import {useDeviceStore} from "@/store/deviceStore.ts";
 import {v7 as uuid} from "uuid"
 import {sendMessage} from "@/components/message/sendMessage.ts";
+import {getTouchRect} from "@/utils/event/getTouchRect.ts";
 
 export type MindMapGlobal = {
     zIndexIncrement: number,
@@ -959,21 +960,7 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
 
                         const onMove = (e: TouchEvent) => {
                             e.preventDefault()
-                            const current = {x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY}
-                            let width = current.x - start.x
-                            let height = current.y - start.y
-                            const x = width > 0 ? start.x : current.x
-                            const y = height > 0 ? start.y : current.y
-                            width = width > 0 ? width : -width
-                            height = height > 0 ? height : -height
-                            vueFlow.userSelectionRect.value = {
-                                width,
-                                height,
-                                x,
-                                y,
-                                startX: start.x,
-                                startY: start.y,
-                            }
+                            let {x, y, width, height} = getTouchRect(e, start)
                             const rect = {
                                 width,
                                 height,
@@ -1007,17 +994,19 @@ const initMindMap = (data: MindMapData = getDefaultMindMapData()) => {
                                 vueFlow.addSelectedEdges(newSelectedEdges)
                                 vueFlow.multiSelectionActive.value = false
 
-                                // 在框选结束后，在触控端恢复拖拽
-                                toggleDefaultMouseAction()
-                                selectionRectEnable = false
+                                // 在框选结束后，如果已有选中，在触控端恢复拖拽
+                                if (isSelectionNotEmpty.value) {
+                                    toggleDefaultMouseAction()
+                                    selectionRectEnable = false
+                                }
                             })
                         }
 
-                        document.documentElement.addEventListener('touchmove', onMove)
+                        document.documentElement.addEventListener('touchmove', onMove, {passive: false})
                         document.documentElement.addEventListener('touchend', onTouchEnd)
                         document.documentElement.addEventListener('touchcancel', onTouchEnd)
                     }
-                })
+                }, {passive: false})
             }
         })
     }
