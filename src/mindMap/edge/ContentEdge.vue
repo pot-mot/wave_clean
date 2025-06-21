@@ -302,11 +302,6 @@ const executeDelete = () => {
     transition: background-color 0.5s ease;
 }
 
-.toolbar > button svg {
-    /* 阻止点击按钮导致外部无法拖拽问题 */
-    pointer-events: none !important;
-}
-
 .toolbar > button:hover {
     background-color: var(--background-color-hover);
 }

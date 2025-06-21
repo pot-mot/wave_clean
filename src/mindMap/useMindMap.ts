@@ -841,13 +841,13 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                     }
                 })
 
-                let currentPanOnDrag = toRaw(vueFlow.panOnDrag.value)
                 // 鼠标移入非交互元素时，允许拖拽，否则禁止画布拖拽
+                let currentPanOnDrag = vueFlow.panOnDrag.value
                 paneEl.addEventListener('mouseover', (e) => {
-                    if (judgeTargetIsInteraction(e)) {
-                        currentPanOnDrag = toRaw(vueFlow.panOnDrag.value)
+                    if (vueFlow.panOnDrag.value !== false && judgeTargetIsInteraction(e)) {
+                        currentPanOnDrag = vueFlow.panOnDrag.value
                         vueFlow.panOnDrag.value = false
-                    } else {
+                    } else if (currentPanOnDrag !== false) {
                         vueFlow.panOnDrag.value = currentPanOnDrag
                     }
                 })
