@@ -14,7 +14,7 @@ import IconDelete from "@/components/icons/IconDelete.vue";
 import IconCopy from "@/components/icons/IconCopy.vue";
 import IconFocus from "@/components/icons/IconFocus.vue";
 import {useDeviceStore} from "@/store/deviceStore.ts";
-import {blurActiveElement, getMatchedElementOrParent} from "@/mindMap/clickUtils.ts";
+import {blurActiveElement, getMatchedElementOrParent} from "@/utils/event/judgeEventTarget.ts";
 
 const {isTouchDevice} = useDeviceStore()
 

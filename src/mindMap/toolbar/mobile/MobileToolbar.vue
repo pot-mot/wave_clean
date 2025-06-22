@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import {useMindMap} from "@/mindMap/useMindMap.ts";
-import {computed, onBeforeUnmount, onMounted, ref, shallowRef} from "vue";
+import {computed, onBeforeUnmount, onMounted, ref} from "vue";
 import LayerMenu from "@/mindMap/layer/LayerMenu.vue";
-import {checkElementParent} from "@/mindMap/clickUtils.ts";
 import MetaMenu from "@/mindMap/meta/MetaMenu.vue";
 import IconSave from "@/components/icons/IconSave.vue";
 import IconCopy from "@/components/icons/IconCopy.vue";
@@ -16,11 +15,11 @@ import IconSelectRect from "@/components/icons/IconSelectRect.vue";
 import IconLayer from "@/components/icons/IconLayer.vue";
 import IconDelete from "@/components/icons/IconDelete.vue";
 import IconMultiSelect from "@/components/icons/IconMultiSelect.vue";
-import {QuickInputItem, useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
 import IconSelectAll from "@/components/icons/IconSelectAll.vue";
-import DownloadSelect from "@/mindMap/toolBar/DownloadSelect.vue";
-
-const metaStore = useMindMapMetaStore()
+import DownloadSelect from "@/mindMap/file/DownloadSelect.vue";
+import {checkElementParent} from "@/utils/event/judgeEventTarget.ts";
+import {useFocusTargetStore} from "@/store/focusTargetStore.ts";
+import QuickInputBar from "@/mindMap/quickInput/QuickInputBar.vue";
 
 const {
     save,
@@ -50,6 +49,9 @@ const metaMenuOpen = ref(false)
 
 const layersMenuOpen = ref(false)
 
+/**
+ * 监听返回键行为，拦截返回键并关闭当前菜单
+ */
 const handleBackState = (): boolean => {
     if (metaMenuOpen.value) {
         metaMenuOpen.value = false
@@ -61,56 +63,26 @@ const handleBackState = (): boolean => {
     return true
 }
 
-const focusTarget = shallowRef<EventTarget | Element | null>()
-const setActiveElementByActiveElement = () => {
-    focusTarget.value = document.activeElement
-}
-const setActiveElementByFocusIn = (e: Event) => {
-    focusTarget.value = e.target
-}
-const cleanActiveElement = () => {
-    focusTarget.value = null
-}
-
-const isVueFlowInputFocused = computed<boolean>(() => {
-    return (focusTarget.value instanceof HTMLInputElement || focusTarget.value instanceof HTMLTextAreaElement) &&
-        currentLayer.value.vueFlow.vueFlowRef.value !== null && checkElementParent(focusTarget.value, currentLayer.value.vueFlow.vueFlowRef.value)
-})
-
 onMounted(() => {
     // @ts-ignore
     window.touchBackCallback = handleBackState
-
-    document.addEventListener('focusin', setActiveElementByFocusIn)
-    document.addEventListener('focusout', cleanActiveElement)
-    window.addEventListener('resize', setActiveElementByActiveElement)
 })
+
 onBeforeUnmount(() => {
     // @ts-ignore
     window.touchBackCallback = null
-
-    document.removeEventListener('focusin', setActiveElementByFocusIn)
-    document.removeEventListener('focusout', cleanActiveElement)
-    window.removeEventListener('resize', setActiveElementByActiveElement)
-    cleanActiveElement()
 })
 
-const handleQuickInput = (quickInput: QuickInputItem) => {
-    if (focusTarget.value instanceof HTMLInputElement || focusTarget.value instanceof HTMLTextAreaElement) {
-        const target = focusTarget.value as HTMLInputElement | HTMLTextAreaElement
+/**
+ * 检查聚焦元素
+ */
+const focusTargetStore = useFocusTargetStore()
 
-        const start = target.selectionStart ?? target.value.length
-        const end = target.selectionEnd ?? target.value.length
-
-        target.setRangeText(quickInput.value, start, end, 'end')
-
-        const inputEvent = new Event('input', { bubbles: true })
-        target.dispatchEvent(inputEvent)
-
-        const changeEvent = new Event('change')
-        target.dispatchEvent(changeEvent)
-    }
-}
+const isVueFlowInputFocused = computed<boolean>(() => {
+    const focusTarget = focusTargetStore.focusTarget
+    return (focusTarget.value instanceof HTMLInputElement || focusTarget.value instanceof HTMLTextAreaElement) &&
+        currentLayer.value.vueFlow.vueFlowRef.value !== null && checkElementParent(focusTarget.value, currentLayer.value.vueFlow.vueFlowRef.value)
+})
 </script>
 
 <template>
@@ -185,18 +157,11 @@ const handleQuickInput = (quickInput: QuickInputItem) => {
 
     <div
         class="toolbar bottom"
-        style="gap: 0.5rem;"
         :class="{
             open: isVueFlowInputFocused && !metaMenuOpen
         }"
     >
-        <button
-            v-for="quickInput in metaStore.meta.value.quickInputs"
-            :key="quickInput.id"
-            @touchend.prevent="handleQuickInput(quickInput)"
-        >
-            {{ quickInput.label }}
-        </button>
+        <QuickInputBar/>
     </div>
 
     <div
@@ -258,8 +223,9 @@ const handleQuickInput = (quickInput: QuickInputItem) => {
 .toolbar.top,
 .toolbar.bottom {
     width: 100%;
-    height: 2rem;
-    line-height: 2rem;
+    height: 2.5rem;
+    line-height: 2.5rem;
+    --icon-size: 1.25rem;
     display: flex;
     justify-content: space-between;
     opacity: 0;
@@ -332,15 +298,15 @@ const handleQuickInput = (quickInput: QuickInputItem) => {
 
 .toolbar.layer-menu {
     top: 0;
-    height: calc(100vh - 2rem);
+    height: 100vh;
     right: 0;
 }
 
 .toolbar.layer-menu > div {
     position: absolute;
-    top: 2rem;
+    top: 2.5rem;
     right: 0;
-    height: calc(100% - 2rem);
+    height: calc(100% - 5rem);
     width: min(60vw, 20rem);
     border-left: var(--border);
     border-color: var(--background-color-hover);

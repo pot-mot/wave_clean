@@ -1,7 +1,7 @@
 <script setup lang="ts" generic="T">
 import {computed, onBeforeUnmount, onMounted, ref, useTemplateRef} from "vue";
-import {useTouchEnterLeave} from "@/utils/event/TouchEnterLeave.ts";
-import {getMatchedElementOrParent} from "@/mindMap/clickUtils.ts";
+import {useTouchEnterLeave} from "@/utils/event/useTouchEnterLeave.ts";
+import {getMatchedElementOrParent} from "@/utils/event/judgeEventTarget.ts";
 import {useDeviceStore} from "@/store/deviceStore.ts";
 
 const props = defineProps<{

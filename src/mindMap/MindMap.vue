@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import {useMindMap} from "@/mindMap/useMindMap.ts";
-import MobileBar from "@/mindMap/toolBar/mobile/MobileBar.vue";
-import DeskTopBar from "@/mindMap/toolBar/desktop/DeskTopBar.vue";
+import MobileToolbar from "@/mindMap/toolbar/mobile/MobileToolbar.vue";
+import DesktopToolbar from "@/mindMap/toolbar/desktop/DesktopToolbar.vue";
 import MindMapLayer from "@/mindMap/layer/MindMapLayer.vue";
 import {nextTick, ref, watch} from "vue";
-import BackGround from "@/mindMap/background/BackGround.vue";
-import {judgeTargetIsInteraction} from "@/mindMap/clickUtils.ts";
+import MindMapBackground from "@/mindMap/background/MindMapBackground.vue";
+import {judgeTargetIsInteraction} from "@/utils/event/judgeEventTarget.ts";
 import {useDeviceStore} from "@/store/deviceStore.ts";
 
 const {isTouchDevice} = useDeviceStore()
@@ -72,7 +72,7 @@ const handleKeyDown = async (e: KeyboardEvent) => {
         id="mind-map-wrapper"
         style="width: 100%; height: 100%; position: relative;"
     >
-        <BackGround :viewport="currentLayer.vueFlow.viewport.value"/>
+        <MindMapBackground :viewport="currentLayer.vueFlow.viewport.value"/>
 
         <MindMapLayer
             v-for="layer in layers"
@@ -81,10 +81,10 @@ const handleKeyDown = async (e: KeyboardEvent) => {
         />
 
         <template v-if="isTouchDevice">
-            <MobileBar/>
+            <MobileToolbar/>
         </template>
         <template v-else>
-            <DeskTopBar/>
+            <DesktopToolbar/>
         </template>
     </div>
 </template>

@@ -9,7 +9,7 @@ import {
 } from "@/mindMap/useMindMap.ts";
 import {getRaw} from "@/utils/json/getRaw.ts";
 import {v7 as uuid} from "uuid";
-import {blurActiveElement} from "@/mindMap/clickUtils.ts";
+import {blurActiveElement} from "@/utils/event/judgeEventTarget.ts";
 import {nextTick} from "vue";
 import {sendMessage} from "@/components/message/sendMessage.ts";
 import {exportAsJpg, exportAsPng, exportAsSvg} from "@/utils/file/htmlExport.ts";

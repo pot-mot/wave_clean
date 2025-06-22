@@ -11,7 +11,7 @@ import IconMenu from "@/components/icons/IconMenu.vue";
 import IconLayer from "@/components/icons/IconLayer.vue";
 import IconDrag from "@/components/icons/IconDrag.vue";
 import IconSelectRect from "@/components/icons/IconSelectRect.vue";
-import DownloadSelect from "@/mindMap/toolBar/DownloadSelect.vue";
+import DownloadSelect from "@/mindMap/file/DownloadSelect.vue";
 
 const {
     save,

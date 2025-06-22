@@ -7,7 +7,7 @@ import {useEdgeUpdaterTouch} from "@/mindMap/edge/useEdgeUpdaterTouch.ts";
 import AutoResizeForeignObject from "@/mindMap/svg/AutoResizeForeignObject.vue";
 import IconDelete from "@/components/icons/IconDelete.vue";
 import IconFocus from "@/components/icons/IconFocus.vue";
-import {blurActiveElement} from "@/mindMap/clickUtils.ts";
+import {blurActiveElement} from "@/utils/event/judgeEventTarget.ts";
 import IconArrowNone from "@/components/icons/IconArrowNone.vue";
 import IconArrowTwoWay from "@/components/icons/IconArrowTwoWay.vue";
 import {getPaddingBezierPath} from "@/mindMap/edge/paddingBezierPath.ts";

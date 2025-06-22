@@ -12,7 +12,7 @@ import {
     XYPosition,
 } from "@vue-flow/core";
 import {computed, nextTick, readonly, ref, ShallowReactive, shallowReactive, ShallowRef, shallowRef, toRaw,} from "vue";
-import {blurActiveElement, judgeTargetIsInteraction} from "@/mindMap/clickUtils.ts";
+import {blurActiveElement, judgeTargetIsInteraction} from "@/utils/event/judgeEventTarget.ts";
 import {jsonSortPropStringify} from "@/utils/json/jsonStringify.ts";
 import {MindMapImportData, prepareImportIntoMindMap} from "@/mindMap/import/import.ts";
 import {
