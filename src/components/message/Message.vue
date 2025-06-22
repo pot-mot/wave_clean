@@ -11,7 +11,6 @@
                 v-for="(item, index) in messageItems"
                 :key="item.id"
                 class="message-wrapper"
-                :ref="el => initSize(el)"
             >
                 <div
                     class="message" :class="item.type"
@@ -19,10 +18,10 @@
                     @mouseleave="handleMouseLeave(item)"
                 >
                     <Component v-if="typeof item.content !== 'string'" :is="item.content"/>
-                    <span v-else>{{ item.content }}</span>
-                    <span v-if="item.canClose" class="close-icon" @click="close(index)">
+                    <div v-else>{{ item.content }}</div>
+                    <div v-if="item.canClose" class="close-icon" @click="close(index)">
                         <IconClose/>
-                    </span>
+                    </div>
                 </div>
             </div>
         </TransitionGroup>
@@ -80,18 +79,10 @@ const open = (
     const {
         type,
         canClose
-    } = Object.assign({}, options, messageOpenDefaultOptions)
+    } = Object.assign({}, messageOpenDefaultOptions, options)
     const messageItem: MessageItem = {id: ++messageItemIdIncrement, content, type, canClose}
     setMessageItemTimeout(messageItem)
     messageItems.value.push(messageItem)
-}
-
-const initSize = (el: Element | any | null) => {
-    if (!el) return
-    if (el instanceof HTMLElement && !el.style.width) {
-        el.style.width = el.scrollWidth + 'px'
-        el.style.height = el.scrollHeight + 'px'
-    }
 }
 
 const handleMouseEnter = (messageItem: MessageItem) => {
@@ -139,16 +130,18 @@ defineExpose({
 
 .message-wrapper {
     width: 100%;
-    margin-bottom: 0.5rem;
+    margin-bottom: 1rem;
 }
 
 .message {
+    display: flex;
     height: fit-content;
     width: fit-content;
     margin: auto;
     padding: 0.2rem 1rem;
-    text-align: center;
+    white-space: pre;
     font-size: 1rem;
+    line-height: 1.5rem;
     background-color: var(--background-color);
     border: var(--border);
     border-radius: var(--border-radius);
@@ -183,12 +176,15 @@ defineExpose({
 }
 
 .close-icon {
-    width: 1rem;
-    height: 1rem;
-    line-height: 1rem;
-    margin-left: 0.6rem;
-    font-size: 1rem;
+    height: 1.5rem;
+    line-height: 1.4rem;
+    margin-left: 0.5rem;
     cursor: pointer;
+    --icon-color: var(--comment-color);
+}
+
+.close-icon:hover {
+    --icon-color: var(--danger-color);
 }
 
 /* messages 过渡动画 */
