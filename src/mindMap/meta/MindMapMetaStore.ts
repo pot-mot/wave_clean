@@ -10,6 +10,7 @@ import {Theme} from "@tauri-apps/api/window";
 import {useThemeStore} from "@/store/themeStore.ts";
 import {debounce} from "lodash";
 import {v7 as uuid} from "uuid";
+import {createStore} from "@/store/createStore.ts";
 
 const metaFileName = '[[WAVE_CLEAN_EDIT_META]]'
 
@@ -157,7 +158,7 @@ export const getDefaultMeta = () => {
     }
 }
 
-const initMindMapMetaStore = () => {
+export const useMindMapMetaStore = createStore(() => {
     const meta = ref<Meta>(getDefaultMeta())
 
     const mindMapStore = useMindMap()
@@ -315,15 +316,4 @@ const initMindMapMetaStore = () => {
         toggle,
         currentMindMap,
     }
-}
-
-type MindMapMetaStore = ReturnType<typeof initMindMapMetaStore>
-
-let metaStore: MindMapMetaStore | undefined = undefined
-
-export const useMindMapMetaStore = () => {
-    if (metaStore === undefined) {
-        metaStore = initMindMapMetaStore()
-    }
-    return metaStore
-}
+})
