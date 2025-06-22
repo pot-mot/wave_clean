@@ -39,7 +39,7 @@ const layersMenuOpen = ref(false)
             <IconSave/>
         </button>
 
-        <DownloadSelect/>
+        <DownloadSelect style="margin-left: 0.5rem; margin-right: 0.5rem;"/>
 
         <button :disabled="!canUndo" @click="undo()" :class="{disabled: !canUndo}">
             <IconUndo/>

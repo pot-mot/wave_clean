@@ -79,23 +79,23 @@ onBeforeUnmount(() => {
 const focusTargetStore = useFocusTargetStore()
 
 const isVueFlowInputFocused = computed<boolean>(() => {
-    const focusTarget = focusTargetStore.focusTarget
-    return (focusTarget.value instanceof HTMLInputElement || focusTarget.value instanceof HTMLTextAreaElement) &&
-        currentLayer.value.vueFlow.vueFlowRef.value !== null && checkElementParent(focusTarget.value, currentLayer.value.vueFlow.vueFlowRef.value)
+    const focusTarget = focusTargetStore.focusTarget.value
+    return (focusTarget instanceof HTMLInputElement || focusTarget instanceof HTMLTextAreaElement) &&
+        currentLayer.value.vueFlow.vueFlowRef.value !== null && checkElementParent(focusTarget, currentLayer.value.vueFlow.vueFlowRef.value)
 })
 </script>
 
 <template>
     <div class="toolbar top" :class="{open: !metaMenuOpen}">
         <div class="container">
-            <button @click="metaMenuOpen = !metaMenuOpen" :class="{enable: metaMenuOpen}">
+            <button @click="metaMenuOpen = !metaMenuOpen" :class="{enable: metaMenuOpen}" style="padding-left: 1rem;">
                 <IconMenu/>
             </button>
             <button @click="save()">
                 <IconSave/>
             </button>
 
-            <DownloadSelect/>
+            <DownloadSelect style="margin-left: 0.5rem;"/>
         </div>
 
         <div class="container">
@@ -103,7 +103,7 @@ const isVueFlowInputFocused = computed<boolean>(() => {
                 <IconFit/>
             </button>
 
-            <button @click="removeSelection()" :class="{disabled: !isSelectionPlural}">
+            <button @click="removeSelection()" :class="{disabled: !isSelectionPlural}" style="padding-right: 1rem;">
                 <IconDelete :color="isSelectionPlural ? 'var(--danger-color)' : 'var(--icon-color)'"/>
             </button>
         </div>
@@ -135,7 +135,7 @@ const isVueFlowInputFocused = computed<boolean>(() => {
         }"
     >
         <div class="container">
-            <button @click="toggleSelectAll()">
+            <button @click="toggleSelectAll()" style="padding-left: 1rem;">
                 <IconSelectAll/>
             </button>
 
@@ -156,7 +156,7 @@ const isVueFlowInputFocused = computed<boolean>(() => {
                 <IconRedo/>
             </button>
 
-            <button @click="layersMenuOpen = !layersMenuOpen" :class="{enable: layersMenuOpen}">
+            <button @click="layersMenuOpen = !layersMenuOpen" :class="{enable: layersMenuOpen}" style="padding-right: 1rem; margin-left: 0.5rem;">
                 <IconLayer/>
             </button>
         </div>
@@ -258,17 +258,6 @@ const isVueFlowInputFocused = computed<boolean>(() => {
     border-color: var(--background-color-hover);
 }
 
-.toolbar.top > .container > button:nth-child(1),
-.toolbar.bottom > .container > button:nth-child(1) {
-    padding-left: 1rem;
-}
-
-.toolbar.top > .container > button:nth-last-child(1),
-.toolbar.bottom > .container > button:nth-last-child(1) {
-    padding-right: 1rem;
-}
-
-
 .toolbar.top > .container,
 .toolbar.bottom > .container {
     display: flex;
@@ -282,10 +271,9 @@ const isVueFlowInputFocused = computed<boolean>(() => {
     border: var(--border);
     border-color: var(--background-color-hover);
     border-radius: var(--border-radius);
-}
-.toolbar.right-top button {
-    width: 100%;
-    height: 2.5rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
 }
 
 .toolbar.right-top.open {
@@ -298,6 +286,10 @@ const isVueFlowInputFocused = computed<boolean>(() => {
     flex-direction: column;
 }
 
+.toolbar.right-top button {
+    width: 100%;
+    height: 2.5rem;
+}
 
 .toolbar.meta-menu,
 .toolbar.layer-menu {
