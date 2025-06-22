@@ -24,6 +24,7 @@
 
     --icon-color: #666;
     --icon-color-light: #999;
+    --icon-size: 1rem;
 
     color: var(--text-color);
     background-color: var(--background-color);

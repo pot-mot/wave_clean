@@ -1,19 +1,25 @@
 <script setup lang="ts">
-withDefaults(defineProps<{
+import {computed} from "vue";
+
+const props = withDefaults(defineProps<{
     color?: string,
-    size?: number,
+    size?: string,
+    height?: string,
+    width?: string,
 }>(), {
-    size: 16,
+    size: "var(--icon-size)",
     color: "var(--icon-color)"
 })
+
+const computedHeight = computed(() => props.height ?? props.size)
+
+const computedWidth = computed(() => props.width ?? props.size)
 </script>
 
 <template>
     <svg
         xmlns="http://www.w3.org/2000/svg"
         class="base-icon"
-        :width="size"
-        :height="size"
         :stroke="color"
         viewBox="0 0 24 24"
         stroke-linecap="round"
@@ -30,5 +36,7 @@ withDefaults(defineProps<{
     display: inline-block;
     vertical-align: middle;
     user-select: none;
+    height: v-bind(computedHeight);
+    width: v-bind(computedWidth);
 }
 </style>
