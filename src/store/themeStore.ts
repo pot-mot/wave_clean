@@ -2,6 +2,7 @@ import {readonly, ref, watch} from "vue";
 import {Theme, getCurrentWindow} from "@tauri-apps/api/window";
 import {useDeviceStore} from "@/store/deviceStore.ts";
 import {createStore} from "@/store/createStore.ts";
+import {tinycolor} from "vue-color";
 
 export const useThemeStore = createStore(() => {
     const {isTouchDevice} = useDeviceStore()
@@ -38,11 +39,13 @@ export const useThemeStore = createStore(() => {
         theme.value = theme.value === 'dark' ? 'light' : 'dark';
     }
 
-    const currentPrimaryColor = window.getComputedStyle(document.documentElement).getPropertyValue("--primary-color").toLowerCase()
-    const primaryColor = ref<string>(currentPrimaryColor)
+    const initPrimaryColor = window.getComputedStyle(document.documentElement).getPropertyValue("--primary-color").toLowerCase()
+    document.documentElement.style.setProperty("--primary-color-opacity-background", tinycolor(initPrimaryColor).setAlpha(0.1).toRgbString())
+    const primaryColor = ref<string>(initPrimaryColor)
 
     watch(() => primaryColor.value, (newPrimaryColor) => {
         document.documentElement.style.setProperty("--primary-color", newPrimaryColor)
+        document.documentElement.style.setProperty("--primary-color-opacity-background", tinycolor(newPrimaryColor).setAlpha(0.1).toRgbString())
     })
 
     const setPrimaryColor = (newPrimaryColor: string) => {

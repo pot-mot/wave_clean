@@ -84,4 +84,10 @@ initLayer(props.layer)
 :deep(.vue-flow__pane.dragged-view) {
     cursor: default;
 }
+
+:deep(.vue-flow__selection) {
+    border: var(--border);
+    border-color: var(--primary-color);
+    background-color: var(--primary-color-opacity-background);
+}
 </style>

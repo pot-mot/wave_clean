@@ -142,7 +142,6 @@ defineExpose({
     white-space: pre;
     font-size: 1rem;
     line-height: 1.5rem;
-    background-color: var(--background-color);
     border: var(--border);
     border-radius: var(--border-radius);
     pointer-events: all;
@@ -153,26 +152,31 @@ defineExpose({
 .message.primary {
     color: var(--primary-color);
     border-color: var(--primary-color);
+    background-color: var(--primary-color-opacity-background);
 }
 
 .message.success {
     color: var(--success-color);
     border-color: var(--success-color);
+    background-color: var(--success-color-opacity-background);
 }
 
 .message.error {
     color: var(--danger-color);
     border-color: var(--danger-color);
+    background-color: var(--danger-color);
 }
 
 .message.warning {
     color: var(--warning-color);
     border-color: var(--warning-color);
+    background-color: var(--warning-color-opacity-background);
 }
 
 .message.info {
-    color: var(--comment-color);
-    border-color: var(--comment-color);
+    color: var(--info-color);
+    border-color: var(--info-color);
+    background-color: var(--info-color-opacity-background);
 }
 
 .close-icon {
@@ -180,7 +184,7 @@ defineExpose({
     line-height: 1.4rem;
     margin-left: 0.5rem;
     cursor: pointer;
-    --icon-color: var(--comment-color);
+    --icon-color: var(--info-color);
 }
 
 .close-icon:hover {
