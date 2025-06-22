@@ -1113,13 +1113,21 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         canUndo: readonly(canUndo),
         canRedo: readonly(canRedo),
         undo: () => {
-            history.undo()
-            sendMessage("undo")
+            if (canUndo.value) {
+                history.undo()
+                sendMessage("undo", {type: "success"})
+            } else {
+                sendMessage("cannot undo", {type: "warning"})
+            }
             focus()
         },
         redo: () => {
-            history.redo()
-            sendMessage("redo")
+            if (canRedo.value) {
+                history.redo()
+                sendMessage("redo", {type: "success"})
+            } else {
+                sendMessage("cannot redo", {type: "warning"})
+            }
             focus()
         },
 
