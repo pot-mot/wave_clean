@@ -87,7 +87,7 @@ const isVueFlowInputFocused = computed<boolean>(() => {
 
 <template>
     <div class="toolbar top" :class="{open: !metaMenuOpen}">
-        <div>
+        <div class="container">
             <button @click="metaMenuOpen = !metaMenuOpen" :class="{enable: metaMenuOpen}">
                 <IconMenu/>
             </button>
@@ -98,19 +98,7 @@ const isVueFlowInputFocused = computed<boolean>(() => {
             <DownloadSelect/>
         </div>
 
-        <div>
-            <button @click="copy()">
-                <IconCopy/>
-            </button>
-            <button @click="cut()">
-                <IconCut/>
-            </button>
-            <button @click="paste()">
-                <IconPaste/>
-            </button>
-        </div>
-
-        <div>
+        <div class="container">
             <button @click="fitView()">
                 <IconFit/>
             </button>
@@ -122,12 +110,31 @@ const isVueFlowInputFocused = computed<boolean>(() => {
     </div>
 
     <div
+        class="toolbar right-top"
+        :class="{
+            open: !isVueFlowInputFocused && !metaMenuOpen
+        }"
+    >
+        <div class="container">
+            <button @click="copy()">
+                <IconCopy/>
+            </button>
+            <button @click="cut()">
+                <IconCut/>
+            </button>
+            <button @click="paste()">
+                <IconPaste/>
+            </button>
+        </div>
+    </div>
+
+    <div
         class="toolbar bottom"
         :class="{
             open: !isVueFlowInputFocused && !metaMenuOpen
         }"
     >
-        <div>
+        <div class="container">
             <button @click="toggleSelectAll()">
                 <IconSelectAll/>
             </button>
@@ -141,7 +148,7 @@ const isVueFlowInputFocused = computed<boolean>(() => {
             </button>
         </div>
 
-        <div>
+        <div class="container">
             <button :disabled="!canUndo" @click="undo()" :class="{disabled: !canUndo}">
                 <IconUndo/>
             </button>
@@ -169,7 +176,7 @@ const isVueFlowInputFocused = computed<boolean>(() => {
         :class="{open: !isVueFlowInputFocused && metaMenuOpen}"
         @click.self="metaMenuOpen = false"
     >
-        <div>
+        <div class="container">
             <MetaMenu/>
         </div>
     </div>
@@ -179,7 +186,7 @@ const isVueFlowInputFocused = computed<boolean>(() => {
         :class="{open: !isVueFlowInputFocused && layersMenuOpen}"
         @click.self="layersMenuOpen = false"
     >
-        <div>
+        <div class="container">
             <LayerMenu/>
         </div>
     </div>
@@ -199,7 +206,7 @@ const isVueFlowInputFocused = computed<boolean>(() => {
     background-color: var(--background-color);
     border: none;
     cursor: pointer;
-    transition: background-color 0.5s ease;
+    transition: background-color 0.3s ease;
 }
 
 .toolbar button:hover {
@@ -251,10 +258,46 @@ const isVueFlowInputFocused = computed<boolean>(() => {
     border-color: var(--background-color-hover);
 }
 
-.toolbar.top > div,
-.toolbar.bottom > div {
+.toolbar.top > .container > button:nth-child(1),
+.toolbar.bottom > .container > button:nth-child(1) {
+    padding-left: 1rem;
+}
+
+.toolbar.top > .container > button:nth-last-child(1),
+.toolbar.bottom > .container > button:nth-last-child(1) {
+    padding-right: 1rem;
+}
+
+
+.toolbar.top > .container,
+.toolbar.bottom > .container {
     display: flex;
 }
+
+.toolbar.right-top {
+    height: fit-content;
+    width: 2.5rem;
+    top: 3rem;
+    right: 0.5rem;
+    border: var(--border);
+    border-color: var(--background-color-hover);
+    border-radius: var(--border-radius);
+}
+.toolbar.right-top button {
+    width: 100%;
+    height: 2.5rem;
+}
+
+.toolbar.right-top.open {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.toolbar.right-top > .container {
+    display: flex;
+    flex-direction: column;
+}
+
 
 .toolbar.meta-menu,
 .toolbar.layer-menu {
@@ -271,8 +314,8 @@ const isVueFlowInputFocused = computed<boolean>(() => {
     opacity: 1;
 }
 
-.toolbar.meta-menu > div,
-.toolbar.layer-menu > div {
+.toolbar.meta-menu > .container,
+.toolbar.layer-menu > .container {
     transition: transform 0.5s ease;
 }
 
@@ -282,7 +325,7 @@ const isVueFlowInputFocused = computed<boolean>(() => {
     left: 0;
 }
 
-.toolbar.meta-menu > div {
+.toolbar.meta-menu > .container {
     position: absolute;
     top: 0;
     left: 0;
@@ -292,7 +335,7 @@ const isVueFlowInputFocused = computed<boolean>(() => {
     border-color: var(--background-color-hover);
     transform: translateX(-100%);
 }
-.toolbar.meta-menu.open > div {
+.toolbar.meta-menu.open > .container {
     transform: translateX(0);
 }
 
@@ -302,7 +345,7 @@ const isVueFlowInputFocused = computed<boolean>(() => {
     right: 0;
 }
 
-.toolbar.layer-menu > div {
+.toolbar.layer-menu > .container {
     position: absolute;
     top: 2.5rem;
     right: 0;
@@ -312,7 +355,7 @@ const isVueFlowInputFocused = computed<boolean>(() => {
     border-color: var(--background-color-hover);
     transform: translateX(100%);
 }
-.toolbar.layer-menu.open > div {
+.toolbar.layer-menu.open > .container {
     transform: translateX(0);
 }
 </style>

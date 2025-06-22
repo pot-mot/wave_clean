@@ -68,7 +68,7 @@ const layersMenuOpen = ref(false)
         tabindex="-1"
         @keydown.esc="metaMenuOpen = false"
     >
-        <div>
+        <div class="container">
             <MetaMenu/>
         </div>
     </div>
@@ -79,7 +79,7 @@ const layersMenuOpen = ref(false)
         tabindex="-1"
         @keydown.esc="layersMenuOpen = false"
     >
-        <div>
+        <div class="container">
             <LayerMenu/>
         </div>
     </div>
@@ -97,7 +97,7 @@ const layersMenuOpen = ref(false)
     background-color: var(--background-color);
     border: none;
     cursor: pointer;
-    transition: background-color 0.5s ease;
+    transition: background-color 0.3s ease;
 }
 
 .toolbar button:hover {
@@ -163,32 +163,32 @@ const layersMenuOpen = ref(false)
     right: 0;
 }
 
-.toolbar.meta-menu > div,
-.toolbar.layer-menu > div {
+.toolbar.meta-menu > .container,
+.toolbar.layer-menu > .container {
     height: 100%;
     width: 100%;
     transition: transform 0.5s ease;
 }
 
-.toolbar.meta-menu > div {
+.toolbar.meta-menu > .container {
     border-top: var(--border);
     border-bottom: var(--border);
     border-right: var(--border);
     border-color: var(--background-color-hover);
     transform: translateX(-100%);
 }
-.toolbar.meta-menu.open > div {
+.toolbar.meta-menu.open > .container {
     transform: translateX(0);
 }
 
-.toolbar.layer-menu > div{
+.toolbar.layer-menu > .container{
     border-top: var(--border);
     border-bottom: var(--border);
     border-left: var(--border);
     border-color: var(--background-color-hover);
     transform: translateX(100%);
 }
-.toolbar.layer-menu.open > div {
+.toolbar.layer-menu.open > .container {
     transform: translateX(0);
 }
 </style>
