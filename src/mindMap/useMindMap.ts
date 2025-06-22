@@ -128,10 +128,12 @@ export type SizePositionEdgePartial = {
     data: Partial<SizePositionEdge["data"]>
 }
 
+export type EdgeArrowType = 'one-way' | 'two-way' | 'none'
+
 export const CONTENT_EDGE_TYPE = "CONTENT_EDGE" as const
 export type ContentEdgeData = {
     content: string,
-    arrowType?: 'one-way' | 'two-way' | 'none' | undefined
+    arrowType?: EdgeArrowType | undefined
 } & SizePositionEdgePartial["data"]
 export type ContentEdge = Pick<Edge, 'id' | 'source' | 'target'> & {
     data: ContentEdgeData,
