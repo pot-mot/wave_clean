@@ -1,6 +1,6 @@
 <template>
     <BaseIcon>
-        <path d="M 5 5 l 4 0 l 0 4 l -4 0 l 0 -4 M 18 5 l 4 0 l 0 4 l -4 0 l 0 -4 M 5 18 l 4 0 l 0 4 l -4 0 l 0 -4 M 18 18 l 4 0 l 0 4 l -4 0 l 0 -4 M 7 9 l 0 9 M 20 9 l 0 9 M 9 7 l 9 0 M 9 20 l 9 0"/>
+        <path d="M 4 4 l 4 0 l 0 4 l -4 0 l 0 -4 M 16 4 l 4 0 l 0 4 l -4 0 l 0 -4 M 4 16 l 4 0 l 0 4 l -4 0 l 0 -4 M 16 16 l 4 0 l 0 4 l -4 0 l 0 -4 M 6 9 l 0 6 M 18 9 l 0 6 M 9 6 l 6 0 M 9 18 l 6 0"/>
     </BaseIcon>
 </template>
 
