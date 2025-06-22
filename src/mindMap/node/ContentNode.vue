@@ -205,7 +205,7 @@ const executeDelete = () => {
 .toolbar > button {
     padding: 0.3rem;
     margin-right: 0.3rem;
-    transition: background-color 0.5s ease;
+    transition: background-color 0.3s ease;
 }
 
 .toolbar > button:hover {

@@ -212,10 +212,10 @@ const executeDelete = () => {
                 orient="auto-start-reverse"
             >
                 <polyline
+                    class="content-edge-arrow"
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     points="-6,-4 2,0 -6,4"
-                    style="fill: var(--edge-color); transition: fill 0.5s ease;"
                 />
             </marker>
         </defs>
@@ -223,7 +223,7 @@ const executeDelete = () => {
         <BaseEdge
             ref="bezierRef"
             v-bind.prop="props"
-            style="stroke: var(--edge-color); transition: stroke 0.5s ease;"
+            class="content-edge-line"
             :path="bezierPath"
             :marker-start="markerStart"
             :marker-end="markerEnd"
@@ -299,10 +299,20 @@ const executeDelete = () => {
 .toolbar > button {
     padding: 0.3rem;
     margin-right: 0.3rem;
-    transition: background-color 0.5s ease;
+    transition: background-color 0.3s ease;
 }
 
 .toolbar > button:hover {
     background-color: var(--background-color-hover);
+}
+
+:deep(.content-edge-line) {
+    stroke: var(--edge-color) !important;
+    transition: stroke 0.3s ease;
+}
+
+.content-edge-arrow {
+    fill: var(--edge-color);
+    transition: fill 0.3s ease;
 }
 </style>
