@@ -25,12 +25,7 @@ body {
     transition: none !important;
 }
 
-/* 选中元素 */
-::selection {
-    background-color: var(--primary-color);
-    opacity: 0.8;
-}
-
+/* 取消聚焦元素外层高亮 */
 div:focus {
     outline: none;
 }
