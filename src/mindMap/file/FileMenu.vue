@@ -5,6 +5,7 @@ import {computed, ref} from "vue";
 import {sendMessage} from "@/components/message/sendMessage.ts";
 import IconAdd from "@/components/icons/IconAdd.vue";
 import DragModelList from "@/components/list/DragModelList.vue";
+import {formatDatetimeToLocal} from "@/utils/datetime/datetimeFormat.ts";
 
 const metaStore = useMindMapMetaStore()
 
@@ -76,7 +77,7 @@ const handleRename = (key: string, e: Event) => {
                         <div
                             class="last-edit-time"
                         >
-                            {{ mindMap.lastEditTime }}
+                            {{ formatDatetimeToLocal(mindMap.lastEditTime ?? mindMap.createdTime) }}
                         </div>
                     </div>
 
@@ -101,7 +102,7 @@ const handleRename = (key: string, e: Event) => {
                         <div
                             class="last-edit-time"
                         >
-                            {{ mindMap.lastEditTime }}
+                            {{ formatDatetimeToLocal(mindMap.lastEditTime ?? mindMap.createdTime) }}
                         </div>
                     </div>
                 </div>

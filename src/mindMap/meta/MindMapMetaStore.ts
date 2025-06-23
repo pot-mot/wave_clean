@@ -23,7 +23,8 @@ export type QuickInputItem = {
 export type MindMapMetaData = {
     key: string,
     name: string,
-    lastEditTime: string
+    createdTime?: string,
+    lastEditTime?: string
 }
 
 export type Meta = {
@@ -53,11 +54,16 @@ const Meta_JsonSchema: JSONSchemaType<Meta> = {
                     name: {
                         type: "string",
                     },
+                    createdTime: {
+                        type: "string",
+                        nullable: true
+                    },
                     lastEditTime: {
                         type: "string",
+                        nullable: true
                     },
                 },
-                required: ["key", "name", "lastEditTime"],
+                required: ["key", "name"],
             },
         },
         currentTheme: {
@@ -105,11 +111,16 @@ const PartialMeta_JsonSchema: JSONSchemaType<Partial<Meta>> = {
                     name: {
                         type: "string",
                     },
+                    createdTime: {
+                        type: "string",
+                        nullable: true
+                    },
                     lastEditTime: {
                         type: "string",
+                        nullable: true
                     },
                 },
-                required: ["key", "name", "lastEditTime"],
+                required: ["key", "name"],
             },
             nullable: true,
         },
@@ -180,14 +191,14 @@ export const useMindMapMetaStore = createStore(() => {
 
     const add = async (index: number, name: string) => {
         try {
-            const timestamp = new Date()
+            const timestamp = `${new Date().getTime()}`
             const key = `${name}-${uuid()}`
-            meta.value.mindMaps.splice(index, 0, {key, name, lastEditTime: timestamp.toLocaleString()})
+            meta.value.mindMaps.splice(index, 0, {key, name, createdTime: timestamp, lastEditTime: timestamp})
             await jsonFileOperations.create(key)
             await jsonFileOperations.set(key, jsonSortPropStringify(getDefaultMindMapData()))
             return key
         } catch (e) {
-            sendMessage("create mindmap fail")
+            sendMessage("create mindmap fail", {type: "error"})
             throw e
         }
     }
@@ -205,7 +216,7 @@ export const useMindMapMetaStore = createStore(() => {
             meta.value.mindMaps = meta.value.mindMaps.filter(item => item.key !== key)
             await jsonFileOperations.remove(key)
         } catch (e) {
-            sendMessage("delete mindmap fail")
+            sendMessage("delete mindmap fail", {type: "error"})
             throw e
         }
     }
@@ -233,10 +244,15 @@ export const useMindMapMetaStore = createStore(() => {
         if (key !== undefined) {
             try {
                 await jsonFileOperations.set(key, JSON.stringify(mindMapStore.exportJson()))
-                sendMessage("save success")
+                for (const item of meta.value.mindMaps) {
+                    if (item.key === key) {
+                        item.lastEditTime = `${new Date().getTime()}`
+                    }
+                }
+                sendMessage("save success", {type: "success"})
             } catch (e) {
                 console.error(e)
-                sendMessage(`save fail: ${e}`)
+                sendMessage(`save fail: ${e}`, {type: "error"})
             }
         } else {
             sendMessage("please create a new mindMap")
@@ -253,13 +269,13 @@ export const useMindMapMetaStore = createStore(() => {
             meta.value.currentKey = key
         } catch (e) {
             console.error(e)
-            sendMessage(`toggle mindmap error.`)
+            sendMessage(`toggle mindmap error.`, {type: "error"})
         }
     }
 
     const currentMindMap = computed<MindMapMetaData | undefined>(() => {
-        return meta.value.mindMaps.find(it => it.key === meta.value.currentKey)
-    })
+            return meta.value.mindMaps.find(it => it.key === meta.value.currentKey)
+        })
 
     ;(async () => {
         document.documentElement.classList.add('init-loading')
