@@ -112,7 +112,7 @@ const isVueFlowInputFocused = computed<boolean>(() => {
     <div
         class="toolbar right-top"
         :class="{
-            open: !isVueFlowInputFocused && !metaMenuOpen
+            open: !isVueFlowInputFocused && !metaMenuOpen && !layersMenuOpen
         }"
     >
         <div class="container">
