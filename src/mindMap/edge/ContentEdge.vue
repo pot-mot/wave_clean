@@ -14,7 +14,7 @@ import {getPaddingBezierPath} from "@/mindMap/edge/paddingBezierPath.ts";
 import IconArrowOneWayLeft from "@/components/icons/IconArrowOneWayLeft.vue";
 import IconArrowOneWayRight from "@/components/icons/IconArrowOneWayRight.vue";
 import {v7 as uuid} from "uuid"
-import {debounce, throttle} from "lodash";
+import {debounce} from "lodash";
 
 const {updateEdgeData, isSelectionPlural, canMultiSelect, findEdge, selectEdge, fitRect, remove, currentViewport} = useMindMap()
 
@@ -108,10 +108,29 @@ const calculateMidPoint = (path: SVGPathElement) => {
 // 同步 edge size position
 const boundingClientRect = ref<DOMRect>()
 
-watch(() => [boundingClientRect.value, inputWidth.value, inputHeight.value], debounce(() => {
+// 计算 edge 外部尺寸
+const calculateBoundingBox = (path: SVGPathElement) => {
+    boundingClientRect.value = path.getBoundingClientRect()
+}
+
+const syncSizePosition = () => {
     const edge = findEdge(props.id, props.layer.vueFlow)
     if (edge !== undefined && boundingClientRect.value !== undefined) {
-        let {width, height, top, left} = boundingClientRect.value
+        const flowTransform = props.layer.vueFlow.viewport.value
+        const zoom = flowTransform.zoom
+
+        let {width, height, x: left, y: top} = boundingClientRect.value
+
+        // 计算与当前画布的偏移量
+        left -= flowTransform.x
+        top -= flowTransform.y
+
+        // 计算缩放
+        width /= zoom
+        height /= zoom
+        left /= zoom
+        top /= zoom
+
         if (inputWidth.value > width) {
             left -= (inputWidth.value - width) / 2
             width = inputWidth.value
@@ -121,33 +140,22 @@ watch(() => [boundingClientRect.value, inputWidth.value, inputHeight.value], deb
             height = inputHeight.value
         }
 
-        const {
-            x: flowLeft,
-            y: flowTop,
-        } = props.layer.vueFlow.screenToFlowCoordinate({
-            x: left,
-            y: top,
-        })
         const sizePositionData: SizePositionEdgePartial["data"] = {
-            position: {left: flowLeft, top: flowTop},
-            size: {width, height}
+            position: {left, top},
+            size: {width: width, height: height}
         }
 
         // edge size position change never emit history change
         Object.assign(edge.data, sizePositionData)
     }
-}, 500), {immediate: true})
-
-// 计算 edge 外部尺寸
-const calculateBoundingBox = throttle((path: SVGPathElement) => {
-    boundingClientRect.value = path.getBoundingClientRect()
-}, 500)
+}
 
 onMounted(() => {
     const path = bezierRef.value?.$el?.nextElementSibling as SVGPathElement | undefined
     if (path === undefined) return
     calculateMidPoint(path)
     calculateBoundingBox(path)
+    syncSizePosition()
     pathObserver = new MutationObserver(() => {
         calculateMidPoint(path)
         calculateBoundingBox(path)
@@ -156,9 +164,9 @@ onMounted(() => {
         attributes: true,
         attributeFilter: ['d']
     })
-
-    curveMidpoint.value = path.getPointAtLength(path.getTotalLength() / 2)
 })
+
+watch(() => [boundingClientRect.value, inputWidth.value, inputHeight.value], debounce(syncSizePosition, 200))
 
 onBeforeUnmount(() => {
     pathObserver?.disconnect()
