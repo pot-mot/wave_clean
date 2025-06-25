@@ -224,17 +224,17 @@ export const useMindMapMetaStore = createStore(() => {
     const get = async (key: string): Promise<MindMapData> => {
         const item = meta.value.mindMaps.find(it => it.key === key)
         if (item === undefined) {
-            sendMessage(`toggle error, MindMap not existed.`)
+            sendMessage(`toggle error, MindMap not existed.`, {type: "error"})
             throw new Error(`mindMap ${key} not existed`)
         }
         const data = await jsonFileOperations.get(key)
         if (data === undefined) {
-            sendMessage(`toggle error, MindMap not existed.`)
+            sendMessage(`toggle error, MindMap not existed.`, {type: "error"})
             throw new Error(`mindMap ${key} file not existed`)
         }
         const parsedData = JSON.parse(data)
         if (!validateMindMapData(parsedData)) {
-            sendMessage(`toggle error, MindMap illegal.`)
+            sendMessage(`toggle error, MindMap illegal.`, {type: "error"})
             throw new Error(`invalid mindMap ${key}`)
         }
         return parsedData
@@ -255,7 +255,7 @@ export const useMindMapMetaStore = createStore(() => {
                 sendMessage(`save fail: ${e}`, {type: "error"})
             }
         } else {
-            sendMessage("please create a new mindMap")
+            sendMessage("please create a new mindMap", {type: "warning"})
         }
     }
 
@@ -317,7 +317,7 @@ export const useMindMapMetaStore = createStore(() => {
             }
         } catch (e) {
             console.error(e)
-            sendMessage("meta file init fail")
+            sendMessage("meta file init fail", {type: "error"})
         } finally {
             document.documentElement.classList.remove('init-loading')
         }

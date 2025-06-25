@@ -164,7 +164,7 @@ defineExpose({
 .message.error {
     color: var(--danger-color);
     border-color: var(--danger-color);
-    background-color: var(--danger-color);
+    background-color: var(--danger-color-opacity-background);
 }
 
 .message.warning {

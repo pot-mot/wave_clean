@@ -1082,12 +1082,12 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
             const savePath = await exportMindMapToFile(useMindMapMetaStore().currentMindMap.value?.name, exportJson(), global.layers, type)
 
             if (!savePath) {
-                sendMessage("export fail")
+                sendMessage("export fail", {type: "error"})
             } else {
-                sendMessage(`export success, file in ${savePath}`)
+                sendMessage(`export success, file in ${savePath}`, {type: "success"})
             }
         } catch (e) {
-            sendMessage("export fail")
+            sendMessage("export fail", {type: "error"})
         }
 
         isExportFile.value = false
@@ -1195,33 +1195,33 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         ) => {
             try {
                 const result = await layer.copy(data)
-                sendMessage("copy")
+                sendMessage("copy", {type: "success"})
                 focus()
                 return result
             } catch (e) {
-                sendMessage("copy fail")
+                sendMessage("copy fail", {type: "warning"})
                 throw e
             }
         },
         paste: async (layer: MindMapLayer = global.currentLayer.value) => {
             try {
                 const result = await layer.paste()
-                sendMessage("paste")
+                sendMessage("paste", {type: "success"})
                 focus()
                 return result
             } catch (e) {
-                sendMessage("paste fail")
+                sendMessage("paste fail", {type: "warning"})
                 throw e
             }
         },
         cut: async (layer: MindMapLayer = global.currentLayer.value) => {
             try {
                 const result = await layer.cut()
-                sendMessage("cut")
+                sendMessage("cut", {type: "success"})
                 focus()
                 return result
             } catch (e) {
-                sendMessage("cut fail")
+                sendMessage("cut fail", {type: "warning"})
                 throw e
             }
         },

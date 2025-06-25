@@ -205,7 +205,7 @@ const exportMindMapToImage = async (
         }
 
         if (left === Infinity || top === Infinity || right === -Infinity || bottom === -Infinity) {
-            sendMessage("cannot export empty")
+            sendMessage("cannot export empty", {type: "warning"})
             return;
         }
 

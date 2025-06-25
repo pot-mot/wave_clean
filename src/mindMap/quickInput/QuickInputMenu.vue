@@ -25,7 +25,7 @@ const input = ref<QuickInputItem>(getDefaultQuickInput())
 
 const handleAdd = () => {
     if (input.value.label.length === 0 || input.value.value.length === 0) {
-        sendMessage("Please set label and value")
+        sendMessage("Please set label and value", {type: "warning"})
         return
     }
     metaStore.meta.value.quickInputs.push(input.value)
