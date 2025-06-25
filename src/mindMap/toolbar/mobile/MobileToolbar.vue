@@ -333,7 +333,7 @@ const isVueFlowInputFocused = computed<boolean>(() => {
 
 .toolbar.layer-menu {
     top: 0;
-    height: 100vh;
+    height: calc(100vh - 2.5rem);
     right: 0;
 }
 
@@ -341,7 +341,7 @@ const isVueFlowInputFocused = computed<boolean>(() => {
     position: absolute;
     top: 2.5rem;
     right: 0;
-    height: calc(100% - 5rem);
+    height: calc(100% - 2.5rem);
     width: min(60vw, 20rem);
     border-left: var(--border);
     border-color: var(--background-color-hover);
