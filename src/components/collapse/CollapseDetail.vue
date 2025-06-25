@@ -34,14 +34,13 @@
                     :class="{ open: isOpen }"
                 />
             </div>
-
         </div>
 
         <div
             class="collapse-detail-body"
             ref="bodyRef"
         >
-            <slot/>
+            <slot name="body"/>
         </div>
     </div>
 </template>
@@ -51,7 +50,7 @@ import {onMounted, useTemplateRef, watch} from 'vue'
 import {CollapseProps, defaultCollapseProps} from "@/components/collapse/CollapseProps.ts";
 import IconCaretDown from "@/components/icons/IconCaretDown.vue";
 
-const isOpen = defineModel({required: true})
+const isOpen = defineModel<boolean>({required: false, default: false})
 
 const props = withDefaults(defineProps<CollapseProps>(), defaultCollapseProps)
 
@@ -82,6 +81,10 @@ watch(() => isOpen.value, () => {
 </script>
 
 <style scoped>
+.collapse-detail-head {
+    width: 100%;
+}
+
 .collapse-detail-head.open-by-head {
     cursor: pointer;
 }
@@ -92,27 +95,30 @@ watch(() => isOpen.value, () => {
 
 .collapse-detail-head.caret-left {
     display: grid;
-    grid-template-columns: 1rem 1fr;
+    grid-template-columns: 1rem calc(100% - 1rem);
 }
 
 .collapse-detail-head.caret-right {
+    position: relative;
     display: grid;
-    grid-template-columns: 1fr 1rem;
+    grid-template-columns: calc(100% - 1rem) 1rem;
 }
 
 .collapse-detail-head > .caret-wrapper > .caret {
+    position: absolute;
+    top: 50%;
     transition: transform v-bind(transitionDuration+ 'ms') ease;
 }
 
 .collapse-detail-head > .caret-wrapper > .caret.left {
-    transform: rotate(-90deg);
+    transform: translateY(-50%) rotate(-90deg);
 }
 
 .collapse-detail-head > .caret-wrapper > .caret.right {
-    transform: rotate(90deg);
+    transform: translateY(-50%) rotate(90deg);
 }
 
 .collapse-detail-head > .caret-wrapper > .caret.open {
-    transform: rotate(0);
+    transform: translateY(-50%) rotate(0);
 }
 </style>

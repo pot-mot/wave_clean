@@ -5,7 +5,7 @@ export type CollapseProps = {
 }
 
 export const defaultCollapseProps: CollapseProps = {
-    openTrigger: 'head',
-    triggerPosition: 'left',
+    openTrigger: 'caret',
+    triggerPosition: 'right',
     transitionDuration: 300,
 }
