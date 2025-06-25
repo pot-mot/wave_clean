@@ -18,12 +18,26 @@ import {blurActiveElement, getMatchedElementOrParent} from "@/utils/event/judgeE
 
 const {isTouchDevice} = useDeviceStore()
 
-const {updateNodeData, disableDrag, enableDrag, isSelectionPlural, canMultiSelect, findNode, selectNode,  copy, paste, fitRect, remove} = useMindMap()
+const {
+    updateNodeData,
+    disableDrag,
+    enableDrag,
+    isSelectionPlural,
+    canMultiSelect,
+    findNode,
+    selectNode,
+    copy,
+    paste,
+    fitRect,
+    remove
+} = useMindMap()
 
 const props = defineProps<NodeProps & {
     data: ContentNodeData,
     layer: RawMindMapLayer,
 }>()
+
+const _node = computed(() => findNode(props.id, props.layer.vueFlow))
 
 const innerValue = computed<string>({
     get() {
@@ -38,7 +52,7 @@ const inputWidth = ref(0)
 const inputHeight = ref(0)
 
 const handleResize = (size: { width: number, height: number }) => {
-    const node = findNode(props.id, props.layer.vueFlow)
+    const node = _node.value
     if (node) {
         node.width = size.width
         node.height = size.height
@@ -81,7 +95,7 @@ const onHandleMouseDown = (e: MouseEvent) => {
 
 // 复制
 const executeCopy = () => {
-    const node = findNode(props.id, props.layer.vueFlow)
+    const node = _node.value
     if (node !== undefined) {
         blurActiveElement()
         copy({nodes: [node] as any as ContentNode[], edges: []}, props.layer)
@@ -111,7 +125,7 @@ const executeCopy = () => {
 
 // 聚焦
 const executeFocus = () => {
-    const node = findNode(props.id, props.layer.vueFlow)
+    const node = _node.value
     if (node !== undefined) {
         fitRect({
             x: node.position.x,

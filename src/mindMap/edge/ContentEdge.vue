@@ -14,7 +14,6 @@ import {getPaddingBezierPath} from "@/mindMap/edge/paddingBezierPath.ts";
 import IconArrowOneWayLeft from "@/components/icons/IconArrowOneWayLeft.vue";
 import IconArrowOneWayRight from "@/components/icons/IconArrowOneWayRight.vue";
 import {v7 as uuid} from "uuid"
-import {debounce} from "lodash";
 
 const {updateEdgeData, isSelectionPlural, canMultiSelect, findEdge, selectEdge, fitRect, remove, currentViewport} = useMindMap()
 
@@ -23,6 +22,8 @@ const props = defineProps<EdgeProps & {
     data: ContentEdgeData,
     layer: RawMindMapLayer,
 }>()
+
+const _edge = computed(() => findEdge(props.id, props.layer.vueFlow))
 
 const innerValue = computed<string>({
     get() {
@@ -114,7 +115,7 @@ const calculateBoundingBox = (path: SVGPathElement) => {
 }
 
 const syncSizePosition = () => {
-    const edge = findEdge(props.id, props.layer.vueFlow)
+    const edge = _edge.value
     if (edge !== undefined && boundingClientRect.value !== undefined) {
         const flowTransform = props.layer.vueFlow.viewport.value
         const zoom = flowTransform.zoom
@@ -126,10 +127,10 @@ const syncSizePosition = () => {
         top -= flowTransform.y
 
         // 计算缩放
-        width /= zoom
-        height /= zoom
         left /= zoom
         top /= zoom
+        width /= zoom
+        height /= zoom
 
         if (inputWidth.value > width) {
             left -= (inputWidth.value - width) / 2
@@ -166,7 +167,7 @@ onMounted(() => {
     })
 })
 
-watch(() => [boundingClientRect.value, inputWidth.value, inputHeight.value], debounce(syncSizePosition, 200))
+watch(() => [boundingClientRect.value, inputWidth.value, inputHeight.value], syncSizePosition)
 
 onBeforeUnmount(() => {
     pathObserver?.disconnect()
