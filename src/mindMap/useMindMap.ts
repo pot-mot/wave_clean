@@ -100,9 +100,15 @@ export const MindMapLayerDataKeys = ['name', 'opacity'] as const
 export type MindMapLayerData = Pick<RawMindMapLayer, typeof MindMapLayerDataKeys[number]>
 
 export const CONTENT_NODE_TYPE = "CONTENT_NODE" as const
+
+export const ContentNodeDataType_CONSTANTS = ["text", "markdown"] as const
+export type ContentNodeDataType = typeof ContentNodeDataType_CONSTANTS[number]
+
 export type ContentNodeData = {
     content: string,
-    color?: string | undefined
+    type?: ContentNodeDataType,
+    color?: string,
+    withBorder?: boolean,
 }
 export type ContentNode = Pick<Node, 'id' | 'position'> & {
     data: ContentNodeData,
@@ -128,12 +134,16 @@ export type SizePositionEdgePartial = {
     data: Partial<SizePositionEdge["data"]>
 }
 
-export type EdgeArrowType = 'one-way' | 'two-way' | 'none'
-
 export const CONTENT_EDGE_TYPE = "CONTENT_EDGE" as const
+
+export const ContentEdgeArrowType_CONSTANTS = ['one-way', 'two-way', 'none'] as const
+export type ContentEdgeArrowType = typeof ContentEdgeArrowType_CONSTANTS[number]
+
 export type ContentEdgeData = {
     content: string,
-    arrowType?: EdgeArrowType | undefined
+    arrowType?: ContentEdgeArrowType,
+    color?: string,
+    withBorder?: boolean,
 } & SizePositionEdgePartial["data"]
 export type ContentEdge = Pick<Edge, 'id' | 'source' | 'target'> & {
     data: ContentEdgeData,
@@ -347,7 +357,8 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                 position,
                 type: CONTENT_NODE_TYPE,
                 data: {
-                    content: ""
+                    content: "",
+                    type: "markdown",
                 },
             }
         })

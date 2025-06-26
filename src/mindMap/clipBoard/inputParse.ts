@@ -14,7 +14,9 @@ const ContentNode_JsonSchema: JSONSchemaType<ContentNode> = {
             type: "object",
             properties: {
                 content: {type: "string"},
+                type: {type: "string", enum: ["text", "markdown"], nullable: true},
                 color: {type: "string", nullable: true},
+                withBorder: {type: "boolean", nullable: true},
             },
             required: ["content"]
         }
@@ -22,46 +24,6 @@ const ContentNode_JsonSchema: JSONSchemaType<ContentNode> = {
 }
 
 export const validateContentNode = createSchemaValidator<ContentNode>(ContentNode_JsonSchema)
-
-const SizePositionEdgePartial_JsonSchema: JSONSchemaType<SizePositionEdgePartial> = {
-    type: "object",
-    required: ["data"],
-    properties: {
-        data: {
-            type: "object",
-            properties: {
-                size: {
-                    type: "object",
-                    required: ["width", "height"],
-                    properties: {
-                        width: {
-                            type: "number"
-                        },
-                        height: {
-                            type: "number"
-                        }
-                    },
-                    nullable: true,
-                },
-                position: {
-                    type: "object",
-                    required: ["top", "left"],
-                    properties: {
-                        left: {
-                            type: "number"
-                        },
-                        top: {
-                            type: "number"
-                        }
-                    },
-                    nullable: true,
-                }
-            }
-        }
-    }
-}
-
-export const validateSizePositionEdgePartial = createSchemaValidator<SizePositionEdgePartial>(SizePositionEdgePartial_JsonSchema)
 
 const ContentEdge_JsonSchema: JSONSchemaType<ContentEdge> = {
     type: "object",
@@ -76,38 +38,27 @@ const ContentEdge_JsonSchema: JSONSchemaType<ContentEdge> = {
         data: {
             type: "object",
             properties: {
-                size: {
-                    type: "object",
-                    required: ["width", "height"],
-                    properties: {
-                        width: {
-                            type: "number"
-                        },
-                        height: {
-                            type: "number"
-                        }
-                    },
-                    nullable: true,
-                },
-                position: {
-                    type: "object",
-                    required: ["top", "left"],
-                    properties: {
-                        left: {
-                            type: "number"
-                        },
-                        top: {
-                            type: "number"
-                        }
-                    },
-                    nullable: true,
-                },
                 content: {type: "string"},
                 arrowType: {
                     type: "string",
                     enum: ["one-way", "two-way", "none"],
                     nullable: true
-                }
+                },
+                color: {type: "string", nullable: true},
+                withBorder: {type: "boolean", nullable: true},
+
+                size: {
+                    type: "object",
+                    required: ["width", "height"],
+                    properties: {width: {type: "number"}, height: {type: "number"}},
+                    nullable: true,
+                },
+                position: {
+                    type: "object",
+                    required: ["top", "left"],
+                    properties: {left: {type: "number"}, top: {type: "number"}},
+                    nullable: true,
+                },
             },
             required: ["content"]
         }
@@ -115,6 +66,32 @@ const ContentEdge_JsonSchema: JSONSchemaType<ContentEdge> = {
 }
 
 export const validateContentEdge = createSchemaValidator<ContentEdge>(ContentEdge_JsonSchema)
+
+const SizePositionEdgePartial_JsonSchema: JSONSchemaType<SizePositionEdgePartial> = {
+    type: "object",
+    required: ["data"],
+    properties: {
+        data: {
+            type: "object",
+            properties: {
+                size: {
+                    type: "object",
+                    required: ["width", "height"],
+                    properties: {width: {type: "number"}, height: {type: "number"}},
+                    nullable: true,
+                },
+                position: {
+                    type: "object",
+                    required: ["top", "left"],
+                    properties: {left: {type: "number"}, top: {type: "number"}},
+                    nullable: true,
+                },
+            }
+        }
+    }
+}
+
+export const validateSizePositionEdgePartial = createSchemaValidator<SizePositionEdgePartial>(SizePositionEdgePartial_JsonSchema)
 
 const MindMapImportData_JsonSchema: JSONSchemaType<MindMapImportData> = {
     type: "object",
