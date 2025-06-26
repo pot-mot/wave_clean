@@ -32,8 +32,7 @@ const {
     remove
 } = useMindMap()
 
-const props = defineProps<NodeProps & {
-    data: ContentNodeData,
+const props = defineProps<NodeProps<ContentNodeData> & {
     layer: RawMindMapLayer,
 }>()
 
