@@ -6,6 +6,7 @@ import {sendMessage} from "@/components/message/sendMessage.ts";
 import IconAdd from "@/components/icons/IconAdd.vue";
 import DragModelList from "@/components/list/DragModelList.vue";
 import {formatDatetimeToLocal} from "@/utils/datetime/datetimeFormat.ts";
+import CollapseDetail from "@/components/collapse/CollapseDetail.vue";
 
 const metaStore = useMindMapMetaStore()
 
@@ -17,7 +18,7 @@ const name = ref("")
 
 const handleAdd = () => {
     if (name.value.length === 0) {
-        sendMessage("Please set a name")
+        sendMessage("Please set a name", {type: "warning"})
         return
     }
     metaStore.add(0, name.value)
@@ -63,31 +64,38 @@ const handleRename = (key: string, e: Event) => {
             @remove="mindMap => metaStore.remove(mindMap.key)"
         >
             <template #default="{item: mindMap}">
-                <div
-                    class="file-item"
-                    @click="handleOpen(mindMap.key)"
-                >
-                    <div>
-                        <input
-                            class="file-name"
-                            :value="mindMap.name"
-                            @change="(e) => handleRename(mindMap.key, e)"
-                            @click.stop
-                        >
+                <CollapseDetail>
+                    <template #head>
                         <div
-                            class="last-edit-time"
+                            class="file-item"
+                            @click="handleOpen(mindMap.key)"
                         >
-                            {{ formatDatetimeToLocal(mindMap.lastEditTime ?? mindMap.createdTime) }}
+                            <div>
+                                <input
+                                    class="file-name"
+                                    :value="mindMap.name"
+                                    @change="(e) => handleRename(mindMap.key, e)"
+                                    @click.stop
+                                >
+                                <div
+                                    class="last-edit-time"
+                                >
+                                    {{ formatDatetimeToLocal(mindMap.lastEditTime ?? mindMap.createdTime) }}
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                    </template>
 
-                    <button
-                        class="file-delete-button"
-                        @click.stop="handleDelete(mindMap.key)"
-                    >
-                        <IconDelete/>
-                    </button>
-                </div>
+                    <template #body>
+                        <button
+                            class="file-delete-button"
+                            @click.stop="handleDelete(mindMap.key)"
+                        >
+                            <IconDelete/>
+                        </button>
+                    </template>
+                </CollapseDetail>
+
             </template>
 
             <template #dragView="{data: {item: mindMap}}">

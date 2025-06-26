@@ -7,6 +7,7 @@ import IconAdd from "@/components/icons/IconAdd.vue";
 import IconInvisible from "@/components/icons/IconInvisible.vue";
 import DragList from "@/components/list/DragList.vue";
 import {computed} from "vue";
+import CollapseDetail from "@/components/collapse/CollapseDetail.vue";
 
 const {
     layers,
@@ -73,29 +74,36 @@ const handleSwap = (a: number, b: number) => {
             @remove="it => removeLayer(it.id)"
         >
             <template #default="{item: layer}">
-                <div class="layer-menu-item" @click="toggleLayer(layer.id)">
-                    <button
-                        @click.stop="toggleLayerVisible(layer)"
-                        class="layer-menu-item-visible"
-                    >
-                        <IconVisible v-if="layer.visible"/>
-                        <IconInvisible v-else/>
-                    </button>
-                    <div class="layer-menu-item-view">
-                        <LayerView :layer="layer"/>
-                    </div>
-                    <input
-                        :value="layer.name"
-                        class="layer-menu-item-name"
-                        @change="(e) => handleLayerNameChange(layer, e)"
-                    >
-                    <button
-                        @click.stop="removeLayer(layer.id)"
-                        class="layer-menu-item-delete"
-                    >
-                        <IconDelete/>
-                    </button>
-                </div>
+                <CollapseDetail>
+                    <template #head>
+                        <div class="layer-menu-item" @click="toggleLayer(layer.id)">
+                            <button
+                                @click.stop="toggleLayerVisible(layer)"
+                                class="layer-menu-item-visible"
+                            >
+                                <IconVisible v-if="layer.visible"/>
+                                <IconInvisible v-else/>
+                            </button>
+                            <div class="layer-menu-item-view">
+                                <LayerView :layer="layer"/>
+                            </div>
+                            <input
+                                :value="layer.name"
+                                class="layer-menu-item-name"
+                                @change="(e) => handleLayerNameChange(layer, e)"
+                            >
+                        </div>
+                    </template>
+
+                    <template #body>
+                        <button
+                            @click.stop="removeLayer(layer.id)"
+                            class="layer-menu-item-delete"
+                        >
+                            <IconDelete/>
+                        </button>
+                    </template>
+                </CollapseDetail>
             </template>
 
             <template #dragView="{data: {item: layer}}">
@@ -142,7 +150,7 @@ const handleSwap = (a: number, b: number) => {
     width: 100%;
     display: grid;
     grid-gap: 0.5rem;
-    grid-template-columns: 1.5rem 4rem calc(100% - 8.5rem) 1.5rem;
+    grid-template-columns: 1.5rem 4rem calc(100% - 6.5rem);
     user-select: none;
 }
 
@@ -150,9 +158,10 @@ const handleSwap = (a: number, b: number) => {
     position: relative;
     height: 5rem;
     width: 100%;
-    padding: 0 2rem;
+    padding-left: 2rem;
+    padding-right: 1rem;
     display: grid;
-    grid-template-columns: 4rem calc(100% - 8.5rem);
+    grid-template-columns: 4rem calc(100% - 4.5rem);
     grid-gap: 0.5rem;
     opacity: 0.8;
     z-index: var(--top-z-index);
