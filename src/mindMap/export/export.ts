@@ -13,7 +13,7 @@ import {blurActiveElement} from "@/utils/event/judgeEventTarget.ts";
 import {nextTick} from "vue";
 import {sendMessage} from "@/components/message/sendMessage.ts";
 import {exportAsJpg, exportAsPng, exportAsSvg} from "@/utils/file/htmlExport.ts";
-import {validateSizePositionEdgePartial} from "@/mindMap/clipBoard/inputParse.ts";
+import {validateSizePositionEdgePartial} from "@/mindMap/typeValidate/validateMindMap.ts";
 import {downloadTextFile} from "@/utils/file/fileSave.ts";
 import {jsonPrettyFormat} from "@/utils/json/jsonStringify.ts";
 
