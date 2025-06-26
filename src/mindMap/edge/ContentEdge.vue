@@ -198,6 +198,19 @@ const executeToggleArrowType = () => {
     }
 }
 
+// 边框颜色
+const borderColor = computed(() => {
+    if (props.selected) {
+        return 'var(--primary-color)'
+    } else if (props.data.withBorder === true) {
+        return 'var(--border-color)'
+    } else if (props.data.withBorder !== undefined) {
+        return 'transparent'
+    } else {
+        return 'var(--border-color)'
+    }
+})
+
 // 删除
 const executeDelete = () => {
     blurActiveElement()
@@ -248,9 +261,7 @@ const executeDelete = () => {
                 :class="{untouchable: !inputShow}"
                 :font-size="12"
                 :padding="2"
-                :style="{
-                    borderColor: selected ? 'var(--primary-color)' : 'transparent',
-                }"
+                :style="{borderColor}"
                 v-model="innerValue"
                 @blur="handleBlur"
             />
