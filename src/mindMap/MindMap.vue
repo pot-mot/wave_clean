@@ -42,6 +42,11 @@ const handleKeyDown = async (e: KeyboardEvent) => {
                 e.preventDefault()
                 undo()
             }
+        } else if (e.key === 'y' || e.key === "Y") {
+            if (judgeTargetIsInteraction(e)) return
+
+            e.preventDefault()
+            redo()
         } else if (e.key === "s" || e.key === "S") {
             e.preventDefault()
             await save()
