@@ -89,7 +89,6 @@ const layersMenuOpen = ref(false)
 .toolbar {
     z-index: 5;
     position: absolute;
-    background-color: var(--background-color);
 }
 
 .toolbar button {
@@ -125,6 +124,7 @@ const layersMenuOpen = ref(false)
     display: flex;
     justify-content: space-around;
     border-bottom: var(--border);
+    background-color: var(--background-color);
     max-width: 100%;
     overflow-x: auto;
 }
@@ -147,13 +147,10 @@ const layersMenuOpen = ref(false)
     width: max(20vw, 20rem);
     overflow: hidden;
     pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.5s ease;
 }
 .toolbar.meta-menu.open,
 .toolbar.layer-menu.open {
     pointer-events: all;
-    opacity: 1;
 }
 
 .toolbar.meta-menu {
