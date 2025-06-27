@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {ExposeParam, MdEditor} from "md-editor-v3";
 import {Theme} from "@tauri-apps/api/window";
-import {nextTick, onMounted, useTemplateRef} from "vue";
+import {nextTick, onBeforeUnmount, onMounted, shallowRef, useTemplateRef} from "vue";
 import {v7 as uuid} from "uuid";
 import {MarkdownEditorElement} from "@/components/editor/MarkdownEditorElement.ts";
 
@@ -16,12 +16,21 @@ defineProps<{
 const id = `markdown-editor-${uuid()}`
 
 const editorRef = useTemplateRef<ExposeParam>("editorRef")
+const elementRef = shallowRef<MarkdownEditorElement | undefined>()
 
 onMounted(async () => {
     await nextTick()
-    const element = document.querySelector(`#${id}`)
+    const element = document.querySelector(`#${id}.md-editor`)
     if (element && element instanceof HTMLDivElement) {
-        (element as MarkdownEditorElement).ref = editorRef.value
+        (element as MarkdownEditorElement).editor = editorRef.value
+        elementRef.value = element
+    }
+})
+
+onBeforeUnmount(() => {
+    if (elementRef.value) {
+        elementRef.value.editor = null
+        elementRef.value = undefined
     }
 })
 </script>

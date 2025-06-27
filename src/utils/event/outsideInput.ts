@@ -17,8 +17,8 @@ export const outsideInput = (target: Element | EventTarget | null, value: string
         target.dispatchEvent(changeEvent)
     } else if (checkIsMdEditor(target)) {
         const parent = getMatchedElementOrParent(target, (el) => el.classList.contains('md-editor'))
-        if (parent && checkIsMarkdownEditorElement(parent) && parent.ref) {
-            parent.ref.insert(() => {
+        if (parent && checkIsMarkdownEditorElement(parent) && parent.editor) {
+            parent.editor.insert(() => {
                 return {targetValue: value, select: false}
             })
         }
