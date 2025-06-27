@@ -154,39 +154,68 @@ export const clearImportData = (
     };
 }
 
+export type JustifyOptions = {
+    point: XYPosition,
+    type: "leftTop" | "topNode" | "leftNode"
+}
+
 /**
  * 将节点和边对齐到 leftTop
  */
 const justifyNodes = (
     nodes: ContentNode[],
-    leftTop: XYPosition,
+    options: JustifyOptions,
 ) => {
-    let minX: number | undefined = undefined
-    let minY: number | undefined = undefined
-    for (const node of nodes) {
-        if (minX === undefined || node.position.x < minX) {
-            minX = node.position.x
+    if (nodes.length === 0) return
+
+    let baseX: number
+    let baseY: number
+
+    switch (options.type) {
+        case 'leftTop': {
+            // 计算全局最小坐标
+            baseX = Math.min(...nodes.map(n => n.position.x))
+            baseY = Math.min(...nodes.map(n => n.position.y))
+            break
         }
-        if (minY === undefined || node.position.y < minY) {
-            minY = node.position.y
+        case 'topNode': {
+            // 查找Y值最小的节点
+            const topNode = nodes.reduce((prev, curr) =>
+                prev.position.y < curr.position.y ? prev : curr
+            )
+            baseX = topNode.position.x
+            baseY = topNode.position.y
+            break
+        }
+        case 'leftNode': {
+            // 查找X值最小的节点
+            const leftNode = nodes.reduce((prev, curr) =>
+                prev.position.x < curr.position.x ? prev : curr
+            )
+            baseX = leftNode.position.x
+            baseY = leftNode.position.y
+            break
         }
     }
-    if (minX === undefined || minY === undefined) return
+
+    // 统一应用偏移量
+    const offsetX = options.point.x - baseX
+    const offsetY = options.point.y - baseY
 
     for (const node of nodes) {
-        node.position.x = node.position.x - minX + leftTop.x
-        node.position.y = node.position.y - minY + leftTop.y
+        node.position.x += offsetX;
+        node.position.y += offsetY;
     }
 }
 
 /**
  * 向 vueFlow 导入 data
- * 若 leftTop 为 undefined，则不重对齐 nodes 位置
+ * justifyOptions 为 undefined，则不重对齐 nodes 位置
  */
 export const prepareImportIntoMindMap = (
     vueFlow: VueFlowStore,
     data: MindMapImportData,
-    leftTop: XYPosition | undefined = undefined,
+    justifyOptions?: JustifyOptions | undefined,
 ): MindMapImportDataCleanResult => {
     const nodes = toRaw(vueFlow.getNodes.value)
     const edges = toRaw(vueFlow.getEdges.value)
@@ -207,8 +236,8 @@ export const prepareImportIntoMindMap = (
         nodeHandleIdsMap
     )
 
-    if (leftTop !== undefined) {
-        justifyNodes(clearResult.newNodes, leftTop)
+    if (justifyOptions !== undefined) {
+        justifyNodes(clearResult.newNodes, justifyOptions)
     }
 
     return clearResult

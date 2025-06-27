@@ -1,7 +1,7 @@
 import {jsonFileOperations} from "@/utils/file/JsonFileOperations.ts";
 import {computed, ref, watch} from "vue";
 import {getDefaultMindMapData, MindMapData, useMindMap} from "@/mindMap/useMindMap.ts";
-import {validateMindMapData} from "@/mindMap/clipBoard/inputParse.ts";
+import {validateMindMapData} from "@/mindMap/typeValidate/validateMindMap.ts";
 import {jsonSortPropStringify} from "@/utils/json/jsonStringify.ts";
 import {sendMessage} from "@/components/message/sendMessage.ts";
 import type {JSONSchemaType} from "ajv/lib/types/json-schema.ts";

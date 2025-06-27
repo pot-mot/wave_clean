@@ -17,9 +17,7 @@ import {v7 as uuid} from "uuid"
 
 const {updateEdgeData, isSelectionPlural, canMultiSelect, findEdge, selectEdge, fitRect, remove, currentViewport} = useMindMap()
 
-const props = defineProps<EdgeProps & {
-    id: string,
-    data: ContentEdgeData,
+const props = defineProps<EdgeProps<ContentEdgeData> & {
     layer: RawMindMapLayer,
 }>()
 

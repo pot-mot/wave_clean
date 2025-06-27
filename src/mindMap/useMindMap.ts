@@ -14,14 +14,14 @@ import {
 import {computed, nextTick, readonly, ref, ShallowReactive, shallowReactive, ShallowRef, shallowRef, toRaw,} from "vue";
 import {blurActiveElement, judgeTargetIsInteraction} from "@/utils/event/judgeEventTarget.ts";
 import {jsonSortPropStringify} from "@/utils/json/jsonStringify.ts";
-import {MindMapImportData, prepareImportIntoMindMap} from "@/mindMap/import/import.ts";
+import {JustifyOptions, MindMapImportData, prepareImportIntoMindMap} from "@/mindMap/import/import.ts";
 import {
     ExportFileType,
     exportMindMapData,
     exportMindMapSelectionData, exportMindMapToFile,
     MindMapExportData
 } from "@/mindMap/export/export.ts";
-import {validateMindMapImportData} from "@/mindMap/clipBoard/inputParse.ts";
+import {validateMindMapImportData} from "@/mindMap/typeValidate/validateMindMap.ts";
 import {checkFullConnection, FullConnection, reverseConnection} from "@/mindMap/edge/connection.ts";
 import {useMindMapHistory} from "@/mindMap/history/MindMapHistory.ts";
 import {CustomClipBoard, unimplementedClipBoard, useClipBoard} from "@/utils/clipBoard/useClipBoard.ts";
@@ -395,9 +395,9 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         return vueFlow.screenToFlowCoordinate({x: window.innerWidth / 2, y: window.innerHeight / 2})
     }
 
-    const importData = (data: MindMapImportData, leftTop: XYPosition = getCenterPosition(), vueFlow = getCurrentVueFlow()) => {
+    const importData = (data: MindMapImportData, justifyOptions: JustifyOptions = {point: getCenterPosition(), type: "leftTop"}, vueFlow = getCurrentVueFlow()) => {
         blurActiveElement()
-        const {newNodes, newEdges} = prepareImportIntoMindMap(vueFlow, data, leftTop)
+        const {newNodes, newEdges} = prepareImportIntoMindMap(vueFlow, data, justifyOptions)
         history.executeCommand("import", {layerId: currentLayerId.value, nodes: newNodes, edges: newEdges})
 
         const currentMultiSelectionActive = vueFlow.multiSelectionActive.value
@@ -649,7 +649,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                     return exportMindMapSelectionData(vueFlow)
                 },
                 importData: (data: MindMapImportData) => {
-                    importData(data, screenToFlowCoordinate(screenPosition.value))
+                    importData(data, {point: screenToFlowCoordinate(screenPosition.value), type: "topNode"})
                 },
                 removeData: (data: MindMapExportData) => {
                     remove({nodes: data.nodes?.map(it => it.id), edges: data.edges?.map(it => it.id)})
