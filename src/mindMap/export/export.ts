@@ -15,7 +15,7 @@ import {
     validateContentEdge,
     validateContentNode,
     validateSizePositionEdgePartial
-} from "@/mindMap/clipBoard/inputParse.ts";
+} from "@/mindMap/typeValidate/validateMindMap.ts";
 import {downloadTextFile} from "@/utils/file/fileSave.ts";
 import {jsonPrettyFormat} from "@/utils/json/jsonStringify.ts";
 

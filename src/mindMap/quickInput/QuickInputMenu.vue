@@ -5,6 +5,7 @@ import {ref} from "vue";
 import {sendMessage} from "@/components/message/sendMessage.ts";
 import IconAdd from "@/components/icons/IconAdd.vue";
 import DragModelList from "@/components/list/DragModelList.vue";
+import {v7 as uuid} from "uuid"
 
 const metaStore = useMindMapMetaStore()
 
@@ -16,7 +17,7 @@ const handleToggleCurrent = (item: QuickInputItem) => {
 
 const getDefaultQuickInput = () => {
     return {
-        id: Date.now().toString(),
+        id: uuid(),
         label: "",
         value: "",
     }

@@ -15,8 +15,13 @@ import IconCopy from "@/components/icons/IconCopy.vue";
 import IconFocus from "@/components/icons/IconFocus.vue";
 import {useDeviceStore} from "@/store/deviceStore.ts";
 import {blurActiveElement, getMatchedElementOrParent} from "@/utils/event/judgeEventTarget.ts";
+import {useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
+import {NodeResizer} from "@vue-flow/node-resizer";
+import MarkdownEditor from "@/components/editor/MarkdownEditor.vue";
 
 const {isTouchDevice} = useDeviceStore()
+
+const {meta} = useMindMapMetaStore()
 
 const {
     updateNodeData,
@@ -32,11 +37,18 @@ const {
     remove
 } = useMindMap()
 
-const props = defineProps<NodeProps<ContentNodeData> & {
+const props = withDefaults(defineProps<NodeProps<ContentNodeData> & {
     layer: RawMindMapLayer,
-}>()
+    minWidth?: number,
+    minHeight?: number,
+}>(), {
+    minWidth: 160,
+    minHeight: 48,
+})
 
 const _node = computed(() => findNode(props.id, props.layer.vueFlow))
+
+const canResize = computed(() => props.data.type === 'markdown')
 
 const innerValue = computed<string>({
     get() {
@@ -63,13 +75,13 @@ const handleResize = (size: { width: number, height: number }) => {
 const inputDisable = ref(true)
 const inputRef = useTemplateRef<InstanceType<typeof FitSizeBlockInput>>("inputRef")
 
-const handleNodeMouseDown = () => {
+const handleNodeSelect = () => {
     if (isSelectionPlural.value) return
     if (canMultiSelect.value) return
     selectNode(props.id, props.layer.vueFlow)
 }
 
-const handleNodeWrapperClick = () => {
+const handleNodeFocus = () => {
     if (canMultiSelect.value) return
     if (!props.selected) return
     disableDrag(props.layer.vueFlow)
@@ -156,7 +168,57 @@ const executeDelete = () => {
 </script>
 
 <template>
-    <div>
+    <div class="content-node">
+        <div
+            class="fit-parent"
+            @mousedown.capture="handleNodeSelect"
+            @touchstart.capture="handleNodeSelect"
+        >
+            <div
+                v-if="(!data.type) || data.type === 'text'"
+                class="fit-parent"
+                :style="{width: `${inputWidth}px`, height: `${inputHeight}px`}"
+                @click.capture="handleNodeFocus"
+            >
+                <FitSizeBlockInput
+                    ref="inputRef"
+                    :class="{untouchable: inputDisable}"
+                    :style="{borderColor}"
+                    v-model="innerValue"
+                    @resize="handleResize"
+                    @blur="handleBlur"
+                />
+            </div>
+
+            <div
+                v-else-if="data.type === 'markdown'"
+                class="fit-parent"
+                :style="{minWidth: `${minWidth}px`, minHeight: `${minHeight}px`}"
+                @click.capture="handleNodeFocus"
+            >
+                <MarkdownEditor
+                    class="fit-parent"
+                    :class="{untouchable: inputDisable}"
+                    v-model="innerValue"
+                    :theme="meta.currentTheme"
+                    @wheel.stop
+                />
+            </div>
+
+            <NodeResizer
+                v-if="selected && canResize"
+                :min-width="minWidth"
+                :min-height="minHeight"
+            />
+
+            <Handle
+                v-for="handle in ContentNodeHandles"
+                :id="handle"
+                :position="handle"
+                @mousedown="onHandleMouseDown"
+            />
+        </div>
+
         <NodeToolbar :node-id="id" :is-visible="selected && !inputDisable" class="toolbar">
             <button @mousedown.capture.prevent.stop="executeCopy">
                 <IconCopy/>
@@ -170,39 +232,21 @@ const executeDelete = () => {
                 <IconDelete/>
             </button>
         </NodeToolbar>
-
-        <div
-            class="content-node"
-            @mousedown.capture="handleNodeMouseDown"
-            @touchstart.capture="handleNodeMouseDown"
-        >
-            <div
-                class="node-wrapper"
-                :style="{width: `${inputWidth}px`, height: `${inputHeight}px`}"
-                @click.capture="handleNodeWrapperClick"
-            >
-                <FitSizeBlockInput
-                    ref="inputRef"
-                    :class="{untouchable: inputDisable}"
-                    :style="{borderColor}"
-                    v-model="innerValue"
-                    @resize="handleResize"
-                    @blur="handleBlur"
-                />
-            </div>
-
-            <template v-for="handle in ContentNodeHandles">
-                <Handle
-                    :id="handle"
-                    :position="handle"
-                    @mousedown="onHandleMouseDown"
-                />
-            </template>
-        </div>
     </div>
 </template>
 
 <style scoped>
+.content-node {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.content-node .fit-parent {
+    width: 100%;
+    height: 100%;
+}
+
 .untouchable {
     -webkit-user-select: none;
     -moz-user-select: none;
