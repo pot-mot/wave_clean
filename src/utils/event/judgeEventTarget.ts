@@ -1,6 +1,6 @@
 const interactionTagNames = ["INPUT", "TEXTAREA", "BUTTON"]
 
-export const interactionTagClassList = ["md-editor"]
+export const interactionTagClassList = ["md-editor", "cm-content"]
 
 export const checkIsElement = (e: any): e is Element => {
     return (e instanceof Element)
@@ -43,7 +43,7 @@ export const judgeTarget = (
 ) => {
     let current = e.target
     if (checkIsElement(current)) {
-        judgeElement(current, judge)
+        return judgeElement(current, judge)
     }
     return false
 }
@@ -58,11 +58,9 @@ export const judgeInteraction = (el: Element): boolean => {
     if (interactionTagNames.includes(el.tagName)) {
         return true
     }
-    if (containsClassList(el, interactionTagClassList)) {
-        return true
-    }
+    return containsClassList(el, interactionTagClassList);
 
-    return false
+
 }
 
 export const judgeElementIsInteraction = (
