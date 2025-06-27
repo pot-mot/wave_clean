@@ -29,6 +29,7 @@ const toPureContentNode = (node: ContentNode): ContentNode => {
         id: node.id,
         type: "CONTENT_NODE",
         position: node.position,
+        dimensions: node.dimensions,
         data: {
             content: node.data.content,
             type: node.data.type,

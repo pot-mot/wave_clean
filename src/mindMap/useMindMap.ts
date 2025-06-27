@@ -3,7 +3,6 @@ import {
     Edge,
     GraphEdge,
     GraphNode,
-    Node,
     Position,
     Rect,
     useVueFlow,
@@ -110,9 +109,13 @@ export type ContentNodeData = {
     color?: string,
     withBorder?: boolean,
 }
-export type ContentNode = Pick<Node, 'id' | 'position'> & {
+export type ContentNode = Pick<GraphNode, 'id' | 'position'> & {
     data: ContentNodeData,
     type: typeof CONTENT_NODE_TYPE,
+    dimensions?: {
+        width: number,
+        height: number,
+    } | null | undefined
 }
 
 export const ContentNodeHandles: Position[] = [Position.Left, Position.Right, Position.Top, Position.Bottom] as const

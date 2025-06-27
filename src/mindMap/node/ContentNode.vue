@@ -59,6 +59,10 @@ const innerValue = computed<string>({
     }
 })
 
+const inputDisable = ref(true)
+const inputRef = useTemplateRef<InstanceType<typeof FitSizeBlockInput>>("inputRef")
+const markdownEditorRef = useTemplateRef<InstanceType<typeof MarkdownEditor>>("markdownEditorRef")
+
 const inputWidth = ref(0)
 const inputHeight = ref(0)
 
@@ -72,9 +76,6 @@ const handleResize = (size: { width: number, height: number }) => {
     inputHeight.value = size.height
 }
 
-const inputDisable = ref(true)
-const inputRef = useTemplateRef<InstanceType<typeof FitSizeBlockInput>>("inputRef")
-
 const handleNodeSelect = () => {
     if (isSelectionPlural.value) return
     if (canMultiSelect.value) return
@@ -86,7 +87,11 @@ const handleNodeFocus = () => {
     if (!props.selected) return
     disableDrag(props.layer.vueFlow)
     inputDisable.value = false
-    inputRef.value?.el?.focus()
+    if (props.data.type === 'markdown') {
+        markdownEditorRef.value?.editorRef?.focus()
+    } else {
+        inputRef.value?.el?.focus()
+    }
 }
 
 const handleBlur = () => {
@@ -192,16 +197,22 @@ const executeDelete = () => {
 
             <div
                 v-else-if="data.type === 'markdown'"
-                class="fit-parent"
-                :style="{minWidth: `${minWidth}px`, minHeight: `${minHeight}px`}"
+                :style="{
+                    minWidth: `${minWidth}px`,
+                    minHeight: `${minHeight}px`,
+                    height: _node ? `${_node.dimensions.height}px` : '100%',
+                    width: _node ? `${_node.dimensions.width}px` : '100%',
+                }"
                 @click.capture="handleNodeFocus"
             >
                 <MarkdownEditor
+                    ref="markdownEditorRef"
                     class="fit-parent"
                     :class="{untouchable: inputDisable}"
                     v-model="innerValue"
                     :theme="meta.currentTheme"
                     @wheel.stop
+                    @blur="handleBlur"
                 />
             </div>
 

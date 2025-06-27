@@ -53,6 +53,11 @@ onBeforeUnmount(() => {
         elementRef.value = undefined
     }
 })
+
+defineExpose({
+    editorRef,
+    elementRef,
+})
 </script>
 
 <template>

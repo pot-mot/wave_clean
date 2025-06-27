@@ -9,7 +9,17 @@ const ContentNode_JsonSchema: JSONSchemaType<ContentNode> = {
     properties: {
         id: {type: "string"},
         type: {type: "string", enum: ["CONTENT_NODE"]},
-        position: {type: "object", properties: {x: {type: "number"}, y: {type: "number"}}, required: ["x", "y"]},
+        position: {
+            type: "object",
+            required: ["x", "y"],
+            properties: {x: {type: "number"}, y: {type: "number"}},
+        },
+        dimensions: {
+            type: "object",
+            required: ["width", "height"],
+            properties: {width: {type: "number"}, height: {type: "number"}},
+            nullable: true,
+        },
         data: {
             type: "object",
             properties: {
