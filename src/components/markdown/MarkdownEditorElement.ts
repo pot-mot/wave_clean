@@ -5,5 +5,5 @@ export type MarkdownEditorElement = Element & {
 }
 
 export const checkIsMarkdownEditorElement = (e: Element): e is MarkdownEditorElement => {
-    return "editor" in e && e.classList.contains("md-editor")
+    return "editor" in e && e.classList.contains("md-markdown")
 }

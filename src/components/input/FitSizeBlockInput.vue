@@ -91,9 +91,9 @@ defineExpose({el: textareaRef, isFocus})
     <textarea
         ref="textareaRef"
         :style="{
-            padding: `${props.padding}px`,
-            borderWidth: `${props.borderWidth}px`,
-            fontSize: `${props.fontSize}px`,
+            padding: `${padding}px`,
+            borderWidth: `${borderWidth}px`,
+            fontSize: `${fontSize}px`,
             width: `${width}px`,
             height: `${height}px`,
             cursor: isFocus ? 'text' : 'default'

@@ -1,5 +1,5 @@
 import {checkIsInputOrTextarea, checkIsMdEditor, getMatchedElementOrParent} from "@/utils/event/judgeEventTarget.ts";
-import {checkIsMarkdownEditorElement} from "@/components/editor/MarkdownEditorElement.ts";
+import {checkIsMarkdownEditorElement} from "@/components/markdown/MarkdownEditorElement.ts";
 
 export const outsideInput = (target: Element | EventTarget | null, value: string) => {
     if (target === null || target === undefined) return
@@ -16,7 +16,7 @@ export const outsideInput = (target: Element | EventTarget | null, value: string
         const changeEvent = new Event('change')
         target.dispatchEvent(changeEvent)
     } else if (checkIsMdEditor(target)) {
-        const parent = getMatchedElementOrParent(target, (el) => el.classList.contains('md-editor'))
+        const parent = getMatchedElementOrParent(target, (el) => el.classList.contains('md-markdown'))
         if (parent && checkIsMarkdownEditorElement(parent) && parent.editor) {
             parent.editor.insert(() => {
                 return {targetValue: value, select: false}

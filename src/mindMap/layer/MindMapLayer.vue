@@ -38,6 +38,9 @@ initLayer(props.layer)
         :connect-on-click="false"
         :select-nodes-on-drag="false"
         :selection-key-code="false"
+
+        no-drag-class-name="noDrag"
+        no-wheel-class-name="noWheel"
     >
         <template #node-CONTENT_NODE="nodeProps">
             <ContentNode v-bind="nodeProps" :layer="layer"/>

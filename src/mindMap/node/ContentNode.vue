@@ -7,7 +7,7 @@ import {
     RawMindMapLayer,
     useMindMap
 } from "@/mindMap/useMindMap.ts";
-import {computed, ref, useTemplateRef} from "vue";
+import {computed, nextTick, ref, useTemplateRef} from "vue";
 import FitSizeBlockInput from "@/components/input/FitSizeBlockInput.vue";
 import {NodeToolbar} from "@vue-flow/node-toolbar";
 import IconDelete from "@/components/icons/IconDelete.vue";
@@ -17,7 +17,7 @@ import {useDeviceStore} from "@/store/deviceStore.ts";
 import {blurActiveElement, getMatchedElementOrParent} from "@/utils/event/judgeEventTarget.ts";
 import {useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
 import {NodeResizer} from "@vue-flow/node-resizer";
-import MarkdownEditor from "@/components/editor/MarkdownEditor.vue";
+import MarkdownEditor from "@/components/markdown/MarkdownEditor.vue";
 
 const {isTouchDevice} = useDeviceStore()
 
@@ -25,8 +25,6 @@ const {meta} = useMindMapMetaStore()
 
 const {
     updateNodeData,
-    disableDrag,
-    enableDrag,
     isSelectionPlural,
     canMultiSelect,
     findNode,
@@ -43,7 +41,7 @@ const props = withDefaults(defineProps<NodeProps<ContentNodeData> & {
     minHeight?: number,
 }>(), {
     minWidth: 160,
-    minHeight: 48,
+    minHeight: 66,
 })
 
 const _node = computed(() => findNode(props.id, props.layer.vueFlow))
@@ -69,8 +67,8 @@ const inputHeight = ref(0)
 const handleResize = (size: { width: number, height: number }) => {
     const node = _node.value
     if (node) {
-        node.width = size.width
-        node.height = size.height
+        node.dimensions.width = size.width
+        node.dimensions.height = size.height
     }
     inputWidth.value = size.width
     inputHeight.value = size.height
@@ -85,7 +83,6 @@ const handleNodeSelect = () => {
 const handleNodeFocus = () => {
     if (canMultiSelect.value) return
     if (!props.selected) return
-    disableDrag(props.layer.vueFlow)
     inputDisable.value = false
     if (props.data.type === 'markdown') {
         markdownEditorRef.value?.editorRef?.focus()
@@ -96,7 +93,6 @@ const handleNodeFocus = () => {
 
 const handleBlur = () => {
     inputDisable.value = true
-    enableDrag(props.layer.vueFlow)
 }
 
 const onHandleMouseDown = (e: MouseEvent) => {
@@ -139,6 +135,19 @@ const executeCopy = () => {
     }
 }
 
+// 边框颜色
+const borderColor = computed(() => {
+    if (props.selected) {
+        return 'var(--primary-color)'
+    } else if (props.data.withBorder === true) {
+        return 'var(--border-color)'
+    } else if (props.data.withBorder !== undefined) {
+        return 'transparent'
+    } else {
+        return 'var(--border-color)'
+    }
+})
+
 // 聚焦
 const executeFocus = () => {
     const node = _node.value
@@ -152,18 +161,20 @@ const executeFocus = () => {
     }
 }
 
-// 边框颜色
-const borderColor = computed(() => {
-    if (props.selected) {
-        return 'var(--primary-color)'
-    } else if (props.data.withBorder === true) {
-        return 'var(--border-color)'
-    } else if (props.data.withBorder !== undefined) {
-        return 'transparent'
-    } else {
-        return 'var(--border-color)'
+// 切换内容类型
+const executeToggleType = async () => {
+    blurActiveElement()
+    switch (props.data.type) {
+        case 'markdown':
+            updateNodeData(props.id, {type: 'text'})
+            break
+        default:
+            updateNodeData(props.id, {type: 'markdown'})
+            break
     }
-})
+    await nextTick()
+    handleNodeFocus()
+}
 
 // 删除
 const executeDelete = () => {
@@ -187,7 +198,7 @@ const executeDelete = () => {
             >
                 <FitSizeBlockInput
                     ref="inputRef"
-                    :class="{untouchable: inputDisable}"
+                    :class="{untouchable: inputDisable, noDrag: !inputDisable}"
                     :style="{borderColor}"
                     v-model="innerValue"
                     @resize="handleResize"
@@ -207,12 +218,12 @@ const executeDelete = () => {
             >
                 <MarkdownEditor
                     ref="markdownEditorRef"
-                    class="fit-parent"
-                    :class="{untouchable: inputDisable}"
+                    :class="{untouchable: inputDisable, noDrag: !inputDisable, noWheel: !inputDisable}"
                     v-model="innerValue"
                     :theme="meta.currentTheme"
                     @wheel.stop
                     @blur="handleBlur"
+                    :preview-only="inputDisable"
                 />
             </div>
 
@@ -237,6 +248,10 @@ const executeDelete = () => {
 
             <button @mousedown.capture.prevent.stop="executeFocus">
                 <IconFocus/>
+            </button>
+
+            <button @mousedown.capture.prevent.stop="executeToggleType">
+                {{ data.type }}
             </button>
 
             <button @mousedown.capture.prevent.stop="executeDelete">
