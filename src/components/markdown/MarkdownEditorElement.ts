@@ -1,9 +1,13 @@
-import {ExposeParam} from "md-editor-v3";
+import Vditor from "vditor";
 
-export type MarkdownEditorElement = Element & {
-    editor?: ExposeParam | null
+export type MarkdownEditorElement = HTMLElement & {
+    editor?: Vditor | null
 }
 
-export const checkIsMarkdownEditorElement = (e: Element): e is MarkdownEditorElement => {
-    return "editor" in e && e.classList.contains("md-markdown")
+export const checkIsMarkdownEditorElement = (e: any): e is MarkdownEditorElement => {
+    return e instanceof HTMLElement && e.classList.contains("markdown-editor") &&
+        (
+            ("editor" in e && (e.editor instanceof Vditor || e.editor === null || e.editor === undefined)) ||
+            !("editor" in e)
+        )
 }

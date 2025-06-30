@@ -16,8 +16,8 @@ import IconFocus from "@/components/icons/IconFocus.vue";
 import {useDeviceStore} from "@/store/deviceStore.ts";
 import {blurActiveElement, getMatchedElementOrParent} from "@/utils/event/judgeEventTarget.ts";
 import {useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
-import {NodeResizer} from "@vue-flow/node-resizer";
 import MarkdownEditor from "@/components/markdown/MarkdownEditor.vue";
+import {NodeResizer} from "@vue-flow/node-resizer";
 
 const {isTouchDevice} = useDeviceStore()
 
@@ -208,12 +208,8 @@ const executeDelete = () => {
 
             <div
                 v-else-if="data.type === 'markdown'"
-                :style="{
-                    minWidth: `${minWidth}px`,
-                    minHeight: `${minHeight}px`,
-                    height: _node ? `${_node.dimensions.height}px` : '100%',
-                    width: _node ? `${_node.dimensions.width}px` : '100%',
-                }"
+                class="fit-parent"
+                :style="{minWidth: `${minWidth}px`, minHeight: `${minHeight}px`}"
                 @click.capture="handleNodeFocus"
             >
                 <MarkdownEditor

@@ -17,7 +17,7 @@ import IconDelete from "@/components/icons/IconDelete.vue";
 import IconMultiSelect from "@/components/icons/IconMultiSelect.vue";
 import IconSelectAll from "@/components/icons/IconSelectAll.vue";
 import DownloadSelect from "@/mindMap/file/DownloadSelect.vue";
-import {checkElementParent, checkIsInputOrTextarea, checkIsMdEditor} from "@/utils/event/judgeEventTarget.ts";
+import {checkElementParent, checkIsInputOrTextarea, checkIsMarkdownEditor} from "@/utils/event/judgeEventTarget.ts";
 import {useFocusTargetStore} from "@/store/focusTargetStore.ts";
 import QuickInputBar from "@/mindMap/quickInput/QuickInputBar.vue";
 
@@ -80,7 +80,7 @@ const focusTargetStore = useFocusTargetStore()
 
 const isVueFlowInputFocused = computed<boolean>(() => {
     const focusTarget = focusTargetStore.focusTarget.value
-    return (checkIsInputOrTextarea(focusTarget) || checkIsMdEditor(focusTarget)) &&
+    return (checkIsInputOrTextarea(focusTarget) || checkIsMarkdownEditor(focusTarget)) &&
         currentLayer.value.vueFlow.vueFlowRef.value !== null && checkElementParent(focusTarget, currentLayer.value.vueFlow.vueFlowRef.value)
 })
 </script>

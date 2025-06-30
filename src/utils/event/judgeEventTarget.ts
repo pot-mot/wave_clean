@@ -1,6 +1,6 @@
 const interactionTagNames = ["INPUT", "TEXTAREA", "BUTTON"]
 
-export const interactionTagClassList = ["md-markdown", "cm-content"]
+export const interactionTagClassList = ["markdown-editor"]
 
 export const checkIsElement = (e: any): e is Element => {
     return (e instanceof Element)
@@ -10,8 +10,8 @@ export const checkIsInputOrTextarea = (e: any): e is HTMLInputElement | HTMLText
     return (e instanceof HTMLInputElement || e instanceof HTMLTextAreaElement)
 }
 
-export const checkIsMdEditor = (e: any): e is HTMLElement => {
-    return (e instanceof HTMLElement && e.classList.contains("cm-content"))
+export const checkIsMarkdownEditor = (e: any): e is HTMLElement => {
+    return (e instanceof HTMLElement && e.classList.contains("markdown-editor"))
 }
 
 export const containsClassList = (e: Element, classNames: string[]) => {
