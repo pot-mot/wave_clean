@@ -163,8 +163,12 @@ export const getDefaultMeta = () => {
             {id: "-6", label: '[', value: '['},
             {id: "-7", label: ']', value: ']'},
             {id: "-8", label: '^', value: '^'},
-            {id: "-9", label: '\\', value: '\\'},
-            {id: "-10", label: '\'', value: '\''},
+            {id: "-9", label: '/', value: '/'},
+            {id: "-10", label: '|', value: '|'},
+            {id: "-11", label: '\\', value: '\\'},
+            {id: "-12", label: '\'', value: '\''},
+            {id: "-13", label: '-', value: '-'},
+            {id: "-14", label: '_', value: '_'},
         ],
     }
 }
