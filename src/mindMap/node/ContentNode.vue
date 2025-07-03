@@ -3,7 +3,7 @@ import {Handle, NodeProps} from "@vue-flow/core";
 import {
     ContentNode,
     ContentNodeData,
-    ContentNodeHandles,
+    ContentNodeHandles, ContentType, ContentType_DEFAULT,
     RawMindMapLayer,
     useMindMap
 } from "@/mindMap/useMindMap.ts";
@@ -17,7 +17,6 @@ import {useDeviceStore} from "@/store/deviceStore.ts";
 import {blurActiveElement, getMatchedElementOrParent} from "@/utils/event/judgeEventTarget.ts";
 import {useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
 import MarkdownEditor from "@/components/markdown/MarkdownEditor.vue";
-import {NodeResizer} from "@vue-flow/node-resizer";
 
 const {isTouchDevice} = useDeviceStore()
 
@@ -46,7 +45,7 @@ const props = withDefaults(defineProps<NodeProps<ContentNodeData> & {
 
 const _node = computed(() => findNode(props.id, props.layer.vueFlow))
 
-const canResize = computed(() => props.data.type === 'markdown')
+const dataTypeOrDefault = computed<ContentType>(() => props.data.type ?? ContentType_DEFAULT)
 
 const innerValue = computed<string>({
     get() {
@@ -191,7 +190,7 @@ const executeDelete = () => {
             @touchstart.capture="handleNodeSelect"
         >
             <div
-                v-if="(!data.type) || data.type === 'text'"
+                v-if="dataTypeOrDefault === 'text'"
                 class="fit-parent"
                 :style="{width: `${inputWidth}px`, height: `${inputHeight}px`}"
                 @click.capture="handleNodeFocus"
@@ -207,7 +206,7 @@ const executeDelete = () => {
             </div>
 
             <div
-                v-else-if="data.type === 'markdown'"
+                v-else-if="dataTypeOrDefault === 'markdown'"
                 class="fit-parent"
                 :style="{minWidth: `${minWidth}px`, minHeight: `${minHeight}px`}"
                 @click.capture="handleNodeFocus"
@@ -222,12 +221,6 @@ const executeDelete = () => {
                     :preview-only="inputDisable"
                 />
             </div>
-
-            <NodeResizer
-                v-if="selected && canResize"
-                :min-width="minWidth"
-                :min-height="minHeight"
-            />
 
             <Handle
                 v-for="handle in ContentNodeHandles"
@@ -247,7 +240,7 @@ const executeDelete = () => {
             </button>
 
             <button @mousedown.capture.prevent.stop="executeToggleType">
-                {{ data.type }}
+                {{ dataTypeOrDefault }}
             </button>
 
             <button @mousedown.capture.prevent.stop="executeDelete">

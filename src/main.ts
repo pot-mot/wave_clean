@@ -6,7 +6,6 @@ import './assets/base.css'
 
 import "@vue-flow/core/dist/style.css"
 import "@vue-flow/core/dist/theme-default.css"
-import "@vue-flow/node-resizer/dist/style.css"
 
 import "vditor/dist/index.css";
 

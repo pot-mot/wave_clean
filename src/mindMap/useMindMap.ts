@@ -100,12 +100,14 @@ export type MindMapLayerData = Pick<RawMindMapLayer, typeof MindMapLayerDataKeys
 
 export const CONTENT_NODE_TYPE = "CONTENT_NODE" as const
 
-export const ContentNodeDataType_CONSTANTS = ["text", "markdown"] as const
-export type ContentNodeDataType = typeof ContentNodeDataType_CONSTANTS[number]
+export const ContentType_CONSTANTS = ["text", "markdown"] as const
+export type ContentType = typeof ContentType_CONSTANTS[number]
+
+export const ContentType_DEFAULT = ContentType_CONSTANTS[0]
 
 export type ContentNodeData = {
     content: string,
-    type?: ContentNodeDataType,
+    type?: ContentType,
     color?: string,
     withBorder?: boolean,
 }
@@ -361,7 +363,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                 type: CONTENT_NODE_TYPE,
                 data: {
                     content: "",
-                    type: "markdown",
+                    type: ContentType_DEFAULT,
                 },
             }
         })

@@ -20,7 +20,6 @@
     "@tauri-apps/plugin-fs": "~2.3.0",
     "@tauri-apps/plugin-opener": "^2.4.0",
     "@vue-flow/core": "^1.45.0",
-    "@vue-flow/node-resizer": "^1.5.0",
     "@vue-flow/node-toolbar": "^1.1.1",
     "ajv": "^8.17.1",
     "html-to-image": "^1.11.11",
