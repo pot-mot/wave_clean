@@ -2,9 +2,12 @@
 import MindMap from "@/mindMap/MindMap.vue";
 import {useThemeStore} from "@/store/themeStore.ts";
 import {useFocusTargetStore} from "@/store/focusTargetStore.ts";
+import {initMonacoMarkdownCompletion} from "@/components/markdown/markdownCompletion.ts";
 
 useThemeStore()
 useFocusTargetStore()
+
+initMonacoMarkdownCompletion()
 </script>
 
 <template>

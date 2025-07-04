@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import {Theme} from "@tauri-apps/api/window";
 import {computed, onBeforeUnmount, onMounted, useTemplateRef, watch} from "vue";
-import {MarkdownEditorElement} from "@/components/markdown/MarkdownEditorElement.ts";
-import Vditor from "vditor";
 import {v7 as uuid} from "uuid"
 import {sendMessage} from "@/components/message/sendMessage.ts";
+import {editor} from "monaco-editor/esm/vs/editor/editor.api.js";
+import "monaco-editor/esm/vs/editor/common/editorTheme.js"
+import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
+import {MarkdownEditorElement} from "@/components/markdown/MarkdownEditorElement.ts";
 
 const id = `markdown-editor-${uuid()}`
 
@@ -20,17 +22,17 @@ const props = withDefaults(defineProps<{
 })
 
 const emits = defineEmits<{
-    (event: "input", editor: Vditor, value: string): void
-    (event: "focus", editor: Vditor): void
-    (event: "blur", editor: Vditor): void
+    (event: "change", editor: IStandaloneCodeEditor, value: string): void
+    (event: "focus", editor: IStandaloneCodeEditor): void
+    (event: "blur", editor: IStandaloneCodeEditor): void
 }>()
 
 const elementRef = useTemplateRef<MarkdownEditorElement>('elementRef')
-const editorRef = computed<Vditor | null | undefined>({
+const editorRef = computed<IStandaloneCodeEditor | null | undefined>({
     get() {
         return elementRef.value?.editor
     },
-    set(newEditor: Vditor | null | undefined) {
+    set(newEditor: IStandaloneCodeEditor | null | undefined) {
         if (elementRef.value) {
             elementRef.value.editor = newEditor
         }
@@ -38,7 +40,7 @@ const editorRef = computed<Vditor | null | undefined>({
 })
 
 const editorTheme = computed(() => {
-    return props.theme === "dark" ? "dark" : "classic"
+    return props.theme === "dark" ? "vs-dark" : "vs"
 })
 
 onMounted(async () => {
@@ -47,37 +49,47 @@ onMounted(async () => {
         sendMessage("MarkdownEditor init fail, element not existed", {type: "error"})
         return
     }
-    const editor = new Vditor(element, {
-        mode: "sv",
-        height: "100%",
-        width: "100%",
+    const editorInstance = editor.create(element, {
+        language: "markdown",
+        value: modelValue.value,
         theme: editorTheme.value,
-        cache: {
-            enable: false,
+        selectOnLineNumbers: false, // 显示行号 默认true
+        minimap: {
+            enabled: false,
         },
-        preview: {
-            mode: "editor",
-        },
-        after:() => {
-            editor.setValue(modelValue.value)
-        },
-        toolbar: [],
-        input: (value: string) => {
-            emits("input", editor, value)
-            modelValue.value = value
-        },
-        focus: () => {
-            emits("focus", editor)
-        },
-        blur: () => {
-            emits("blur", editor)
-        }
+        lineNumbers: "off",
+        readOnly: false, // 只读
+        fontSize: 16, // 字体大小
+        lineHeight: 22,
+        wordWrap: "on",
+        wordBreak: "keepAll",
+        wrappingIndent: "indent",
+        scrollBeyondLastLine: true, // 代码后面的空白
+        overviewRulerBorder: false, // 不要滚动条的边框
     })
-    editorRef.value = editor
+
+    editorInstance.onDidChangeModelContent(() => {
+        modelValue.value = editorInstance.getValue()
+    })
+
+    editorInstance.onDidFocusEditorWidget(() => {
+        emits("focus", editorInstance)
+    })
+    editorInstance.onDidBlurEditorWidget(() => {
+        emits("blur", editorInstance)
+    })
+    editorInstance.onDidChangeModel(() => {
+        emits("change", editorInstance, editorInstance.getValue())
+    })
+
+    editorRef.value = editorInstance
 })
 
 onBeforeUnmount(() => {
-    editorRef.value = null
+    if (editorRef.value) {
+        editorRef.value.dispose()
+        editorRef.value = null
+    }
 })
 
 watch(() => modelValue.value, (value) => {
@@ -86,8 +98,10 @@ watch(() => modelValue.value, (value) => {
     }
 })
 
-watch(() => editorTheme.value, (value) => {
-    editorRef.value?.setTheme(value)
+watch(() => editorTheme.value, (theme) => {
+    editorRef.value?.updateOptions({
+        theme
+    })
 })
 
 defineExpose({
@@ -98,19 +112,8 @@ defineExpose({
 
 <template>
     <div
-        class="markdown-editor-wrapper"
-    >
-        <div
-            :id="id"
-            class="markdown-editor"
-            ref="elementRef"
-        />
-    </div>
+        :id="id"
+        style="height: 500px; width: 600px;"
+        ref="elementRef"
+    />
 </template>
-
-<style scoped>
-.markdown-editor-wrapper {
-    width: 100%;
-    height: 100%;
-}
-</style>

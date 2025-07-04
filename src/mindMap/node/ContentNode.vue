@@ -7,7 +7,7 @@ import {
     RawMindMapLayer,
     useMindMap
 } from "@/mindMap/useMindMap.ts";
-import {computed, nextTick, ref, useTemplateRef} from "vue";
+import {computed, nextTick, ref, useTemplateRef, watch} from "vue";
 import FitSizeBlockInput from "@/components/input/FitSizeBlockInput.vue";
 import {NodeToolbar} from "@vue-flow/node-toolbar";
 import IconDelete from "@/components/icons/IconDelete.vue";
@@ -47,23 +47,27 @@ const _node = computed(() => findNode(props.id, props.layer.vueFlow))
 
 const dataTypeOrDefault = computed<ContentType>(() => props.data.type ?? ContentType_DEFAULT)
 
-const innerValue = computed<string>({
+// 是否可编辑
+const editable = ref(true)
+
+// text input 模式
+const inputValue = computed<string>({
     get() {
         return props.data.content
     },
     set(newVal: string) {
-        updateNodeData(props.id, {content: newVal})
+        if (newVal !== props.data.content) {
+            updateNodeData(props.id, {content: newVal})
+        }
     }
 })
 
-const inputDisable = ref(true)
 const inputRef = useTemplateRef<InstanceType<typeof FitSizeBlockInput>>("inputRef")
-const markdownEditorRef = useTemplateRef<InstanceType<typeof MarkdownEditor>>("markdownEditorRef")
 
 const inputWidth = ref(0)
 const inputHeight = ref(0)
 
-const handleResize = (size: { width: number, height: number }) => {
+const handleInputResize = (size: { width: number, height: number }) => {
     const node = _node.value
     if (node) {
         node.dimensions.width = size.width
@@ -73,6 +77,28 @@ const handleResize = (size: { width: number, height: number }) => {
     inputHeight.value = size.height
 }
 
+const handleInputBlur = () => {
+    editable.value = true
+}
+
+// markdown 模式
+const markdownEditorRef = useTemplateRef<InstanceType<typeof MarkdownEditor>>("markdownEditorRef")
+
+const markdownEditorValue = ref<string>(props.data.content)
+
+watch(() => props.data.content, (value) => {
+    if (value !== markdownEditorValue.value) {
+        markdownEditorValue.value = value
+    }
+})
+
+const handleMarkdownEditorBlur = () => {
+    if (markdownEditorValue.value !== props.data.content) {
+        updateNodeData(props.id, {content: markdownEditorValue.value})
+    }
+}
+
+// 节点行为
 const handleNodeSelect = () => {
     if (isSelectionPlural.value) return
     if (canMultiSelect.value) return
@@ -82,18 +108,15 @@ const handleNodeSelect = () => {
 const handleNodeFocus = () => {
     if (canMultiSelect.value) return
     if (!props.selected) return
-    inputDisable.value = false
-    if (props.data.type === 'markdown') {
-        markdownEditorRef.value?.editorRef?.focus()
-    } else {
+    editable.value = false
+    if (dataTypeOrDefault.value === 'text') {
         inputRef.value?.el?.focus()
+    } else if (dataTypeOrDefault.value === 'markdown') {
+        markdownEditorRef.value?.editorRef?.focus()
     }
 }
 
-const handleBlur = () => {
-    inputDisable.value = true
-}
-
+// 连接点行为
 const onHandleMouseDown = (e: MouseEvent) => {
     if (e.target instanceof HTMLElement) {
         const target = e.target as HTMLElement
@@ -165,9 +188,9 @@ const executeToggleType = async () => {
     blurActiveElement()
     switch (props.data.type) {
         case 'markdown':
-            updateNodeData(props.id, {type: 'text'})
+            updateNodeData(props.id, {type: 'text', content: markdownEditorValue.value})
             break
-        default:
+        case 'text':
             updateNodeData(props.id, {type: 'markdown'})
             break
     }
@@ -177,6 +200,9 @@ const executeToggleType = async () => {
 
 // 删除
 const executeDelete = () => {
+    if (dataTypeOrDefault.value === 'markdown' && markdownEditorValue.value !== props.data.content) {
+        updateNodeData(props.id, {content: markdownEditorValue.value})
+    }
     blurActiveElement()
     remove({nodes: [props.id]})
 }
@@ -197,11 +223,11 @@ const executeDelete = () => {
             >
                 <FitSizeBlockInput
                     ref="inputRef"
-                    :class="{untouchable: inputDisable, noDrag: !inputDisable}"
+                    :class="{untouchable: editable, noDrag: !editable}"
                     :style="{borderColor}"
-                    v-model="innerValue"
-                    @resize="handleResize"
-                    @blur="handleBlur"
+                    v-model="inputValue"
+                    @resize="handleInputResize"
+                    @blur="handleInputBlur"
                 />
             </div>
 
@@ -213,12 +239,10 @@ const executeDelete = () => {
             >
                 <MarkdownEditor
                     ref="markdownEditorRef"
-                    :class="{untouchable: inputDisable, noDrag: !inputDisable, noWheel: !inputDisable}"
-                    v-model="innerValue"
+                    :class="{untouchable: editable, noDrag: !editable, noWheel: !editable}"
+                    v-model="markdownEditorValue"
                     :theme="meta.currentTheme"
-                    @wheel.stop
-                    @blur="handleBlur"
-                    :preview-only="inputDisable"
+                    @blur="handleMarkdownEditorBlur"
                 />
             </div>
 
@@ -230,7 +254,7 @@ const executeDelete = () => {
             />
         </div>
 
-        <NodeToolbar :node-id="id" :is-visible="selected && !inputDisable" class="toolbar">
+        <NodeToolbar :node-id="id" :is-visible="selected && !editable" class="toolbar">
             <button @mousedown.capture.prevent.stop="executeCopy">
                 <IconCopy/>
             </button>
