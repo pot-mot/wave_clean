@@ -258,7 +258,7 @@ const executeDelete = () => {
                 v-show="innerValue.length > 0 || inputShow"
                 :class="{untouchable: !inputShow}"
                 :font-size="12"
-                :padding="2"
+                :padding="{top: 2, left: 4, right: 4, bottom: 2}"
                 :style="{borderColor}"
                 v-model="innerValue"
                 @blur="handleBlur"

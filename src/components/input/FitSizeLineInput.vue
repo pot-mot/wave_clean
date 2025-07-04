@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import {nextTick, onMounted, ref, useTemplateRef, watch} from "vue";
+import {computed, nextTick, onMounted, ref, useTemplateRef, watch} from "vue";
 import {getTextLineSize} from "@/components/input/textSize.ts";
+import {calculatePadding, PaddingData} from "@/components/input/paddingCalculate.ts";
 
 const isFocus = ref(false)
 
 const props = withDefaults(
     defineProps<{
-        padding?: number,
+        padding?: PaddingData,
         borderWidth?: number,
         fontSize?: number,
     }>(), {
@@ -20,6 +21,8 @@ const modelValue = defineModel<string>({
     required: true,
 })
 
+const fullPadding = computed(() => calculatePadding(props.padding))
+
 const inputRef = useTemplateRef<HTMLInputElement>("inputRef")
 const innerValue = ref<string>(modelValue.value)
 
@@ -32,10 +35,9 @@ const emits = defineEmits<{
 
 const updateTextSize = () => {
     if (!inputRef.value) return;
-    const expanding = (props.borderWidth + props.padding) * 2
     const {width: innerWidth, height: innerHeight} = getTextLineSize(innerValue.value, inputRef.value)
-    width.value = (innerWidth <= 0 ? 1 : innerWidth) + expanding
-    height.value = (innerHeight < props.fontSize ? props.fontSize : innerHeight) + expanding
+    width.value = (innerWidth <= 0 ? 1 : innerWidth) + props.borderWidth * 2 + fullPadding.value.left + fullPadding.value.right
+    height.value = (innerHeight < props.fontSize ? props.fontSize : innerHeight) + props.borderWidth * 2 + fullPadding.value.top + fullPadding.value.bottom
     emits("resize", {width: width.value, height: height.value})
 }
 
@@ -43,10 +45,9 @@ const handleComposition = (e: CompositionEvent) => {
     if (!inputRef.value) return
     const start = inputRef.value.selectionStart ?? innerValue.value.length
     const text = innerValue.value.slice(0, start) + e.data + innerValue.value.slice(start)
-    const expanding = (props.borderWidth + props.padding) * 2
     const {width: innerWidth, height: innerHeight} = getTextLineSize(text, inputRef.value)
-    width.value = (innerWidth <= 0 ? 1 : innerWidth) + expanding
-    height.value = (innerHeight < props.fontSize ? props.fontSize : innerHeight) + expanding
+    width.value = (innerWidth <= 0 ? 1 : innerWidth) + props.borderWidth * 2 + fullPadding.value.left + fullPadding.value.right
+    height.value = (innerHeight < props.fontSize ? props.fontSize : innerHeight) + props.borderWidth * 2 + fullPadding.value.top + fullPadding.value.bottom
     emits("resize", {width: width.value, height: height.value})
 }
 
@@ -96,7 +97,10 @@ defineExpose({el: inputRef, isFocus})
     <input
         ref="inputRef"
         :style="{
-            padding: `${props.padding}px`,
+             paddingLeft: `${fullPadding.left}px`,
+            paddingRight: `${fullPadding.right}px`,
+            paddingTop: `${fullPadding.top}px`,
+            paddingBottom: `${fullPadding.bottom}px`,
             borderWidth: `${props.borderWidth}px`,
             fontSize: `${props.fontSize}px`,
             width: `${width}px`,

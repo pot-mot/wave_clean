@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import {nextTick, onMounted, ref, useTemplateRef, watch} from "vue";
+import {computed, nextTick, onMounted, ref, useTemplateRef, watch} from "vue";
 import {getTextBlockWidth} from "@/components/input/textSize.ts";
 import {vTapInput} from "@/components/input/vTabInput.ts";
+import {calculatePadding, PaddingData} from "@/components/input/paddingCalculate.ts";
 
 const isFocus = ref(false)
 
 const props = withDefaults(
     defineProps<{
-        padding?: number,
+        padding?: PaddingData,
         borderWidth?: number,
         fontSize?: number,
     }>(), {
@@ -21,6 +22,8 @@ const modelValue = defineModel<string>({
     required: true,
 })
 
+const fullPadding = computed(() => calculatePadding(props.padding))
+
 const textareaRef = useTemplateRef<HTMLTextAreaElement>("textareaRef")
 const innerValue = ref<string>(modelValue.value)
 
@@ -33,10 +36,9 @@ const emits = defineEmits<{
 
 const updateTextSize = () => {
     if (!textareaRef.value) return
-    const expanding = (props.borderWidth + props.padding) * 2
     const {width: innerWidth, height: innerHeight} = getTextBlockWidth(innerValue.value, textareaRef.value)
-    width.value = (innerWidth <= 0 ? 1 : innerWidth) + expanding
-    height.value = (innerHeight < props.fontSize ? props.fontSize : innerHeight) + expanding
+    width.value = (innerWidth <= 0 ? 1 : innerWidth) + props.borderWidth * 2 + fullPadding.value.left + fullPadding.value.right
+    height.value = (innerHeight < props.fontSize ? props.fontSize : innerHeight) + props.borderWidth * 2 + fullPadding.value.top + fullPadding.value.bottom
     emits("resize", {width: width.value, height: height.value})
 }
 
@@ -44,10 +46,9 @@ const handleComposition = (e: CompositionEvent) => {
     if (!textareaRef.value) return
     const start = textareaRef.value.selectionStart ?? innerValue.value.length
     const text = innerValue.value.slice(0, start) + e.data + innerValue.value.slice(start)
-    const expanding = (props.borderWidth + props.padding) * 2
     const {width: innerWidth, height: innerHeight} = getTextBlockWidth(text, textareaRef.value)
-    width.value = (innerWidth <= 0 ? 1 : innerWidth) + expanding
-    height.value = (innerHeight < props.fontSize ? props.fontSize : innerHeight) + expanding
+    width.value = (innerWidth <= 0 ? 1 : innerWidth) + props.borderWidth * 2 + fullPadding.value.left + fullPadding.value.right
+    height.value = (innerHeight < props.fontSize ? props.fontSize : innerHeight) + props.borderWidth * 2 + fullPadding.value.top + fullPadding.value.bottom
     emits("resize", {width: width.value, height: height.value})
 }
 
@@ -91,7 +92,10 @@ defineExpose({el: textareaRef, isFocus})
     <textarea
         ref="textareaRef"
         :style="{
-            padding: `${padding}px`,
+            paddingLeft: `${fullPadding.left}px`,
+            paddingRight: `${fullPadding.right}px`,
+            paddingTop: `${fullPadding.top}px`,
+            paddingBottom: `${fullPadding.bottom}px`,
             borderWidth: `${borderWidth}px`,
             fontSize: `${fontSize}px`,
             width: `${width}px`,
