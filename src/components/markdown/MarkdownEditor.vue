@@ -7,6 +7,7 @@ import {editor} from "monaco-editor/esm/vs/editor/editor.api.js";
 import "monaco-editor/esm/vs/editor/common/editorTheme.js"
 import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
 import {MarkdownEditorElement} from "@/components/markdown/MarkdownEditorElement.ts";
+import {initMonacoMarkdownEvent} from "@/components/markdown/markdownCompletion.ts";
 
 const id = `markdown-editor-${uuid()}`
 
@@ -14,12 +15,9 @@ const modelValue = defineModel<string>({
     required: true
 })
 
-const props = withDefaults(defineProps<{
+const props = defineProps<{
     theme?: Theme | undefined,
-    previewOnly?: boolean,
-}>(), {
-    previewOnly: false,
-})
+}>()
 
 const emits = defineEmits<{
     (event: "change", editor: IStandaloneCodeEditor, value: string): void
@@ -66,7 +64,10 @@ onMounted(async () => {
         wrappingIndent: "indent",
         scrollBeyondLastLine: true, // 代码后面的空白
         overviewRulerBorder: false, // 不要滚动条的边框
+        dragAndDrop: false,
     })
+
+    initMonacoMarkdownEvent(editorInstance)
 
     editorInstance.onDidChangeModelContent(() => {
         modelValue.value = editorInstance.getValue()
@@ -111,9 +112,11 @@ defineExpose({
 </script>
 
 <template>
-    <div
-        :id="id"
-        style="height: 500px; width: 600px;"
-        ref="elementRef"
-    />
+    <div class="markdown-editor">
+        <div
+            :id="id"
+            style="height: 500px; width: 600px;"
+            ref="elementRef"
+        />
+    </div>
 </template>

@@ -1,9 +1,10 @@
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api.js";
 // import "monaco-editor/esm/vs/basic-languages/markdown/markdown.js";
-import {languages} from "monaco-editor/esm/vs/editor/editor.api.js";
+import {editor, languages} from "monaco-editor/esm/vs/editor/editor.api.js";
 import OnEnterRule = languages.OnEnterRule;
 import IAutoClosingPair = languages.IAutoClosingPair;
 import IMonarchLanguageRule = languages.IMonarchLanguageRule;
+import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
 
 const brackets: [string, string][] = []
 
@@ -253,7 +254,7 @@ const markdownLanguage = {
     tokenizer,
 }
 
-export const initMonacoMarkdownCompletion = () => {
+export const initMonacoMarkdownLanguage = () => {
     monaco.languages.register({id: 'markdown'})
 
     monaco.languages.setMonarchTokensProvider('markdown', markdownLanguage)
@@ -264,4 +265,7 @@ export const initMonacoMarkdownCompletion = () => {
         autoClosingPairs,
         onEnterRules,
     })
+}
+
+export const initMonacoMarkdownEvent = (editor: IStandaloneCodeEditor) => {
 }

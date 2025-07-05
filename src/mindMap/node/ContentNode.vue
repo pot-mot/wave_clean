@@ -17,6 +17,7 @@ import {useDeviceStore} from "@/store/deviceStore.ts";
 import {blurActiveElement, getMatchedElementOrParent} from "@/utils/event/judgeEventTarget.ts";
 import {useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
 import MarkdownEditor from "@/components/markdown/MarkdownEditor.vue";
+import MarkdownPreview from "@/components/markdown/MarkdownPreview.vue";
 
 const {isTouchDevice} = useDeviceStore()
 
@@ -34,23 +35,20 @@ const {
     remove
 } = useMindMap()
 
-const props = withDefaults(defineProps<NodeProps<ContentNodeData> & {
+const props = defineProps<NodeProps<ContentNodeData> & {
     layer: RawMindMapLayer,
-    minWidth?: number,
-    minHeight?: number,
-}>(), {
-    minWidth: 160,
-    minHeight: 66,
-})
+}>()
 
 const _node = computed(() => findNode(props.id, props.layer.vueFlow))
 
 const dataTypeOrDefault = computed<ContentType>(() => props.data.type ?? ContentType_DEFAULT)
 
-// 是否可编辑
-const editable = ref(true)
+// 是否已聚焦
+const isFocus = ref(false)
 
 // text input 模式
+const inputRef = useTemplateRef<InstanceType<typeof FitSizeBlockInput>>("inputRef")
+
 const inputValue = computed<string>({
     get() {
         return props.data.content
@@ -61,8 +59,6 @@ const inputValue = computed<string>({
         }
     }
 })
-
-const inputRef = useTemplateRef<InstanceType<typeof FitSizeBlockInput>>("inputRef")
 
 const inputWidth = ref(0)
 const inputHeight = ref(0)
@@ -78,13 +74,15 @@ const handleInputResize = (size: { width: number, height: number }) => {
 }
 
 const handleInputBlur = () => {
-    editable.value = true
+    isFocus.value = false
 }
 
 // markdown 模式
 const markdownEditorRef = useTemplateRef<InstanceType<typeof MarkdownEditor>>("markdownEditorRef")
 
 const markdownEditorValue = ref<string>(props.data.content)
+
+const isMarkdownEdit = ref(false)
 
 watch(() => props.data.content, (value) => {
     if (value !== markdownEditorValue.value) {
@@ -95,6 +93,17 @@ watch(() => props.data.content, (value) => {
 const handleMarkdownEditorBlur = () => {
     if (markdownEditorValue.value !== props.data.content) {
         updateNodeData(props.id, {content: markdownEditorValue.value})
+    }
+    isFocus.value = false
+    isMarkdownEdit.value = false
+}
+
+// 切换编辑模式
+const executeToggleMarkdownEdit = async () => {
+    isMarkdownEdit.value = !isMarkdownEdit.value
+    if (isMarkdownEdit.value) {
+        await nextTick()
+        markdownEditorRef.value?.editorRef?.focus()
     }
 }
 
@@ -108,11 +117,9 @@ const handleNodeSelect = () => {
 const handleNodeFocus = () => {
     if (canMultiSelect.value) return
     if (!props.selected) return
-    editable.value = false
+    isFocus.value = true
     if (dataTypeOrDefault.value === 'text') {
         inputRef.value?.el?.focus()
-    } else if (dataTypeOrDefault.value === 'markdown') {
-        markdownEditorRef.value?.editorRef?.focus()
     }
 }
 
@@ -184,18 +191,19 @@ const executeFocus = () => {
 }
 
 // 切换内容类型
-const executeToggleType = async () => {
+const executeToggleType = () => {
     blurActiveElement()
     switch (props.data.type) {
         case 'markdown':
             updateNodeData(props.id, {type: 'text', content: markdownEditorValue.value})
+            isMarkdownEdit.value = false
             break
         case 'text':
             updateNodeData(props.id, {type: 'markdown'})
+            isMarkdownEdit.value = false
+            isFocus.value = true
             break
     }
-    await nextTick()
-    handleNodeFocus()
 }
 
 // 删除
@@ -217,13 +225,12 @@ const executeDelete = () => {
         >
             <div
                 v-if="dataTypeOrDefault === 'text'"
-                class="fit-parent"
                 :style="{width: `${inputWidth}px`, height: `${inputHeight}px`}"
                 @click.capture="handleNodeFocus"
             >
                 <FitSizeBlockInput
                     ref="inputRef"
-                    :class="{untouchable: editable, noDrag: !editable}"
+                    :class="{untouchable: !isFocus, noDrag: isFocus}"
                     :style="{borderColor}"
                     v-model="inputValue"
                     @resize="handleInputResize"
@@ -234,15 +241,21 @@ const executeDelete = () => {
             <div
                 v-else-if="dataTypeOrDefault === 'markdown'"
                 class="fit-parent"
-                :style="{minWidth: `${minWidth}px`, minHeight: `${minHeight}px`}"
                 @click.capture="handleNodeFocus"
             >
                 <MarkdownEditor
+                    v-if="isMarkdownEdit"
                     ref="markdownEditorRef"
-                    :class="{untouchable: editable, noDrag: !editable, noWheel: !editable}"
+                    class="noDrag noWheel"
                     v-model="markdownEditorValue"
                     :theme="meta.currentTheme"
                     @blur="handleMarkdownEditorBlur"
+                />
+                <MarkdownPreview
+                    v-else
+                    :class="{noDrag: isFocus, noWheel: isFocus}"
+                    :style="{borderColor}"
+                    :value="data.content"
                 />
             </div>
 
@@ -254,7 +267,7 @@ const executeDelete = () => {
             />
         </div>
 
-        <NodeToolbar :node-id="id" :is-visible="selected && !editable" class="toolbar">
+        <NodeToolbar :node-id="id" :is-visible="selected && isFocus" class="toolbar">
             <button @mousedown.capture.prevent.stop="executeCopy">
                 <IconCopy/>
             </button>
@@ -265,6 +278,10 @@ const executeDelete = () => {
 
             <button @mousedown.capture.prevent.stop="executeToggleType">
                 {{ dataTypeOrDefault }}
+            </button>
+
+            <button v-if="dataTypeOrDefault === 'markdown' && !isMarkdownEdit" @mousedown.capture.prevent.stop="executeToggleMarkdownEdit">
+                edit
             </button>
 
             <button @mousedown.capture.prevent.stop="executeDelete">
