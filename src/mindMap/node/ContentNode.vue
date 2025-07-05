@@ -46,6 +46,12 @@ const dataTypeOrDefault = computed<ContentType>(() => props.data.type ?? Content
 // 是否已聚焦
 const isFocus = ref(false)
 
+watch(() => props.selected, (value, oldValue) => {
+    if (!value && oldValue) {
+        isFocus.value = false
+    }
+})
+
 // text input 模式
 const inputRef = useTemplateRef<InstanceType<typeof FitSizeBlockInput>>("inputRef")
 
@@ -253,7 +259,7 @@ const executeDelete = () => {
                 />
                 <MarkdownPreview
                     v-else
-                    :class="{noDrag: isFocus, noWheel: isFocus}"
+                    :class="{untouchable: !isFocus, noDrag: isFocus, noWheel: isFocus}"
                     :style="{borderColor}"
                     :value="data.content"
                 />
