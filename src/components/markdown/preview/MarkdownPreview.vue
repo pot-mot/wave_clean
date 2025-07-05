@@ -11,6 +11,7 @@ const renderResult = computed(() => md.render(props.value))
 
 <template>
     <div
+        tabindex="-1"
         class="markdown-preview"
         v-html="renderResult"
     />
