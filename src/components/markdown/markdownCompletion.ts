@@ -5,6 +5,8 @@ import OnEnterRule = languages.OnEnterRule;
 import IAutoClosingPair = languages.IAutoClosingPair;
 import IMonarchLanguageRule = languages.IMonarchLanguageRule;
 
+const brackets: [string, string][] = []
+
 const surroundingPairs: IAutoClosingPair[] = [
     {open: '{', close: '}'},
     {open: '[', close: ']'},
@@ -28,8 +30,6 @@ const surroundingPairs: IAutoClosingPair[] = [
     {open: '“', close: '”'},
 ]
 
-const brackets: [string, string][] = surroundingPairs.map(it => [it.open, it.close])
-
 const autoClosingPairs: IAutoClosingPair[] = [
     {open: '{', close: '}'},
     {open: '[', close: ']'},
@@ -43,12 +43,9 @@ const autoClosingPairs: IAutoClosingPair[] = [
 
 const onEnterRules: OnEnterRule[] = [
     {beforeText: /^\s*> .*$/, action: {indentAction: monaco.languages.IndentAction.None, appendText: '> '}},
-    {beforeText: /^\s*\+ \[ ] .*$/, action: {indentAction: monaco.languages.IndentAction.None, appendText: '+ [ ] '}},
-    {beforeText: /^\s*- \[ ] .*$/, action: {indentAction: monaco.languages.IndentAction.None, appendText: '- [ ] '}},
-    {beforeText: /^\s*\* \[ ] .*$/, action: {indentAction: monaco.languages.IndentAction.None, appendText: '* [ ] '}},
-    {beforeText: /^\s*\+ \[x] .*$/, action: {indentAction: monaco.languages.IndentAction.None, appendText: '+ [ ] '}},
-    {beforeText: /^\s*- \[x] .*$/, action: {indentAction: monaco.languages.IndentAction.None, appendText: '- [ ] '}},
-    {beforeText: /^\s*\* \[x] .*$/, action: {indentAction: monaco.languages.IndentAction.None, appendText: '* [ ] '}},
+    {beforeText: /^\s*\+ \[[xX ]] .*$/, action: {indentAction: monaco.languages.IndentAction.None, appendText: '+ [ ] '}},
+    {beforeText: /^\s*- \[[xX ]] .*$/, action: {indentAction: monaco.languages.IndentAction.None, appendText: '- [ ] '}},
+    {beforeText: /^\s*\* \[[xX ]] .*$/, action: {indentAction: monaco.languages.IndentAction.None, appendText: '* [ ] '}},
     {beforeText: /^\s*\+ .*$/, action: {indentAction: monaco.languages.IndentAction.None, appendText: '+ '}},
     {beforeText: /^\s*- .*$/, action: {indentAction: monaco.languages.IndentAction.None, appendText: '- '}},
     {beforeText: /^\s*\* .*$/, action: {indentAction: monaco.languages.IndentAction.None, appendText: '* '}},
