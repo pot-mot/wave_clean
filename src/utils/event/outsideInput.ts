@@ -1,5 +1,5 @@
 import {checkIsInputOrTextarea, checkIsMarkdownEditor, getMatchedElementOrParent} from "@/utils/event/judgeEventTarget.ts";
-import {checkIsMarkdownEditorElement} from "@/components/markdown/MarkdownEditorElement.ts";
+import {checkIsMarkdownEditorElement} from "@/components/markdown/editor/MarkdownEditorElement.ts";
 
 export const outsideInput = (target: Element | EventTarget | null, value: string) => {
     if (target === null || target === undefined) return

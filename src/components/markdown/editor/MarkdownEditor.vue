@@ -6,8 +6,8 @@ import {sendMessage} from "@/components/message/sendMessage.ts";
 import {editor} from "monaco-editor/esm/vs/editor/editor.api.js";
 import "monaco-editor/esm/vs/editor/common/editorTheme.js"
 import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
-import {MarkdownEditorElement} from "@/components/markdown/MarkdownEditorElement.ts";
-import {initMonacoMarkdownEvent} from "@/components/markdown/markdownCompletion.ts";
+import {MarkdownEditorElement} from "@/components/markdown/editor/MarkdownEditorElement.ts";
+import {initMonacoMarkdownEvent} from "@/components/markdown/editor/markdownCompletion.ts";
 
 const id = `markdown-editor-${uuid()}`
 

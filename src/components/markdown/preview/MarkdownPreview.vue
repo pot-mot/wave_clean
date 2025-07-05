@@ -1,17 +1,25 @@
 <script setup lang="ts">
-defineProps<{
+import {md} from "@/components/markdown/preview/markdownRender.ts";
+import {computed} from "vue";
+
+const props = defineProps<{
     value: string
 }>()
+
+const renderResult = computed(() => md.render(props.value))
 </script>
 
 <template>
-    <div class="markdown-preview">
-        {{ value }}
-    </div>
+    <div
+        class="markdown-preview"
+        v-html="renderResult"
+    />
 </template>
 
 <style scoped>
 .markdown-preview {
+    cursor: text;
+    user-select: text;
     white-space: pre;
     border: var(--border);
     border-radius: var(--border-radius);

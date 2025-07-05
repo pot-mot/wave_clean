@@ -16,8 +16,8 @@ import IconFocus from "@/components/icons/IconFocus.vue";
 import {useDeviceStore} from "@/store/deviceStore.ts";
 import {blurActiveElement, getMatchedElementOrParent} from "@/utils/event/judgeEventTarget.ts";
 import {useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
-import MarkdownEditor from "@/components/markdown/MarkdownEditor.vue";
-import MarkdownPreview from "@/components/markdown/MarkdownPreview.vue";
+import MarkdownEditor from "@/components/markdown/editor/MarkdownEditor.vue";
+import MarkdownPreview from "@/components/markdown/preview/MarkdownPreview.vue";
 
 const {isTouchDevice} = useDeviceStore()
 
@@ -110,6 +110,8 @@ const executeToggleMarkdownEdit = async () => {
     if (isMarkdownEdit.value) {
         await nextTick()
         markdownEditorRef.value?.editorRef?.focus()
+    } else {
+        updateNodeData(props.id, {content: markdownEditorValue.value})
     }
 }
 
@@ -286,8 +288,8 @@ const executeDelete = () => {
                 {{ dataTypeOrDefault }}
             </button>
 
-            <button v-if="dataTypeOrDefault === 'markdown' && !isMarkdownEdit" @mousedown.capture.prevent.stop="executeToggleMarkdownEdit">
-                edit
+            <button v-if="dataTypeOrDefault === 'markdown'" @mousedown.capture.prevent.stop="executeToggleMarkdownEdit">
+                {{ isMarkdownEdit ? 'preview' : 'edit'}}
             </button>
 
             <button @mousedown.capture.prevent.stop="executeDelete">
