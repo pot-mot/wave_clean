@@ -21,7 +21,6 @@ const renderResult = computed(() => md.render(props.value))
 .markdown-preview {
     cursor: text;
     user-select: text;
-    white-space: pre;
     border: var(--border);
     border-radius: var(--border-radius);
     background-color: var(--background-color);
