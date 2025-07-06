@@ -1,5 +1,6 @@
 import {checkIsInputOrTextarea, checkIsMarkdownEditor, getMatchedElementOrParent} from "@/utils/event/judgeEventTarget.ts";
 import {checkIsMarkdownEditorElement} from "@/components/markdown/editor/MarkdownEditorElement.ts";
+import * as monaco from "monaco-editor";
 
 export const outsideInput = (target: Element | EventTarget | null, value: string) => {
     if (target === null || target === undefined) return
@@ -18,9 +19,23 @@ export const outsideInput = (target: Element | EventTarget | null, value: string
     } else if (checkIsMarkdownEditor(target)) {
         const parent = getMatchedElementOrParent(target, (el) => el.classList.contains('markdown-editor'))
         if (parent && checkIsMarkdownEditorElement(parent) && parent.editor) {
-            // parent.editor.insert(() => {
-            //     return {targetValue: value, select: false}
-            // })
+            const editor = parent.editor
+
+            const position = editor.getPosition()
+            if (!position) return
+
+            editor.executeEdits('outsideInput', [
+                {
+                    range: new monaco.Range(
+                        position.lineNumber,
+                        position.column,
+                        position.lineNumber,
+                        position.column
+                    ),
+                    text: value,
+                    forceMoveMarkers: true
+                }
+            ])
         }
     }
 }
