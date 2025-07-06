@@ -49,6 +49,7 @@ const isFocus = ref(false)
 watch(() => props.selected, (value, oldValue) => {
     if (!value && oldValue) {
         isFocus.value = false
+        isMarkdownEdit.value = false
     }
 })
 
@@ -100,8 +101,6 @@ const handleMarkdownEditorBlur = () => {
     if (markdownEditorValue.value !== props.data.content) {
         updateNodeData(props.id, {content: markdownEditorValue.value})
     }
-    isFocus.value = false
-    isMarkdownEdit.value = false
 }
 
 // 切换编辑模式

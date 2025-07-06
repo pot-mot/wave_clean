@@ -58,7 +58,9 @@ onMounted(async () => {
         lineNumbers: "off",
         readOnly: false, // 只读
         fontSize: 16, // 字体大小
-        lineHeight: 22,
+        lineHeight: 24,
+        tabSize: 4,
+        folding: true,
         wordWrap: "on",
         wordBreak: "keepAll",
         wrappingIndent: "indent",
