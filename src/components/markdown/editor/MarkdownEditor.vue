@@ -64,7 +64,7 @@ onMounted(async () => {
         folding: true,
         wordWrap: "on",
         wordBreak: "keepAll",
-        wrappingIndent: "indent",
+        wrappingIndent: "none",
         scrollBeyondLastLine: true, // 代码后面的空白
         overviewRulerBorder: false, // 不要滚动条的边框
         dragAndDrop: false,
