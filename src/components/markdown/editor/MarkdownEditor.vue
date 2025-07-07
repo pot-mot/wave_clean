@@ -59,6 +59,7 @@ onMounted(async () => {
         readOnly: false, // 只读
         fontSize: 16, // 字体大小
         lineHeight: 24,
+        padding: {top: 12, bottom: 12},
         tabSize: 4,
         folding: true,
         wordWrap: "on",
