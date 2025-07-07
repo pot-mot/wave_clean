@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {md} from "@/components/markdown/preview/markdownRender.ts";
 import {computed} from "vue";
+import "@/components/markdown/preview/markdown-preview.css"
 
 const props = defineProps<{
     value: string
