@@ -256,6 +256,10 @@ const executeToggleType = () => {
             updateNodeData(props.id, {type: 'markdown'})
             isMarkdownEdit.value = false
             isFocus.value = true
+            markdownContentSize.value = {
+                width: inputWidth.value,
+                height: inputHeight.value,
+            }
             break
     }
 }
