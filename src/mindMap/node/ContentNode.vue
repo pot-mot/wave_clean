@@ -18,6 +18,7 @@ import {blurActiveElement, getMatchedElementOrParent} from "@/utils/event/judgeE
 import {useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
 import MarkdownEditor from "@/components/markdown/editor/MarkdownEditor.vue";
 import MarkdownPreview from "@/components/markdown/preview/MarkdownPreview.vue";
+import ResizeWrapper from "@/components/resizer/ResizeWrapper.vue";
 
 const {isTouchDevice} = useDeviceStore()
 
@@ -90,6 +91,11 @@ const markdownEditorRef = useTemplateRef<InstanceType<typeof MarkdownEditor>>("m
 const markdownEditorValue = ref<string>(props.data.content)
 
 const isMarkdownEdit = ref(false)
+
+const markdownContentSize = ref({
+    height: 100,
+    width: 100,
+})
 
 watch(() => props.data.content, (value) => {
     if (value !== markdownEditorValue.value) {
@@ -224,9 +230,13 @@ const executeDelete = () => {
 </script>
 
 <template>
-    <div class="content-node">
+    <div
+        class="content-node"
+        style="overflow: visible;"
+    >
         <div
             class="fit-parent"
+            style="overflow: visible;"
             @mousedown.capture="handleNodeSelect"
             @touchstart.capture="handleNodeSelect"
         >
@@ -248,22 +258,29 @@ const executeDelete = () => {
             <div
                 v-else-if="dataTypeOrDefault === 'markdown'"
                 class="fit-parent"
+                style="overflow: visible;"
                 @click.capture="handleNodeFocus"
             >
-                <MarkdownEditor
-                    v-if="isMarkdownEdit"
-                    ref="markdownEditorRef"
-                    class="noDrag noWheel"
-                    v-model="markdownEditorValue"
-                    :theme="meta.currentTheme"
-                    @blur="handleMarkdownEditorBlur"
-                />
-                <MarkdownPreview
-                    v-else
-                    :class="{untouchable: !isFocus, noDrag: isFocus, noWheel: isFocus}"
-                    :style="{borderColor}"
-                    :value="data.content"
-                />
+                <ResizeWrapper
+                    v-model="markdownContentSize"
+                >
+                    <MarkdownEditor
+                        v-if="isMarkdownEdit"
+                        ref="markdownEditorRef"
+                        class="fit-parent noDrag noWheel"
+                        v-model="markdownEditorValue"
+                        :theme="meta.currentTheme"
+                        @blur="handleMarkdownEditorBlur"
+                    />
+                    <MarkdownPreview
+                        v-else
+                        class="fit-parent"
+                        style="overflow: auto;"
+                        :class="{untouchable: !isFocus, noDrag: isFocus, noWheel: isFocus}"
+                        :style="{borderColor}"
+                        :value="data.content"
+                    />
+                </ResizeWrapper>
             </div>
 
             <Handle
@@ -302,7 +319,6 @@ const executeDelete = () => {
 .content-node {
     width: 100%;
     height: 100%;
-    overflow: hidden;
 }
 
 .content-node .fit-parent {

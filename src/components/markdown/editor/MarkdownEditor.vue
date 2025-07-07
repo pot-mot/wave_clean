@@ -67,6 +67,7 @@ onMounted(async () => {
         scrollBeyondLastLine: true, // 代码后面的空白
         overviewRulerBorder: false, // 不要滚动条的边框
         dragAndDrop: false,
+        automaticLayout: true,
     })
 
     initMonacoMarkdownEvent(editorInstance)
@@ -114,11 +115,9 @@ defineExpose({
 </script>
 
 <template>
-    <div class="markdown-editor">
-        <div
-            :id="id"
-            style="height: 500px; width: 600px;"
-            ref="elementRef"
-        />
-    </div>
+    <div
+        :id="id"
+        class="markdown-editor"
+        ref="elementRef"
+    />
 </template>
