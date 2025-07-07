@@ -31,6 +31,7 @@ const {
     canMultiSelect,
     findNode,
     selectNode,
+    resizeNode,
     copy,
     paste,
     fitRect,
@@ -76,8 +77,8 @@ const inputHeight = ref(0)
 const handleInputResize = (size: { width: number, height: number }) => {
     const node = _node.value
     if (node) {
-        node.dimensions.width = size.width
-        node.dimensions.height = size.height
+        node.width = size.width
+        node.height = size.height
     }
     inputWidth.value = size.width
     inputHeight.value = size.height
@@ -138,6 +139,24 @@ onMounted(async () => {
     }
 })
 
+watch(() => _node.value?.dimensions.width, (width) => {
+    if (width !== undefined && markdownContentSize.value.width !== width) {
+        markdownContentSize.value.width = width
+    }
+})
+watch(() => _node.value?.dimensions.height, (height) => {
+    if (height !== undefined && markdownContentSize.value.height !== height) {
+        markdownContentSize.value.height = height
+    }
+})
+watch(() => markdownContentSize.value, (size) => {
+    const node = _node.value
+    if (node) {
+        node.height = size.height
+        node.width = size.width
+    }
+}, {deep: true})
+
 const handleMarkdownEditorResize = ({direction, currentDiff}: ResizeEventArgs) => {
     const node = _node.value
     if (node) {
@@ -158,7 +177,47 @@ const handleMarkdownEditorResize = ({direction, currentDiff}: ResizeEventArgs) =
     }
 }
 
-const handleMarkdownEditorResizeStop = ({diff}: ResizeStopEventArgs) => {
+const handleMarkdownEditorResizeStop = ({origin, direction, diff}: ResizeStopEventArgs) => {
+    const node = _node.value
+    if (node) {
+        const oldPosition =  {
+            x: node.position.x,
+            y: node.position.y,
+        }
+
+        if (node) {
+            switch (direction) {
+                case "top":
+                case "top-left":
+                case "top-right":
+                    oldPosition.y -= diff.y
+                    break
+            }
+            switch (direction) {
+                case "left":
+                case "top-left":
+                case "bottom-left":
+                    oldPosition.x -= diff.x
+                    break
+            }
+        }
+
+        resizeNode(props.id, {
+            oldSize: {
+                width: origin.width,
+                height: origin.height,
+            },
+            newSize: {
+                width: markdownContentSize.value.width,
+                height: markdownContentSize.value.height,
+            },
+            oldPosition,
+            newPosition: {
+                x: node.position.x,
+                y: node.position.y,
+            },
+        })
+    }
 }
 
 // 节点行为

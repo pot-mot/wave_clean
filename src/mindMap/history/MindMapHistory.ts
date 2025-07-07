@@ -15,6 +15,7 @@ import {exportMindMapData, MindMapExportData} from "@/mindMap/export/export.ts";
 import {prepareImportIntoMindMap} from "@/mindMap/import/import.ts";
 import {getRaw} from "@/utils/json/getRaw.ts";
 import {getKeys} from "@/utils/type/typeGuard.ts";
+import {validateContentEdge, validateContentNode} from "@/mindMap/typeValidate/validateMindMap.ts";
 
 export type MindMapHistoryCommands = {
     "layer:add": CommandDefinition<
@@ -66,6 +67,14 @@ export type MindMapHistoryCommands = {
         layerId: string,
         id: string,
         data: Partial<ContentNodeData>,
+    }>,
+    "node:resize": CommandDefinition<{
+        layerId: string,
+        id: string,
+        newSize: { width: number, height: number },
+        oldSize: { width: number, height: number },
+        newPosition: XYPosition,
+        oldPosition: XYPosition,
     }>,
 
     "edge:add": CommandDefinition<{
@@ -305,12 +314,22 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
         }
     })
 
+    const getGraphNode = (id: string, vueFlow: VueFlowStore): GraphNode => {
+        const node = vueFlow.findNode(id)
+        if (node === undefined) throw new Error(`node [${id}] is undefined`)
+        return node
+    }
+
+    const getContentNode = (id: string, vueFlow: VueFlowStore): ContentNode => {
+        const node = getGraphNode(id, vueFlow)
+        if (!validateContentNode(node)) throw new Error(`node [${id}] is not a content node`)
+        return node
+    }
 
     history.registerCommand("node:data:change", {
         applyAction: ({layerId, id, data}) => {
             const vueFlow = getVueFlow(layerId)
-            const node = vueFlow.findNode(id) as ContentNode | undefined
-            if (node === undefined) throw new Error(`node [${id}] is undefined`)
+            const node = getContentNode(id, vueFlow)
 
             const previousData = getRaw(node.data)
             vueFlow.updateNodeData(id, Object.assign({}, previousData, data), {replace: true})
@@ -318,12 +337,36 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
         },
         revertAction: ({layerId, id, data}) => {
             const vueFlow = getVueFlow(layerId)
-            const node = vueFlow.findNode(id) as ContentNode | undefined
-            if (node === undefined) throw new Error(`node [${id}] is undefined`)
+            const node = getContentNode(id, vueFlow)
 
             const currentData = getRaw(node.data)
             vueFlow.updateNodeData(id, data, {replace: true})
             return {layerId, id, data: currentData}
+        }
+    })
+
+    history.registerCommand("node:resize", {
+        applyAction: (options) => {
+            const {layerId, id, newSize, newPosition} = options
+
+            const vueFlow = getVueFlow(layerId)
+            const node = getGraphNode(id, vueFlow)
+
+            node.width = newSize.width
+            node.height = newSize.height
+            node.position.x = newPosition.x
+            node.position.y = newPosition.y
+
+            return options
+        },
+        revertAction: ({layerId, id, oldSize, oldPosition}) => {
+            const vueFlow = getVueFlow(layerId)
+            const node = getGraphNode(id, vueFlow)
+
+            node.width = oldSize.width
+            node.height = oldSize.height
+            node.position.x = oldPosition.x
+            node.position.y = oldPosition.y
         }
     })
 
@@ -344,19 +387,29 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
         }
     })
 
+    const getGraphEdge = (id: string, vueFlow: VueFlowStore): GraphEdge => {
+        const edge = vueFlow.findEdge(id)
+        if (edge === undefined) throw new Error(`edge [${id}] is undefined`)
+        return edge
+    }
+
+    const getContentEdge = (id: string, vueFlow: VueFlowStore): ContentEdge => {
+        const edge = getGraphEdge(id, vueFlow)
+        if (!validateContentEdge(edge)) throw new Error(`edge [${id}] is not a content edge`)
+        return edge
+    }
+
     history.registerCommand("edge:reconnect", {
         applyAction: ({layerId, id, oldConnection, newConnection}) => {
             const vueFlow = getVueFlow(layerId)
-            const edge = vueFlow.findEdge(id)
-            if (edge === undefined) throw new Error(`edge [${id}] is undefined`)
+            const edge = getGraphEdge(id, vueFlow)
 
             vueFlow.updateEdge(edge, newConnection, true)
             return {layerId, id: createEdgeId(newConnection), oldConnection}
         },
         revertAction: ({layerId, id, oldConnection}) => {
             const vueFlow = getVueFlow(layerId)
-            const edge = vueFlow.findEdge(id)
-            if (edge === undefined) throw new Error(`edge [${id}] is undefined`)
+            const edge = getGraphEdge(id, vueFlow)
 
             vueFlow.updateEdge(edge, oldConnection, true)
         }
@@ -365,8 +418,7 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
     history.registerCommand("edge:data:change", {
         applyAction: ({layerId, id, data}) => {
             const vueFlow = getVueFlow(layerId)
-            const edge = vueFlow.findEdge(id) as ContentEdge | undefined
-            if (edge === undefined) throw new Error(`edge [${id}] is undefined`)
+            const edge = getContentEdge(id, vueFlow)
 
             const previousData = getRaw(edge.data)
             vueFlow.updateEdgeData(id, Object.assign({}, previousData, data), {replace: true})
@@ -374,8 +426,7 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
         },
         revertAction: ({layerId, id, data}) => {
             const vueFlow = getVueFlow(layerId)
-            const edge = vueFlow.findEdge(id) as ContentEdge | undefined
-            if (edge === undefined) throw new Error(`edge [${id}] is undefined`)
+            const edge = getContentEdge(id, vueFlow)
 
             const currentData = getRaw(edge.data)
             vueFlow.updateEdgeData(id, data, {replace: true})

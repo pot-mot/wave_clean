@@ -400,7 +400,14 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         return vueFlow.screenToFlowCoordinate({x: window.innerWidth / 2, y: window.innerHeight / 2})
     }
 
-    const importData = (data: MindMapImportData, justifyOptions: JustifyOptions = {point: getCenterPosition(), type: "leftTop"}, vueFlow = getCurrentVueFlow()) => {
+    const importData = (
+        data: MindMapImportData,
+        justifyOptions: JustifyOptions = {
+            point: getCenterPosition(),
+            type: "leftTop"
+        },
+        vueFlow = getCurrentVueFlow()
+    ) => {
         blurActiveElement()
         const {newNodes, newEdges} = prepareImportIntoMindMap(vueFlow, data, justifyOptions)
         history.executeCommand("import", {layerId: currentLayerId.value, nodes: newNodes, edges: newEdges})
@@ -1188,6 +1195,18 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         },
         updateNodeData: (id: string, data: Partial<ContentNodeData>, layerId: string = currentLayerId.value) => {
             history.executeCommand('node:data:change', {layerId, id, data})
+        },
+        resizeNode: (
+            id: string,
+            options: {
+                newSize: { width: number, height: number },
+                oldSize: { width: number, height: number },
+                newPosition: XYPosition,
+                oldPosition: XYPosition,
+            },
+            layerId: string = currentLayerId.value
+        ) => {
+            history.executeCommand('node:resize', {layerId, id, ...options})
         },
 
         addEdge,
