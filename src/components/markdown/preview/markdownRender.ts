@@ -13,6 +13,7 @@ import {full as MarkdownItEmoji} from 'markdown-it-emoji';
 // @ts-ignore
 import MarkdownItTaskLists from 'markdown-it-task-lists';
 import MarkdownItMultiMdTable from 'markdown-it-multimd-table';
+import {MarkdownItLink} from "@/components/markdown/preview/plugins/MarkdownItLink.ts";
 
 const md = new MarkdownIt({
     html: true,
@@ -20,6 +21,7 @@ const md = new MarkdownIt({
 })
 
 md
+    .use(MarkdownItLink)
     .use(MarkdownItSub)
     .use(MarkdownItSup)
     .use(MarkdownItMark)

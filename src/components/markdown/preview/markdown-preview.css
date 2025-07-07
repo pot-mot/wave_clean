@@ -227,12 +227,36 @@
     background-color: var(--background-color-hover);
 }
 
+.markdown-preview {
+    --link-color: #2360bb;
+    --link-hover-color: #5399f8;
+    --link-visited-color: #290467;
+    --link-visited-hover-color: #4007a2;
+}
+
+.dark .markdown-preview {
+    --link-color: #466ed2;
+    --link-hover-color: #64a0ff;
+    --link-visited-color: #8c64d2;
+    --link-visited-hover-color: #b48ceb;
+}
+
 .markdown-preview a {
+    color: var(--link-color);
     text-decoration: none;
 }
 
 .markdown-preview a:hover {
+    color: var(--link-hover-color);
     text-decoration: underline;
+}
+
+.markdown-preview a:visited {
+    color: var(--link-visited-color);
+}
+
+.markdown-preview a:visited:hover {
+    color: var(--link-visited-hover-color);
 }
 
 .markdown-preview p {
