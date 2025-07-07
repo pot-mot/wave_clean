@@ -107,14 +107,19 @@ const handleMarkdownEditorBlur = () => {
     }
 }
 
+watch(() => isMarkdownEdit.value, (isEdit) => {
+    // 当退出编辑模式时，如果内容有修改，则更新数据
+    if (!isEdit && markdownEditorValue.value !== props.data.content) {
+        updateNodeData(props.id, {content: markdownEditorValue.value})
+    }
+})
+
 // 切换编辑模式
 const executeToggleMarkdownEdit = async () => {
     isMarkdownEdit.value = !isMarkdownEdit.value
     if (isMarkdownEdit.value) {
         await nextTick()
         markdownEditorRef.value?.editorRef?.focus()
-    } else {
-        updateNodeData(props.id, {content: markdownEditorValue.value})
     }
 }
 
@@ -410,12 +415,12 @@ const executeDelete = () => {
                 <IconFocus/>
             </button>
 
-            <button @mousedown.capture.prevent.stop="executeToggleType">
-                {{ dataTypeOrDefault }}
-            </button>
-
             <button v-if="dataTypeOrDefault === 'markdown'" @mousedown.capture.prevent.stop="executeToggleMarkdownEdit">
                 {{ isMarkdownEdit ? 'preview' : 'edit'}}
+            </button>
+
+            <button @mousedown.capture.prevent.stop="executeToggleType">
+                {{ dataTypeOrDefault }}
             </button>
 
             <button @mousedown.capture.prevent.stop="executeDelete">
