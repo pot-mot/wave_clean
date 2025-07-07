@@ -5,15 +5,11 @@ export type ResizeOrigin = {
     height: number,
 }
 
-export type ResizeDirection =
-    'top'
-    | 'left'
-    | 'right'
-    | 'bottom'
-    | 'top-left'
-    | 'top-right'
-    | 'bottom-left'
-    | 'bottom-right'
+export const resizeBorderKeys = ['top', 'left', 'right', 'bottom']
+
+export const resizeHandleKeys = ['top-left', 'top-right', 'bottom-left', 'bottom-right']
+
+export type ResizeDirection = typeof resizeBorderKeys[number] | typeof resizeHandleKeys[number]
 
 export type ResizeStartEventArgs = {
     origin: ResizeOrigin,

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import {readonly, ref} from 'vue'
 import {
+    resizeBorderKeys,
+    resizeHandleKeys,
     ResizeDirection,
     ResizeEventArgs,
     ResizeOrigin,
@@ -38,21 +40,30 @@ const isResizing = ref(false)
 const resizeOrigin = ref<ResizeOrigin>()
 const resizeDirection = ref<ResizeDirection>()
 
-const startResize = (direction: ResizeDirection, e: MouseEvent) => {
+const startResize = (direction: ResizeDirection, e: MouseEvent | TouchEvent) => {
     if (isResizing.value) return
 
-    e.preventDefault()
+    const isTouchEvent = e instanceof TouchEvent
+    const mouseOrTouch = isTouchEvent ? e.touches[0] : e
+    if (!mouseOrTouch) return
 
     isResizing.value = true
     resizeDirection.value = direction
     resizeOrigin.value = {
-        clientX: e.clientX,
-        clientY: e.clientY,
+        clientX: mouseOrTouch.clientX,
+        clientY: mouseOrTouch.clientY,
         width: size.value.width,
         height: size.value.height,
     }
-    document.addEventListener('mousemove', handleMouseMove)
-    document.addEventListener('mouseup', stopResize)
+
+    if (isTouchEvent) {
+        document.addEventListener('touchmove', handleResizingByTouch)
+        document.addEventListener('touchend', stopResizeByTouch)
+        document.addEventListener('touchcancel', stopResizeByTouch)
+    } else {
+        document.addEventListener('mousemove', handleResizing)
+        document.addEventListener('mouseup', stopResize)
+    }
 
     emits("resize-start", {
         origin: resizeOrigin.value,
@@ -61,19 +72,22 @@ const startResize = (direction: ResizeDirection, e: MouseEvent) => {
 }
 
 const cleanResizeEvent = () => {
-    document.removeEventListener('mousemove', handleMouseMove)
+    document.removeEventListener('mousemove', handleResizing)
     document.removeEventListener('mouseup', stopResize)
+    document.removeEventListener('touchmove', handleResizingByTouch)
+    document.removeEventListener('touchend', stopResizeByTouch)
+    document.removeEventListener('touchcancel', stopResizeByTouch)
 }
 
-const handleMouseMove = (e: MouseEvent) => {
+const handleResizing = (position: { clientX: number, clientY: number }) => {
     if (!isResizing.value || !resizeOrigin.value || !resizeDirection.value) {
         cleanResizeEvent()
         return
     }
 
     // 和初始对比的偏移量
-    const dx = (e.clientX - resizeOrigin.value.clientX) / props.scale
-    const dy = (e.clientY - resizeOrigin.value.clientY) / props.scale
+    const dx = (position.clientX - resizeOrigin.value.clientX) / props.scale
+    const dy = (position.clientY - resizeOrigin.value.clientY) / props.scale
 
     const previousHeight = size.value.height
     const previousWidth = size.value.width
@@ -128,7 +142,11 @@ const handleMouseMove = (e: MouseEvent) => {
     })
 }
 
-const stopResize = (e: MouseEvent) => {
+const handleResizingByTouch = (e: TouchEvent) => {
+    handleResizing(e.changedTouches[0] ?? e.touches[0])
+}
+
+const stopResize = (position: { clientX: number, clientY: number }) => {
     if (!isResizing.value || !resizeOrigin.value || !resizeDirection.value) {
         cleanResizeEvent()
         return
@@ -145,10 +163,17 @@ const stopResize = (e: MouseEvent) => {
             height: size.value.height,
         },
         diff: {
-            x: (e.clientX - resizeOrigin.value.clientX) / props.scale,
-            y: (e.clientY - resizeOrigin.value.clientY) / props.scale,
+            x: (position.clientX - resizeOrigin.value.clientX) / props.scale,
+            y: (position.clientY - resizeOrigin.value.clientY) / props.scale,
         }
     })
+
+    resizeDirection.value = undefined
+    resizeOrigin.value = undefined
+}
+
+const stopResizeByTouch = (e: TouchEvent) => {
+    stopResize(e.changedTouches[0] ?? e.touches[0])
 }
 
 defineExpose({
@@ -167,15 +192,19 @@ defineExpose({
         <slot/>
 
         <template v-if="!disabled">
-            <div class="resize-border top" @mousedown.capture.stop.prevent="startResize('top', $event)"/>
-            <div class="resize-border left" @mousedown.capture.stop.prevent="startResize('left', $event)"/>
-            <div class="resize-border right" @mousedown.capture.stop.prevent="startResize('right', $event)"/>
-            <div class="resize-border bottom" @mousedown.capture.stop.prevent="startResize('bottom', $event)"/>
+            <div
+                v-for="key of resizeBorderKeys"
+                :class="`resize-border ${key}`"
+                @mousedown.capture.stop.prevent="startResize(key, $event)"
+                @touchstart.capture.stop="startResize(key, $event)"
+            />
 
-            <div class="resize-handle top-left" @mousedown.capture.stop.prevent="startResize('top-left', $event)"/>
-            <div class="resize-handle top-right" @mousedown.capture.stop.prevent="startResize('top-right', $event)"/>
-            <div class="resize-handle bottom-left" @mousedown.capture.stop.prevent="startResize('bottom-left', $event)"/>
-            <div class="resize-handle bottom-right" @mousedown.capture.stop.prevent="startResize('bottom-right', $event)"/>
+            <div
+                v-for="key of resizeHandleKeys"
+                :class="`resize-handle ${key}`"
+                @mousedown.capture.stop.prevent="startResize(key, $event)"
+                @touchstart.capture.stop="startResize(key, $event)"
+            />
         </template>
     </div>
 </template>
