@@ -7,7 +7,7 @@ import {
     RawMindMapLayer,
     useMindMap
 } from "@/mindMap/useMindMap.ts";
-import {computed, nextTick, ref, useTemplateRef, watch} from "vue";
+import {computed, nextTick, onMounted, ref, useTemplateRef, watch} from "vue";
 import FitSizeBlockInput from "@/components/input/FitSizeBlockInput.vue";
 import {NodeToolbar} from "@vue-flow/node-toolbar";
 import IconDelete from "@/components/icons/IconDelete.vue";
@@ -19,6 +19,7 @@ import {useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
 import MarkdownEditor from "@/components/markdown/editor/MarkdownEditor.vue";
 import MarkdownPreview from "@/components/markdown/preview/MarkdownPreview.vue";
 import ResizeWrapper from "@/components/resizer/ResizeWrapper.vue";
+import {ResizeEventArgs, ResizeStopEventArgs} from "@/components/resizer/ResizeWrapperType.ts";
 
 const {isTouchDevice} = useDeviceStore()
 
@@ -33,7 +34,8 @@ const {
     copy,
     paste,
     fitRect,
-    remove
+    remove,
+    currentViewport,
 } = useMindMap()
 
 const props = defineProps<NodeProps<ContentNodeData> & {
@@ -92,11 +94,6 @@ const markdownEditorValue = ref<string>(props.data.content)
 
 const isMarkdownEdit = ref(false)
 
-const markdownContentSize = ref({
-    height: 100,
-    width: 100,
-})
-
 watch(() => props.data.content, (value) => {
     if (value !== markdownEditorValue.value) {
         markdownEditorValue.value = value
@@ -118,6 +115,50 @@ const executeToggleMarkdownEdit = async () => {
     } else {
         updateNodeData(props.id, {content: markdownEditorValue.value})
     }
+}
+
+// markdown 编辑器尺寸
+const MarkdownEditorResizeRef = useTemplateRef<InstanceType<typeof ResizeWrapper>>("MarkdownEditorResizeRef")
+
+const isResizing = computed(() => MarkdownEditorResizeRef.value?.isResizing ?? false)
+
+const markdownContentSize = ref({
+    height: 0,
+    width: 0,
+})
+
+onMounted(async () => {
+    const node = _node.value
+    if (node) {
+        await nextTick()
+        markdownContentSize.value = {
+            width: node.dimensions.width,
+            height: node.dimensions.height,
+        }
+    }
+})
+
+const handleMarkdownEditorResize = ({direction, currentDiff}: ResizeEventArgs) => {
+    const node = _node.value
+    if (node) {
+        switch (direction) {
+            case "top":
+            case "top-left":
+            case "top-right":
+                node.position.y -= currentDiff.y
+                break
+        }
+        switch (direction) {
+            case "left":
+            case "top-left":
+            case "bottom-left":
+                node.position.x -= currentDiff.x
+                break
+        }
+    }
+}
+
+const handleMarkdownEditorResizeStop = ({diff}: ResizeStopEventArgs) => {
 }
 
 // 节点行为
@@ -262,7 +303,13 @@ const executeDelete = () => {
                 @click.capture="handleNodeFocus"
             >
                 <ResizeWrapper
+                    ref="MarkdownEditorResizeRef"
                     v-model="markdownContentSize"
+                    :scale="currentViewport.zoom"
+                    :disabled="!isFocus"
+                    :class="{noWheel: isResizing}"
+                    @resize="handleMarkdownEditorResize"
+                    @resize-stop="handleMarkdownEditorResizeStop"
                 >
                     <MarkdownEditor
                         v-if="isMarkdownEdit"
@@ -276,7 +323,7 @@ const executeDelete = () => {
                         v-else
                         class="fit-parent"
                         style="overflow: auto;"
-                        :class="{untouchable: !isFocus, noDrag: isFocus, noWheel: isFocus}"
+                        :class="{untouchable: !isFocus, noDrag: isFocus}"
                         :style="{borderColor}"
                         :value="data.content"
                     />
