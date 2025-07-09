@@ -244,6 +244,10 @@ const handleNodeFocus = () => {
     isFocus.value = true
     if (dataTypeOrDefault.value === 'text') {
         inputRef.value?.el?.focus()
+    } else if (dataTypeOrDefault.value === 'markdown') {
+        if (markdownEditorValue.value.trim().length === 0 && !isMarkdownEdit.value) {
+            executeToggleMarkdownEdit()
+        }
     }
 }
 
