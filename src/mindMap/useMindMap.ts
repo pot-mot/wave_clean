@@ -559,6 +559,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         vueFlow.panOnDrag.value = isTouchDevice.value ? true : [0, 2]
         selectionRectMouseButton = 2
         selectionRectEnable = false
+        focus()
     }
     // 默认操作为框选，通过鼠标右键拖拽
     const setDefaultSelectionRect = (
@@ -568,6 +569,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         vueFlow.panOnDrag.value = isTouchDevice.value ? false : [2]
         selectionRectMouseButton = 0
         selectionRectEnable = true
+        focus()
     }
     const toggleDefaultMouseAction = (
         vueFlow: VueFlowStore = getCurrentVueFlow()
