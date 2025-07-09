@@ -24,11 +24,10 @@ const handleClick = (e: MouseEvent) => {
     if (e.target && e.target instanceof Element && elementRef.value) {
         const currentElement: Element = e.target
 
-        // 代码复制处理
-        // if (currentElement.classList.contains("code-copy-button")) {
-        //     copyCode(e);
-        //     return;
-        // }
+        if (currentElement.classList.contains("code-copy-button")) {
+            copyCode(e);
+            return;
+        }
 
         if (currentElement instanceof HTMLImageElement && !currentElement.classList.contains('error')) {
             imagePreview(currentElement, elementRef.value)

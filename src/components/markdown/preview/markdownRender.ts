@@ -1,5 +1,4 @@
 import MarkdownIt from "markdown-it";
-import MermaidIt from "mermaid-it-markdown";
 import {MarkdownItKatex} from "@/components/markdown/preview/plugins/MarkdownItKatex.ts";
 //@ts-ignore
 import MarkdownItSub from 'markdown-it-sub';
@@ -14,6 +13,7 @@ import MarkdownItTaskLists from 'markdown-it-task-lists';
 import MarkdownItMultiMdTable from 'markdown-it-multimd-table';
 import {MarkdownItLink} from "@/components/markdown/preview/plugins/MarkdownItLink.ts";
 import {MarkdownItImage} from "@/components/markdown/preview/plugins/MarkdownItImage.ts";
+import {MarkdownItPrismCode} from "@/components/markdown/preview/plugins/MarkdownItPrismCode.ts";
 
 const md = new MarkdownIt({
     html: true,
@@ -28,9 +28,9 @@ md
     .use(MarkdownItMark)
     .use(MarkdownItEmoji)
     .use(MarkdownItTaskLists)
-    .use(MarkdownItKatex, {strict: false})
+    .use(MarkdownItPrismCode)
+    .use(MarkdownItKatex)
     .use(MarkdownItMultiMdTable, {multiline: true, rowspan: true, headerless: true,})
-    .use(MermaidIt)
 
 export {
     md

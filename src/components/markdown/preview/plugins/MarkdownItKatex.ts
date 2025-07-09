@@ -5,8 +5,9 @@ import StateInline from "markdown-it/lib/rules_inline/state_inline";
 import StateBlock from "markdown-it/lib/rules_block/state_block";
 import katex, {KatexOptions} from 'katex';
 import "katex/dist/katex.min.css"
+import {renderPrismCodeBlock} from "@/components/markdown/preview/plugins/MarkdownItPrismCode.ts";
 
-export const mathInline = (state: StateInline, silent: boolean): boolean => {
+const mathInline = (state: StateInline, silent: boolean): boolean => {
     let start, match, token, pos;
 
     if (state.src[state.pos] != "$") {
@@ -59,7 +60,7 @@ export const mathInline = (state: StateInline, silent: boolean): boolean => {
     return true;
 }
 
-export const mathBlock = (state: StateBlock, start: number, end: number, silent: boolean): boolean => {
+const mathBlock = (state: StateBlock, start: number, end: number, silent: boolean): boolean => {
     let firstLine, lastLine, next, lastPos, found = false, token,
         pos = state.bMarks[start] + state.tShift[start],
         max = state.eMarks[start]
@@ -122,13 +123,12 @@ export const mathBlock = (state: StateBlock, start: number, end: number, silent:
 const cache = new Map<string, string>
 
 const getRenderKatex = (text: string, options?: KatexOptions): string => {
-    if (cache.has(text)) {
-        return cache.get(text)!;
-    } else {
-        const result = katex.renderToString(text, options);
-        cache.set(text, result);
-        return result;
+    let result = cache.get(text)
+    if (result === undefined) {
+        result = katex.renderToString(text, options)
+        cache.set(text, result)
     }
+    return result
 }
 
 export const renderKatexInline = (content: string, options?: KatexOptions): string => {
@@ -138,7 +138,12 @@ export const renderKatexInline = (content: string, options?: KatexOptions): stri
         const result = getRenderKatex(content, opts);
         return `<span class="katex">${result}</span>`;
     } catch (e) {
-        return `<span class="katex-error">katex render fail: ${content}\nbecause of error: ${e}</span>`;
+        return `
+<div class="katex error">
+    ${renderPrismCodeBlock(content, 'latex')}
+    <div class="error-detail">${e}</div>
+</div>
+`.trim()
     }
 }
 
@@ -147,27 +152,29 @@ export const renderKatexBlock = (content: string, options?: KatexOptions): strin
     opts.displayMode = true;
     try {
         const result = getRenderKatex(content, opts);
-        return `<details><summary><div class="katex">${result}</div></summary><pre>${content}</pre></details>`;
+        return `<details><summary><div class="katex">${result}</div></summary>${renderPrismCodeBlock(content, 'latex')}</details>`
     } catch (e) {
-        return `<div class="katex-error">katex render fail: ${content}\nbecause of error: ${e}</div>`;
+        return `
+<div class="katex error">
+    ${renderPrismCodeBlock(content, 'latex')}
+    <div class="error-detail">${e}</div>
+</div>
+`.trim()
     }
 }
 
 export const MarkdownItKatex = (md: MarkdownIt, options: KatexOptions = {}) => {
     //@ts-ignore
-    md.katexConfig = options;
-
-    //@ts-ignore
     md.renderer.rules['math_inline'] = (tokens: Token[], idx: number) => {
-        return renderKatexInline(tokens[idx].content, options);
+        return renderKatexInline(tokens[idx].content, options)
     }
     //@ts-ignore
     md.renderer.rules['math_block'] = (tokens: Token[], idx: number) => {
-        return renderKatexBlock(tokens[idx].content, options);
+        return renderKatexBlock(tokens[idx].content, options)
     }
 
     md.inline.ruler.after('escape', 'math_inline', mathInline);
     md.block.ruler.after('blockquote', 'math_block', mathBlock, {
         alt: ['paragraph', 'reference', 'blockquote', 'list']
-    });
+    })
 }
