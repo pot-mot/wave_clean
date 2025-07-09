@@ -443,11 +443,11 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
      */
     const isSelectionNotEmpty = computed(() => {
         const vueFlow = getCurrentVueFlow()
-        return vueFlow.getSelectedNodes.value.length + vueFlow.getSelectedEdges.value.length > 0
+        return (vueFlow.getSelectedNodes.value.length + vueFlow.getSelectedEdges.value.length) > 0
     })
     const isSelectionPlural = computed(() => {
         const vueFlow = getCurrentVueFlow()
-        return vueFlow.getSelectedNodes.value.length + vueFlow.getSelectedEdges.value.length > 1
+        return (vueFlow.getSelectedNodes.value.length + vueFlow.getSelectedEdges.value.length) > 1
     })
     const canMultiSelect = computed(() => {
         const vueFlow = getCurrentVueFlow()
@@ -925,11 +925,11 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                             }
 
                             const onMouseUp = () => {
-                                vueFlow.userSelectionActive.value = false
-                                vueFlow.userSelectionRect.value = null
-
                                 document.documentElement.removeEventListener('mousemove', onMove)
                                 document.documentElement.removeEventListener('mouseup', onMouseUp)
+
+                                vueFlow.userSelectionActive.value = false
+                                vueFlow.userSelectionRect.value = null
 
                                 const newSelectedNodes = vueFlow.getSelectedNodes.value
                                 const newSelectedEdges = vueFlow.getSelectedEdges.value
@@ -1052,27 +1052,17 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                         }
 
                         const onTouchEnd = () => {
-                            vueFlow.userSelectionActive.value = false
-                            vueFlow.userSelectionRect.value = null
-
                             document.documentElement.removeEventListener('touchmove', onMove)
                             document.documentElement.removeEventListener('touchend', onTouchEnd)
                             document.documentElement.removeEventListener('touchcancel', onTouchEnd)
 
-                            const newSelectedNodes = vueFlow.getSelectedNodes.value
-                            const newSelectedEdges = vueFlow.getSelectedEdges.value
-                            setTimeout(() => {
-                                cleanSelection()
-                                vueFlow.addSelectedNodes(newSelectedNodes)
-                                vueFlow.addSelectedEdges(newSelectedEdges)
-                                vueFlow.multiSelectionActive.value = false
+                            vueFlow.multiSelectionActive.value = false
+                            vueFlow.userSelectionActive.value = false
+                            vueFlow.userSelectionRect.value = null
 
-                                // 在框选结束后，如果已有选中，在触控端恢复拖拽
-                                if (isSelectionNotEmpty.value) {
-                                    toggleDefaultMouseAction()
-                                    selectionRectEnable = false
-                                }
-                            })
+                            if (isSelectionNotEmpty.value) {
+                                setDefaultPanDrag()
+                            }
                         }
 
                         document.documentElement.addEventListener('touchmove', onMove, {passive: false})
