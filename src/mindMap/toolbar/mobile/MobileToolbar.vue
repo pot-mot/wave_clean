@@ -139,12 +139,12 @@ const isVueFlowInputFocused = computed<boolean>(() => {
                 <IconSelectAll/>
             </button>
 
-            <button @click="toggleDefaultMouseAction()" :class="{enable: defaultMouseAction === 'selectionRect'}">
-                <IconSelectRect/>
-            </button>
-
             <button @click="toggleMultiSelect()" :class="{enable: canMultiSelect && defaultMouseAction !== 'selectionRect'}">
                 <IconMultiSelect/>
+            </button>
+
+            <button @click="toggleDefaultMouseAction()" :class="{enable: defaultMouseAction === 'selectionRect'}">
+                <IconSelectRect/>
             </button>
         </div>
 

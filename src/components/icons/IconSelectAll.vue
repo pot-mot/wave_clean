@@ -1,23 +1,9 @@
 <template>
-    <!-- https://tablericons.com/ select-all -->
+    <!-- https://tablericons.com/ box-multiple -->
     <BaseIcon>
-        <path d="M8 8m0 1a1 1 0 0 1 1 -1h6a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-6a1 1 0 0 1 -1 -1z" />
-        <path d="M12 20v.01" />
-        <path d="M16 20v.01" />
-        <path d="M8 20v.01" />
-        <path d="M4 20v.01" />
-        <path d="M4 16v.01" />
-        <path d="M4 12v.01" />
-        <path d="M4 8v.01" />
-        <path d="M4 4v.01" />
-        <path d="M8 4v.01" />
-        <path d="M12 4v.01" />
-        <path d="M16 4v.01" />
-        <path d="M20 4v.01" />
-        <path d="M20 8v.01" />
-        <path d="M20 12v.01" />
-        <path d="M20 16v.01" />
-        <path d="M20 20v.01" />
+        <path d="M7 3m0 2a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2z" />
+        <path d="M17 17v2a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-10a2 2 0 0 1 2 -2h2" />
+        <path d="M 11 7 l -2 5 m 1 -2 h 2 m -1 -3 l 1 5 M 14 7 l 0 5 l 2 0 M 18 7 l 0 5 l 2 0"/>
     </BaseIcon>
 </template>
 

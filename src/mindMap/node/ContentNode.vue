@@ -20,6 +20,10 @@ import MarkdownEditor from "@/components/markdown/editor/MarkdownEditor.vue";
 import MarkdownPreview from "@/components/markdown/preview/MarkdownPreview.vue";
 import ResizeWrapper from "@/components/resizer/ResizeWrapper.vue";
 import {ResizeEventArgs, ResizeStopEventArgs} from "@/components/resizer/ResizeWrapperType.ts";
+import IconEdit from "@/components/icons/IconEdit.vue";
+import IconPreview from "@/components/icons/IconPreview.vue";
+import IconMarkdown from "@/components/icons/IconMarkdown.vue";
+import IconMarkdownOff from "@/components/icons/IconMarkdownOff.vue";
 
 const {isTouchDevice} = useDeviceStore()
 
@@ -404,9 +408,8 @@ const executeDelete = () => {
                     <MarkdownPreview
                         v-else
                         class="fit-parent"
-                        style="overflow: auto;"
                         :class="{untouchable: !isFocus, noDrag: isFocus}"
-                        :style="{borderColor}"
+                        :style="{borderColor, overflow: isFocus ? 'auto' : 'hidden', scrollbarGutter: isFocus ? 'auto' : 'unset'}"
                         :value="data.content"
                     />
                 </ResizeWrapper>
@@ -430,18 +433,23 @@ const executeDelete = () => {
             </button>
 
             <button @mousedown.capture.prevent.stop="executeToggleType">
-                {{ dataTypeOrDefault }}
-            </button>
-
-            <button v-if="dataTypeOrDefault === 'markdown'" @mousedown.capture.prevent.stop="executeToggleMarkdownEdit">
-                {{ isMarkdownEdit ? 'preview' : 'edit'}}
+                <IconMarkdown v-if="dataTypeOrDefault === 'text'"/>
+                <IconMarkdownOff v-else-if="dataTypeOrDefault === 'markdown'"/>
             </button>
 
             <button @mousedown.capture.prevent.stop="executeDelete">
                 <IconDelete/>
             </button>
 
+            <br>
 
+            <button
+                v-if="dataTypeOrDefault === 'markdown'"
+                @mousedown.capture.prevent.stop="executeToggleMarkdownEdit"
+            >
+                <IconPreview v-if="isMarkdownEdit"/>
+                <IconEdit v-else/>
+            </button>
         </NodeToolbar>
     </div>
 </template>
@@ -485,6 +493,7 @@ const executeDelete = () => {
 .toolbar > button {
     padding: 0.3rem;
     margin-right: 0.3rem;
+    margin-top: 0.3rem;
     transition: background-color 0.3s ease;
 }
 
