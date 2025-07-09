@@ -1,6 +1,5 @@
 import MarkdownIt from "markdown-it";
 import MermaidIt from "mermaid-it-markdown";
-import "katex/dist/katex.min.css"
 import {MarkdownItKatex} from "@/components/markdown/preview/plugins/MarkdownItKatex.ts";
 //@ts-ignore
 import MarkdownItSub from 'markdown-it-sub';
@@ -14,6 +13,7 @@ import {full as MarkdownItEmoji} from 'markdown-it-emoji';
 import MarkdownItTaskLists from 'markdown-it-task-lists';
 import MarkdownItMultiMdTable from 'markdown-it-multimd-table';
 import {MarkdownItLink} from "@/components/markdown/preview/plugins/MarkdownItLink.ts";
+import {MarkdownItImage} from "@/components/markdown/preview/plugins/MarkdownItImage.ts";
 
 const md = new MarkdownIt({
     html: true,
@@ -22,6 +22,7 @@ const md = new MarkdownIt({
 
 md
     .use(MarkdownItLink)
+    .use(MarkdownItImage)
     .use(MarkdownItSub)
     .use(MarkdownItSup)
     .use(MarkdownItMark)

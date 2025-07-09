@@ -1,13 +1,47 @@
 <script setup lang="ts">
 import {md} from "@/components/markdown/preview/markdownRender.ts";
-import {computed} from "vue";
+import {computed, useTemplateRef} from "vue";
 import "@/components/markdown/preview/markdown-preview.css"
+import {imagePreview} from "@/components/markdown/preview/plugins/MarkdownItImage.ts";
+import {getMatchedElementOrParent} from "@/utils/event/judgeEventTarget.ts";
 
 const props = defineProps<{
     value: string
 }>()
 
+const elementRef = useTemplateRef<HTMLDivElement>("elementRef")
+
 const renderResult = computed(() => md.render(props.value))
+
+const handleClick = (e: MouseEvent) => {
+    const selection = window.getSelection()
+    let isSelectionEmpty = true
+
+    if (selection && selection.toString().length > 0) {
+        isSelectionEmpty = false
+    }
+
+    if (e.target && e.target instanceof Element && elementRef.value) {
+        const currentElement: Element = e.target
+
+        // 代码复制处理
+        // if (currentElement.classList.contains("code-copy-button")) {
+        //     copyCode(e);
+        //     return;
+        // }
+
+        if (currentElement instanceof HTMLImageElement && !currentElement.classList.contains('error')) {
+            imagePreview(currentElement, elementRef.value)
+            return
+        }
+
+        const svgSvgElement = getMatchedElementOrParent(currentElement, el => el instanceof SVGSVGElement)
+        if (svgSvgElement && isSelectionEmpty) {
+            imagePreview(svgSvgElement, elementRef.value);
+            return
+        }
+    }
+}
 </script>
 
 <template>
@@ -15,6 +49,8 @@ const renderResult = computed(() => md.render(props.value))
         tabindex="-1"
         class="markdown-preview"
         v-html="renderResult"
+        ref="elementRef"
+        @click="handleClick"
     />
 </template>
 
