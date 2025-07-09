@@ -955,6 +955,15 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                     }
                 })
 
+                // 当触碰数量多于，阻止节点拖拽
+                el.addEventListener('touchstart', (e) => {
+                    if (e.touches.length > 1) {
+                        disableDrag()
+                    } else {
+                        enableDrag()
+                    }
+                }, {capture: true})
+
                 // 双击添加节点
                 let waitNextTouchEnd = false
                 let waitTimeout: number | undefined
