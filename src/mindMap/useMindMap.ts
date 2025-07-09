@@ -882,69 +882,64 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                 // 多选框
                 paneEl.addEventListener('mousedown', (e) => {
                     if (e.target !== paneEl) return
+                    if (!selectionRectEnable) return
+                    if (e.button !== selectionRectMouseButton) return
 
-                    // 如果开启了 selectionRectEnable，则将根据 selectionRectMouseButton 判断并进行拖曳创建选择框
-                    if (selectionRectEnable) {
+                    e.preventDefault()
+                    blurActiveElement()
+
+                    vueFlow.multiSelectionActive.value = true
+                    vueFlow.userSelectionActive.value = true
+                    cleanSelection()
+
+                    const start = {x: e.clientX, y: e.clientY}
+
+                    const onRectSelect = (e: MouseEvent) => {
                         e.preventDefault()
-                        vueFlow.multiSelectionActive.value = false
+                        const current = {x: e.clientX, y: e.clientY}
+                        let width = current.x - start.x
+                        let height = current.y - start.y
+                        const x = width > 0 ? start.x : current.x
+                        const y = height > 0 ? start.y : current.y
+                        width = width > 0 ? width : -width
+                        height = height > 0 ? height : -height
+
+                        const rect = {
+                            width,
+                            height,
+                            x,
+                            y,
+                            startX: start.x,
+                            startY: start.y,
+                        }
+                        vueFlow.userSelectionRect.value = rect
+
+                        const {nodes, edges} = getByClientRect(rect)
 
                         cleanSelection()
-                        blurActiveElement()
-
-                        if (e.button === selectionRectMouseButton) {
-                            vueFlow.userSelectionActive.value = true
-                            vueFlow.multiSelectionActive.value = true
-
-                            const start = {x: e.clientX, y: e.clientY}
-
-                            const onMove = (e: MouseEvent) => {
-                                e.preventDefault()
-                                const current = {x: e.clientX, y: e.clientY}
-                                let width = current.x - start.x
-                                let height = current.y - start.y
-                                const x = width > 0 ? start.x : current.x
-                                const y = height > 0 ? start.y : current.y
-                                width = width > 0 ? width : -width
-                                height = height > 0 ? height : -height
-
-                                const rect = {
-                                    width,
-                                    height,
-                                    x,
-                                    y,
-                                    startX: start.x,
-                                    startY: start.y,
-                                }
-                                vueFlow.userSelectionRect.value = rect
-
-                                const {nodes, edges} = getByClientRect(rect)
-
-                                cleanSelection()
-                                vueFlow.addSelectedNodes(nodes)
-                                vueFlow.addSelectedEdges(edges)
-                            }
-
-                            const onMouseUp = () => {
-                                document.documentElement.removeEventListener('mousemove', onMove)
-                                document.documentElement.removeEventListener('mouseup', onMouseUp)
-
-                                vueFlow.userSelectionActive.value = false
-                                vueFlow.userSelectionRect.value = null
-
-                                const newSelectedNodes = vueFlow.getSelectedNodes.value
-                                const newSelectedEdges = vueFlow.getSelectedEdges.value
-                                setTimeout(() => {
-                                    cleanSelection()
-                                    vueFlow.addSelectedNodes(newSelectedNodes)
-                                    vueFlow.addSelectedEdges(newSelectedEdges)
-                                    vueFlow.multiSelectionActive.value = false
-                                })
-                            }
-
-                            document.documentElement.addEventListener('mousemove', onMove)
-                            document.documentElement.addEventListener('mouseup', onMouseUp)
-                        }
+                        vueFlow.addSelectedNodes(nodes)
+                        vueFlow.addSelectedEdges(edges)
                     }
+
+                    const onRectSelectEnd = () => {
+                        document.documentElement.removeEventListener('mousemove', onRectSelect)
+                        document.documentElement.removeEventListener('mouseup', onRectSelectEnd)
+
+                        vueFlow.userSelectionActive.value = false
+                        vueFlow.userSelectionRect.value = null
+
+                        const newSelectedNodes = vueFlow.getSelectedNodes.value
+                        const newSelectedEdges = vueFlow.getSelectedEdges.value
+                        setTimeout(() => {
+                            cleanSelection()
+                            vueFlow.addSelectedNodes(newSelectedNodes)
+                            vueFlow.addSelectedEdges(newSelectedEdges)
+                            vueFlow.multiSelectionActive.value = false
+                        })
+                    }
+
+                    document.documentElement.addEventListener('mousemove', onRectSelect)
+                    document.documentElement.addEventListener('mouseup', onRectSelectEnd)
                 })
             } else {
                 // 设置屏幕位置
@@ -1016,59 +1011,56 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                 // 多选框
                 paneEl.addEventListener('touchstart', (e) => {
                     if (e.target !== paneEl) return
+                    if (!selectionRectEnable) return
 
-                    // 如果开启了 selectionRect，则将根据 selectionRectMouseButton 判断并进行拖曳创建选择框
-                    if (selectionRectEnable) {
-                        blurActiveElement()
+                    e.preventDefault()
+                    blurActiveElement()
+
+                    vueFlow.userSelectionActive.value = true
+                    vueFlow.multiSelectionActive.value = true
+                    cleanSelection()
+
+                    const start = {x: e.touches[0].clientX, y: e.touches[0].clientY}
+
+                    const onRectSelect = (e: TouchEvent) => {
                         e.preventDefault()
-                        vueFlow.multiSelectionActive.value = false
+                        let {x, y, width, height} = getTouchRect(e, start)
+                        const rect = {
+                            width,
+                            height,
+                            x,
+                            y,
+                            startX: start.x,
+                            startY: start.y,
+                        }
+                        vueFlow.userSelectionRect.value = rect
+
+                        const {nodes, edges} = getByClientRect(rect)
 
                         cleanSelection()
-                        blurActiveElement()
-
-                        vueFlow.userSelectionActive.value = true
-                        vueFlow.multiSelectionActive.value = true
-
-                        const start = {x: e.touches[0].clientX, y: e.touches[0].clientY}
-
-                        const onMove = (e: TouchEvent) => {
-                            e.preventDefault()
-                            let {x, y, width, height} = getTouchRect(e, start)
-                            const rect = {
-                                width,
-                                height,
-                                x,
-                                y,
-                                startX: start.x,
-                                startY: start.y,
-                            }
-                            vueFlow.userSelectionRect.value = rect
-
-                            const {nodes, edges} = getByClientRect(rect)
-
-                            cleanSelection()
-                            vueFlow.addSelectedNodes(nodes)
-                            vueFlow.addSelectedEdges(edges)
-                        }
-
-                        const onTouchEnd = () => {
-                            document.documentElement.removeEventListener('touchmove', onMove)
-                            document.documentElement.removeEventListener('touchend', onTouchEnd)
-                            document.documentElement.removeEventListener('touchcancel', onTouchEnd)
-
-                            vueFlow.multiSelectionActive.value = false
-                            vueFlow.userSelectionActive.value = false
-                            vueFlow.userSelectionRect.value = null
-
-                            if (isSelectionNotEmpty.value) {
-                                setDefaultPanDrag()
-                            }
-                        }
-
-                        document.documentElement.addEventListener('touchmove', onMove, {passive: false})
-                        document.documentElement.addEventListener('touchend', onTouchEnd)
-                        document.documentElement.addEventListener('touchcancel', onTouchEnd)
+                        vueFlow.addSelectedNodes(nodes)
+                        vueFlow.addSelectedEdges(edges)
                     }
+
+                    const onRectSelectEnd = (e: TouchEvent) => {
+                        if (e.touches.length !== 0) return
+
+                        document.documentElement.removeEventListener('touchmove', onRectSelect)
+                        document.documentElement.removeEventListener('touchend', onRectSelectEnd)
+                        document.documentElement.removeEventListener('touchcancel', onRectSelectEnd)
+
+                        vueFlow.multiSelectionActive.value = false
+                        vueFlow.userSelectionActive.value = false
+                        vueFlow.userSelectionRect.value = null
+
+                        if (isSelectionNotEmpty.value) {
+                            setDefaultPanDrag()
+                        }
+                    }
+
+                    document.documentElement.addEventListener('touchmove', onRectSelect, {passive: false})
+                    document.documentElement.addEventListener('touchend', onRectSelectEnd)
+                    document.documentElement.addEventListener('touchcancel', onRectSelectEnd)
                 }, {passive: false})
             }
         })
