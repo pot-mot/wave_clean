@@ -77,6 +77,8 @@ const inputHeight = ref(0)
 const handleInputResize = (size: { width: number, height: number }) => {
     const node = _node.value
     if (node) {
+        // 保持 node 居中
+        node.position.x = node.position.x - (size.width - inputWidth.value) / 2
         node.width = size.width
         node.height = size.height
     }
@@ -315,6 +317,18 @@ const executeToggleType = () => {
         case 'markdown':
             updateNodeData(props.id, {type: 'text', content: markdownEditorValue.value})
             isMarkdownEdit.value = false
+
+            // 保持 node 居中且顶部高度不变
+            const node = _node.value
+            if (node) {
+                const oldWidth = node.dimensions.width
+                nextTick(() => {
+                    const node = _node.value
+                    if (node) {
+                        node.position.x += (oldWidth - inputWidth.value) / 2
+                    }
+                })
+            }
             break
         case 'text':
             updateNodeData(props.id, {type: 'markdown'})
@@ -415,17 +429,19 @@ const executeDelete = () => {
                 <IconFocus/>
             </button>
 
-            <button v-if="dataTypeOrDefault === 'markdown'" @mousedown.capture.prevent.stop="executeToggleMarkdownEdit">
-                {{ isMarkdownEdit ? 'preview' : 'edit'}}
-            </button>
-
             <button @mousedown.capture.prevent.stop="executeToggleType">
                 {{ dataTypeOrDefault }}
+            </button>
+
+            <button v-if="dataTypeOrDefault === 'markdown'" @mousedown.capture.prevent.stop="executeToggleMarkdownEdit">
+                {{ isMarkdownEdit ? 'preview' : 'edit'}}
             </button>
 
             <button @mousedown.capture.prevent.stop="executeDelete">
                 <IconDelete/>
             </button>
+
+
         </NodeToolbar>
     </div>
 </template>
