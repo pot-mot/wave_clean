@@ -4,7 +4,7 @@
             class="caret-wrapper"
             v-if="triggerPosition === 'left'"
             @click="isOpen = !isOpen"
-            @touchend.prevent
+            @touchend.prevent="isOpen = !isOpen"
         >
             <IconCaretDown
                 class="caret left"
