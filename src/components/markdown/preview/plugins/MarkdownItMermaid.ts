@@ -38,10 +38,9 @@ const renderMermaid = async (
         renderElement.remove()
         cache.set(rawCode, result.svg)
         element.outerHTML = `
+<div class="mermaid">${result.svg}</div>
 <details>
-    <summary>
-        <div class="mermaid">${result.svg}</div>
-    </summary>
+    <summary>Source Code</summary>
     ${renderPrismCodeBlock(rawCode, 'mermaid')}
 </details>
 `.trim()
@@ -69,10 +68,9 @@ export const renderMermaidBlock = (rawCode: string): string => {
         return `<div id="${id}" class="mermaid-wait" ${RawCodeAttr}="${rawCode}">${rawCode}</div>`
     } else {
         return `
+<div class="mermaid">${renderedCode}</div>
 <details>
-    <summary>
-        <div class="mermaid">${renderedCode}</div>
-    </summary>
+    <summary>Source Code</summary>
     ${renderPrismCodeBlock(rawCode, 'mermaid')}
 </details>
 `.trim()

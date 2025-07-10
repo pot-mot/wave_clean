@@ -156,7 +156,13 @@ export const renderKatexBlock = (content: string, options?: KatexOptions): strin
     opts.displayMode = true;
     try {
         const result = getRenderKatex(content, opts);
-        return `<details><summary><div class="katex">${result}</div></summary>${renderPrismCodeBlock(content, 'latex')}</details>`
+        return `
+<div class="katex">${result}</div>
+<details>
+    <summary>Source Code</summary>
+    ${renderPrismCodeBlock(content, 'latex')}
+</details>
+`.trim()
     } catch (e) {
         return `
 <div class="katex error">
