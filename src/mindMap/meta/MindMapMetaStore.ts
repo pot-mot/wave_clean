@@ -8,7 +8,7 @@ import type {JSONSchemaType} from "ajv/lib/types/json-schema.ts";
 import {createSchemaValidator} from "@/utils/type/typeGuard.ts";
 import {Theme} from "@tauri-apps/api/window";
 import {useThemeStore} from "@/store/themeStore.ts";
-import {debounce} from "lodash";
+import {debounce} from "lodash-es";
 import {v7 as uuid} from "uuid";
 import {createStore} from "@/store/createStore.ts";
 

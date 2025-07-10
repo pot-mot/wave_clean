@@ -1,4 +1,4 @@
-import {cloneDeep} from "lodash";
+import {cloneDeep} from "lodash-es";
 import {BaseHistory, FullUndefinedHistoryEventsArgs, HistoryEvents} from "@/history/BaseHistory.ts";
 import mitt from "mitt";
 

@@ -2,7 +2,7 @@
 import {MindMapLayer} from "@/mindMap/useMindMap.ts";
 import {computed, onBeforeUnmount, onMounted, ref, useTemplateRef, watch} from "vue";
 import {GraphNode} from "@vue-flow/core";
-import {debounce} from "lodash";
+import {debounce} from "lodash-es";
 
 const props = defineProps<{
     layer: MindMapLayer
