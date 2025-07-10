@@ -153,23 +153,29 @@ const PartialMeta_JsonSchema: JSONSchemaType<Partial<Meta>> = {
 export const validatePartialMeta = createSchemaValidator<Partial<Meta>>(PartialMeta_JsonSchema)
 
 export const getDefaultMeta = () => {
+    let index = -1
     return {
         mindMaps: [],
         quickInputs: [
-            {id: "-1", label: 'TAB', value: '    '},
-            {id: "-2", label: '<', value: '<'},
-            {id: "-3", label: '>', value: '>'},
-            {id: "-4", label: '{', value: '{'},
-            {id: "-5", label: '}', value: '}'},
-            {id: "-6", label: '[', value: '['},
-            {id: "-7", label: ']', value: ']'},
-            {id: "-8", label: '^', value: '^'},
-            {id: "-9", label: '/', value: '/'},
-            {id: "-10", label: '|', value: '|'},
-            {id: "-11", label: '\\', value: '\\'},
-            {id: "-12", label: '\'', value: '\''},
-            {id: "-13", label: '-', value: '-'},
-            {id: "-14", label: '_', value: '_'},
+            {id: `${index--}`, label: 'TAB', value: '    '},
+            {id: `${index--}`, label: '<', value: '<'},
+            {id: `${index--}`, label: '>', value: '>'},
+            {id: `${index--}`, label: '(', value: '('},
+            {id: `${index--}`, label: ')', value: ')'},
+            {id: `${index--}`, label: '[', value: '['},
+            {id: `${index--}`, label: ']', value: ']'},
+            {id: `${index--}`, label: '[', value: '['},
+            {id: `${index--}`, label: ']', value: ']'},
+            {id: `${index--}`, label: '{', value: '{'},
+            {id: `${index--}`, label: '}', value: '}'},
+            {id: `${index--}`, label: '/', value: '/'},
+            {id: `${index--}`, label: '|', value: '|'},
+            {id: `${index--}`, label: '\\', value: '\\'},
+            {id: `${index--}`, label: '-', value: '-'},
+            {id: `${index--}`, label: '_', value: '_'},
+            {id: `${index--}`, label: '\'', value: '\''},
+            {id: `${index--}`, label: '"', value: '"'},
+            {id: `${index--}`, label: '^', value: '^'},
         ],
     }
 }

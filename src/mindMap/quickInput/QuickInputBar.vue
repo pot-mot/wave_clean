@@ -2,6 +2,7 @@
 import {QuickInputItem, useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
 import {useFocusTargetStore} from "@/store/focusTargetStore.ts";
 import {outsideInput} from "@/utils/event/outsideInput.ts";
+import CollapseItem from "@/components/collapse/CollapseItem.vue";
 
 const metaStore = useMindMapMetaStore()
 
@@ -13,14 +14,36 @@ const handleQuickInput = (quickInput: QuickInputItem) => {
 </script>
 
 <template>
-    <div style="display: flex; gap: 0.5rem;">
-        <button
-            v-for="quickInput in metaStore.meta.value.quickInputs"
-            :key="quickInput.id"
-            @touchend.prevent="handleQuickInput(quickInput)"
-            style="padding: 0 0.5rem; border: none;"
-        >
-            {{ quickInput.label }}
-        </button>
-    </div>
+    <CollapseItem
+        min-height="2.5rem"
+        max-height="7.5rem"
+    >
+        <div class="quick-input-bar">
+            <button
+                class="quick-input-item"
+                v-for="quickInput in metaStore.meta.value.quickInputs"
+                :key="quickInput.id"
+                @touchend.prevent="handleQuickInput(quickInput)"
+            >
+                {{ quickInput.label }}
+            </button>
+        </div>
+    </CollapseItem>
 </template>
+
+<style scoped>
+.quick-input-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding-left: 0.5rem;
+}
+
+.quick-input-item {
+    height: 2rem;
+    line-height: 2rem;
+    padding: 0 0.6rem;
+    border: none;
+    cursor: pointer;
+}
+</style>

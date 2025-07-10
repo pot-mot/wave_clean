@@ -163,7 +163,7 @@ const isVueFlowInputFocused = computed<boolean>(() => {
     </div>
 
     <div
-        class="toolbar bottom"
+        class="toolbar quick-input"
         :class="{
             open: isVueFlowInputFocused && !metaMenuOpen
         }"
@@ -289,6 +289,25 @@ const isVueFlowInputFocused = computed<boolean>(() => {
 .toolbar.right-top button {
     width: 100%;
     height: 2.5rem;
+}
+
+.toolbar.quick-input {
+    width: 100%;
+    line-height: 2.5rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+
+    bottom: 0;
+    border-top: var(--border);
+    border-color: var(--background-color-hover);
+
+    overflow-x: hidden;
+}
+
+.toolbar.quick-input.open {
+    opacity: 1;
+    pointer-events: all;
 }
 
 .toolbar.meta-menu,

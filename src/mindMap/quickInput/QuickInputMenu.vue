@@ -179,4 +179,8 @@ const handleDelete = (item: QuickInputItem) => {
     border: var(--border);
     pointer-events: all;
 }
+
+:deep(.drag-gap.over) {
+    height: 1rem;
+}
 </style>
