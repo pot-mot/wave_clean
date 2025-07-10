@@ -6,7 +6,6 @@
             @click="() => {
                 if (openTrigger === 'head') isOpen = !isOpen
             }"
-            @touchend.prevent
         >
             <div
                 class="caret-wrapper"
@@ -14,7 +13,6 @@
                 @click="() => {
                     if (openTrigger === 'caret') isOpen = !isOpen
                 }"
-                @touchend.prevent
             >
                 <IconCaretDown
                     class="caret left"
@@ -30,7 +28,6 @@
                 @click="() => {
                     if (openTrigger === 'caret') isOpen = !isOpen
                 }"
-                @touchend.prevent
             >
                 <IconCaretDown
                     class="caret right"
