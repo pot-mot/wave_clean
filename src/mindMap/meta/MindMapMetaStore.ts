@@ -11,6 +11,7 @@ import {useThemeStore} from "@/store/themeStore.ts";
 import {debounce} from "lodash-es";
 import {v7 as uuid} from "uuid";
 import {createStore} from "@/store/createStore.ts";
+import {cleanMarkdownRenderCache} from "@/components/markdown/preview/markdownRender.ts";
 
 const metaFileName = '[[WAVE_CLEAN_EDIT_META]]'
 
@@ -265,6 +266,7 @@ export const useMindMapMetaStore = createStore(() => {
 
     const toggle = async (key: string) => {
         try {
+            cleanMarkdownRenderCache()
             const item = meta.value.mindMaps.find(it => it.key === key)
             if (item !== undefined && meta.value.currentKey !== undefined) {
                 const mindMap = await get(key)

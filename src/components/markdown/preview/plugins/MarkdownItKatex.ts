@@ -122,6 +122,10 @@ const mathBlock = (state: StateBlock, start: number, end: number, silent: boolea
 
 const cache = new Map<string, string>
 
+export const cleanKatexCache = () => {
+    cache.clear()
+}
+
 const getRenderKatex = (text: string, options?: KatexOptions): string => {
     let result = cache.get(text)
     if (result === undefined) {

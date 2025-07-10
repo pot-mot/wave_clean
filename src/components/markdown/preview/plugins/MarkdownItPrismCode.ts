@@ -48,7 +48,11 @@ export const mermaidLanguages = new Set([
     "graph",
 ])
 
-const codeCache: Map<string, string> = new Map
+const cache: Map<string, string> = new Map
+
+export const cleanPrismCache = () => {
+    cache.clear()
+}
 
 const renderCodeWithLineNumbers = (code: string): string => {
     const counts: string[] = []
@@ -67,11 +71,11 @@ export const renderPrismCodeBlock = (rawCode: string, language: string): string 
     try {
         const key = `[ ${language} ]-[ ${rawCode} ]`
 
-        let renderedCode = codeCache.get(key)
+        let renderedCode = cache.get(key)
         if (renderedCode === undefined) {
             if (prismLanguages.has(language)) {
                 renderedCode = Prism.highlight(rawCode, Prism.languages[language], language)
-                codeCache.set(key, renderedCode)
+                cache.set(key, renderedCode)
             } else {
                 renderedCode = rawCode
             }
