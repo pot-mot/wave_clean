@@ -1,6 +1,5 @@
-import * as monaco from "monaco-editor/esm/vs/editor/editor.api.js";
 // import "monaco-editor/esm/vs/basic-languages/markdown/markdown.js";
-import {editor, languages} from "monaco-editor/esm/vs/editor/editor.api.js";
+import {editor, languages, KeyCode, Range, Position} from "monaco-editor/esm/vs/editor/editor.api.js";
 import OnEnterRule = languages.OnEnterRule;
 import IAutoClosingPair = languages.IAutoClosingPair;
 import IMonarchLanguageRule = languages.IMonarchLanguageRule;
@@ -247,11 +246,11 @@ const markdownLanguage = {
 }
 
 export const initMonacoMarkdownLanguage = () => {
-    monaco.languages.register({id: 'markdown'})
+    languages.register({id: 'markdown'})
 
-    monaco.languages.setMonarchTokensProvider('markdown', markdownLanguage)
+    languages.setMonarchTokensProvider('markdown', markdownLanguage)
 
-    monaco.languages.setLanguageConfiguration('markdown', {
+    languages.setLanguageConfiguration('markdown', {
         surroundingPairs,
         brackets,
         autoClosingPairs,
@@ -325,7 +324,7 @@ const lineEnterActions: onEnterAction[] = [
 
 export const initMonacoMarkdownEvent = (editor: IStandaloneCodeEditor) => {
     editor.onKeyDown((e) => {
-        if (e.keyCode === monaco.KeyCode.Enter) {
+        if (e.keyCode === KeyCode.Enter) {
             const model = editor.getModel()
             if (!model) return
             const position = editor.getPosition()
@@ -348,7 +347,7 @@ export const initMonacoMarkdownEvent = (editor: IStandaloneCodeEditor) => {
                     })
                     editor.executeEdits('enterAction', [
                         {
-                            range: new monaco.Range(
+                            range: new Range(
                                 position.lineNumber,
                                 position.column,
                                 position.lineNumber,
@@ -367,7 +366,7 @@ export const initMonacoMarkdownEvent = (editor: IStandaloneCodeEditor) => {
                             indent,
                             appendText
                         })
-                        editor.setPosition(new monaco.Position(position.lineNumber + lineOffset, position.column + columnOffset))
+                        editor.setPosition(new Position(position.lineNumber + lineOffset, position.column + columnOffset))
                     }
                 }
             }

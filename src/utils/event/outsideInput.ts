@@ -1,6 +1,6 @@
 import {checkIsInputOrTextarea, checkIsMarkdownEditor, getMatchedElementOrParent} from "@/utils/event/judgeEventTarget.ts";
 import {checkIsMarkdownEditorElement} from "@/components/markdown/editor/MarkdownEditorElement.ts";
-import * as monaco from "monaco-editor";
+import {Range} from "monaco-editor/esm/vs/editor/editor.api.js";
 
 export const outsideInput = (target: Element | EventTarget | null, value: string) => {
     if (target === null || target === undefined) return
@@ -26,7 +26,7 @@ export const outsideInput = (target: Element | EventTarget | null, value: string
 
             editor.executeEdits('outsideInput', [
                 {
-                    range: new monaco.Range(
+                    range: new Range(
                         position.lineNumber,
                         position.column,
                         position.lineNumber,

@@ -76,4 +76,22 @@ export default defineConfig(async () => ({
             '@': fileURLToPath(new URL('./src', import.meta.url))
         }
     },
+    build: {
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    'vue': ['vue'],
+                    'vue-flow': ['@vue-flow/core', '@vue-flow/node-toolbar'],
+                    'lodash': ['lodash-es'],
+                    'monaco-editor': ['monaco-editor'],
+                    'prismjs': ['prismjs'],
+                    'markdown-it': ['markdown-it', 'markdown-it-emoji', 'markdown-it-mark', 'markdown-it-multimd-table', 'markdown-it-sub', 'markdown-it-sup', 'markdown-it-task-lists'],
+                    'mermaid': ['mermaid'],
+                    'katex': ['katex'],
+                    'image-viewer': ['v-viewer', 'viewerjs'],
+                    'html-to-image': ['html-to-image'],
+                }
+            }
+        }
+    }
 }));
