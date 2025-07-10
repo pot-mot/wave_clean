@@ -158,7 +158,7 @@ export const renderKatexBlock = (content: string, options?: KatexOptions): strin
         const result = getRenderKatex(content, opts);
         return `
 <div class="katex">${result}</div>
-<details>
+<details class="katex-source-code">
     <summary>Source Code</summary>
     ${renderPrismCodeBlock(content, 'latex')}
 </details>

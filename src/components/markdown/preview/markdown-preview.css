@@ -275,7 +275,7 @@
 
 .markdown-preview code,
 .markdown-preview pre {
-    font-family: monospace, system-ui;
+    font-family: Consolas, "Courier New", monospace, system-ui;
     font-size: 1em;
     text-align: left;
     word-spacing: normal;
@@ -332,6 +332,12 @@
 .markdown-preview .katex,
 .markdown-preview .mermaid {
     max-width: 100%;
+}
+
+.markdown-preview .katex-source-code,
+.markdown-preview .mermaid-source-code {
+    margin-top: 0;
+    padding-top: 0;
 }
 
 .markdown-preview .katex.error,

@@ -45,7 +45,6 @@ export const katexLanguages = new Set([
 
 export const mermaidLanguages = new Set([
     "mermaid",
-    "graph",
 ])
 
 const cache: Map<string, string> = new Map
