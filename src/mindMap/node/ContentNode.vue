@@ -96,10 +96,13 @@ const handleInputBlur = () => {
 
 // markdown 模式
 const markdownEditorRef = useTemplateRef<InstanceType<typeof MarkdownEditor>>("markdownEditorRef")
+const markdownPreviewRef = useTemplateRef<InstanceType<typeof MarkdownPreview>>("markdownPreviewRef")
 
 const markdownEditorValue = ref<string>(props.data.content)
 
 const isMarkdownEdit = ref(false)
+
+const isMarkdownPreviewOverflow = computed<boolean>(() => markdownPreviewRef.value?.isOverflow ?? false)
 
 watch(() => props.data.content, (value) => {
     if (value !== markdownEditorValue.value) {
@@ -411,8 +414,9 @@ const executeDelete = () => {
                     />
                     <MarkdownPreview
                         v-else
+                        ref="markdownPreviewRef"
                         class="fit-parent"
-                        :class="{untouchable: !isFocus, noDrag: isFocus}"
+                        :class="{untouchable: !isFocus, noDrag: isFocus, noWheel: isFocus && isMarkdownPreviewOverflow}"
                         :style="{borderColor, overflow: isFocus ? 'auto' : 'hidden', scrollbarGutter: isFocus ? 'auto' : 'unset'}"
                         :value="data.content"
                     />

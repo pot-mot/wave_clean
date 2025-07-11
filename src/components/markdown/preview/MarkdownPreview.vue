@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {md} from "@/components/markdown/preview/markdownRender.ts";
-import {computed, useTemplateRef} from "vue";
+import {computed, onBeforeUnmount, onMounted, ref, useTemplateRef} from "vue";
 import "@/components/markdown/preview/markdown-preview.css"
 import "@/components/markdown/preview/codeStyle/code.css"
 import {imagePreview} from "@/components/markdown/preview/plugins/MarkdownItImage.ts";
@@ -52,6 +52,39 @@ const handleClick = (e: MouseEvent) => {
         }
     }
 }
+
+// 计算内容是否溢出
+const isOverflow = ref(false)
+
+let resizeObserver: ResizeObserver | null = null
+
+const checkOverflow = () => {
+    const element = elementRef.value
+    if (element) {
+        isOverflow.value =
+            element.scrollHeight > element.clientHeight ||
+            element.scrollWidth > element.clientWidth
+    }
+}
+
+onMounted(() => {
+    const element = elementRef.value
+    if (element) {
+        resizeObserver = new ResizeObserver(checkOverflow)
+        resizeObserver.observe(element)
+    }
+})
+
+onBeforeUnmount(() => {
+    if (resizeObserver) {
+        resizeObserver.disconnect()
+        resizeObserver = null
+    }
+})
+
+defineExpose({
+    isOverflow
+})
 </script>
 
 <template>
