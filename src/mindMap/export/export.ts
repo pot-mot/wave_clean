@@ -161,10 +161,12 @@ const exportMindMapToImage = async (
 }
 
 #${id} input,
-#${id} textarea {
+#${id} textarea,
+#${id} .markdown-preview {
     pointer-events: all !important;
     cursor: text !important;
-}  
+    user-select: text !important;
+}
 `
     document.head.appendChild(removeTransitionStyle)
     let el: HTMLElement | null = null
