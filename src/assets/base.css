@@ -91,6 +91,13 @@ a {
     text-decoration: none;
 }
 
+pre,
+code,
+pre span {
+    vertical-align: top;
+    cursor: text;
+}
+
 input,
 textarea,
 select {

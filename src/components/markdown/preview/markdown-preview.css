@@ -193,12 +193,12 @@
 
 .markdown-preview a {
     color: var(--link-color);
-    text-decoration: none;
+    text-decoration: underline;
+    cursor: pointer;
 }
 
 .markdown-preview a:hover {
     color: var(--link-hover-color);
-    text-decoration: underline;
 }
 
 .markdown-preview a:visited {
@@ -288,7 +288,7 @@
 }
 
 .markdown-preview {
-    --code-font-color: #e5e5e5;
+    --code-color: #e5e5e5;
     --code-background-color: #333;
 
     --code-inline-color: #333;
@@ -311,22 +311,96 @@
     background-color: var(--code-inline-background-color);
 }
 
-.markdown-preview pre {
+.markdown-preview .code-block {
+    position: relative;
     margin: 0.5em 0;
     border-radius: 3px;
     color: var(--code-color);
     background-color: var(--code-background-color);
+    line-height: 1.5rem;
 }
 
-.markdown-preview pre.error {
-    white-space: pre-line;
+.markdown-preview .code-block.error {
     border: 1px solid var(--danger-color);
     padding: 5px;
 }
 
-.markdown-preview pre > .error-detail {
+.markdown-preview .code-block > .error-detail {
     color: var(--danger-color);
     width: 100%;
+}
+
+.markdown-preview .code-block > pre {
+    line-height: inherit;
+    font-style: normal;
+    font-weight: 400;
+    padding: 0.8em 2em 0.8em 3.5em;
+    overflow-x: auto;
+}
+
+.markdown-preview .code-block > pre::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+
+.markdown-preview .code-block > pre > code {
+    white-space: pre;
+}
+
+.markdown-preview .code-block > .line-numbers {
+    position: absolute;
+    top: 0.8em;
+    left: 0;
+
+    line-height: inherit;
+    white-space: pre-line;
+    font-style: normal;
+    font-weight: 400;
+    width: 3em;
+    border-right: 1px solid var(--text-color);
+    background-color: var(--code-background-color);
+    text-align: center;
+
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+}
+
+.markdown-preview .code-block > .code-copy-button {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 0;
+    margin: 0;
+    width: 1.6em;
+    height: 1.6em;
+    cursor: pointer;
+}
+
+.markdown-preview .code-block > .code-copy-button:before {
+    display: block;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    overflow: hidden;
+    content: '';
+    background-position: 50% 50%;
+    background-repeat: no-repeat;
+    background-size: 80% 80%;
+    background-image: url("data:image/svg+xml,%3Csvg%20viewBox%3D%220%200%201024%201024%22%20version%3D%221.1%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23999%22%3E%3Cpath%20d%3D%22M670.037333%20283.818667H206.677333c-28.330667%200-51.2%2022.869333-51.2%2051.2V836.266667c0%2028.330667%2022.869333%2051.2%2051.2%2051.2h463.530667c28.330667%200%2051.2-22.869333%2051.2-51.2V335.018667a51.370667%2051.370667%200%200%200-51.370667-51.2z%20m-17.066666%20535.381333H223.744V352.085333h429.397333V819.2z%22%2F%3E%3Cpath%20d%3D%22M794.965333%20119.466667H342.186667c-18.773333%200-34.133333%2015.36-34.133334%2034.133333s15.36%2034.133333%2034.133334%2034.133333h452.778666c12.458667%200%2022.528%2010.069333%2022.528%2022.528v509.269334c0%2018.773333%2015.36%2034.133333%2034.133334%2034.133333s34.133333-15.36%2034.133333-34.133333V210.261333C885.589333%20160.085333%20844.970667%20119.466667%20794.965333%20119.466667z%22%2F%3E%3C%2Fsvg%3E");
+}
+
+.markdown-preview .code-block > .code-copy-button:hover:before {
+    background-image: url("data:image/svg+xml,%3Csvg%20viewBox%3D%220%200%201024%201024%22%20version%3D%221.1%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23d5d5d5%22%3E%3Cpath%20d%3D%22M670.037333%20283.818667H206.677333c-28.330667%200-51.2%2022.869333-51.2%2051.2V836.266667c0%2028.330667%2022.869333%2051.2%2051.2%2051.2h463.530667c28.330667%200%2051.2-22.869333%2051.2-51.2V335.018667a51.370667%2051.370667%200%200%200-51.370667-51.2z%20m-17.066666%20535.381333H223.744V352.085333h429.397333V819.2z%22%2F%3E%3Cpath%20d%3D%22M794.965333%20119.466667H342.186667c-18.773333%200-34.133333%2015.36-34.133334%2034.133333s15.36%2034.133333%2034.133334%2034.133333h452.778666c12.458667%200%2022.528%2010.069333%2022.528%2022.528v509.269334c0%2018.773333%2015.36%2034.133333%2034.133334%2034.133333s34.133333-15.36%2034.133333-34.133333V210.261333C885.589333%20160.085333%20844.970667%20119.466667%20794.965333%20119.466667z%22%2F%3E%3C%2Fsvg%3E");
+}
+
+.markdown-preview .code-block > .code-language {
+    position: absolute;
+    top: 0;
+    right: 1.8em;
+    font-size: 1em;
+    color: #999;
+    cursor: default;
 }
 
 .markdown-preview .katex,

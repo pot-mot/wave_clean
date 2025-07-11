@@ -10,6 +10,14 @@ export type ClipBoardTarget<INPUT, OUTPUT> = {
     stringifyData: (data: OUTPUT) => string
 }
 
+export const copyText = async (text: string) => {
+    try {
+        await writeText(text)
+    } catch (e) {
+        await window.navigator.clipboard.writeText(text)
+    }
+}
+
 export const useClipBoard = <INPUT, OUTPUT>(target: ClipBoardTarget<INPUT, OUTPUT>) => {
     const copy = async (lazyData: LazyData<OUTPUT> = target.exportData): Promise<OUTPUT> => {
         const data = await lazyDataParse(lazyData)

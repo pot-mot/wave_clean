@@ -2,8 +2,12 @@
 import {md} from "@/components/markdown/preview/markdownRender.ts";
 import {computed, useTemplateRef} from "vue";
 import "@/components/markdown/preview/markdown-preview.css"
+import "@/components/markdown/preview/codeStyle/code.css"
 import {imagePreview} from "@/components/markdown/preview/plugins/MarkdownItImage.ts";
 import {getMatchedElementOrParent} from "@/utils/event/judgeEventTarget.ts";
+import {copyText} from "@/utils/clipBoard/useClipBoard.ts";
+import {sendMessage} from "@/components/message/sendMessage.ts";
+import {copyButtonFindCodeBlockPre} from "@/components/markdown/preview/plugins/MarkdownItPrismCode.ts";
 
 const props = defineProps<{
     value: string
@@ -25,8 +29,15 @@ const handleClick = (e: MouseEvent) => {
         const currentElement: Element = e.target
 
         if (currentElement.classList.contains("code-copy-button")) {
-            copyCode(e);
-            return;
+            const codeBlockPre = copyButtonFindCodeBlockPre(currentElement)
+            if (codeBlockPre) {
+                copyText(codeBlockPre.textContent || "")
+                sendMessage("Copy success", {type: "success"})
+                return
+            } else {
+                sendMessage("Copy fail, target not found", {type: "error"})
+                return
+            }
         }
 
         if (currentElement instanceof HTMLImageElement && !currentElement.classList.contains('error')) {

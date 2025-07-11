@@ -53,19 +53,6 @@ export const cleanPrismCache = () => {
     cache.clear()
 }
 
-const renderCodeWithLineNumbers = (code: string): string => {
-    const counts: string[] = []
-    let codes = code.split('\n');
-    if (codes[codes.length - 1].length == 0) {
-        codes = codes.slice(0, codes.length - 1);
-    }
-    for (let i = 0; i < codes.length; i++) {
-        counts.push(`${i + 1}`);
-    }
-    return `<div class="count">${counts.join('\n')}</div>` +
-        `<code>${codes.join('\n')}</code>`
-}
-
 export const renderPrismCodeBlock = (rawCode: string, language: string): string => {
     try {
         const key = `[ ${language} ]-[ ${rawCode} ]`
@@ -80,24 +67,58 @@ export const renderPrismCodeBlock = (rawCode: string, language: string): string 
             }
         }
 
+        const lineNumbers: string[] = []
+        const codeLines = renderedCode.split('\n')
+        if (renderedCode.length > 0) {
+            for (let i = 1; i < codeLines.length; i++) {
+                lineNumbers.push(String(i));
+            }
+            if (codeLines[codeLines.length - 1].trim().length > 0) {
+                lineNumbers.push(String(codeLines.length))
+            }
+        }
+
         return `
-<pre class="${language ? `language-${language}` : ''}">
-    ${renderCodeWithLineNumbers(renderedCode)}
-    <button class="code-copy-button" title="复制"/>
+<div class="code-block">
+    <div class="line-numbers">${lineNumbers.join('\n')}</div>
+    <pre class="${language.length > 0 ? `language-${language}` : ''}"><code>${codeLines.join('\n')}</code></pre>
+    <button class="code-copy-button" title="copy"></button>
     <div class="code-language">${language}</div>
-</pre>
+</div>
 `.trim()
     } catch (e) {
+        const lineNumbers: string[] = []
+        const codeLines = rawCode.split('\n')
+        if (rawCode.length > 0) {
+            for (let i = 1; i < codeLines.length; i++) {
+                lineNumbers.push(String(i));
+            }
+            if (codeLines[codeLines.length - 1].trim().length > 0) {
+                lineNumbers.push(String(codeLines.length))
+            }
+        }
+
         return `
-<pre class="error ${language ? `language-${language}` : ''}">
-    ${rawCode}
+<div class="code-block error">
+    <div class="line-numbers">${lineNumbers.join('\n')}</div>
+    <pre class="${language.length > 0 ? `language-${language}` : ''}"><code>${rawCode}</code></pre>
     <div class="error-detail">${e}</div>
-</pre>
+    <button class="code-copy-button" title="copy"></button>
+    <div class="code-language">${language}</div>
+</div>
 `.trim()
     }
 }
 
-const renderCodeBlock = (text: string, language: string): string => {
+export const copyButtonFindCodeBlockPre = (element: Element): HTMLElement | null => {
+    const codeBlock = element.closest('.code-block')
+    if (codeBlock) {
+        return codeBlock.querySelector('pre')
+    }
+    return null
+}
+
+const renderCodeBlock = (text: string, language: string = ''): string => {
     if (mermaidLanguages.has(language)) {
         return renderMermaidBlock(text)
     } else if (katexLanguages.has(language)) {
@@ -112,5 +133,10 @@ export const MarkdownItPrismCode = (md: MarkdownIt) => {
         const token = tokens[idx]
         const language = token.info.trim()
         return renderCodeBlock(token.content, language)
+    }
+
+    md.renderer.rules.code_block = (tokens, idx) => {
+        const token = tokens[idx]
+        return renderCodeBlock(token.content)
     }
 }
