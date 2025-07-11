@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {md} from "@/components/markdown/preview/markdownRender.ts";
-import {computed, onBeforeUnmount, onMounted, ref, useTemplateRef} from "vue";
+import {nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch} from "vue";
 import "@/components/markdown/preview/markdown-preview.css"
 import "@/components/markdown/preview/codeStyle/code.css"
 import {imagePreview} from "@/components/markdown/preview/plugins/MarkdownItImage.ts";
@@ -8,6 +8,9 @@ import {getMatchedElementOrParent} from "@/utils/event/judgeEventTarget.ts";
 import {copyText} from "@/utils/clipBoard/useClipBoard.ts";
 import {sendMessage} from "@/components/message/sendMessage.ts";
 import {copyButtonFindCodeBlockPre} from "@/components/markdown/preview/plugins/MarkdownItPrismCode.ts";
+import {useThemeStore} from "@/store/themeStore.ts";
+
+const themeStore = useThemeStore()
 
 const props = defineProps<{
     value: string
@@ -15,8 +18,22 @@ const props = defineProps<{
 
 const elementRef = useTemplateRef<HTMLDivElement>("elementRef")
 
-const renderResult = computed(() => md.render(props.value))
+const renderResult = ref("")
 
+const render = () => {
+    renderResult.value = md.render(props.value)
+}
+
+onMounted(() => {
+    render()
+})
+
+watch(() => themeStore.theme.value, async () => {
+    await nextTick()
+    render()
+})
+
+// 处理点击事件
 const handleClick = (e: MouseEvent) => {
     const selection = window.getSelection()
     let isSelectionEmpty = true

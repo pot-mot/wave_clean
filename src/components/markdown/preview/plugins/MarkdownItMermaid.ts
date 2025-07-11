@@ -1,15 +1,16 @@
 import mermaid from "mermaid"
 import {renderPrismCodeBlock} from "@/components/markdown/preview/plugins/MarkdownItPrismCode.ts";
 import {v7 as uuid} from "uuid"
+import {Theme} from "@tauri-apps/api/window";
 
-mermaid.initialize(
-    {
-        startOnLoad: false,
-        flowchart: {
-            htmlLabels: true
-        },
+const defaultOptions = {
+    startOnLoad: false,
+    flowchart: {
+        htmlLabels: true
     },
-)
+}
+
+mermaid.initialize(defaultOptions)
 
 const cache = new Map<string, string>
 
@@ -18,6 +19,13 @@ export const cleanMermaidCache = () => {
 }
 
 const RawCodeAttr = "raw-code"
+
+export const setMermaidTheme = (newTheme: Theme) => {
+    mermaid.initialize({
+        ...defaultOptions,
+        theme: newTheme === 'dark' ? 'dark' : 'default'
+    })
+}
 
 const renderMermaid = async (
     id: string,

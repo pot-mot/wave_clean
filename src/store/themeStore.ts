@@ -3,6 +3,8 @@ import {Theme, getCurrentWindow} from "@tauri-apps/api/window";
 import {useDeviceStore} from "@/store/deviceStore.ts";
 import {createStore} from "@/store/createStore.ts";
 import {tinycolor} from "vue-color";
+import {setMermaidTheme} from "@/components/markdown/preview/plugins/MarkdownItMermaid.ts";
+import {cleanMarkdownRenderCache} from "@/components/markdown/preview/markdownRender.ts";
 
 export const useThemeStore = createStore(() => {
     const {isTouchDevice} = useDeviceStore()
@@ -24,11 +26,13 @@ export const useThemeStore = createStore(() => {
 
 
     watch(() => theme.value, (newTheme) => {
+        cleanMarkdownRenderCache()
         if (newTheme === 'dark') {
             document.documentElement.classList.add('dark');
         } else {
             document.documentElement.classList.remove('dark');
         }
+        setMermaidTheme(newTheme)
     }, {immediate: true})
 
     const setTheme = (newTheme: Theme) => {
