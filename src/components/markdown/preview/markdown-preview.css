@@ -372,9 +372,11 @@
     right: 0;
     padding: 0;
     margin: 0;
-    width: 1.6em;
-    height: 1.6em;
+    width: 1.5em;
+    height: 1.5em;
     cursor: pointer;
+    border: none;
+    background: none;
 }
 
 .markdown-preview .code-block > .code-copy-button:before {
@@ -397,8 +399,9 @@
 .markdown-preview .code-block > .code-language {
     position: absolute;
     top: 0;
-    right: 1.8em;
-    font-size: 1em;
+    right: 1.75em;
+    font-size: 0.75em;
+    line-height: 1.5em;
     color: #999;
     cursor: default;
 }
