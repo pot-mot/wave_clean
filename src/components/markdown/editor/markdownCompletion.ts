@@ -245,7 +245,7 @@ const markdownLanguage = {
     tokenizer,
 }
 
-export const initMonacoMarkdownLanguage = () => {
+const initMonacoMarkdownLanguage = () => {
     languages.register({id: 'markdown'})
 
     languages.setMonarchTokensProvider('markdown', markdownLanguage)
@@ -257,6 +257,7 @@ export const initMonacoMarkdownLanguage = () => {
         onEnterRules,
     })
 }
+initMonacoMarkdownLanguage()
 
 type onEnterAppendTextOptions = {
     match: RegExpMatchArray,
