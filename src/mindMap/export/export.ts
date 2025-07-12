@@ -167,6 +167,19 @@ const exportMindMapToImage = async (
     cursor: text !important;
     user-select: text !important;
 }
+
+#${id} .markdown-preview .code-language {
+    right: 0.25em;
+}
+
+#${id} .markdown-preview .code-copy-button {
+    display: none;
+}
+
+#${id} *::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
 `
     document.head.appendChild(removeTransitionStyle)
     let el: HTMLElement | null = null
