@@ -1,6 +1,7 @@
 import {SchemaValidator} from "@/utils/type/typeGuard.ts";
 import {readText, writeText} from "@tauri-apps/plugin-clipboard-manager";
 import {LazyData, lazyDataParse} from "@/utils/type/lazyDataParse.ts";
+import {noTauriInvokeSubstitution} from "@/utils/error/noTauriInvokeSubstitution.ts";
 
 export type ClipBoardTarget<INPUT, OUTPUT> = {
     importData: (data: INPUT) => void | Promise<void>,
@@ -11,21 +12,31 @@ export type ClipBoardTarget<INPUT, OUTPUT> = {
 }
 
 export const copyText = async (text: string) => {
-    try {
-        await writeText(text)
-    } catch (e) {
-        await window.navigator.clipboard.writeText(text)
-    }
+    await noTauriInvokeSubstitution(
+        async () => {
+            await writeText(text)
+        },
+        async () => {
+            await window.navigator.clipboard.writeText(text)
+        }
+    )
+}
+
+export const readClipBoardText = async () => {
+    return await noTauriInvokeSubstitution(
+        async () => {
+            return await readText()
+        },
+        async () => {
+            return await window.navigator.clipboard.readText()
+        }
+    )
 }
 
 export const useClipBoard = <INPUT, OUTPUT>(target: ClipBoardTarget<INPUT, OUTPUT>) => {
     const copy = async (lazyData: LazyData<OUTPUT> = target.exportData): Promise<OUTPUT> => {
         const data = await lazyDataParse(lazyData)
-        try {
-            await writeText(target.stringifyData(data))
-        } catch (e) {
-            await window.navigator.clipboard.writeText(target.stringifyData(data))
-        }
+        await copyText(target.stringifyData(data))
         return data
     }
 
@@ -36,13 +47,7 @@ export const useClipBoard = <INPUT, OUTPUT>(target: ClipBoardTarget<INPUT, OUTPU
     }
 
     const paste = async (): Promise<INPUT | string | undefined> => {
-        let text: string | undefined
-        try {
-            text = await readText()
-        } catch (e) {
-            text = await window.navigator.clipboard.readText()
-        }
-
+        const text = await readClipBoardText()
         const data = JSON.parse(text)
         let errors: any
         if (target.validateInput(data, e => errors = e)) {
