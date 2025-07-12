@@ -100,6 +100,7 @@ onBeforeUnmount(() => {
 })
 
 defineExpose({
+    elementRef,
     isOverflow
 })
 </script>
