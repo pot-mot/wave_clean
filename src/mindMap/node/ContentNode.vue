@@ -324,7 +324,7 @@ const executeFocus = () => {
 // 切换内容类型
 const executeToggleType = () => {
     blurActiveElement()
-    switch (props.data.type) {
+    switch (dataTypeOrDefault.value) {
         case 'markdown':
             updateNodeData(props.id, {type: 'text', content: markdownEditorValue.value})
             isMarkdownEdit.value = false
