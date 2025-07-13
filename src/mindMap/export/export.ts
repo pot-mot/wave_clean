@@ -18,6 +18,7 @@ import {
 } from "@/mindMap/typeValidate/validateMindMap.ts";
 import {downloadTextFile} from "@/utils/file/fileSave.ts";
 import {jsonPrettyFormat} from "@/utils/json/jsonStringify.ts";
+import {withLoading} from "@/components/loading/loadingApi.ts";
 
 export type MindMapExportData = {
     nodes: ContentNode[],
@@ -276,11 +277,13 @@ export const exportMindMapToFile = async (
     layers: ReadonlyArray<MindMapLayer>,
     type: ExportFileType,
 ) => {
-    const defaultSaveName = `${currentMindMapName ?? 'untitled'}-${new Date().getTime()}`
+    return await withLoading("Export MindMap", async () => {
+        const defaultSaveName = `${currentMindMapName ?? 'untitled'}-${new Date().getTime()}`
 
-    if (type === "JSON") {
-        return await exportMindMapToJson(defaultSaveName, mindMapData)
-    } else {
-        return await exportMindMapToImage(defaultSaveName, layers, type)
-    }
+        if (type === "JSON") {
+            return await exportMindMapToJson(defaultSaveName, mindMapData)
+        } else {
+            return await exportMindMapToImage(defaultSaveName, layers, type)
+        }
+    })
 }
