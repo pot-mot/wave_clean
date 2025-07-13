@@ -97,8 +97,9 @@ const handleSwap = (a: number, b: number) => {
 
                     <template #body>
                         <button
-                            @click.stop="removeLayer(layer.id)"
                             class="layer-menu-item-delete"
+                            :class="{disabled: layers.length <= 1}"
+                            @click.stop="layers.length > 1 ? removeLayer(layer.id) : () => {}"
                         >
                             <IconDelete/>
                         </button>
@@ -179,6 +180,12 @@ const handleSwap = (a: number, b: number) => {
     height: 1.5rem;
     width: 1.5rem;
     margin-top: 1.75rem;
+}
+
+.layer-menu-item-delete.disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+    --icon-color: var(--text-color);
 }
 
 .layer-menu-item-name {
