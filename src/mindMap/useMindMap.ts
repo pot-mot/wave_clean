@@ -32,6 +32,7 @@ import {v7 as uuid} from "uuid"
 import {sendMessage} from "@/components/message/sendMessage.ts";
 import {getTouchRect} from "@/utils/event/getTouchRect.ts";
 import {createStore} from "@/store/createStore.ts";
+import {withLoading} from "@/components/loading/loadingApi.ts";
 
 export type MindMapGlobal = {
     zIndexIncrement: number,
@@ -1069,7 +1070,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
     const exportFileType = ref<ExportFileType>("PNG")
     const isExportFile = ref(false)
 
-    const exportJson = (): MindMapData => {
+    const getMindMapData = (): MindMapData => {
         return {
             currentLayerId: currentLayerId.value,
             layers: global.layers.map(layer => ({
@@ -1092,21 +1093,24 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
 
         isExportFile.value = true
 
-        sendMessage("download start")
-
         try {
-            const savePath = await exportMindMapToFile(useMindMapMetaStore().currentMindMap.value?.name, exportJson(), global.layers, type)
+            await withLoading("Export MindMap", async () => {
+                const savePath = await exportMindMapToFile(
+                    useMindMapMetaStore().currentMindMap.value?.name,
+                    getMindMapData(),
+                    global.layers,
+                    type
+                )
 
-            if (!savePath) {
-                sendMessage("export fail", {type: "error"})
-            } else {
-                sendMessage(`export success, file in ${savePath}`, {type: "success"})
-            }
-        } catch (e) {
-            sendMessage("export fail", {type: "error"})
+                if (!savePath) {
+                    sendMessage("Export MindMap Fail", {type: "error"})
+                } else {
+                    sendMessage(`Export MindMap Success, \nFile in ${savePath}`, {type: "success"})
+                }
+            })
+        } finally {
+            isExportFile.value = false
         }
-
-        isExportFile.value = false
     }
 
     return {
@@ -1264,7 +1268,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         },
 
         exportFileType,
-        exportJson,
+        getMindMapData,
         exportFile,
 
         save: async () => {

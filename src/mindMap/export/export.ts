@@ -18,7 +18,7 @@ import {
 } from "@/mindMap/typeValidate/validateMindMap.ts";
 import {downloadTextFile} from "@/utils/file/fileSave.ts";
 import {jsonPrettyFormat} from "@/utils/json/jsonStringify.ts";
-import {withLoading} from "@/components/loading/loadingApi.ts";
+import {nextFrame} from "@/utils/animationFrame/nextFrame.ts";
 
 export type MindMapExportData = {
     nodes: ContentNode[],
@@ -194,6 +194,8 @@ const exportMindMapToImage = async (
 
         await nextTick()
 
+        await nextFrame()
+
         el = document.createElement('div')
         el.id = id
         el.style.position = 'absolute'
@@ -229,7 +231,7 @@ const exportMindMapToImage = async (
 
         if (left === Infinity || top === Infinity || right === -Infinity || bottom === -Infinity) {
             sendMessage("cannot export empty", {type: "warning"})
-            return;
+            return
         }
 
         const width = Math.max(right - left + padding * 2, 1)
@@ -248,7 +250,11 @@ const exportMindMapToImage = async (
 
         el.append(...nodeEdgeEls)
 
+        await nextFrame()
+
         document.body.appendChild(el)
+
+        await nextFrame()
 
         return await exportImageAs(el, defaultFileName, type)
     } catch (e) {
@@ -277,13 +283,11 @@ export const exportMindMapToFile = async (
     layers: ReadonlyArray<MindMapLayer>,
     type: ExportFileType,
 ) => {
-    return await withLoading("Export MindMap", async () => {
-        const defaultSaveName = `${currentMindMapName ?? 'untitled'}-${new Date().getTime()}`
+    const defaultSaveName = `${currentMindMapName ?? 'untitled'}-${new Date().getTime()}`
 
-        if (type === "JSON") {
-            return await exportMindMapToJson(defaultSaveName, mindMapData)
-        } else {
-            return await exportMindMapToImage(defaultSaveName, layers, type)
-        }
-    })
+    if (type === "JSON") {
+        return await exportMindMapToJson(defaultSaveName, mindMapData)
+    } else {
+        return await exportMindMapToImage(defaultSaveName, layers, type)
+    }
 }

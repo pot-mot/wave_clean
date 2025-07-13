@@ -255,7 +255,7 @@ export const useMindMapMetaStore = createStore(() => {
         }
 
         await withLoading("Save MindMap", async () => {
-            await jsonFileOperations.set(key, JSON.stringify(mindMapStore.exportJson()))
+            await jsonFileOperations.set(key, JSON.stringify(mindMapStore.getMindMapData()))
             for (const item of meta.value.mindMaps) {
                 if (item.key === key) {
                     item.lastEditTime = `${new Date().getTime()}`

@@ -68,7 +68,7 @@ defineExpose({
                     <span v-if="task.status === 'success'" class="success-tag">[SUCCESS]</span>
                     <span v-else-if="task.status === 'fail'" class="fail-tag">[FAIL]</span>
                     <span>{{ task.message }}</span>
-                    <button class="close-button" @click="removeTask(task)">
+                    <button v-if="task.status !== undefined" class="close-button" @click="removeTask(task)">
                         <IconClose/>
                     </button>
                 </div>
