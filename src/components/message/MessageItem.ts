@@ -14,14 +14,18 @@ export type MessageItem = {
     timeout?: number | undefined,
     // 是否可关闭
     canClose: boolean,
+    // 重复次数
+    repeatCount: number,
 }
 
 export type MessageOpenOptions = {
     type: MessageType,
     canClose: boolean,
+    grouping: boolean,
 }
 
 export const messageOpenDefaultOptions: MessageOpenOptions = {
     type: "info",
     canClose: true,
+    grouping: true,
 }
