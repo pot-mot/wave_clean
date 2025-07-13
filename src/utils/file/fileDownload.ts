@@ -2,6 +2,7 @@ import {downloadDir} from "@tauri-apps/api/path";
 import {save, SaveDialogOptions} from "@tauri-apps/plugin-dialog";
 import {sendMessage} from "@/components/message/sendMessage.ts";
 import {writeFile} from "@tauri-apps/plugin-fs";
+import {noTauriInvokeSubstitution} from "@/utils/error/noTauriInvokeSubstitution.ts";
 
 const encoder = new TextEncoder()
 
@@ -68,13 +69,16 @@ export const downloadTextFile = async (
 
     const data = encoder.encode(text)
 
-    try {
-        return await downloadFileUsingTauriFile(data, filename)
-    } catch (e) {
-        const dataUrl = `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`;
-        downloadFileUsingAnchor(dataUrl, filename)
-        return "download path"
-    }
+    return await noTauriInvokeSubstitution(
+        async () => {
+            return await downloadFileUsingTauriFile(data, filename)
+        },
+        () => {
+            const dataUrl = `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`;
+            downloadFileUsingAnchor(dataUrl, filename)
+            return "download path"
+        }
+    )
 }
 
 export const downloadImageFile = async (
@@ -95,12 +99,15 @@ export const downloadImageFile = async (
     }
     const data = new Uint8Array(arrayBuffer)
 
-    try {
-        return await downloadFileUsingTauriFile(data, filename)
-    } catch (e) {
-        downloadFileUsingAnchor(dataUrl, filename)
-        return "download path"
-    }
+    return await noTauriInvokeSubstitution(
+        async () => {
+            return await downloadFileUsingTauriFile(data, filename)
+        },
+        () => {
+            downloadFileUsingAnchor(dataUrl, filename)
+            return "download path"
+        }
+    )
 }
 
 const svgPrefix = 'data:image/svg+xml;charset=utf-8,';
@@ -119,10 +126,13 @@ export const downloadSvgFile = async (
 
     const data = encoder.encode(decodedSvgContent);
 
-    try {
-        return await downloadFileUsingTauriFile(data, filename)
-    } catch (e) {
-        downloadFileUsingAnchor(dataUrl, filename)
-        return "download path"
-    }
+    return await noTauriInvokeSubstitution(
+        async () => {
+            return await downloadFileUsingTauriFile(data, filename)
+        },
+        () => {
+            downloadFileUsingAnchor(dataUrl, filename)
+            return "download path"
+        }
+    )
 }

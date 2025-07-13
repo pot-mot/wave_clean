@@ -16,7 +16,7 @@ import {
     validateContentNode,
     validateSizePositionEdgePartial
 } from "@/mindMap/typeValidate/validateMindMap.ts";
-import {downloadTextFile} from "@/utils/file/fileSave.ts";
+import {downloadTextFile} from "@/utils/file/fileDownload.ts";
 import {jsonPrettyFormat} from "@/utils/json/jsonStringify.ts";
 import {nextFrame} from "@/utils/animationFrame/nextFrame.ts";
 

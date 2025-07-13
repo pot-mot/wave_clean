@@ -1,5 +1,5 @@
 import {toJpeg, toPng, toSvg} from 'html-to-image';
-import {downloadImageFile, downloadSvgFile} from "@/utils/file/fileSave.ts";
+import {downloadImageFile, downloadSvgFile} from "@/utils/file/fileDownload.ts";
 
 export const exportAsSvg = async (element: HTMLElement, filename: string) => {
     const svg = await toSvg(element, {pixelRatio: 2, height: element.offsetHeight, width: element.offsetWidth})
