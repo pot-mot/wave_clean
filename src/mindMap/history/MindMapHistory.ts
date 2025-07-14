@@ -10,7 +10,7 @@ import {exportMindMapData, MindMapExportData} from "@/mindMap/export/export.ts";
 import {prepareImportIntoMindMap} from "@/mindMap/import/import.ts";
 import {getRaw} from "@/utils/json/getRaw.ts";
 import {getKeys} from "@/utils/type/typeGuard.ts";
-import {MindMapLayer, MindMapLayerData, RawMindMapLayer} from "@/mindMap/layer/MindMapLayer.ts";
+import {MindMapLayer, MindMapLayerDiffData, RawMindMapLayer} from "@/mindMap/layer/MindMapLayer.ts";
 import {ContentNode, ContentNodeData, validateContentNode} from "@/mindMap/node/ContentNode.ts";
 import {ContentEdge, ContentEdgeData, validateContentEdge} from "@/mindMap/edge/ContentEdge.ts";
 
@@ -28,10 +28,10 @@ export type MindMapHistoryCommands = {
     >,
     "layer:data:change": CommandDefinition<{
         layerId: string,
-        newData: Partial<MindMapLayerData>,
+        newData: Partial<MindMapLayerDiffData>,
     }, {
         layerId: string,
-        oldData: Partial<MindMapLayerData>,
+        oldData: Partial<MindMapLayerDiffData>,
     }>,
     "layer:toggle": CommandDefinition<string>,
     "layer:dragged": CommandDefinition<{
@@ -212,7 +212,7 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
     history.registerCommand("layer:data:change", {
         applyAction: ({layerId, newData}) => {
             const layer = getLayer(layerId)
-            const oldData: Partial<MindMapLayerData> = {}
+            const oldData: Partial<MindMapLayerDiffData> = {}
             for (const key of getKeys(newData)) {
                 const oldValue = layer[key]
                 oldData[key] = oldValue as any

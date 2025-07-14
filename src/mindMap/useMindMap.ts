@@ -28,7 +28,6 @@ import {MindMapData} from "@/mindMap/MindMapData.ts";
 import {checkFullConnection, FullConnection, reverseConnection} from "@/mindMap/edge/connection.ts";
 import {useMindMapHistory} from "@/mindMap/history/MindMapHistory.ts";
 import {unimplementedClipBoard, useClipBoard} from "@/utils/clipBoard/useClipBoard.ts";
-import {getKeys} from "@/utils/type/typeGuard.ts";
 import {useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
 import {LazyData} from "@/utils/type/lazyDataParse.ts";
 import {useDeviceStore} from "@/store/deviceStore.ts";
@@ -37,7 +36,12 @@ import {sendMessage} from "@/components/message/sendMessage.ts";
 import {getTouchRect} from "@/utils/event/getTouchRect.ts";
 import {createStore} from "@/store/createStore.ts";
 import {withLoading} from "@/components/loading/loadingApi.ts";
-import {MindMapLayer, MindMapLayerData} from "@/mindMap/layer/MindMapLayer.ts";
+import {
+    MindMapLayer,
+    MindMapLayerData,
+    MindMapLayerDiffData,
+    MindMapLayerDiffDataKeys
+} from "@/mindMap/layer/MindMapLayer.ts";
 import {ContentNodeData, ContentType_DEFAULT, NodeType_CONTENT} from "@/mindMap/node/ContentNode.ts";
 import {ContentEdgeData, EdgeType_CONTENT} from "@/mindMap/edge/ContentEdge.ts";
 
@@ -99,8 +103,11 @@ export const createLayer = (id: string, name: string) => {
 }
 
 // 将 MindMapData 中的静态图层数据转换为真实的响应式图层
-const dataToLayers = (
-    data: Pick<MindMapData, 'layers' | 'currentLayerId'>
+const layerDataToLayers = (
+    data: {
+        currentLayerId: string,
+        layers: MindMapLayerData[],
+    }
 ): {
     layers: ShallowReactive<MindMapLayer[]>,
     currentLayer: ShallowReactive<MindMapLayer>
@@ -140,7 +147,7 @@ export type MindMapGlobal = {
 export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData()) => {
     const {isTouchDevice} = useDeviceStore()
 
-    const {currentLayer, layers} = dataToLayers(data)
+    const {currentLayer, layers} = layerDataToLayers(data)
 
     const global: MindMapGlobal = {
         zIndexIncrement: data.zIndexIncrement,
@@ -249,14 +256,14 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         history.executeCommand("layer:visible:change", {layerId, visible})
     }
 
-    const changeLayerData = (layerId: string, data: Partial<MindMapLayerData>) => {
+    const changeLayerData = (layerId: string, data: Partial<MindMapLayerDiffData>) => {
         const layer = global.layers.find(layer => layer.id === layerId)
         if (layer === undefined) {
             console.error(`layer ${layerId} not exist`)
             return
         }
         let equalFlag = true
-        for (const key of getKeys(data)) {
+        for (const key of MindMapLayerDiffDataKeys) {
             if (layer[key] !== data[key]) {
                 equalFlag = false
                 break
@@ -1188,7 +1195,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         },
 
         set: async (data: MindMapData) => {
-            const {layers, currentLayer} = dataToLayers(data)
+            const {layers, currentLayer} = layerDataToLayers(data)
             global.zIndexIncrement = data.zIndexIncrement
             global.layers.splice(0, global.layers.length, ...layers)
             currentViewport.value = data.transform
