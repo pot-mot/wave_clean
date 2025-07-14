@@ -34,13 +34,10 @@ import {getTouchRect} from "@/utils/event/getTouchRect.ts";
 import {createStore} from "@/store/createStore.ts";
 import {withLoading} from "@/components/loading/loadingApi.ts";
 
-export type MindMapGlobal = {
-    zIndexIncrement: number,
-    layers: ShallowReactive<MindMapLayer[]>,
-    currentLayer: ShallowRef<ShallowReactive<MindMapLayer>>,
-    toggleCurrentLayer: (layerId: string) => void,
-}
-
+// 思维导图图层（字面量，非响应式）类型
+// 包含：
+//  图层本身的基本信息
+//  剪切板API
 export type RawMindMapLayer = {
     readonly id: string,
     readonly vueFlow: VueFlowStore,
@@ -49,7 +46,24 @@ export type RawMindMapLayer = {
     opacity: number,
 } & CustomClipBoard<MindMapImportData, MindMapExportData>
 
+// 思维导图图层类型（响应式）
+export type MindMapLayer = ShallowReactive<RawMindMapLayer>
+
+// 思维导图图层数据，包含其中需要被历史记录跟踪的部分
+export const MindMapLayerDataKeys = ['name', 'opacity'] as const
+export type MindMapLayerData = Pick<RawMindMapLayer, typeof MindMapLayerDataKeys[number]>
+
+// 思维导图全局类型，用于对外暴露 zIndex自增、图层状态与图层切换API
+export type MindMapGlobal = {
+    zIndexIncrement: number,
+    layers: ShallowReactive<MindMapLayer[]>,
+    currentLayer: ShallowRef<ShallowReactive<MindMapLayer>>,
+    toggleCurrentLayer: (layerId: string) => void,
+}
+
+// 思维导图数据
 export type MindMapData = {
+    zIndexIncrement: number,
     currentLayerId: string,
     layers: {
         id: string,
@@ -59,14 +73,6 @@ export type MindMapData = {
         data: MindMapExportData
     }[],
     transform: ViewportTransform,
-} & Pick<MindMapGlobal, 'zIndexIncrement'>
-
-export const createLayerId = () => {
-    return `layer-${uuid()}`
-}
-
-export const createNodeId = () => {
-    return `node-${uuid()}`
 }
 
 export const getDefaultMindMapData = (): MindMapData => {
@@ -94,11 +100,7 @@ export const getDefaultMindMapData = (): MindMapData => {
     }
 }
 
-export type MindMapLayer = ShallowReactive<RawMindMapLayer>
-
-export const MindMapLayerDataKeys = ['name', 'opacity'] as const
-export type MindMapLayerData = Pick<RawMindMapLayer, typeof MindMapLayerDataKeys[number]>
-
+// 内容节点
 export const CONTENT_NODE_TYPE = "CONTENT_NODE" as const
 
 export const ContentType_CONSTANTS = ["text", "markdown"] as const
@@ -123,6 +125,7 @@ export type ContentNode = Pick<GraphNode, 'id' | 'position'> & {
 
 export const ContentNodeHandles: Position[] = [Position.Left, Position.Right, Position.Top, Position.Bottom] as const
 
+// 在data中具有尺寸信息和位置信息的边，需要配合边进行监听
 export type SizePositionEdge = {
     data: {
         position: {
@@ -140,6 +143,7 @@ export type SizePositionEdgePartial = {
     data: Partial<SizePositionEdge["data"]>
 }
 
+// 内容边
 export const CONTENT_EDGE_TYPE = "CONTENT_EDGE" as const
 
 export const ContentEdgeArrowType_CONSTANTS = ['one-way', 'two-way', 'none'] as const
@@ -158,6 +162,15 @@ export type ContentEdge = Pick<Edge, 'id' | 'source' | 'target'> & {
     targetHandle: string,
 }
 
+// 创建 uuid
+export const createLayerId = () => {
+    return `layer-${uuid()}`
+}
+
+export const createNodeId = () => {
+    return `node-${uuid()}`
+}
+
 export const createVueFlowId = () => {
     return `vueflow-${uuid()}`
 }
@@ -165,8 +178,6 @@ export const createVueFlowId = () => {
 export const createEdgeId = (connection: Connection) => {
     return `vueflow__edge-${connection.source}${connection.sourceHandle ?? ''}-${connection.target}${connection.targetHandle ?? ''}`
 }
-
-export type MouseAction = "panDrag" | "selectionRect"
 
 export const createLayer = (id: string, name: string) => {
     const vueFlowId = createVueFlowId()
@@ -181,7 +192,11 @@ export const createLayer = (id: string, name: string) => {
     })
 }
 
-const dataToLayers = (data: Pick<MindMapData, 'layers' | 'currentLayerId'>): Pick<MindMapGlobal, 'layers'> & {
+// 将 MindMapData 中的静态图层数据转换为真实的响应式图层
+const dataToLayers = (
+    data: Pick<MindMapData, 'layers' | 'currentLayerId'>
+): {
+    layers: ShallowReactive<MindMapLayer[]>,
     currentLayer: ShallowReactive<MindMapLayer>
 } => {
     const currentLayerIndex = data.layers.findIndex(layer => layer.id === data.currentLayerId)
@@ -207,6 +222,9 @@ const dataToLayers = (data: Pick<MindMapData, 'layers' | 'currentLayerId'>): Pic
         currentLayer
     }
 }
+
+// 鼠标默认行为
+export type MouseAction = "panDrag" | "selectionRect"
 
 export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData()) => {
     const {isTouchDevice} = useDeviceStore()
