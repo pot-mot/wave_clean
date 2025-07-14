@@ -2,20 +2,17 @@ import {CommandDefinition, useCommandHistory} from "@/history/commandHistory.ts"
 import {GraphEdge, GraphNode, useVueFlow, VueFlowStore, XYPosition} from "@vue-flow/core";
 import {FullConnection} from "@/mindMap/edge/connection.ts";
 import {
-    ContentEdge,
-    ContentEdgeData,
-    ContentNode,
-    ContentNodeData,
-    createEdgeId, createVueFlowId,
-    MindMapGlobal, MindMapLayer, MindMapLayerData,
-    RawMindMapLayer
+    createEdgeId,
+    createVueFlowId, MindMapGlobal
 } from "@/mindMap/useMindMap.ts";
 import {ref, shallowReactive} from "vue";
 import {exportMindMapData, MindMapExportData} from "@/mindMap/export/export.ts";
 import {prepareImportIntoMindMap} from "@/mindMap/import/import.ts";
 import {getRaw} from "@/utils/json/getRaw.ts";
 import {getKeys} from "@/utils/type/typeGuard.ts";
-import {validateContentEdge, validateContentNode} from "@/mindMap/typeValidate/validateMindMap.ts";
+import {MindMapLayer, MindMapLayerData, RawMindMapLayer} from "@/mindMap/layer/MindMapLayer.ts";
+import {ContentNode, ContentNodeData, validateContentNode} from "@/mindMap/node/ContentNode.ts";
+import {ContentEdge, ContentEdgeData, validateContentEdge} from "@/mindMap/edge/ContentEdge.ts";
 
 export type MindMapHistoryCommands = {
     "layer:add": CommandDefinition<

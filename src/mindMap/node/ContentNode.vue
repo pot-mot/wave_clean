@@ -1,10 +1,6 @@
 <script setup lang="ts">
 import {Handle, NodeProps} from "@vue-flow/core";
 import {
-    ContentNode,
-    ContentNodeData,
-    ContentNodeHandles, ContentType, ContentType_DEFAULT,
-    RawMindMapLayer,
     useMindMap
 } from "@/mindMap/useMindMap.ts";
 import {computed, nextTick, onMounted, ref, useTemplateRef, watch} from "vue";
@@ -24,6 +20,14 @@ import IconEdit from "@/components/icons/IconEdit.vue";
 import IconPreview from "@/components/icons/IconPreview.vue";
 import IconMarkdown from "@/components/icons/IconMarkdown.vue";
 import IconMarkdownOff from "@/components/icons/IconMarkdownOff.vue";
+import {RawMindMapLayer} from "@/mindMap/layer/MindMapLayer.ts";
+import {
+    ContentNode,
+    ContentNodeData,
+    ContentNodeHandles,
+    ContentType,
+    ContentType_DEFAULT
+} from "@/mindMap/node/ContentNode.ts";
 
 const {isTouchDevice} = useDeviceStore()
 

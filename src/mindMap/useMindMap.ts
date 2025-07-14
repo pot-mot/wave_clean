@@ -1,9 +1,7 @@
 import {
     Connection,
-    Edge,
     GraphEdge,
     GraphNode,
-    Position,
     Rect,
     useVueFlow,
     ViewportTransform,
@@ -13,17 +11,23 @@ import {
 import {computed, nextTick, readonly, ref, ShallowReactive, shallowReactive, ShallowRef, shallowRef, toRaw,} from "vue";
 import {blurActiveElement, judgeTargetIsInteraction} from "@/utils/event/judgeEventTarget.ts";
 import {jsonSortPropStringify} from "@/utils/json/jsonStringify.ts";
-import {JustifyOptions, MindMapImportData, prepareImportIntoMindMap} from "@/mindMap/import/import.ts";
+import {
+    JustifyOptions,
+    MindMapImportData,
+    prepareImportIntoMindMap,
+    validateMindMapImportData
+} from "@/mindMap/import/import.ts";
 import {
     ExportFileType,
     exportMindMapData,
-    exportMindMapSelectionData, exportMindMapToFile,
+    exportMindMapSelectionData,
+    exportMindMapToFile,
     MindMapExportData
 } from "@/mindMap/export/export.ts";
-import {validateMindMapImportData} from "@/mindMap/typeValidate/validateMindMap.ts";
+import {MindMapData} from "@/mindMap/MindMapData.ts";
 import {checkFullConnection, FullConnection, reverseConnection} from "@/mindMap/edge/connection.ts";
 import {useMindMapHistory} from "@/mindMap/history/MindMapHistory.ts";
-import {CustomClipBoard, unimplementedClipBoard, useClipBoard} from "@/utils/clipBoard/useClipBoard.ts";
+import {unimplementedClipBoard, useClipBoard} from "@/utils/clipBoard/useClipBoard.ts";
 import {getKeys} from "@/utils/type/typeGuard.ts";
 import {useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
 import {LazyData} from "@/utils/type/lazyDataParse.ts";
@@ -33,46 +37,27 @@ import {sendMessage} from "@/components/message/sendMessage.ts";
 import {getTouchRect} from "@/utils/event/getTouchRect.ts";
 import {createStore} from "@/store/createStore.ts";
 import {withLoading} from "@/components/loading/loadingApi.ts";
+import {MindMapLayer, MindMapLayerData} from "@/mindMap/layer/MindMapLayer.ts";
+import {ContentNodeData, ContentType_DEFAULT, NodeType_CONTENT} from "@/mindMap/node/ContentNode.ts";
+import {ContentEdgeData, EdgeType_CONTENT} from "@/mindMap/edge/ContentEdge.ts";
 
-// 思维导图图层（字面量，非响应式）类型
-// 包含：
-//  图层本身的基本信息
-//  剪切板API
-export type RawMindMapLayer = {
-    readonly id: string,
-    readonly vueFlow: VueFlowStore,
-    name: string,
-    visible: boolean,
-    opacity: number,
-} & CustomClipBoard<MindMapImportData, MindMapExportData>
+// 鼠标默认行为
+type MouseAction = "panDrag" | "selectionRect"
 
-// 思维导图图层类型（响应式）
-export type MindMapLayer = ShallowReactive<RawMindMapLayer>
-
-// 思维导图图层数据，包含其中需要被历史记录跟踪的部分
-export const MindMapLayerDataKeys = ['name', 'opacity'] as const
-export type MindMapLayerData = Pick<RawMindMapLayer, typeof MindMapLayerDataKeys[number]>
-
-// 思维导图全局类型，用于对外暴露 zIndex自增、图层状态与图层切换API
-export type MindMapGlobal = {
-    zIndexIncrement: number,
-    layers: ShallowReactive<MindMapLayer[]>,
-    currentLayer: ShallowRef<ShallowReactive<MindMapLayer>>,
-    toggleCurrentLayer: (layerId: string) => void,
+export const createLayerId = () => {
+    return `layer-${uuid()}`
 }
 
-// 思维导图数据
-export type MindMapData = {
-    zIndexIncrement: number,
-    currentLayerId: string,
-    layers: {
-        id: string,
-        name: string,
-        visible: boolean,
-        opacity: number,
-        data: MindMapExportData
-    }[],
-    transform: ViewportTransform,
+export const createNodeId = () => {
+    return `node-${uuid()}`
+}
+
+export const createVueFlowId = () => {
+    return `vueflow-${uuid()}`
+}
+
+export const createEdgeId = (connection: Connection) => {
+    return `vueflow__edge-${connection.source}${connection.sourceHandle ?? ''}-${connection.target}${connection.targetHandle ?? ''}`
 }
 
 export const getDefaultMindMapData = (): MindMapData => {
@@ -98,85 +83,6 @@ export const getDefaultMindMapData = (): MindMapData => {
         },
         zIndexIncrement: 1,
     }
-}
-
-// 内容节点
-export const CONTENT_NODE_TYPE = "CONTENT_NODE" as const
-
-export const ContentType_CONSTANTS = ["text", "markdown"] as const
-export type ContentType = typeof ContentType_CONSTANTS[number]
-
-export const ContentType_DEFAULT = ContentType_CONSTANTS[0]
-
-export type ContentNodeData = {
-    content: string,
-    type?: ContentType,
-    color?: string,
-    withBorder?: boolean,
-}
-export type ContentNode = Pick<GraphNode, 'id' | 'position'> & {
-    data: ContentNodeData,
-    type: typeof CONTENT_NODE_TYPE,
-    dimensions?: {
-        width: number,
-        height: number,
-    } | null | undefined
-}
-
-export const ContentNodeHandles: Position[] = [Position.Left, Position.Right, Position.Top, Position.Bottom] as const
-
-// 在data中具有尺寸信息和位置信息的边，需要配合边进行监听
-export type SizePositionEdge = {
-    data: {
-        position: {
-            left: number,
-            top: number,
-        },
-        size: {
-            width: number,
-            height: number,
-        }
-    }
-}
-
-export type SizePositionEdgePartial = {
-    data: Partial<SizePositionEdge["data"]>
-}
-
-// 内容边
-export const CONTENT_EDGE_TYPE = "CONTENT_EDGE" as const
-
-export const ContentEdgeArrowType_CONSTANTS = ['one-way', 'two-way', 'none'] as const
-export type ContentEdgeArrowType = typeof ContentEdgeArrowType_CONSTANTS[number]
-
-export type ContentEdgeData = {
-    content: string,
-    arrowType?: ContentEdgeArrowType,
-    color?: string,
-    withBorder?: boolean,
-} & SizePositionEdgePartial["data"]
-export type ContentEdge = Pick<Edge, 'id' | 'source' | 'target'> & {
-    data: ContentEdgeData,
-    type: typeof CONTENT_EDGE_TYPE,
-    sourceHandle: string,
-    targetHandle: string,
-}
-
-// 创建 uuid
-export const createLayerId = () => {
-    return `layer-${uuid()}`
-}
-
-export const createNodeId = () => {
-    return `node-${uuid()}`
-}
-
-export const createVueFlowId = () => {
-    return `vueflow-${uuid()}`
-}
-
-export const createEdgeId = (connection: Connection) => {
-    return `vueflow__edge-${connection.source}${connection.sourceHandle ?? ''}-${connection.target}${connection.targetHandle ?? ''}`
 }
 
 export const createLayer = (id: string, name: string) => {
@@ -223,8 +129,13 @@ const dataToLayers = (
     }
 }
 
-// 鼠标默认行为
-export type MouseAction = "panDrag" | "selectionRect"
+// 思维导图全局变量类型，对外暴露 zIndex自增、图层状态与图层切换API
+export type MindMapGlobal = {
+    zIndexIncrement: number,
+    layers: ShallowReactive<MindMapLayer[]>,
+    currentLayer: ShallowRef<ShallowReactive<MindMapLayer>>,
+    toggleCurrentLayer: (layerId: string) => void,
+}
 
 export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData()) => {
     const {isTouchDevice} = useDeviceStore()
@@ -379,7 +290,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
             node: {
                 id: createNodeId(),
                 position,
-                type: CONTENT_NODE_TYPE,
+                type: NodeType_CONTENT,
                 data: {
                     content: "",
                     type: ContentType_DEFAULT,
@@ -405,7 +316,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
             edge: {
                 ...connection,
                 id,
-                type: CONTENT_EDGE_TYPE,
+                type: EdgeType_CONTENT,
                 data: {
                     content: ""
                 },

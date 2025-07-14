@@ -1,18 +1,29 @@
 import {VueFlowStore, XYPosition} from "@vue-flow/core";
 import {
-    ContentEdge,
-    ContentNode,
-    ContentNodeHandles,
     createEdgeId,
     createNodeId
 } from "@/mindMap/useMindMap.ts";
 import {toRaw} from "vue";
 import {FullConnection, reverseConnection} from "@/mindMap/edge/connection.ts";
+import {ContentNode, ContentNode_JsonSchema, ContentNodeHandles} from "@/mindMap/node/ContentNode.ts";
+import {ContentEdge, ContentEdge_JsonSchema} from "@/mindMap/edge/ContentEdge.ts";
+import type {JSONSchemaType} from "ajv/lib/types/json-schema.ts";
+import {createSchemaValidator} from "@/utils/type/typeGuard.ts";
 
 export type MindMapImportData = {
     nodes?: (ContentNode | undefined | null)[],
     edges?: (ContentEdge | undefined | null)[],
 }
+
+const MindMapImportData_JsonSchema: JSONSchemaType<MindMapImportData> = {
+    type: "object",
+    properties: {
+        nodes: {type: "array", items: ContentNode_JsonSchema, nullable: true},
+        edges: {type: "array", items: ContentEdge_JsonSchema, nullable: true},
+    }
+}
+
+export const validateMindMapImportData = createSchemaValidator<MindMapImportData>(MindMapImportData_JsonSchema)
 
 export type UnconnectedEdgeReason = {
     connectionExist: boolean,
