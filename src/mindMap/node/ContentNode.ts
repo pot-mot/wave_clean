@@ -54,7 +54,7 @@ export const ContentNode_JsonSchema: JSONSchemaType<ContentNode> = {
             type: "object",
             properties: {
                 content: {type: "string"},
-                type: {type: "string", enum: ["text", "markdown"], nullable: true},
+                type: {type: "string", enum: ContentType_CONSTANTS, nullable: true},
                 color: {type: "string", nullable: true},
                 withBorder: {type: "boolean", nullable: true},
             },

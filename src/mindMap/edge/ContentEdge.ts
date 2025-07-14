@@ -43,7 +43,7 @@ export const ContentEdge_JsonSchema: JSONSchemaType<ContentEdge> = {
                 content: {type: "string"},
                 arrowType: {
                     type: "string",
-                    enum: ["one-way", "two-way", "none"],
+                    enum: ContentEdgeArrowType_CONSTANTS,
                     nullable: true
                 },
                 color: {type: "string", nullable: true},
