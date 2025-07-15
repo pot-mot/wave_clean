@@ -1184,7 +1184,6 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         },
         cut: async (layer: MindMapLayer = global.currentLayer.value) => {
             try {
-                if (!isSelectionNotEmpty.value) return
                 const result = await layer.cut()
                 sendMessage("cut", {type: "success"})
                 focus()

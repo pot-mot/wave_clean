@@ -16,6 +16,7 @@ const {
     undo,
     redo,
     save,
+    isSelectionNotEmpty,
     copy,
     cut,
     paste,
@@ -52,11 +53,13 @@ const handleKeyDown = async (e: KeyboardEvent) => {
             await save()
         } else if (e.key === "c" || e.key === "C") {
             if (judgeTargetIsInteraction(e)) return
+            if (!isSelectionNotEmpty.value) return
 
             e.preventDefault()
             await copy()
         } else if (e.key === "x" || e.key === "X") {
             if (judgeTargetIsInteraction(e)) return
+            if (!isSelectionNotEmpty.value) return
 
             e.preventDefault()
             await cut()
