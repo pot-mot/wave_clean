@@ -94,7 +94,6 @@ a {
 pre,
 code,
 pre span {
-    vertical-align: top;
     cursor: text;
 }
 
