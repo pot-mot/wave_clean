@@ -79,19 +79,24 @@ const inputValue = computed<string>({
     }
 })
 
-const inputWidth = ref(0)
-const inputHeight = ref(0)
+const inputSize = ref<{ width: number, height: number }>()
+
+const inputWrapperStyle = computed(() => {
+    return {
+        width: (inputSize.value?.width ?? 0) + "px",
+        height: (inputSize.value?.height ?? 0) + "px",
+    }
+})
 
 const handleInputResize = (size: { width: number, height: number }) => {
     const node = _node.value
-    if (node) {
+    if (node && inputSize.value !== undefined) {
         // 保持 node 居中
-        node.position.x = node.position.x - (size.width - inputWidth.value) / 2
+        node.position.x = node.position.x - (size.width - inputSize.value.width) / 2
         node.width = size.width
         node.height = size.height
     }
-    inputWidth.value = size.width
-    inputHeight.value = size.height
+    inputSize.value = size
 }
 
 const handleInputBlur = () => {
@@ -198,7 +203,7 @@ const handleMarkdownEditorResize = ({direction, currentDiff}: ResizeEventArgs) =
 const handleMarkdownEditorResizeStop = ({origin, direction, diff}: ResizeStopEventArgs) => {
     const node = _node.value
     if (node) {
-        const oldPosition =  {
+        const oldPosition = {
             x: node.position.x,
             y: node.position.y,
         }
@@ -339,8 +344,8 @@ const executeToggleType = () => {
                 const oldWidth = node.dimensions.width
                 nextTick(() => {
                     const node = _node.value
-                    if (node) {
-                        node.position.x += (oldWidth - inputWidth.value) / 2
+                    if (node && inputSize.value !== undefined) {
+                        node.position.x += (oldWidth - inputSize.value.width) / 2
                     }
                 })
             }
@@ -349,9 +354,11 @@ const executeToggleType = () => {
             updateNodeData(props.id, {type: 'markdown'})
             isMarkdownEdit.value = false
             isFocus.value = true
-            markdownContentSize.value = {
-                width: inputWidth.value,
-                height: inputHeight.value,
+            if (inputSize.value !== undefined) {
+                markdownContentSize.value = {
+                    width: inputSize.value.width,
+                    height: inputSize.value.height,
+                }
             }
             break
     }
@@ -380,7 +387,7 @@ const executeDelete = () => {
         >
             <div
                 v-if="dataTypeOrDefault === 'text'"
-                :style="{width: `${inputWidth}px`, height: `${inputHeight}px`}"
+                :style="inputWrapperStyle"
                 @click.capture="handleNodeFocus"
             >
                 <FitSizeBlockInput
