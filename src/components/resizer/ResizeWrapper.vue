@@ -124,6 +124,32 @@ const handleResizing = (position: { clientX: number, clientY: number }) => {
             break
     }
 
+    const currentSizeDiff = {
+        x: size.value.width - previousWidth,
+        y: size.value.height - previousHeight,
+    }
+
+    const totalPositionDiff = {x: 0, y: 0}
+    const currentPositionDiff = {x: 0, y: 0}
+
+    switch (resizeDirection.value) {
+        case "top":
+        case "top-left":
+        case "top-right":
+            totalPositionDiff.y = dy
+            currentPositionDiff.y = -currentSizeDiff.y
+            break
+    }
+
+    switch (resizeDirection.value) {
+        case "left":
+        case "top-left":
+        case "bottom-left":
+            totalPositionDiff.x = dx
+            currentPositionDiff.x = -currentSizeDiff.x
+            break
+    }
+
     emits('resize', {
         origin: resizeOrigin.value,
         direction: resizeDirection.value,
@@ -131,14 +157,13 @@ const handleResizing = (position: { clientX: number, clientY: number }) => {
             width: size.value.width,
             height: size.value.height,
         },
-        totalDiff: {
+        totalSizeDiff: {
             x: dx,
             y: dy,
         },
-        currentDiff: {
-            x: size.value.width - previousWidth,
-            y: size.value.height - previousHeight,
-        }
+        currentSizeDiff,
+        totalPositionDiff,
+        currentPositionDiff,
     })
 }
 
@@ -162,7 +187,7 @@ const stopResize = (position: { clientX: number, clientY: number }) => {
             width: size.value.width,
             height: size.value.height,
         },
-        diff: {
+        totalSizeDiff: {
             x: (position.clientX - resizeOrigin.value.clientX) / props.scale,
             y: (position.clientY - resizeOrigin.value.clientY) / props.scale,
         }

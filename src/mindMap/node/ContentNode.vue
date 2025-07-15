@@ -15,7 +15,7 @@ import {useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
 import MarkdownEditor from "@/components/markdown/editor/MarkdownEditor.vue";
 import MarkdownPreview from "@/components/markdown/preview/MarkdownPreview.vue";
 import ResizeWrapper from "@/components/resizer/ResizeWrapper.vue";
-import {ResizeEventArgs, ResizeStopEventArgs} from "@/components/resizer/ResizeWrapperType.ts";
+import {ResizeEventArgs} from "@/components/resizer/ResizeWrapperType.ts";
 import IconEdit from "@/components/icons/IconEdit.vue";
 import IconPreview from "@/components/icons/IconPreview.vue";
 import IconMarkdown from "@/components/icons/IconMarkdown.vue";
@@ -160,13 +160,12 @@ const markdownContentSize = ref<NodeSize>({
 
 onMounted(async () => {
     const node = _node.value
-    if (node) {
-        await nextTick()
-        if (node.dimensions.height !== 0 && node.dimensions.width !== 0) {
-            markdownContentSize.value = {
-                width: node.dimensions.width,
-                height: node.dimensions.height,
-            }
+    if (!node) return
+    await nextTick()
+    if (node.dimensions.height !== 0 && node.dimensions.width !== 0) {
+        markdownContentSize.value = {
+            width: node.dimensions.width,
+            height: node.dimensions.height,
         }
     }
 })
@@ -183,73 +182,57 @@ watch(() => _node.value?.dimensions.height, (height) => {
 })
 watch(() => markdownContentSize.value, (size) => {
     const node = _node.value
-    if (node) {
-        node.height = size.height
-        node.width = size.width
-    }
+    if (!node) return
+    node.height = size.height
+    node.width = size.width
 }, {deep: true})
 
-const handleMarkdownEditorResize = ({direction, currentDiff}: ResizeEventArgs) => {
+const handleMarkdownEditorResize = ({currentPositionDiff}: ResizeEventArgs) => {
     const node = _node.value
-    if (node) {
-        switch (direction) {
-            case "top":
-            case "top-left":
-            case "top-right":
-                node.position.y -= currentDiff.y
-                break
-        }
-        switch (direction) {
-            case "left":
-            case "top-left":
-            case "bottom-left":
-                node.position.x -= currentDiff.x
-                break
+    if (!node) return
+    node.position.x += currentPositionDiff.x
+    node.position.y += currentPositionDiff.y
+}
+
+type MarkdownEditorResizeStartSizePosition = {
+    size: {width: number, height: number},
+    position: {x: number, y: number},
+}
+
+let markdownResizeStartSizePosition: MarkdownEditorResizeStartSizePosition | undefined
+
+const handleMarkdownEditorResizeStart = () => {
+    const node = _node.value
+    if (!node) return
+    markdownResizeStartSizePosition = {
+        size: {
+            width: markdownContentSize.value.width,
+            height: markdownContentSize.value.height,
+        },
+        position: {
+            x: node.position.x,
+            y: node.position.y,
         }
     }
 }
 
-const handleMarkdownEditorResizeStop = ({origin, direction, diff}: ResizeStopEventArgs) => {
+const handleMarkdownEditorResizeStop = () => {
+    if (!markdownResizeStartSizePosition) return
     const node = _node.value
-    if (node) {
-        const oldPosition = {
+    if (!node) return
+
+    resizeNode(props.id, {
+        oldSize: markdownResizeStartSizePosition.size,
+        oldPosition: markdownResizeStartSizePosition.position,
+        newSize: {
+            width: markdownContentSize.value.width,
+            height: markdownContentSize.value.height,
+        },
+        newPosition: {
             x: node.position.x,
             y: node.position.y,
-        }
-
-        if (node) {
-            switch (direction) {
-                case "top":
-                case "top-left":
-                case "top-right":
-                    oldPosition.y -= diff.y
-                    break
-            }
-            switch (direction) {
-                case "left":
-                case "top-left":
-                case "bottom-left":
-                    oldPosition.x -= diff.x
-                    break
-            }
-        }
-
-        resizeNode(props.id, {
-            oldSize: {
-                width: origin.width,
-                height: origin.height,
-            },
-            newSize: {
-                width: markdownContentSize.value.width,
-                height: markdownContentSize.value.height,
-            },
-            oldPosition,
-            newPosition: {
-                x: node.position.x,
-                y: node.position.y,
-            },
-        })
-    }
+        },
+    })
 }
 
 // 节点行为
@@ -422,6 +405,7 @@ const executeDelete = () => {
                     :disabled="!isFocus"
                     :class="{noWheel: isResizing}"
                     @resize="handleMarkdownEditorResize"
+                    @resize-start="handleMarkdownEditorResizeStart"
                     @resize-stop="handleMarkdownEditorResizeStop"
                 >
                     <MarkdownEditor

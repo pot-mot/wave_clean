@@ -20,13 +20,15 @@ export type ResizeEventArgs = {
     origin: ResizeOrigin,
     direction: ResizeDirection,
     currentSize: { width: number, height: number },
-    totalDiff: { x: number, y: number },
-    currentDiff: { x: number, y: number }
+    totalSizeDiff: { x: number, y: number },
+    currentSizeDiff: { x: number, y: number },
+    totalPositionDiff: { x: number, y: number },
+    currentPositionDiff: { x: number, y: number }
 }
 
 export type ResizeStopEventArgs = {
     origin: ResizeOrigin,
     direction: ResizeDirection,
     currentSize: { width: number, height: number },
-    diff: { x: number, y: number }
+    totalSizeDiff: { x: number, y: number }
 }
