@@ -23,6 +23,8 @@ import IconMarkdownOff from "@/components/icons/IconMarkdownOff.vue";
 import {RawMindMapLayer} from "@/mindMap/layer/MindMapLayer.ts";
 import {
     ContentNode,
+    ContentNode_Markdown_initHeight,
+    ContentNode_Markdown_initWidth,
     ContentNodeData,
     ContentNodeHandles,
     ContentType,
@@ -79,7 +81,12 @@ const inputValue = computed<string>({
     }
 })
 
-const inputSize = ref<{ width: number, height: number }>()
+type NodeSize = {
+    width: number,
+    height: number
+}
+
+const inputSize = ref<NodeSize>()
 
 const inputWrapperStyle = computed(() => {
     return {
@@ -88,7 +95,7 @@ const inputWrapperStyle = computed(() => {
     }
 })
 
-const handleInputResize = (size: { width: number, height: number }) => {
+const handleInputResize = (size: NodeSize) => {
     const node = _node.value
     if (node && inputSize.value !== undefined) {
         // 保持 node 居中
@@ -146,18 +153,20 @@ const MarkdownEditorResizeRef = useTemplateRef<InstanceType<typeof ResizeWrapper
 
 const isResizing = computed(() => MarkdownEditorResizeRef.value?.isResizing ?? false)
 
-const markdownContentSize = ref({
-    height: 0,
-    width: 0,
+const markdownContentSize = ref<NodeSize>({
+    width: ContentNode_Markdown_initWidth,
+    height: ContentNode_Markdown_initHeight,
 })
 
 onMounted(async () => {
     const node = _node.value
     if (node) {
         await nextTick()
-        markdownContentSize.value = {
-            width: node.dimensions.width,
-            height: node.dimensions.height,
+        if (node.dimensions.height !== 0 && node.dimensions.width !== 0) {
+            markdownContentSize.value = {
+                width: node.dimensions.width,
+                height: node.dimensions.height,
+            }
         }
     }
 })

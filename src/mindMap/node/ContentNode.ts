@@ -11,6 +11,9 @@ export type ContentType = typeof ContentType_CONSTANTS[number]
 
 export const ContentType_DEFAULT = ContentType_CONSTANTS[0]
 
+export const ContentNode_Markdown_initWidth = 240
+export const ContentNode_Markdown_initHeight = 160
+
 // 内容节点数据
 export type ContentNodeData = {
     content: string,
