@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {readonly, ref} from 'vue'
+import {readonly, ref, watch} from 'vue'
 import {
     resizeBorderKeys,
     resizeHandleKeys,
@@ -21,12 +21,35 @@ const props = withDefaults(defineProps<{
     disabled?: boolean,
     handleSize?: string,
     borderWidth?: string,
+
+    minWidth?: number
+    maxWidth?: number
+    minHeight?: number
+    maxHeight?: number
 }>(), {
     scale: 1,
     disabled: false,
     handleSize: '8px',
     borderWidth: '2px',
 })
+
+watch(() => size.value.width, (newValue) => {
+    if (props.minWidth !== undefined) {
+        size.value.width = Math.max(newValue, props.minWidth)
+    }
+    if (props.maxWidth !== undefined) {
+        size.value.width = Math.min(newValue, props.maxWidth)
+    }
+}, {immediate: true})
+
+watch(() => size.value.height, (newValue) => {
+    if (props.minHeight !== undefined) {
+        size.value.height = Math.max(newValue, props.minHeight)
+    }
+    if (props.maxHeight !== undefined) {
+        size.value.height = Math.min(newValue, props.maxHeight)
+    }
+}, {immediate: true})
 
 const emits = defineEmits<{
     (event: "resize-start", args: ResizeStartEventArgs): void
@@ -85,50 +108,75 @@ const handleResizing = (position: { clientX: number, clientY: number }) => {
         return
     }
 
-    // 和初始对比的偏移量
+    // 偏移量
     const dx = (position.clientX - resizeOrigin.value.clientX) / props.scale
     const dy = (position.clientY - resizeOrigin.value.clientY) / props.scale
 
     const previousHeight = size.value.height
     const previousWidth = size.value.width
+    let currentHeight = previousHeight
+    let currentWidth = previousWidth
 
     switch (resizeDirection.value) {
         case 'top':
-            size.value.height = resizeOrigin.value.height - dy
+            currentHeight = resizeOrigin.value.height - dy
             break
         case 'left':
-            size.value.width = resizeOrigin.value.width - dx
+            currentWidth = resizeOrigin.value.width - dx
             break
         case 'right':
-            size.value.width = resizeOrigin.value.width + dx
+            currentWidth = resizeOrigin.value.width + dx
             break
         case 'bottom':
-            size.value.height = resizeOrigin.value.height + dy
+            currentHeight = resizeOrigin.value.height + dy
             break
 
         case 'top-left':
-            size.value.width = resizeOrigin.value.width - dx
-            size.value.height = resizeOrigin.value.height - dy
+            currentWidth = resizeOrigin.value.width - dx
+            currentHeight = resizeOrigin.value.height - dy
             break
         case 'top-right':
-            size.value.width = resizeOrigin.value.width + dx
-            size.value.height = resizeOrigin.value.height - dy
+            currentWidth = resizeOrigin.value.width + dx
+            currentHeight = resizeOrigin.value.height - dy
             break
         case 'bottom-left':
-            size.value.width = resizeOrigin.value.width - dx
-            size.value.height = resizeOrigin.value.height + dy
+            currentWidth = resizeOrigin.value.width - dx
+            currentHeight = resizeOrigin.value.height + dy
             break
         case 'bottom-right':
-            size.value.width = resizeOrigin.value.width + dx
-            size.value.height = resizeOrigin.value.height + dy
+            currentWidth = resizeOrigin.value.width + dx
+            currentHeight = resizeOrigin.value.height + dy
             break
+    }
+
+    // 预先计算范围
+    if (props.minWidth !== undefined) {
+        currentWidth = Math.max(currentWidth, props.minWidth)
+    }
+    if (props.maxWidth !== undefined) {
+        currentWidth = Math.min(currentWidth, props.maxWidth)
+    }
+    if (props.minHeight !== undefined) {
+        currentHeight = Math.max(currentHeight, props.minHeight)
+    }
+    if (props.maxHeight !== undefined) {
+        currentHeight = Math.min(currentHeight, props.maxHeight)
+    }
+
+    size.value.width = currentWidth
+    size.value.height = currentHeight
+
+    const totalSizeDiff ={
+        x: currentWidth - resizeOrigin.value.width,
+        y: currentHeight - resizeOrigin.value.height
     }
 
     const currentSizeDiff = {
-        x: size.value.width - previousWidth,
-        y: size.value.height - previousHeight,
+        x: currentWidth - previousWidth,
+        y: currentHeight - previousHeight,
     }
 
+    // 计算偏移量
     const totalPositionDiff = {x: 0, y: 0}
     const currentPositionDiff = {x: 0, y: 0}
 
@@ -136,7 +184,7 @@ const handleResizing = (position: { clientX: number, clientY: number }) => {
         case "top":
         case "top-left":
         case "top-right":
-            totalPositionDiff.y = dy
+            totalPositionDiff.y = -totalSizeDiff.y
             currentPositionDiff.y = -currentSizeDiff.y
             break
     }
@@ -145,7 +193,7 @@ const handleResizing = (position: { clientX: number, clientY: number }) => {
         case "left":
         case "top-left":
         case "bottom-left":
-            totalPositionDiff.x = dx
+            totalPositionDiff.x = -totalSizeDiff.x
             currentPositionDiff.x = -currentSizeDiff.x
             break
     }
@@ -154,13 +202,10 @@ const handleResizing = (position: { clientX: number, clientY: number }) => {
         origin: resizeOrigin.value,
         direction: resizeDirection.value,
         currentSize: {
-            width: size.value.width,
-            height: size.value.height,
+            width: currentWidth,
+            height: currentHeight,
         },
-        totalSizeDiff: {
-            x: dx,
-            y: dy,
-        },
+        totalSizeDiff,
         currentSizeDiff,
         totalPositionDiff,
         currentPositionDiff,

@@ -14,6 +14,9 @@ export const ContentType_DEFAULT = ContentType_CONSTANTS[0]
 export const ContentNode_Markdown_initWidth = 240
 export const ContentNode_Markdown_initHeight = 160
 
+export const ContentNode_Markdown_minWidth = 48
+export const ContentNode_Markdown_minHeight = 32
+
 // 内容节点数据
 export type ContentNodeData = {
     content: string,

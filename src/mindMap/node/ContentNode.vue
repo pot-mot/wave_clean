@@ -25,6 +25,8 @@ import {
     ContentNode,
     ContentNode_Markdown_initHeight,
     ContentNode_Markdown_initWidth,
+    ContentNode_Markdown_minHeight,
+    ContentNode_Markdown_minWidth,
     ContentNodeData,
     ContentNodeHandles,
     ContentType,
@@ -402,6 +404,8 @@ const executeDelete = () => {
                     ref="MarkdownEditorResizeRef"
                     v-model="markdownContentSize"
                     :scale="currentViewport.zoom"
+                    :min-width="ContentNode_Markdown_minWidth"
+                    :min-height="ContentNode_Markdown_minHeight"
                     :disabled="!isFocus"
                     :class="{noWheel: isResizing}"
                     @resize="handleMarkdownEditorResize"
