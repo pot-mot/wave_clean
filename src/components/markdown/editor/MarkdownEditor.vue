@@ -3,11 +3,29 @@ import {Theme} from "@tauri-apps/api/window";
 import {computed, onBeforeUnmount, onMounted, useTemplateRef, watch} from "vue";
 import {v7 as uuid} from "uuid"
 import {sendMessage} from "@/components/message/sendMessage.ts";
-import {editor} from "monaco-editor/esm/vs/editor/editor.api.js";
-import "monaco-editor/esm/vs/editor/common/editorTheme.js"
 import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
 import {MarkdownEditorElement} from "@/components/markdown/editor/MarkdownEditorElement.ts";
-import {initMonacoMarkdownEvent} from "@/components/markdown/editor/markdownCompletion.ts";
+import {initMonacoMarkdownCompletion} from "@/components/markdown/editor/markdownCompletion.ts";
+
+import {editor} from "monaco-editor/esm/vs/editor/editor.api.js";
+// 导入小图标
+import "monaco-editor/esm/vs/base/browser/ui/codicons/codiconStyles.js";
+// 导入主题
+import "monaco-editor/esm/vs/editor/common/editorTheme.js"
+// 导入右键菜单
+import "monaco-editor/esm/vs/editor/contrib/contextmenu/browser/contextmenu.js"
+// 导入搜索
+import "monaco-editor/esm/vs/editor/contrib/find/browser/findController.js";
+// 导入代码折叠
+import "monaco-editor/esm/vs/editor/contrib/folding/browser/folding.js"
+// 导入注释
+import "monaco-editor/esm/vs/editor/contrib/comment/browser/comment.js";
+// 导入多光标
+import "monaco-editor/esm/vs/editor/contrib/multicursor/browser/multicursor.js";
+// 代码提示控件
+import "monaco-editor/esm/vs/editor/contrib/suggest/browser/suggestController.js";
+// token解析
+import "monaco-editor/esm/vs/editor/contrib/tokenization/browser/tokenization.js";
 
 const id = `markdown-editor-${uuid()}`
 
@@ -69,9 +87,14 @@ onMounted(async () => {
         overviewRulerBorder: false, // 不要滚动条的边框
         dragAndDrop: false,
         automaticLayout: true,
+
+        autoClosingBrackets: 'languageDefined', // 是否自动添加结束括号(包括中括号) "always" | "languageDefined" | "beforeWhitespace" | "never"
+        autoClosingDelete: 'never', // 是否自动删除结束括号(包括中括号) "always" | "never" | "auto"
+        autoClosingQuotes: 'languageDefined', // 是否自动添加结束的单引号 双引号 "always" | "languageDefined" | "beforeWhitespace" | "never"
+        autoSurround: "languageDefined",
     })
 
-    initMonacoMarkdownEvent(editorInstance)
+    initMonacoMarkdownCompletion(editorInstance)
 
     editorInstance.onDidChangeModelContent(() => {
         modelValue.value = editorInstance.getValue()
