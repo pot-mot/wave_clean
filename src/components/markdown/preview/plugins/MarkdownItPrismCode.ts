@@ -131,7 +131,7 @@ const renderCodeBlock = (text: string, language: string = ''): string => {
 export const MarkdownItPrismCode = (md: MarkdownIt) => {
     md.renderer.rules.fence = (tokens, idx) => {
         const token = tokens[idx]
-        const language = token.info.trim()
+        const language = token.info.toLowerCase().trim()
         return renderCodeBlock(token.content, language)
     }
 

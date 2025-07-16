@@ -210,12 +210,11 @@
 }
 
 .markdown-preview p {
-    margin-top: 0.5em;
     margin-bottom: 0.5em;
 }
 
 .markdown-preview p + p {
-    margin-top: 1em;
+    margin-top: 0.5em;
 }
 
 .markdown-preview li > p {
