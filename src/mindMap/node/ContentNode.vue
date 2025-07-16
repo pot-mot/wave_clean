@@ -419,6 +419,7 @@ const executeDelete = () => {
                         v-model="markdownEditorValue"
                         :theme="meta.currentTheme"
                         @blur="handleMarkdownEditorBlur"
+                        @click.capture.stop
                     />
                     <MarkdownPreview
                         v-else
