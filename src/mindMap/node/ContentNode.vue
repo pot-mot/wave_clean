@@ -150,6 +150,13 @@ const executeToggleMarkdownEdit = async () => {
     }
 }
 
+// 阻止编辑时切换选中
+const stopCtrlClickWhenMarkdownEdit = (e: MouseEvent) => {
+    if (isMarkdownEdit.value && e.ctrlKey) {
+        e.stopPropagation()
+    }
+}
+
 // markdown 编辑器尺寸
 const MarkdownEditorResizeRef = useTemplateRef<InstanceType<typeof ResizeWrapper>>("MarkdownEditorResizeRef")
 
@@ -419,7 +426,7 @@ const executeDelete = () => {
                         v-model="markdownEditorValue"
                         :theme="meta.currentTheme"
                         @blur="handleMarkdownEditorBlur"
-                        @click.capture.stop
+                        @click.capture="stopCtrlClickWhenMarkdownEdit"
                     />
                     <MarkdownPreview
                         v-else
