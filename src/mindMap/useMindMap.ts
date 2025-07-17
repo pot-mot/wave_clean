@@ -1087,6 +1087,9 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
             focus()
         },
 
+        executeBatch: history.executeBatch,
+        executeAsyncBatch: history.executeAsyncBatch,
+
         getSelection,
         removeSelection,
         remove,
@@ -1129,9 +1132,9 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         updateNodeData: (id: string, data: Partial<ContentNodeData>, layerId: string = currentLayerId.value) => {
             history.executeCommand('node:data:change', {layerId, id, data})
         },
-        resizeNode: (
+        recordNodeResize: (
             id: string,
-            options: {
+            args: {
                 newSize: { width: number, height: number },
                 oldSize: { width: number, height: number },
                 newPosition: XYPosition,
@@ -1139,7 +1142,8 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
             },
             layerId: string = currentLayerId.value
         ) => {
-            history.executeCommand('node:resize', {layerId, id, ...options})
+            const options = {layerId, id, ...args}
+            history.pushCommand('node:resize', options, options)
         },
 
         addEdge,

@@ -351,6 +351,8 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
 
             node.width = newSize.width
             node.height = newSize.height
+            node.dimensions.width = newSize.width
+            node.dimensions.height = newSize.height
             node.position.x = newPosition.x
             node.position.y = newPosition.y
 
@@ -362,6 +364,8 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
 
             node.width = oldSize.width
             node.height = oldSize.height
+            node.dimensions.width = oldSize.width
+            node.dimensions.height = oldSize.height
             node.position.x = oldPosition.x
             node.position.y = oldPosition.y
         }

@@ -43,12 +43,13 @@ const {
     canMultiSelect,
     findNode,
     selectNode,
-    resizeNode,
+    recordNodeResize,
     copy,
     paste,
     fitRect,
     remove,
     currentViewport,
+    executeAsyncBatch,
 } = useMindMap()
 
 const props = defineProps<NodeProps<ContentNodeData> & {
@@ -99,11 +100,15 @@ const inputWrapperStyle = computed(() => {
 
 const handleInputResize = (size: NodeSize) => {
     const node = _node.value
-    if (node && inputSize.value !== undefined) {
-        // 保持 node 居中
-        node.position.x = node.position.x - (size.width - inputSize.value.width) / 2
+    if (node) {
+        if (inputSize.value !== undefined) {
+            // 保持 node 居中
+            node.position.x = node.position.x - (size.width - inputSize.value.width) / 2
+        }
         node.width = size.width
         node.height = size.height
+        node.dimensions.width = size.width
+        node.dimensions.height = size.height
     }
     inputSize.value = size
 }
@@ -126,7 +131,7 @@ watch(() => props.data.content, (value) => {
     if (value !== markdownEditorValue.value) {
         markdownEditorValue.value = value
     }
-})
+}, {immediate: true})
 
 const handleMarkdownEditorBlur = () => {
     if (markdownEditorValue.value !== props.data.content) {
@@ -180,12 +185,12 @@ onMounted(async () => {
 })
 
 watch(() => _node.value?.dimensions.width, (width) => {
-    if (width !== undefined && markdownContentSize.value.width !== width) {
+    if (dataTypeOrDefault.value === 'markdown' && width !== undefined && markdownContentSize.value.width !== width) {
         markdownContentSize.value.width = width
     }
 })
 watch(() => _node.value?.dimensions.height, (height) => {
-    if (height !== undefined && markdownContentSize.value.height !== height) {
+    if (dataTypeOrDefault.value === 'markdown' && height !== undefined && markdownContentSize.value.height !== height) {
         markdownContentSize.value.height = height
     }
 })
@@ -194,6 +199,8 @@ watch(() => markdownContentSize.value, (size) => {
     if (!node) return
     node.height = size.height
     node.width = size.width
+    node.dimensions.height = size.height
+    node.dimensions.width = size.width
 }, {deep: true})
 
 const handleMarkdownEditorResize = ({currentPositionDiff}: ResizeEventArgs) => {
@@ -204,8 +211,8 @@ const handleMarkdownEditorResize = ({currentPositionDiff}: ResizeEventArgs) => {
 }
 
 type MarkdownEditorResizeStartSizePosition = {
-    size: {width: number, height: number},
-    position: {x: number, y: number},
+    size: { width: number, height: number },
+    position: { x: number, y: number },
 }
 
 let markdownResizeStartSizePosition: MarkdownEditorResizeStartSizePosition | undefined
@@ -230,7 +237,7 @@ const handleMarkdownEditorResizeStop = () => {
     const node = _node.value
     if (!node) return
 
-    resizeNode(props.id, {
+    recordNodeResize(props.id, {
         oldSize: markdownResizeStartSizePosition.size,
         oldPosition: markdownResizeStartSizePosition.position,
         newSize: {
@@ -332,43 +339,65 @@ const executeFocus = () => {
 }
 
 // 切换内容类型
-const executeToggleType = () => {
+const executeToggleType = async () => {
     const node = _node.value
     if (!node) return
 
-    // 保持 node 居中且顶部高度不变需要记录 oldWidth
-    const oldWidth = node.dimensions.width
-
     blurActiveElement()
-    switch (dataTypeOrDefault.value) {
-        case 'markdown':
-            updateNodeData(props.id, {type: 'text', content: markdownEditorValue.value})
-            isMarkdownEdit.value = false
-            nextTick(() => {
-                const node = _node.value
-                if (node && inputSize.value !== undefined) {
+
+    await executeAsyncBatch(Symbol("ContentNode toggle type"), async () => {
+        const oldWidth = node.dimensions.width
+        const oldHeight = node.dimensions.height
+        const oldX = node.position.x
+        const oldY = node.position.y
+
+        switch (dataTypeOrDefault.value) {
+            case 'markdown':
+                updateNodeData(props.id, {type: 'text', content: markdownEditorValue.value})
+
+                // 等待 text 使得 input 出现
+                await nextTick()
+                // 等待 input 尺寸计算
+                await nextTick()
+
+                if (inputSize.value !== undefined) {
                     node.position.x += (oldWidth - inputSize.value.width) / 2
                 }
-            })
-            break
-        case 'text':
-            updateNodeData(props.id, {type: 'markdown'})
-            isMarkdownEdit.value = false
-            isFocus.value = true
-            if (inputSize.value !== undefined) {
-                markdownContentSize.value = {
-                    width: inputSize.value.width,
-                    height: inputSize.value.height,
+                break
+            case 'text':
+                updateNodeData(props.id, {type: 'markdown'})
+                if (inputSize.value !== undefined) {
+                    markdownContentSize.value = {
+                        width: inputSize.value.width,
+                        height: inputSize.value.height,
+                    }
                 }
-            }
-            nextTick(() => {
-                const node = _node.value
-                if (node) {
-                    node.position.x += (oldWidth - markdownContentSize.value.width) / 2
-                }
-            })
-            break
-    }
+                await nextTick()
+                isFocus.value = true
+                node.position.x += (oldWidth - markdownContentSize.value.width) / 2
+                break
+        }
+
+        // 记录节点尺寸变化以便重做时恢复至当前尺寸
+        recordNodeResize(props.id, {
+            oldSize: {
+                width: oldWidth,
+                height: oldHeight,
+            },
+            oldPosition: {
+                x: oldX,
+                y: oldY,
+            },
+            newSize: {
+                width: node.dimensions.width,
+                height: node.dimensions.height,
+            },
+            newPosition: {
+                x: node.position.x,
+                y: node.position.y,
+            },
+        })
+    })
 }
 
 // 删除
