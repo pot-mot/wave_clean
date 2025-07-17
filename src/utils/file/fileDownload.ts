@@ -57,6 +57,8 @@ export const ensureFileSuffix = (
         : currentFileName + "." + suffix
 }
 
+const TEXT_PREFIX = 'data:text/plain;charset=utf-8,'
+
 export const downloadTextFile = async (
     text: string,
     options: {
@@ -74,12 +76,14 @@ export const downloadTextFile = async (
             return await downloadFileUsingTauriFile(data, filename)
         },
         () => {
-            const dataUrl = `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`;
+            const dataUrl = `${TEXT_PREFIX}${encodeURIComponent(text)}`;
             downloadFileUsingAnchor(dataUrl, filename)
             return "download path"
         }
     )
 }
+
+const IMAGE_BASE64_PREFIX = /^data:image\/\w+;base64,/
 
 export const downloadImageFile = async (
     dataUrl: string,
@@ -91,7 +95,7 @@ export const downloadImageFile = async (
     let {filename} = options
     filename = ensureFileSuffix(filename, options.fileType)
 
-    const base64Data = dataUrl.replace(/^data:image\/\w+;base64,/, '')
+    const base64Data = dataUrl.replace(IMAGE_BASE64_PREFIX, '')
     const binaryString = atob(base64Data)
     const arrayBuffer = new Uint8Array(binaryString.length)
     for (let i = 0; i < binaryString.length; i++) {
@@ -110,7 +114,7 @@ export const downloadImageFile = async (
     )
 }
 
-const svgPrefix = 'data:image/svg+xml;charset=utf-8,';
+const SVG_PREFIX = 'data:image/svg+xml;charset=utf-8,'
 
 export const downloadSvgFile = async (
     dataUrl: string,
@@ -121,7 +125,7 @@ export const downloadSvgFile = async (
     let {filename} = options
     filename = ensureFileSuffix(filename, "svg")
 
-    const encodedSvgContent = dataUrl.slice(svgPrefix.length);
+    const encodedSvgContent = dataUrl.slice(SVG_PREFIX.length);
     const decodedSvgContent = decodeURIComponent(encodedSvgContent);
 
     const data = encoder.encode(decodedSvgContent);
