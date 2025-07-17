@@ -6,6 +6,7 @@ import {sendMessage} from "@/components/message/sendMessage.ts";
 import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
 import {MarkdownEditorElement} from "@/components/markdown/editor/MarkdownEditorElement.ts";
 import {initMonacoMarkdownCompletion} from "@/components/markdown/editor/markdownCompletion.ts";
+import {initMarkdownImageImportEvent} from "@/components/markdown/editor/markdownImageImport.ts";
 
 import {editor} from "monaco-editor/esm/vs/editor/editor.api.js";
 // 导入小图标
@@ -95,6 +96,8 @@ onMounted(async () => {
     })
 
     initMonacoMarkdownCompletion(editorInstance)
+
+    initMarkdownImageImportEvent(editorInstance)
 
     editorInstance.onDidChangeModelContent(() => {
         modelValue.value = editorInstance.getValue()
