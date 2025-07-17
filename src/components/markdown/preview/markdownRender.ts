@@ -1,4 +1,4 @@
-import MarkdownIt from "markdown-it";
+import MarkdownIt, {Options} from "markdown-it";
 //@ts-ignore
 import MarkdownItSub from 'markdown-it-sub';
 //@ts-ignore
@@ -16,10 +16,14 @@ import {MarkdownItKatex, cleanKatexCache} from "@/components/markdown/preview/pl
 import {cleanMermaidCache} from "@/components/markdown/preview/plugins/MarkdownItMermaid.ts";
 import {MarkdownItPrismCode, cleanPrismCache} from "@/components/markdown/preview/plugins/MarkdownItPrismCode.ts";
 
-export const md = new MarkdownIt({
+const markdownDefaultOptions: Options = {
     html: true,
-    linkify: true
-})
+    xhtmlOut: true,
+    breaks: true,
+    linkify: true,
+}
+
+export const md = new MarkdownIt(markdownDefaultOptions)
 
 md
     .use(MarkdownItLink)
