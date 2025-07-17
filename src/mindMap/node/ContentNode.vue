@@ -333,23 +333,23 @@ const executeFocus = () => {
 
 // 切换内容类型
 const executeToggleType = () => {
+    const node = _node.value
+    if (!node) return
+
+    // 保持 node 居中且顶部高度不变需要记录 oldWidth
+    const oldWidth = node.dimensions.width
+
     blurActiveElement()
     switch (dataTypeOrDefault.value) {
         case 'markdown':
             updateNodeData(props.id, {type: 'text', content: markdownEditorValue.value})
             isMarkdownEdit.value = false
-
-            // 保持 node 居中且顶部高度不变
-            const node = _node.value
-            if (node) {
-                const oldWidth = node.dimensions.width
-                nextTick(() => {
-                    const node = _node.value
-                    if (node && inputSize.value !== undefined) {
-                        node.position.x += (oldWidth - inputSize.value.width) / 2
-                    }
-                })
-            }
+            nextTick(() => {
+                const node = _node.value
+                if (node && inputSize.value !== undefined) {
+                    node.position.x += (oldWidth - inputSize.value.width) / 2
+                }
+            })
             break
         case 'text':
             updateNodeData(props.id, {type: 'markdown'})
@@ -361,6 +361,12 @@ const executeToggleType = () => {
                     height: inputSize.value.height,
                 }
             }
+            nextTick(() => {
+                const node = _node.value
+                if (node) {
+                    node.position.x += (oldWidth - markdownContentSize.value.width) / 2
+                }
+            })
             break
     }
 }
