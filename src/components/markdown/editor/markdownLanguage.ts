@@ -258,8 +258,10 @@ const markdownConfig: LanguageConfiguration = {
     ],
     onEnterRules: [],
     folding: {
+        markers: {start: /<!--/, end: /-->/}
     },
     comments: {
+        blockComment: ['<!--', '-->']
     },
 }
 
