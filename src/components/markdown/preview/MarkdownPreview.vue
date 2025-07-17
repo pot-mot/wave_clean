@@ -28,7 +28,7 @@ onMounted(() => {
     render()
 })
 
-watch(() => themeStore.theme.value, async () => {
+watch(() => [props.value, themeStore.theme.value], async () => {
     await nextTick()
     render()
 })
