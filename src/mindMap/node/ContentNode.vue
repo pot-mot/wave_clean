@@ -432,8 +432,8 @@ const executeDelete = () => {
                         v-else
                         ref="markdownPreviewRef"
                         class="fit-parent"
-                        :class="{untouchable: !isFocus, noDrag: isFocus, noWheel: isFocus && isMarkdownPreviewOverflow}"
-                        :style="{borderColor, overflow: isFocus ? 'auto' : 'hidden', scrollbarGutter: isFocus ? 'auto' : 'unset'}"
+                        :class="{untouchable: !isFocus, noDrag: isFocus, noWheel: isFocus && isMarkdownPreviewOverflow, 'hide-scroll': !isFocus}"
+                        :style="{borderColor, scrollbarGutter: isFocus ? 'auto' : 'unset'}"
                         :value="data.content"
                     />
                 </ResizeWrapper>
@@ -523,5 +523,9 @@ const executeDelete = () => {
 
 .toolbar > button:hover {
     background-color: var(--background-color-hover);
+}
+
+.hide-scroll::-webkit-scrollbar-thumb {
+    background-color: transparent;
 }
 </style>
