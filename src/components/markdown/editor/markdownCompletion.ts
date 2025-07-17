@@ -25,8 +25,9 @@ type onEnterAction = {
     cursorPositionOffset?: (options: onEnterCursorPositonOptions) => {lineOffset: number; columnOffset: number}
 }
 
+const indentRegex = /^\s*/
 const getIndent = (line: string): string => {
-    const indentMatch = line.match(/^\s*/)
+    const indentMatch = line.match(indentRegex)
     return indentMatch ? indentMatch[0] : ''
 }
 

@@ -1,7 +1,9 @@
 // import "monaco-editor/esm/vs/basic-languages/markdown/markdown.js";
 import {languages} from "monaco-editor/esm/vs/editor/editor.api.js";
-import IMonarchLanguage = languages.IMonarchLanguage;
+import IMonarchLanguage = languages.IMonarchLanguage
 import LanguageConfiguration = languages.LanguageConfiguration
+import FoldingRangeProvider = languages.FoldingRangeProvider
+import FoldingRange = languages.FoldingRange
 
 const markdownLanguage: IMonarchLanguage = {
     defaultToken: "",
@@ -53,6 +55,8 @@ const markdownLanguage: IMonarchLanguage = {
             ],
             // github style code blocks (with backticks but no language)
             [/^\s*```\s*$/, {token: "string", next: "@codeblock"}],
+            // katex block
+            [/^\s*\$\$.*$/, {token: "string", next: "@katexblock"}],
             // markup within lines
             {include: "@linecontent"}
         ],
@@ -93,6 +97,10 @@ const markdownLanguage: IMonarchLanguage = {
             [/```\s*$/, {token: "string", next: "@pop", nextEmbedded: "@pop"}],
             [/[^`]+/, "variable.source"]
         ],
+        katexblock: [
+            [/^\s*\$\$.*$/, {token: "string", next: "@pop"}],
+            [/[^\$]+/, "variable.source"]
+        ],
         linecontent: [
             // escapes
             [/&\w+;/, "string.escape"],
@@ -102,7 +110,10 @@ const markdownLanguage: IMonarchLanguage = {
             [/\*\*([^\\*]|@escapes|\*(?!\*))+\*\*/, "strong"],
             [/\b_[^_]+_\b/, "emphasis"],
             [/\*([^\\*]|@escapes)+\*/, "emphasis"],
+            // inline code
             [/`([^\\`]|@escapes)+`/, "variable"],
+            // inline katex
+            [/\$([^\\`]|@escapes)+\$/, "variable"],
             // links
             [/\{+[^}]+\}+/, "string.target"],
             [/(!?\[)((?:[^\]\\]|@escapes)*)(\]\([^\)]+\))/, ["string.link", "", "string.link"]],
@@ -257,12 +268,80 @@ const markdownConfig: LanguageConfiguration = {
         {open: '$', close: '$'},
     ],
     onEnterRules: [],
-    folding: {
-        markers: {start: /<!--/, end: /-->/}
-    },
+    folding: {},
     comments: {
         blockComment: ['<!--', '-->']
     },
+}
+
+type FoldingBlock = {
+    // 起始行匹配正则
+    startReg: RegExp
+    // 生成结束正则（可基于起始行内容）
+    getEndReg: (line: string, match: RegExpMatchArray) => RegExp | undefined
+}
+
+function getFoldingBlockEnd(
+    foldingBlock: FoldingBlock,
+    lines: string[],
+    i: number,
+): number | undefined {
+    const line = lines[i]
+
+    const match = line.match(foldingBlock.startReg);
+    if (!match) return
+
+    const endReg = foldingBlock.getEndReg(line, match)
+    if (!endReg) return
+
+    for (let j = i + 1; j < lines.length; j++) {
+        const nextLine = lines[j]
+        if (endReg.test(nextLine)) {
+            return j
+        }
+    }
+}
+
+const markdownFoldingBlocks: FoldingBlock[] = [
+    {
+        startReg: /^(\s*)(```|~~~)/,
+        getEndReg: (_line, match) => {
+            const indent = match[1]
+            const delimiter = match[2]
+            return new RegExp(`^${indent}${delimiter}`);
+        }
+    },
+    {
+        startReg: /^(\s*)\$\$/,
+        getEndReg: (_line, match) => {
+            const indent = match[1]
+            return new RegExp(`^${indent}\\$\\$`);
+        }
+    },
+    {
+        startReg: /^(\s*)<!--/,
+        getEndReg: () => /-->$/,
+    }
+]
+
+const markdownFoldingRangeProvider: FoldingRangeProvider = {
+    provideFoldingRanges: (model) => {
+        const ranges: FoldingRange[] = []
+        const lines = model.getLinesContent()
+
+        for (let i = 0; i < lines.length; i++) {
+            for (const block of markdownFoldingBlocks) {
+                const result = getFoldingBlockEnd(block, lines, i)
+                if (result !== undefined) {
+                    ranges.push({start: i + 1, end: result + 1})
+                    i = result
+                    break
+                }
+            }
+        }
+
+        return ranges
+    }
 }
 
 export const initMonacoMarkdownLanguage = () => {
@@ -271,4 +350,6 @@ export const initMonacoMarkdownLanguage = () => {
     languages.setMonarchTokensProvider('markdown', markdownLanguage)
 
     languages.setLanguageConfiguration('markdown', markdownConfig)
+
+    languages.registerFoldingRangeProvider('markdown', markdownFoldingRangeProvider)
 }
