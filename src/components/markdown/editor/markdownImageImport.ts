@@ -42,7 +42,7 @@ export const useMarkdownImageImport = () => {
 
         // https://blog.csdn.net/qq_40147756/article/details/142148551
         const files = e.clipboardData?.files
-        if (!files) return
+        if (!files || files.length === 0 || files.length !== e.clipboardData?.items.length) return
 
         e.preventDefault()
         e.stopPropagation()
@@ -58,7 +58,7 @@ export const useMarkdownImageImport = () => {
         const editor = editorElement.editor
 
         const files = e.dataTransfer?.files
-        if (!files) return
+        if (!files || files.length === 0 || files.length !== e.dataTransfer?.items.length) return
 
         e.preventDefault()
         e.stopPropagation()
