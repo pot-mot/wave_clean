@@ -5,6 +5,8 @@ import LanguageConfiguration = languages.LanguageConfiguration
 import FoldingRangeProvider = languages.FoldingRangeProvider
 import FoldingRange = languages.FoldingRange
 
+import {markdownCompletionProvider} from "@/components/markdown/editor/markdownCompletion.ts";
+
 const markdownLanguage: IMonarchLanguage = {
     defaultToken: "",
     tokenPostfix: ".md",
@@ -337,12 +339,16 @@ const markdownFoldingBlocks: FoldingBlock[] = [
     }
 ]
 
+const imageDataUrlReg = /^(\s*)data:image\/.*;base64,/
+
 const markdownFoldingRangeProvider: FoldingRangeProvider = {
     provideFoldingRanges: (model) => {
         const ranges: FoldingRange[] = []
         const lines = model.getLinesContent()
 
         for (let i = 0; i < lines.length; i++) {
+            if (imageDataUrlReg.test(lines[i])) continue
+
             for (const block of markdownFoldingBlocks) {
                 const result = getFoldingBlockEnd(block, lines, i)
                 if (result !== undefined) {
@@ -365,4 +371,6 @@ export const initMonacoMarkdownLanguage = () => {
     languages.setLanguageConfiguration('markdown', markdownConfig)
 
     languages.registerFoldingRangeProvider('markdown', markdownFoldingRangeProvider)
+
+    languages.registerCompletionItemProvider('markdown', markdownCompletionProvider)
 }
