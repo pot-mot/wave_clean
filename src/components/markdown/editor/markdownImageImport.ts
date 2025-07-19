@@ -1,23 +1,76 @@
-import {editor} from "monaco-editor/esm/vs/editor/editor.api.js";
-import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
-import {readClipBoardImageBlob} from "@/utils/clipBoard/useClipBoard.ts";
+import {editor, Range} from "monaco-editor/esm/vs/editor/editor.api.js";
 import {blobToDataURL} from "@/utils/image/blobToDataUrl.ts";
+import {onBeforeUnmount, onMounted} from "vue";
+import {
+    getParentMarkdownEditorElement
+} from "@/components/markdown/editor/MarkdownEditorElement.ts";
+import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
 
-export const initMarkdownImageImportEvent = (editor: IStandaloneCodeEditor) => {
-    editor.onDidPaste(async (e) => {
-        try {
-            const blob = await readClipBoardImageBlob()
-            if (!blob) return
+const insertImage = async (editor: IStandaloneCodeEditor, blobs: Blob[] | FileList | never) => {
+    for (const blob of blobs) {
+        if (!blob.type.startsWith("image/")) continue
 
-            const dataUrl = await blobToDataURL(blob)
-            const valueInRange = editor.getModel()?.getValueInRange(e.range)
-            editor.executeEdits('imagePaste', [
-                {
-                    range: e.range,
-                    text: `![${valueInRange}](${dataUrl})`,
-                    forceMoveMarkers: true
-                }
-            ])
-        } catch {}
+        const selection = editor.getSelection()
+        if (!selection) return;
+
+        const range = new Range(
+            selection.startLineNumber,
+            selection.startColumn,
+            selection.endLineNumber,
+            selection.endColumn
+        )
+
+        const dataUrl = await blobToDataURL(blob)
+        const valueInRange = editor.getModel()?.getValueInRange(range) ?? ""
+        editor.executeEdits('image import', [
+            {
+                range: range,
+                text: `![${valueInRange}](${dataUrl})`,
+                forceMoveMarkers: true
+            }
+        ])
+    }
+}
+
+export const useMarkdownImageImport = () => {
+    const onPaste = async (e: ClipboardEvent) => {
+        const editorElement = getParentMarkdownEditorElement(e.target)
+
+        if (!editorElement) return
+        if (!editorElement.editor) return
+
+        const editor = editorElement.editor
+
+        // https://blog.csdn.net/qq_40147756/article/details/142148551
+        const files = e.clipboardData?.files
+        if (!files) return
+
+        e.preventDefault()
+        await insertImage(editor, files)
+    }
+
+    const onDrop = async (e: DragEvent) => {
+        const editorElement = getParentMarkdownEditorElement(e.target)
+
+        if (!editorElement) return
+        if (!editorElement.editor) return
+
+        const editor = editorElement.editor
+
+        const files = e.dataTransfer?.files
+        if (!files) return
+
+        e.preventDefault()
+        await insertImage(editor, files)
+    }
+
+    onMounted(() => {
+        window.addEventListener('paste', onPaste)
+        window.addEventListener('drop', onDrop)
+    })
+
+    onBeforeUnmount(() => {
+        window.removeEventListener('paste', onPaste)
+        window.removeEventListener('drop', onDrop)
     })
 }
