@@ -112,6 +112,8 @@ const markdownLanguage: IMonarchLanguage = {
             [/\*\*([^\\*]|@escapes|\*(?!\*))+\*\*/, "strong"],
             [/\b_[^_]+_\b/, "emphasis"],
             [/\*([^\\*]|@escapes)+\*/, "emphasis"],
+            // highlight mark
+            [/==([^\\_]|@escapes|_(?!_))+==/, "strong"],
             // inline code
             [/`([^\\`]|@escapes)+`/, "variable"],
             // inline katex
