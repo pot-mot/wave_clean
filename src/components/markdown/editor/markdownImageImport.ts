@@ -6,9 +6,9 @@ import {
 } from "@/components/markdown/editor/MarkdownEditorElement.ts";
 import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
 
-const insertImage = async (editor: IStandaloneCodeEditor, blobs: Blob[] | FileList | never) => {
-    for (const blob of blobs) {
-        if (!blob.type.startsWith("image/")) continue
+const insertImage = async (editor: IStandaloneCodeEditor, files: FileList | never) => {
+    for (const file of files) {
+        if (!file.type.startsWith("image/")) continue
 
         const selection = editor.getSelection()
         if (!selection) return;
@@ -20,12 +20,11 @@ const insertImage = async (editor: IStandaloneCodeEditor, blobs: Blob[] | FileLi
             selection.endColumn
         )
 
-        const dataUrl = await blobToDataURL(blob)
-        const valueInRange = editor.getModel()?.getValueInRange(range) ?? ""
+        const dataUrl = await blobToDataURL(file)
         editor.executeEdits('image import', [
             {
                 range: range,
-                text: `![${valueInRange}](\n${dataUrl}\n)\n`,
+                text: `![${file.name}](\n${dataUrl}\n)\n`,
                 forceMoveMarkers: true
             }
         ])
