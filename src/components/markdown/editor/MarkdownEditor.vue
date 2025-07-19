@@ -88,9 +88,7 @@ onMounted(async () => {
         dragAndDrop: false,
         automaticLayout: true,
         dropIntoEditor: {enabled: true},
-        suggest: {
-            localityBonus: false,
-        },
+        wordBasedSuggestions: "off",
 
         autoClosingBrackets: 'languageDefined', // 是否自动添加结束括号(包括中括号) "always" | "languageDefined" | "beforeWhitespace" | "never"
         autoClosingDelete: 'never', // 是否自动删除结束括号(包括中括号) "always" | "never" | "auto"
