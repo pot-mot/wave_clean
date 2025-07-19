@@ -25,7 +25,7 @@ const insertImage = async (editor: IStandaloneCodeEditor, blobs: Blob[] | FileLi
         editor.executeEdits('image import', [
             {
                 range: range,
-                text: `![${valueInRange}](${dataUrl})`,
+                text: `![${valueInRange}](\n${dataUrl}\n)\n`,
                 forceMoveMarkers: true
             }
         ])

@@ -276,28 +276,34 @@ const markdownConfig: LanguageConfiguration = {
 
 type FoldingBlock = {
     // 起始行匹配正则
-    startReg: RegExp
+    startReg: RegExp | ((line: string) => RegExp | undefined)
     // 生成结束正则（可基于起始行内容）
-    getEndReg: (line: string, match: RegExpMatchArray) => RegExp | undefined
+    endReg: RegExp | ((line: string, match: RegExpMatchArray) => RegExp | undefined)
 }
 
-function getFoldingBlockEnd(
+const getFoldingBlockEnd = (
     foldingBlock: FoldingBlock,
     lines: string[],
     i: number,
-): number | undefined {
-    const line = lines[i]
+): number | undefined => {
+    const line = lines[i];
 
-    const match = line.match(foldingBlock.startReg);
+    const startReg = typeof foldingBlock.startReg === 'function'
+        ? foldingBlock.startReg(line)
+        : foldingBlock.startReg
+    if (!startReg) return
+
+    const match = line.match(startReg)
     if (!match) return
 
-    const endReg = foldingBlock.getEndReg(line, match)
-    if (!endReg) return
+    const endReg = typeof foldingBlock.endReg === 'function'
+        ? foldingBlock.endReg(line, match)
+        : foldingBlock.endReg;
 
+    if (!endReg) return
     for (let j = i + 1; j < lines.length; j++) {
-        const nextLine = lines[j]
-        if (endReg.test(nextLine)) {
-            return j
+        if (endReg.test(lines[j])) {
+            return j;
         }
     }
 }
@@ -305,22 +311,29 @@ function getFoldingBlockEnd(
 const markdownFoldingBlocks: FoldingBlock[] = [
     {
         startReg: /^(\s*)(```|~~~)/,
-        getEndReg: (_line, match) => {
+        endReg: (_line, match) => {
             const indent = match[1]
             const delimiter = match[2]
             return new RegExp(`^${indent}${delimiter}`);
-        }
+        },
     },
     {
         startReg: /^(\s*)\$\$/,
-        getEndReg: (_line, match) => {
+        endReg: (_line, match) => {
             const indent = match[1]
             return new RegExp(`^${indent}\\$\\$`);
-        }
+        },
     },
     {
-        startReg: /^(\s*)<!--/,
-        getEndReg: () => /-->$/,
+        startReg: (line) => {
+            if (/-->$/.test(line)) return
+            return /^(\s*)<!--/
+        },
+        endReg: /-->$/,
+    },
+    {
+        startReg: /.*!\[.*]\(/,
+        endReg: /\)/
     }
 ]
 
@@ -333,7 +346,7 @@ const markdownFoldingRangeProvider: FoldingRangeProvider = {
             for (const block of markdownFoldingBlocks) {
                 const result = getFoldingBlockEnd(block, lines, i)
                 if (result !== undefined) {
-                    ranges.push({start: i + 1, end: result + 1})
+                    ranges.push({start: i + 1, end: result})
                     i = result
                     break
                 }
