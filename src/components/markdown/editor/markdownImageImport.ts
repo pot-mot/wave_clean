@@ -46,6 +46,7 @@ export const useMarkdownImageImport = () => {
         if (!files) return
 
         e.preventDefault()
+        e.stopPropagation()
         await insertImage(editor, files)
     }
 
@@ -61,12 +62,13 @@ export const useMarkdownImageImport = () => {
         if (!files) return
 
         e.preventDefault()
+        e.stopPropagation()
         await insertImage(editor, files)
     }
 
     onMounted(() => {
-        window.addEventListener('paste', onPaste)
-        window.addEventListener('drop', onDrop)
+        window.addEventListener('paste', onPaste, {capture: true})
+        window.addEventListener('drop', onDrop, {capture: true})
     })
 
     onBeforeUnmount(() => {
