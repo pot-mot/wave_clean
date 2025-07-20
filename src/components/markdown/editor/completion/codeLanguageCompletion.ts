@@ -3,11 +3,7 @@ import CompletionItemProvider = languages.CompletionItemProvider;
 import CompletionItem = languages.CompletionItem;
 import CompletionItemKind = languages.CompletionItemKind;
 import {getCurrentFoldingRange, getFoldingRanges} from "@/components/markdown/editor/folding/ModelWithFoldingRanges.ts";
-import {
-    katexLanguages,
-    mermaidLanguages,
-    prismLanguages
-} from "@/components/markdown/preview/plugins/MarkdownItPrismCode.ts";
+import {allLanguages} from "@/components/markdown/preview/plugins/MarkdownItPrismCode.ts";
 
 const codeblockStart = /^\s*(```|~~~)/
 
@@ -29,11 +25,7 @@ export const markdownCodeLanguageCompletionProvider: CompletionItemProvider = {
         if (foldingRange) {
             if (foldingRange.start === position.lineNumber) {
                 if (codeblockStart.test(line)) {
-                    for (const language of [
-                        ...prismLanguages,
-                        ...katexLanguages,
-                        ...mermaidLanguages,
-                    ]) {
+                    for (const language of allLanguages) {
                         suggestions.push({
                             label: language,
                             kind: CompletionItemKind.Keyword,
