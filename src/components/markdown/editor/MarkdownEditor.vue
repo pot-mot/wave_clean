@@ -5,7 +5,6 @@ import {v7 as uuid} from "uuid"
 import {sendMessage} from "@/components/message/sendMessage.ts";
 import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
 import {MarkdownEditorElement} from "@/components/markdown/editor/MarkdownEditorElement.ts";
-import {initMonacoMarkdownCompletion} from "@/components/markdown/editor/markdownCompletion.ts";
 
 import {editor} from "monaco-editor/esm/vs/editor/editor.api.js";
 // 导入小图标
@@ -26,6 +25,7 @@ import "monaco-editor/esm/vs/editor/contrib/multicursor/browser/multicursor.js";
 import "monaco-editor/esm/vs/editor/contrib/suggest/browser/suggestController.js";
 // token解析
 import "monaco-editor/esm/vs/editor/contrib/tokenization/browser/tokenization.js";
+import {initMarkdownEnterCompletion} from "@/components/markdown/editor/completion/enterCompletion.ts";
 
 const id = `markdown-editor-${uuid()}`
 
@@ -96,7 +96,7 @@ onMounted(async () => {
         autoSurround: "languageDefined",
     })
 
-    initMonacoMarkdownCompletion(editorInstance)
+    initMarkdownEnterCompletion(editorInstance)
 
     editorInstance.onDidChangeModelContent(() => {
         modelValue.value = editorInstance.getValue()

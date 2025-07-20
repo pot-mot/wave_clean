@@ -2,10 +2,10 @@
 import {languages} from "monaco-editor/esm/vs/editor/editor.api.js";
 import IMonarchLanguage = languages.IMonarchLanguage
 import LanguageConfiguration = languages.LanguageConfiguration
-import FoldingRangeProvider = languages.FoldingRangeProvider
-import FoldingRange = languages.FoldingRange
-
-import {markdownCompletionProvider} from "@/components/markdown/editor/markdownCompletion.ts";
+import {markdownCharCompletionProvider} from "@/components/markdown/editor/completion/charCompletion.ts";
+import {markdownFoldingRangeProvider} from "@/components/markdown/editor/folding/markdownFolding.ts";
+import {markdownCodeLanguageCompletionProvider} from "@/components/markdown/editor/completion/codeLanguageCompletion.ts";
+import {markdownKatexCompletionProvider} from "@/components/markdown/editor/completion/katexCompletion.ts";
 
 const markdownLanguage: IMonarchLanguage = {
     defaultToken: "",
@@ -48,15 +48,18 @@ const markdownLanguage: IMonarchLanguage = {
             [/^\s*([\*\-+:]|\d+\.)\s/, "keyword"],
             // code block (4 spaces indent)
             [/^(\t|[ ]{4})[^ ].*$/, "string"],
-            // code block (3 tilde)
-            [/^\s*~~~\s*((?:\w|[\/\-#])+)?\s*$/, {token: "string", next: "@codeblock"}],
-            // github style code blocks (with backticks and language)
+            // code blocks (with backticks and language)
+            [
+                /^\s*~~~\s*((?:\w|[\/\-#])+)?\s*$/,
+                {token: "string", next: "@codeblockWithLanguage", nextEmbedded: "$1"}
+            ],
             [
                 /^\s*```\s*((?:\w|[\/\-#])+).*$/,
-                {token: "string", next: "@codeblockgh", nextEmbedded: "$1"}
+                {token: "string", next: "@codeblockWithLanguage", nextEmbedded: "$1"}
             ],
-            // github style code blocks (with backticks but no language)
+            // code blocks (with backticks but no language)
             [/^\s*```\s*$/, {token: "string", next: "@codeblock"}],
+            [/^\s*~~~\s*$/, {token: "string", next: "@codeblock"}],
             // katex block
             [/^\s*\$\$.*$/, {token: "string", next: "@katexblock"}],
             // markup within lines
@@ -95,8 +98,10 @@ const markdownLanguage: IMonarchLanguage = {
             [/.*$/, "variable.source"]
         ],
         // github style code blocks
-        codeblockgh: [
+        codeblockWithLanguage: [
+            [/~~~\s*$/, {token: "string", next: "@pop", nextEmbedded: "@pop"}],
             [/```\s*$/, {token: "string", next: "@pop", nextEmbedded: "@pop"}],
+            [/[^~]+/, "variable.source"],
             [/[^`]+/, "variable.source"]
         ],
         katexblock: [
@@ -278,93 +283,6 @@ const markdownConfig: LanguageConfiguration = {
     },
 }
 
-type FoldingBlock = {
-    // 起始行匹配正则
-    startReg: RegExp | ((line: string) => RegExp | undefined)
-    // 生成结束正则（可基于起始行内容）
-    endReg: RegExp | ((line: string, match: RegExpMatchArray) => RegExp | undefined)
-}
-
-const getFoldingBlockEnd = (
-    foldingBlock: FoldingBlock,
-    lines: string[],
-    i: number,
-): number | undefined => {
-    const line = lines[i];
-
-    const startReg = typeof foldingBlock.startReg === 'function'
-        ? foldingBlock.startReg(line)
-        : foldingBlock.startReg
-    if (!startReg) return
-
-    const match = line.match(startReg)
-    if (!match) return
-
-    const endReg = typeof foldingBlock.endReg === 'function'
-        ? foldingBlock.endReg(line, match)
-        : foldingBlock.endReg;
-
-    if (!endReg) return
-    for (let j = i + 1; j < lines.length; j++) {
-        if (endReg.test(lines[j])) {
-            return j;
-        }
-    }
-}
-
-const markdownFoldingBlocks: FoldingBlock[] = [
-    {
-        startReg: /^(\s*)(```|~~~)/,
-        endReg: (_line, match) => {
-            const indent = match[1]
-            const delimiter = match[2]
-            return new RegExp(`^${indent}${delimiter}`);
-        },
-    },
-    {
-        startReg: /^(\s*)\$\$/,
-        endReg: (_line, match) => {
-            const indent = match[1]
-            return new RegExp(`^${indent}\\$\\$`);
-        },
-    },
-    {
-        startReg: (line) => {
-            if (/-->$/.test(line)) return
-            return /^(\s*)<!--/
-        },
-        endReg: /-->$/,
-    },
-    {
-        startReg: /.*!\[.*]\(/,
-        endReg: /\)/
-    }
-]
-
-const imageDataUrlReg = /^(\s*)data:image\/.*;base64,/
-
-const markdownFoldingRangeProvider: FoldingRangeProvider = {
-    provideFoldingRanges: (model) => {
-        const ranges: FoldingRange[] = []
-        const lines = model.getLinesContent()
-
-        for (let i = 0; i < lines.length; i++) {
-            if (imageDataUrlReg.test(lines[i])) continue
-
-            for (const block of markdownFoldingBlocks) {
-                const result = getFoldingBlockEnd(block, lines, i)
-                if (result !== undefined) {
-                    ranges.push({start: i + 1, end: result})
-                    i = result
-                    break
-                }
-            }
-        }
-
-        return ranges
-    }
-}
-
 export const initMonacoMarkdownLanguage = () => {
     languages.register({id: 'markdown'})
 
@@ -374,5 +292,7 @@ export const initMonacoMarkdownLanguage = () => {
 
     languages.registerFoldingRangeProvider('markdown', markdownFoldingRangeProvider)
 
-    languages.registerCompletionItemProvider('markdown', markdownCompletionProvider)
+    languages.registerCompletionItemProvider('markdown', markdownCharCompletionProvider)
+    languages.registerCompletionItemProvider('markdown', markdownCodeLanguageCompletionProvider)
+    languages.registerCompletionItemProvider('markdown', markdownKatexCompletionProvider)
 }
