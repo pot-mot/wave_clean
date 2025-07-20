@@ -48,18 +48,12 @@ const markdownLanguage: IMonarchLanguage = {
             [/^\s*([\*\-+:]|\d+\.)\s/, "keyword"],
             // code block (4 spaces indent)
             [/^(\t|[ ]{4})[^ ].*$/, "string"],
-            // code blocks (with backticks and language)
-            [
-                /^\s*~~~\s*((?:\w|[\/\-#])+)?\s*$/,
-                {token: "string", next: "@codeblockWithLanguage", nextEmbedded: "$1"}
-            ],
-            [
-                /^\s*```\s*((?:\w|[\/\-#])+).*$/,
-                {token: "string", next: "@codeblockWithLanguage", nextEmbedded: "$1"}
-            ],
             // code blocks (with backticks but no language)
             [/^\s*```\s*$/, {token: "string", next: "@codeblock"}],
             [/^\s*~~~\s*$/, {token: "string", next: "@codeblock"}],
+            // code blocks (wait language)
+            [/^\s*~~~/, {token: "string", next: "@codeblockLanguage"}],
+            [/^\s*```/, {token: "string", next: "@codeblockLanguage"}],
             // katex block
             [/^\s*\$\$.*$/, {token: "string", next: "@katexblock"}],
             // markup within lines
@@ -96,6 +90,9 @@ const markdownLanguage: IMonarchLanguage = {
             [/^\s*~~~\s*$/, {token: "string", next: "@pop"}],
             [/^\s*```\s*$/, {token: "string", next: "@pop"}],
             [/.*$/, "variable.source"]
+        ],
+        codeblockLanguage: [
+            [/\s*((?:\w|[\/\-#])+).*$/, {token: "keyword", next: "codeblockWithLanguage", nextEmbedded: "$1"}]
         ],
         // github style code blocks
         codeblockWithLanguage: [
