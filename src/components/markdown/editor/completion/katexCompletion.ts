@@ -7,6 +7,7 @@ import {md} from "@/components/markdown/preview/markdownRender.ts";
 import {katexExamples} from "@/components/markdown/editor/completion/katexExamples.ts";
 import Command = languages.Command;
 import {COMMAND_removeRange} from "@/components/markdown/editor/command/customCommand.ts";
+import {katexLanguages} from "@/components/markdown/preview/plugins/MarkdownItPrismCode.ts";
 
 const katexSuggestions: Omit<CompletionItem, 'range'>[] = katexExamples.flatMap(it => {
     return it.map(it2 => {
@@ -44,7 +45,10 @@ export const markdownKatexCompletionProvider: CompletionItemProvider = {
 
             const tokens = md.parse(value, {})
             if (tokens.length > 0) {
-                if (tokens[0].type === 'math_block') {
+                if (
+                    tokens[0].type === 'math_block' ||
+                    (tokens[0].type === 'fence' && katexLanguages.has(tokens[0].info))
+                ) {
                     if (context.triggerCharacter === '\\') {
                         command = {
                             id: COMMAND_removeRange,

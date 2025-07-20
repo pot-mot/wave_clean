@@ -89,7 +89,7 @@ const markdownLanguage: IMonarchLanguage = {
         codeblock: [
             [/^\s*~~~\s*$/, {token: "string", next: "@pop"}],
             [/^\s*```\s*$/, {token: "string", next: "@pop"}],
-            [/.*$/, "variable.source"]
+            // [/.*$/, "variable.source"]
         ],
         codeblockLanguage: [
             [/\s*((?:\w|[\/\-#])+).*$/, {token: "keyword", next: "codeblockWithLanguage", nextEmbedded: "$1"}]
@@ -98,12 +98,12 @@ const markdownLanguage: IMonarchLanguage = {
         codeblockWithLanguage: [
             [/~~~\s*$/, {token: "string", next: "@pop", nextEmbedded: "@pop"}],
             [/```\s*$/, {token: "string", next: "@pop", nextEmbedded: "@pop"}],
-            [/[^~]+/, "variable.source"],
-            [/[^`]+/, "variable.source"]
+            // [/[^~]+/, "variable.source"],
+            // [/[^`]+/, "variable.source"]
         ],
         katexblock: [
             [/^\s*\$\$.*$/, {token: "string", next: "@pop"}],
-            [/[^\$]+/, "variable.source"]
+            // [/[^\$]+/, "variable.source"]
         ],
         linecontent: [
             // escapes
