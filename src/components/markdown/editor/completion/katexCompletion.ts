@@ -4,7 +4,7 @@ import CompletionItem = languages.CompletionItem;
 import CompletionItemKind = languages.CompletionItemKind;
 import {getCurrentFoldingRange, getFoldingRanges} from "@/components/markdown/editor/folding/ModelWithFoldingRanges.ts";
 import {md} from "@/components/markdown/preview/markdownRender.ts";
-import {katexExamples} from "@/components/markdown/editor/completion/katexExamples.ts";
+import {katexExamples} from "@/components/markdown/editor/katex/katexExamples.ts";
 import Command = languages.Command;
 import {COMMAND_removeRange} from "@/components/markdown/editor/command/customCommand.ts";
 import {katexLanguages} from "@/components/markdown/preview/plugins/MarkdownItPrismCode.ts";
