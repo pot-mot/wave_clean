@@ -321,6 +321,7 @@
 }
 
 .markdown-preview .code-block > .error-detail {
+    white-space: pre-line;
     color: var(--danger-color);
     width: 100%;
 }
@@ -420,6 +421,7 @@
 
 .markdown-preview .katex > .error-detail,
 .markdown-preview .mermaid > .error-detail {
+    white-space: pre-line;
     color: var(--danger-color);
     width: 100%;
 }
