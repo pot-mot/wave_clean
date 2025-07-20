@@ -6,6 +6,8 @@ import {markdownCharCompletionProvider} from "@/components/markdown/editor/compl
 import {markdownFoldingRangeProvider} from "@/components/markdown/editor/folding/markdownFolding.ts";
 import {markdownCodeLanguageCompletionProvider} from "@/components/markdown/editor/completion/codeLanguageCompletion.ts";
 import {markdownKatexCompletionProvider} from "@/components/markdown/editor/completion/katexCompletion.ts";
+import {registerMermaidLanguage} from "@/components/markdown/editor/mermaid/mermaidLanguage.ts";
+import {markdownMermaidCompletionProvider} from "@/components/markdown/editor/completion/mermaidCompletion.ts";
 
 const markdownLanguage: IMonarchLanguage = {
     defaultToken: "",
@@ -281,6 +283,8 @@ const markdownConfig: LanguageConfiguration = {
 }
 
 export const initMonacoMarkdownLanguage = () => {
+    registerMermaidLanguage()
+
     languages.register({id: 'markdown'})
 
     languages.setMonarchTokensProvider('markdown', markdownLanguage)
@@ -292,4 +296,6 @@ export const initMonacoMarkdownLanguage = () => {
     languages.registerCompletionItemProvider('markdown', markdownCharCompletionProvider)
     languages.registerCompletionItemProvider('markdown', markdownCodeLanguageCompletionProvider)
     languages.registerCompletionItemProvider('markdown', markdownKatexCompletionProvider)
+    languages.registerCompletionItemProvider('markdown', markdownMermaidCompletionProvider)
+
 }
