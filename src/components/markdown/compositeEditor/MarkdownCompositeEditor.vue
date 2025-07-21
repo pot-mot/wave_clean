@@ -6,6 +6,7 @@ import MarkdownEditor from "@/components/markdown/editor/MarkdownEditor.vue";
 import MarkdownPreview from "@/components/markdown/preview/MarkdownPreview.vue";
 import {computed, ref, useTemplateRef} from "vue";
 import {MarkdownEditorEmits, MarkdownEditorProps} from "@/components/markdown/editor/MarkdownEditorType.ts";
+import {PreviewType} from "@/components/markdown/compositeEditor/PreviewType.ts";
 
 const id = `markdown-composite-editor-${uuid()}`
 const editorPaneId = `${id}-editor-pane`
@@ -15,7 +16,7 @@ const modelValue = defineModel<string>({
     required: true
 })
 
-const previewType = defineModel<'preview-only' | 'edit-only' | 'edit-preview'>('previewType', {
+const previewType = defineModel<PreviewType>('previewType', {
     required: false,
     default: 'edit-only',
 })
@@ -26,7 +27,12 @@ const editorRef = computed(() => {
     return markdownEditorRef.value?.editorRef
 })
 
-const props = defineProps<MarkdownEditorProps>()
+type ClassPropType = string | Record<string, any> | string[]
+
+const props = defineProps<MarkdownEditorProps & {
+    editorClass?: ClassPropType,
+    previewClass?: ClassPropType,
+}>()
 const emits = defineEmits<MarkdownEditorEmits>()
 
 const isFullScreen = ref(false)
@@ -46,7 +52,7 @@ defineExpose({
     <div class="markdown-composite-editor">
         <Teleport to="body" :disabled="!isFullScreen">
             <div class="markdown-composite-editor-wrapper" :class="{fullscreen: isFullScreen}">
-                <div>
+                <div class="toolbar">
                     <button @click="previewType = 'edit-only'">edit-only</button>
                     <button @click="previewType = 'preview-only'">preview-only</button>
                     <button @click="previewType = 'edit-preview'">edit-preview</button>
@@ -54,32 +60,36 @@ defineExpose({
                     <button @click="toggleFullScreen">full-screen</button>
                 </div>
 
-                <Splitpanes v-show="previewType === 'edit-preview'">
-                    <Pane size="50" :id="editorPaneId"/>
-                    <Pane size="50" :id="previewPaneId"/>
-                </Splitpanes>
+                <div class="container">
+                    <Splitpanes v-show="previewType === 'edit-preview'">
+                        <Pane size="50" :id="editorPaneId"/>
+                        <Pane size="50" :id="previewPaneId"/>
+                    </Splitpanes>
 
-                <Teleport defer :disabled="previewType === 'edit-only'" :to="`#${editorPaneId}`">
-                    <MarkdownEditor
-                        v-show="previewType !== 'preview-only'"
-                        ref="markdownEditorRef"
-                        class="editor"
-                        v-model="modelValue"
-                        v-bind="props"
-                        @change="(editor, value) => emits('change', editor, value)"
-                        @focus="(editor) => emits('focus', editor)"
-                        @blur="(editor) => emits('blur', editor)"
-                    />
-                </Teleport>
+                    <Teleport defer :disabled="previewType === 'edit-only'" :to="`#${editorPaneId}`">
+                        <MarkdownEditor
+                            v-show="previewType !== 'preview-only'"
+                            ref="markdownEditorRef"
+                            class="editor"
+                            :class="editorClass"
+                            v-model="modelValue"
+                            v-bind="props"
+                            @change="(editor, value) => emits('change', editor, value)"
+                            @focus="(editor) => emits('focus', editor)"
+                            @blur="(editor) => emits('blur', editor)"
+                        />
+                    </Teleport>
 
-                <Teleport defer :disabled="previewType === 'preview-only'" :to="`#${previewPaneId}`">
-                    <MarkdownPreview
-                        v-if="previewType !== 'edit-only'"
-                        ref="markdownPreviewRef"
-                        class="preview"
-                        :value="modelValue"
-                    />
-                </Teleport>
+                    <Teleport defer :disabled="previewType === 'preview-only'" :to="`#${previewPaneId}`">
+                        <MarkdownPreview
+                            v-if="previewType !== 'edit-only'"
+                            ref="markdownPreviewRef"
+                            class="preview"
+                            :class="previewClass"
+                            :value="modelValue"
+                        />
+                    </Teleport>
+                </div>
             </div>
         </Teleport>
     </div>
@@ -100,6 +110,17 @@ defineExpose({
     z-index: var(--top-z-index);
 }
 
+.toolbar {
+    height: 2rem;
+    display: flex;
+    justify-content: space-between;
+}
+
+.container {
+    height: calc(100% - 2rem);
+    overflow: hidden;
+}
+
 .editor {
     height: 100%;
     width: 100%;
@@ -108,5 +129,6 @@ defineExpose({
 .preview {
     height: 100%;
     width: 100%;
+    padding: 0.5rem;
 }
 </style>

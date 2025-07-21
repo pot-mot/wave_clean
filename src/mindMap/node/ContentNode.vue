@@ -126,6 +126,7 @@ const markdownEditorValue = ref<string>(props.data.content)
 
 const isMarkdownEdit = ref(false)
 
+const isMarkdownEditorPreviewOverflow = computed<boolean>(() => markdownEditorRef.value?.markdownPreviewRef?.isOverflow ?? false)
 const isMarkdownPreviewOverflow = computed<boolean>(() => markdownPreviewRef.value?.isOverflow ?? false)
 
 const markdownEditorTheme = computed(() => {
@@ -467,7 +468,9 @@ const executeDelete = () => {
                     <MarkdownCompositeEditor
                         v-if="isMarkdownEdit"
                         ref="markdownEditorRef"
-                        class="fit-parent noDrag noWheel"
+                        class="fit-parent"
+                        editor-class="noDrag noWheel"
+                        :preview-class="{noDrag: true, noWheel: isMarkdownEditorPreviewOverflow}"
                         v-model="markdownEditorValue"
                         :theme="markdownEditorTheme"
                         @blur="handleMarkdownEditorBlur"
