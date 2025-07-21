@@ -7,7 +7,7 @@ export type MarkdownEditorElement = HTMLElement & {
 }
 
 export const checkIsMarkdownEditorElement = (el: any): el is MarkdownEditorElement => {
-    return el instanceof HTMLElement && el.classList.contains("markdown-editor")
+    return el instanceof HTMLElement && el.classList.contains("markdown-editor") && "editor" in el
 }
 
 export const getParentMarkdownEditorElement = (el: any): MarkdownEditorElement | null => {

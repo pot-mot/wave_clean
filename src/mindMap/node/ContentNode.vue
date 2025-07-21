@@ -128,6 +128,10 @@ const isMarkdownEdit = ref(false)
 
 const isMarkdownPreviewOverflow = computed<boolean>(() => markdownPreviewRef.value?.isOverflow ?? false)
 
+const markdownEditorTheme = computed(() => {
+    return meta.value.currentTheme === "dark" ? "vs-dark" : "vs"
+})
+
 watch(() => props.data.content, (value) => {
     if (value !== markdownEditorValue.value) {
         markdownEditorValue.value = value
@@ -465,7 +469,7 @@ const executeDelete = () => {
                         ref="markdownEditorRef"
                         class="fit-parent noDrag noWheel"
                         v-model="markdownEditorValue"
-                        :theme="meta.currentTheme"
+                        :theme="markdownEditorTheme"
                         @blur="handleMarkdownEditorBlur"
                         @click.capture="stopCtrlClickWhenMarkdownEdit"
                     />

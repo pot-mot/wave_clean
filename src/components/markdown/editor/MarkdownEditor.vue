@@ -1,8 +1,5 @@
 <script setup lang="ts">
-import {Theme} from "@tauri-apps/api/window";
 import {computed, onBeforeUnmount, onMounted, useTemplateRef, watch} from "vue";
-import {v7 as uuid} from "uuid"
-import {sendMessage} from "@/components/message/sendMessage.ts";
 import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
 import {MarkdownEditorElement} from "@/components/markdown/editor/MarkdownEditorElement.ts";
 
@@ -27,14 +24,12 @@ import "monaco-editor/esm/vs/editor/contrib/suggest/browser/suggestController.js
 import "monaco-editor/esm/vs/editor/contrib/tokenization/browser/tokenization.js";
 import {initMarkdownEnterCompletion} from "@/components/markdown/editor/completion/enterCompletion.ts";
 
-const id = `markdown-editor-${uuid()}`
-
 const modelValue = defineModel<string>({
     required: true
 })
 
 const props = defineProps<{
-    theme?: Theme | undefined,
+    theme?: "vs" | "vs-dark" | undefined,
 }>()
 
 const emits = defineEmits<{
@@ -55,20 +50,15 @@ const editorRef = computed<IStandaloneCodeEditor | null | undefined>({
     }
 })
 
-const editorTheme = computed(() => {
-    return props.theme === "dark" ? "vs-dark" : "vs"
-})
-
 onMounted(async () => {
     const element = elementRef.value
     if (!element) {
-        sendMessage("MarkdownEditor init fail, element not existed", {type: "error"})
-        return
+        throw new Error("MarkdownEditor init fail, element not existed")
     }
     const editorInstance = editor.create(element, {
         language: "markdown",
         value: modelValue.value,
-        theme: editorTheme.value,
+        theme: props.theme,
         selectOnLineNumbers: false, // 显示行号 默认true
         minimap: {
             enabled: false,
@@ -128,7 +118,7 @@ watch(() => modelValue.value, (value) => {
     }
 })
 
-watch(() => editorTheme.value, (theme) => {
+watch(() => props.theme, (theme) => {
     editorRef.value?.updateOptions({
         theme
     })
@@ -142,7 +132,6 @@ defineExpose({
 
 <template>
     <div
-        :id="id"
         class="markdown-editor"
         ref="elementRef"
     />
