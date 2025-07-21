@@ -336,4 +336,12 @@ const executeDelete = () => {
     fill: var(--edge-color);
     transition: fill 0.3s ease;
 }
+
+:deep(.fit-size-block-input) {
+    color: var(--text-color);
+    background-color: var(--background-color);
+    border: var(--border);
+    border-radius: var(--border-radius);
+    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+}
 </style>

@@ -95,6 +95,7 @@ defineExpose({el: inputRef, isFocus})
 
 <template>
     <input
+        class="fit-size-line-input"
         ref="inputRef"
         :style="{
              paddingLeft: `${fullPadding.left}px`,
@@ -118,19 +119,3 @@ defineExpose({el: inputRef, isFocus})
         @compositionend="updateTextSize"
     />
 </template>
-
-<style scoped>
-input {
-    color: var(--text-color);
-    background-color: var(--background-color);
-    border: var(--border);
-    border-radius: var(--border-radius);
-
-    vertical-align: top;
-    outline: none;
-
-    line-height: 1.5;
-
-    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
-}
-</style>

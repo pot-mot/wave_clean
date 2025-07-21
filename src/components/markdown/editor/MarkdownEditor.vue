@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import {computed, onBeforeUnmount, onMounted, useTemplateRef, watch} from "vue";
-import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
 import {MarkdownEditorElement} from "@/components/markdown/editor/MarkdownEditorElement.ts";
+import {MarkdownEditorEmits, MarkdownEditorProps} from "@/components/markdown/editor/MarkdownEditorType.ts";
 
 import {editor} from "monaco-editor/esm/vs/editor/editor.api.js";
+import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
 // 导入小图标
 import "monaco-editor/esm/vs/base/browser/ui/codicons/codiconStyles.js";
 // 导入主题
@@ -28,15 +29,9 @@ const modelValue = defineModel<string>({
     required: true
 })
 
-const props = defineProps<{
-    theme?: "vs" | "vs-dark" | undefined,
-}>()
+const props = defineProps<MarkdownEditorProps>()
 
-const emits = defineEmits<{
-    (event: "change", editor: IStandaloneCodeEditor, value: string): void
-    (event: "focus", editor: IStandaloneCodeEditor): void
-    (event: "blur", editor: IStandaloneCodeEditor): void
-}>()
+const emits = defineEmits<MarkdownEditorEmits>()
 
 const elementRef = useTemplateRef<MarkdownEditorElement>('elementRef')
 const editorRef = computed<IStandaloneCodeEditor | null | undefined>({

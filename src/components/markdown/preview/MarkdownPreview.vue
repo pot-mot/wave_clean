@@ -119,10 +119,6 @@ defineExpose({
 .markdown-preview {
     cursor: text;
     user-select: text;
-    border: var(--border);
-    border-radius: var(--border-radius);
-    background-color: var(--background-color);
-    padding: 8px;
     tab-size: 4;
     overflow: auto;
     transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;

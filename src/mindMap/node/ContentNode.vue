@@ -12,7 +12,6 @@ import IconFocus from "@/components/icons/IconFocus.vue";
 import {useDeviceStore} from "@/store/deviceStore.ts";
 import {blurActiveElement, getMatchedElementOrParent} from "@/utils/event/judgeEventTarget.ts";
 import {useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
-import MarkdownEditor from "@/components/markdown/editor/MarkdownEditor.vue";
 import MarkdownPreview from "@/components/markdown/preview/MarkdownPreview.vue";
 import ResizeWrapper from "@/components/resizer/ResizeWrapper.vue";
 import {ResizeEventArgs} from "@/components/resizer/ResizeWrapperType.ts";
@@ -32,6 +31,7 @@ import {
     ContentType,
     ContentType_DEFAULT
 } from "@/mindMap/node/ContentNode.ts";
+import MarkdownCompositeEditor from "@/components/markdown/compositeEditor/MarkdownCompositeEditor.vue";
 
 const {isTouchDevice} = useDeviceStore()
 
@@ -119,7 +119,7 @@ const handleInputBlur = () => {
 }
 
 // markdown 模式
-const markdownEditorRef = useTemplateRef<InstanceType<typeof MarkdownEditor>>("markdownEditorRef")
+const markdownEditorRef = useTemplateRef<InstanceType<typeof MarkdownCompositeEditor>>("markdownEditorRef")
 const markdownPreviewRef = useTemplateRef<InstanceType<typeof MarkdownPreview>>("markdownPreviewRef")
 
 const markdownEditorValue = ref<string>(props.data.content)
@@ -464,7 +464,7 @@ const executeDelete = () => {
                     @resize-start="handleMarkdownEditorResizeStart"
                     @resize-stop="handleMarkdownEditorResizeStop"
                 >
-                    <MarkdownEditor
+                    <MarkdownCompositeEditor
                         v-if="isMarkdownEdit"
                         ref="markdownEditorRef"
                         class="fit-parent noDrag noWheel"
@@ -589,5 +589,18 @@ const executeDelete = () => {
 
 .hide-scroll::-webkit-scrollbar-thumb {
     background-color: transparent;
+}
+
+.markdown-preview {
+    padding: 8px;
+}
+
+.markdown-preview,
+:deep(.fit-size-block-input) {
+    color: var(--text-color);
+    background-color: var(--background-color);
+    border: var(--border);
+    border-radius: var(--border-radius);
+    transition: border-color 0.3s ease;
 }
 </style>

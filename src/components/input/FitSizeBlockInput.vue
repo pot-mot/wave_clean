@@ -90,6 +90,7 @@ defineExpose({el: textareaRef, isFocus})
 
 <template>
     <textarea
+        class="fit-size-block-input"
         ref="textareaRef"
         :style="{
             paddingLeft: `${fullPadding.left}px`,
@@ -113,27 +114,3 @@ defineExpose({el: textareaRef, isFocus})
         @compositionend="updateTextSize"
     />
 </template>
-
-<style scoped>
-textarea {
-    color: var(--text-color);
-    background-color: var(--background-color);
-    border: var(--border);
-    border-radius: var(--border-radius);
-
-    vertical-align: top;
-    outline: none;
-
-    resize: none;
-    white-space: pre;
-    word-wrap: normal;
-    word-break: keep-all;
-    overflow: hidden;
-    overflow-wrap: normal;
-    tab-size: 4;
-
-    line-height: 1.5;
-
-    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
-}
-</style>
