@@ -284,6 +284,7 @@ defineExpose({
     position: relative;
     --resize-handle-size: v-bind(handleSize);
     --resize-border-width: v-bind(borderWidth);
+    will-change: width, height;
 }
 
 .resize-border {
