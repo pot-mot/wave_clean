@@ -41,6 +41,7 @@ const {
     updateNodeData,
     isSelectionPlural,
     canMultiSelect,
+    isConnecting,
     findNode,
     selectNode,
     recordNodeResize,
@@ -282,6 +283,11 @@ const onHandleMouseDown = (e: MouseEvent) => {
     }
 }
 
+// 连接点显示
+const handleVisibility = computed<boolean>(() => {
+    return isFocus.value || isConnecting.value
+})
+
 // 复制
 const executeCopy = () => {
     const node = _node.value
@@ -479,6 +485,7 @@ const executeDelete = () => {
                 :id="handle"
                 :position="handle"
                 @mousedown="onHandleMouseDown"
+                :class="{show: handleVisibility}"
             />
         </div>
 
@@ -533,19 +540,35 @@ const executeDelete = () => {
 }
 
 :deep(.vue-flow__handle) {
+    min-width: 0;
+    min-height: 0;
+    width: 0;
+    height: 0;
+    border: none;
+    overflow: visible;
+}
+
+:deep(.vue-flow__handle).show::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     width: 8px;
     height: 8px;
     background: var(--border-color);
+    box-sizing: border-box;
+    border: var(--border);
     border-width: 2px;
     border-color: var(--background-color);
     border-radius: 100%;
 }
 
-:deep(.vue-flow__handle.mousedown) {
+:deep(.vue-flow__handle.mousedown).show::before {
     background: var(--primary-color);
 }
 
-:deep(.vue-flow__handle.connecting) {
+:deep(.vue-flow__handle.connecting).show::before {
     background: var(--primary-color);
 }
 

@@ -8,7 +8,17 @@ import {
     VueFlowStore,
     XYPosition,
 } from "@vue-flow/core";
-import {computed, nextTick, readonly, ref, ShallowReactive, shallowReactive, ShallowRef, shallowRef, toRaw,} from "vue";
+import {
+    computed,
+    nextTick,
+    readonly,
+    ref,
+    ShallowReactive,
+    shallowReactive,
+    ShallowRef,
+    shallowRef,
+    toRaw,
+} from "vue";
 import {blurActiveElement, judgeTargetIsInteraction} from "@/utils/event/judgeEventTarget.ts";
 import {jsonSortPropStringify} from "@/utils/json/jsonStringify.ts";
 import {
@@ -486,6 +496,16 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         return {nodes: innerNodes, edges: innerEdges}
     }
 
+
+    /**
+     * 同步边连接信息
+     */
+    const isConnecting = ref(false)
+    const connectSourceNodeId = ref<string>()
+
+    /**
+     * 默认鼠标行为
+     */
     const defaultMouseAction = ref<MouseAction>('panDrag')
 
     // 默认操作为拖拽
@@ -560,6 +580,8 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
             onNodeDragStart,
             onNodeDragStop,
             onConnect,
+            onConnectStart,
+            onConnectEnd,
             onEdgeUpdateStart,
             onEdgeUpdate,
 
@@ -668,10 +690,20 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
             })
 
             /**
-             * 添加边
+             * 边连接
              */
             onConnect((connectData) => {
                 addEdge(connectData)
+            })
+
+            onConnectStart((data) => {
+                isConnecting.value = true
+                connectSourceNodeId.value = data.nodeId
+            })
+
+            onConnectEnd(() => {
+                isConnecting.value = false
+                connectSourceNodeId.value = undefined
             })
 
             /**
@@ -1117,6 +1149,9 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         canDrag,
         disableDrag,
         enableDrag,
+
+        isConnecting,
+        connectSourceNodeId,
 
         addNode,
         findNode: (id: string, vueFlow: VueFlowStore = getCurrentVueFlow()) => {
