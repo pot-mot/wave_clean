@@ -17,7 +17,7 @@ import MarkdownPreview from "@/components/markdown/preview/MarkdownPreview.vue";
 import ResizeWrapper from "@/components/resizer/ResizeWrapper.vue";
 import {ResizeEventArgs} from "@/components/resizer/ResizeWrapperType.ts";
 import IconEdit from "@/components/icons/IconEdit.vue";
-import IconPreview from "@/components/icons/IconPreview.vue";
+import IconCheck from "@/components/icons/IconCheck.vue";
 import IconMarkdown from "@/components/icons/IconMarkdown.vue";
 import IconMarkdownOff from "@/components/icons/IconMarkdownOff.vue";
 import {RawMindMapLayer} from "@/mindMap/layer/MindMapLayer.ts";
@@ -513,7 +513,7 @@ const executeDelete = () => {
                 v-if="dataTypeOrDefault === 'markdown'"
                 @mousedown.capture.prevent.stop="executeToggleMarkdownEdit"
             >
-                <IconPreview v-if="isMarkdownEdit"/>
+                <IconCheck v-if="isMarkdownEdit"/>
                 <IconEdit v-else/>
             </button>
         </NodeToolbar>
