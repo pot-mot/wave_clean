@@ -20,7 +20,8 @@ const props = withDefaults(defineProps<
     pushOtherPanes: true,
     maximizePanes: true,
     rtl: false,
-    firstSplitter: false
+    firstSplitter: false,
+    zoom: 1,
 })
 
 const slots = useSlots()
@@ -214,10 +215,9 @@ const getCurrentMouseDrag = (event: MouseEvent | TouchEvent): DragInfo | undefin
 // Returns the drag percentage of the splitter relative to the container (ranging from 0 to 100%).
 const getCurrentDragPercentage = (drag: DragInfo): number => {
     if (!containerEl.value) return 0
-
     let dragSize: number = drag[props.horizontal ? 'y' : 'x']
     // In the code below 'size' refers to 'width' for vertical and 'height' for horizontal layout.
-    const containerSize = containerEl.value[props.horizontal ? 'clientHeight' : 'clientWidth']
+    const containerSize = containerEl.value[props.horizontal ? 'clientHeight' : 'clientWidth'] * props.zoom
     if (props.rtl && !props.horizontal) dragSize = containerSize - dragSize
 
     return dragSize * 100 / containerSize

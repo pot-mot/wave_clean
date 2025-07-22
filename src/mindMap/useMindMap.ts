@@ -205,6 +205,9 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
     }
 
     const currentViewport = shallowRef<ViewportTransform>(global.currentLayer.value.vueFlow.viewport.value)
+    const zoom = computed(() => {
+        return currentViewport.value !== undefined ? currentViewport.value.zoom : 1
+    })
 
     const addLayer = () => {
         history.executeBatch(Symbol("layer:add"), () => {
@@ -1097,6 +1100,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         focus,
 
         currentViewport: readonly(currentViewport),
+        zoom,
 
         canUndo: readonly(canUndo),
         canRedo: readonly(canRedo),

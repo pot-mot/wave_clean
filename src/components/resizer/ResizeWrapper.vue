@@ -17,7 +17,7 @@ const size = defineModel<{
 })
 
 const props = withDefaults(defineProps<{
-    scale?: number,
+    zoom?: number,
     disabled?: boolean,
     handleSize?: string,
     borderWidth?: string,
@@ -27,7 +27,7 @@ const props = withDefaults(defineProps<{
     minHeight?: number
     maxHeight?: number
 }>(), {
-    scale: 1,
+    zoom: 1,
     disabled: false,
     handleSize: '8px',
     borderWidth: '2px',
@@ -109,8 +109,8 @@ const handleResizing = (position: { clientX: number, clientY: number }) => {
     }
 
     // 偏移量
-    const dx = (position.clientX - resizeOrigin.value.clientX) / props.scale
-    const dy = (position.clientY - resizeOrigin.value.clientY) / props.scale
+    const dx = (position.clientX - resizeOrigin.value.clientX) / props.zoom
+    const dy = (position.clientY - resizeOrigin.value.clientY) / props.zoom
 
     const previousHeight = size.value.height
     const previousWidth = size.value.width
@@ -233,8 +233,8 @@ const stopResize = (position: { clientX: number, clientY: number }) => {
             height: size.value.height,
         },
         totalSizeDiff: {
-            x: (position.clientX - resizeOrigin.value.clientX) / props.scale,
-            y: (position.clientY - resizeOrigin.value.clientY) / props.scale,
+            x: (position.clientX - resizeOrigin.value.clientX) / props.zoom,
+            y: (position.clientY - resizeOrigin.value.clientY) / props.zoom,
         }
     })
 

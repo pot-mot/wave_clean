@@ -16,6 +16,8 @@ export type SplitpanesProps = {
     maximizePanes?: boolean
     rtl?: boolean
     firstSplitter?: boolean
+
+    zoom?: number
 }
 
 export type EmitPaneData = {

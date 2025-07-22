@@ -18,7 +18,7 @@ import {RawMindMapLayer} from "@/mindMap/layer/MindMapLayer.ts";
 import {SizePositionEdgePartial} from "@/mindMap/edge/SizePositionEdge.ts";
 import {ContentEdgeData} from "@/mindMap/edge/ContentEdge.ts";
 
-const {updateEdgeData, isSelectionPlural, canMultiSelect, findEdge, selectEdge, fitRect, remove, currentViewport} = useMindMap()
+const {updateEdgeData, isSelectionPlural, canMultiSelect, findEdge, selectEdge, fitRect, remove, zoom} = useMindMap()
 
 const props = defineProps<EdgeProps<ContentEdgeData> & {
     layer: RawMindMapLayer,
@@ -66,10 +66,6 @@ const handleBlur = () => {
 }
 
 // 工具栏
-const zoom = computed(() => {
-    return currentViewport.value !== undefined ? 1 / currentViewport.value.zoom : 1
-})
-
 const toolBarWidth = ref(0)
 const toolBarHeight = ref(0)
 
@@ -272,7 +268,7 @@ const executeDelete = () => {
             v-if="selected && inputShow"
             @resize="handleToolBarResize"
             style="z-index: var(--top-z-index);"
-            :transform="`translate(${curveMidpoint.x - (toolBarWidth * zoom) / 2} ${curveMidpoint.y - inputHeight / 2 - (toolBarHeight + 10) * zoom}) scale(${zoom})`"
+            :transform="`translate(${curveMidpoint.x - toolBarWidth / (zoom * 2)} ${curveMidpoint.y - inputHeight / 2 - (toolBarHeight + 10) / zoom}) scale(${1 / zoom})`"
         >
             <div class="toolbar">
                 <button @mousedown.capture.prevent.stop="executeFocus">

@@ -33,6 +33,7 @@ type ClassPropType = string | Record<string, any> | string[]
 const props = defineProps<MarkdownEditorProps & {
     editorClass?: ClassPropType,
     previewClass?: ClassPropType,
+    zoom?: number,
 }>()
 const emits = defineEmits<MarkdownEditorEmits>()
 
@@ -66,6 +67,7 @@ defineExpose({
                     <Splitpanes
                         v-show="previewType === 'edit-preview'"
                         :maximize-panes="false"
+                        :zoom="zoom"
                     >
                         <Pane :size="50" :id="editorPaneId"/>
                         <Pane :size="50" :id="previewPaneId"/>

@@ -49,7 +49,7 @@ const {
     paste,
     fitRect,
     remove,
-    currentViewport,
+    zoom,
     executeAsyncBatch,
 } = useMindMap()
 
@@ -257,6 +257,17 @@ const handleMarkdownEditorResizeStop = () => {
     })
 }
 
+// 阻止 splitter drag
+watch(() => markdownEditorRef.value?.containerRef, async (container) => {
+    if (container) {
+        await nextTick()
+        const splitters = container.querySelectorAll('.splitpanes__splitter')
+        for (const splitter of splitters) {
+            splitter.classList.add('noDrag')
+        }
+    }
+}, {immediate: true})
+
 // 节点行为
 const handleNodeSelect = () => {
     if (isSelectionPlural.value) return
@@ -456,7 +467,7 @@ const executeDelete = () => {
                 <ResizeWrapper
                     ref="MarkdownEditorResizeRef"
                     v-model="markdownContentSize"
-                    :scale="currentViewport.zoom"
+                    :zoom="zoom"
                     :min-width="ContentNode_Markdown_minWidth"
                     :min-height="ContentNode_Markdown_minHeight"
                     :disabled="!isFocus"
@@ -473,6 +484,7 @@ const executeDelete = () => {
                         :preview-class="{noDrag: true, noWheel: isMarkdownEditorPreviewOverflow}"
                         v-model="markdownEditorValue"
                         :theme="markdownEditorTheme"
+                        :zoom="zoom"
                         @blur="handleMarkdownEditorBlur"
                         @click.capture="stopCtrlClickWhenMarkdownEdit"
                     />
