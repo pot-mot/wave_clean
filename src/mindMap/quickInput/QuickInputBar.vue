@@ -15,8 +15,9 @@ const handleQuickInput = (quickInput: QuickInputItem) => {
 
 <template>
     <CollapseItem
-        min-height="2.5rem"
-        max-height="7.5rem"
+        class="quick-input-bar-container"
+        min-height="2rem"
+        max-height="8rem"
     >
         <div class="quick-input-bar">
             <button
@@ -32,6 +33,11 @@ const handleQuickInput = (quickInput: QuickInputItem) => {
 </template>
 
 <style scoped>
+.quick-input-bar-container :deep(.collapse-item-body::-webkit-scrollbar) {
+    width: 0;
+    height: 0;
+}
+
 .quick-input-bar {
     display: flex;
     flex-wrap: wrap;

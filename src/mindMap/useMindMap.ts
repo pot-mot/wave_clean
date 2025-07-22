@@ -58,6 +58,8 @@ import {ContentEdgeData, EdgeType_CONTENT} from "@/mindMap/edge/ContentEdge.ts";
 // 鼠标默认行为
 type MouseAction = "panDrag" | "selectionRect"
 
+export const MIND_MAP_CONTAINER_ID = "MIND_MAP_CONTAINER_ID"
+
 export const createLayerId = () => {
     return `layer-${uuid()}`
 }

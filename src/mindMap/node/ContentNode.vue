@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {Handle, NodeProps} from "@vue-flow/core";
 import {
+    MIND_MAP_CONTAINER_ID,
     useMindMap
 } from "@/mindMap/useMindMap.ts";
 import {computed, nextTick, onMounted, ref, useTemplateRef, watch} from "vue";
@@ -126,6 +127,7 @@ const markdownEditorValue = ref<string>(props.data.content)
 
 const isMarkdownEdit = ref(false)
 
+const isMarkdownEditorFullScreen = computed<boolean>(() => markdownEditorRef.value?.isFullScreen ?? false)
 const isMarkdownEditorPreviewOverflow = computed<boolean>(() => markdownEditorRef.value?.markdownPreviewRef?.isOverflow ?? false)
 const isMarkdownPreviewOverflow = computed<boolean>(() => markdownPreviewRef.value?.isOverflow ?? false)
 
@@ -484,7 +486,9 @@ const executeDelete = () => {
                         :preview-class="{noDrag: true, noWheel: isMarkdownEditorPreviewOverflow}"
                         v-model="markdownEditorValue"
                         :theme="markdownEditorTheme"
-                        :zoom="zoom"
+                        :zoom="isMarkdownEditorFullScreen ? 1 : zoom"
+                        :full-screen-teleport-target="`#${MIND_MAP_CONTAINER_ID}`"
+                        full-screen-z-index="var(--editor-full-screen-z-index)"
                         @blur="handleMarkdownEditorBlur"
                         @click.capture="stopCtrlClickWhenMarkdownEdit"
                     />

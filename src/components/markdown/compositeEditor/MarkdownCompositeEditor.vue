@@ -30,11 +30,17 @@ const editorRef = computed(() => {
 
 type ClassPropType = string | Record<string, any> | string[]
 
-const props = defineProps<MarkdownEditorProps & {
+const props = withDefaults(defineProps<MarkdownEditorProps & {
     editorClass?: ClassPropType,
     previewClass?: ClassPropType,
     zoom?: number,
-}>()
+    fullScreenTeleportTarget?: string | HTMLElement,
+    fullScreenZIndex?: string,
+}>(), {
+    zoom: 1,
+    fullScreenZIndex: "1000000",
+    fullScreenTeleportTarget: 'body',
+})
 const emits = defineEmits<MarkdownEditorEmits>()
 
 const isFullScreen = ref(false)
@@ -48,19 +54,24 @@ defineExpose({
     markdownEditorRef,
     markdownPreviewRef,
     editorRef,
+    isFullScreen,
 })
 </script>
 
 <template>
     <div class="markdown-composite-editor">
-        <Teleport to="body" :disabled="!isFullScreen">
+        <Teleport :to="fullScreenTeleportTarget" :disabled="!isFullScreen">
             <div class="markdown-composite-editor-wrapper" :class="{fullscreen: isFullScreen}">
                 <div class="toolbar">
-                    <button @click="previewType = 'edit-only'">edit-only</button>
-                    <button @click="previewType = 'preview-only'">preview-only</button>
-                    <button @click="previewType = 'edit-preview'">edit-preview</button>
+                    <div>
+                        <button @click="previewType = 'edit-only'">edit-only</button>
+                        <button @click="previewType = 'preview-only'">preview-only</button>
+                        <button @click="previewType = 'edit-preview'">edit-preview</button>
+                    </div>
 
-                    <button @click="toggleFullScreen">full-screen</button>
+                    <div>
+                        <button @click="toggleFullScreen">full-screen</button>
+                    </div>
                 </div>
 
                 <div class="container" ref="containerRef">
@@ -114,18 +125,20 @@ defineExpose({
     left: 0;
     height: 100vh;
     width: 100vw;
-    z-index: var(--top-z-index);
+    z-index: v-bind(fullScreenZIndex);
 }
 
 .toolbar {
     height: 2rem;
     display: flex;
     justify-content: space-between;
+    background-color: var(--background-color);
 }
 
 .container {
     height: calc(100% - 2rem);
     overflow: hidden;
+    background-color: var(--background-color);
 }
 
 .editor {

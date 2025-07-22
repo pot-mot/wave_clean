@@ -166,7 +166,6 @@ const handleSwap = (a: number, b: number) => {
     grid-template-columns: 4rem calc(100% - 4.5rem);
     grid-gap: 0.5rem;
     opacity: 0.8;
-    z-index: var(--top-z-index);
     background-color: var(--primary-color);
 }
 

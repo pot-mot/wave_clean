@@ -267,7 +267,7 @@ const executeDelete = () => {
         <AutoResizeForeignObject
             v-if="selected && inputShow"
             @resize="handleToolBarResize"
-            style="z-index: var(--top-z-index);"
+            style="z-index: var(--edge-toolbar-z-index);"
             :transform="`translate(${curveMidpoint.x - toolBarWidth / (zoom * 2)} ${curveMidpoint.y - inputHeight / 2 - (toolBarHeight + 10) / zoom}) scale(${1 / zoom})`"
         >
             <div class="toolbar">

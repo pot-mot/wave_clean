@@ -88,7 +88,7 @@ defineExpose({
     justify-content: center;
     align-items: center;
     opacity: 1;
-    z-index: var(--top-z-index);
+    z-index: var(--loading-z-index);
     background: var(--mask-color);
 }
 

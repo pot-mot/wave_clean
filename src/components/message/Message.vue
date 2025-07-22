@@ -148,7 +148,7 @@ defineExpose({
     width: 100%;
     margin: auto;
     pointer-events: none;
-    z-index: var(--top-z-index);
+    z-index: var(--message-z-index);
 }
 
 .message-wrapper {
