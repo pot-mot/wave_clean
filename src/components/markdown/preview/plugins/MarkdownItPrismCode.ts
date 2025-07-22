@@ -47,11 +47,11 @@ export const mermaidLanguages = new Set([
     "mermaid",
 ])
 
-export const allLanguages = [
+export const allLanguages = new Set(
     ...prismLanguages,
     ...katexLanguages,
-    ...mermaidLanguages,
-]
+    ...mermaidLanguages
+)
 
 const cache: Map<string, string> = new Map
 
