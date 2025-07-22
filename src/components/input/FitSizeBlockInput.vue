@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {computed, nextTick, onMounted, ref, useTemplateRef, watch} from "vue";
-import {getTextBlockWidth} from "@/components/input/textSize.ts";
+import {getTextBlockSize} from "@/components/input/textSize.ts";
 import {vTapInput} from "@/components/input/vTabInput.ts";
 import {calculatePadding, PaddingData} from "@/components/input/paddingCalculate.ts";
 
@@ -36,7 +36,7 @@ const emits = defineEmits<{
 
 const updateTextSize = () => {
     if (!textareaRef.value) return
-    const {width: innerWidth, height: innerHeight} = getTextBlockWidth(innerValue.value, textareaRef.value)
+    const {width: innerWidth, height: innerHeight} = getTextBlockSize(innerValue.value, textareaRef.value)
     width.value = (innerWidth <= 0 ? 1 : innerWidth) + props.borderWidth * 2 + fullPadding.value.left + fullPadding.value.right
     height.value = (innerHeight < props.fontSize ? props.fontSize : innerHeight) + props.borderWidth * 2 + fullPadding.value.top + fullPadding.value.bottom
     emits("resize", {width: width.value, height: height.value})
@@ -46,7 +46,7 @@ const handleComposition = (e: CompositionEvent) => {
     if (!textareaRef.value) return
     const start = textareaRef.value.selectionStart ?? innerValue.value.length
     const text = innerValue.value.slice(0, start) + e.data + innerValue.value.slice(start)
-    const {width: innerWidth, height: innerHeight} = getTextBlockWidth(text, textareaRef.value)
+    const {width: innerWidth, height: innerHeight} = getTextBlockSize(text, textareaRef.value)
     width.value = (innerWidth <= 0 ? 1 : innerWidth) + props.borderWidth * 2 + fullPadding.value.left + fullPadding.value.right
     height.value = (innerHeight < props.fontSize ? props.fontSize : innerHeight) + props.borderWidth * 2 + fullPadding.value.top + fullPadding.value.bottom
     emits("resize", {width: width.value, height: height.value})
