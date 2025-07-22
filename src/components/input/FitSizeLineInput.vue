@@ -10,10 +10,12 @@ const props = withDefaults(
         padding?: PaddingData,
         borderWidth?: number,
         fontSize?: number,
+        lineHeight?: number,
     }>(), {
         padding: 8,
         borderWidth: 1,
         fontSize: 16,
+        lineHeight: 24,
     }
 )
 
@@ -104,6 +106,7 @@ defineExpose({el: inputRef, isFocus})
             paddingBottom: `${fullPadding.bottom}px`,
             borderWidth: `${props.borderWidth}px`,
             fontSize: `${props.fontSize}px`,
+            lineHeight: `${lineHeight}px`,
             width: `${width}px`,
             height: `${height}px`,
             cursor: isFocus ? 'text' : 'default'
