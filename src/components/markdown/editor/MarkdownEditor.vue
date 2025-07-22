@@ -84,6 +84,9 @@ onMounted(async () => {
     initMarkdownEnterCompletion(editorInstance)
 
     editorInstance.onDidChangeModelContent(() => {
+        // // debug tokenizer
+        // const model = editorInstance.getModel()!
+        // console.log(editor.tokenize(model.getValueInRange(model.getFullModelRange()), model.getLanguageId()))
         modelValue.value = editorInstance.getValue()
     })
 

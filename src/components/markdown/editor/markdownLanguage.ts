@@ -51,13 +51,13 @@ const markdownLanguage: IMonarchLanguage = {
             // code block (4 spaces indent)
             [/^(\t|[ ]{4})[^ ].*$/, "string"],
             // code blocks (with backticks but no language)
-            [/^\s*```\s*$/, {token: "string", next: "@codeblock"}],
-            [/^\s*~~~\s*$/, {token: "string", next: "@codeblock"}],
+            [/^\s*```\s*$/, {token: "string.codeblock.start", next: "@codeblock"}],
+            [/^\s*~~~\s*$/, {token: "string.codeblock.start", next: "@codeblock"}],
             // code blocks (wait language)
-            [/^\s*~~~/, {token: "string", next: "@codeblockLanguage"}],
-            [/^\s*```/, {token: "string", next: "@codeblockLanguage"}],
+            [/^\s*~~~/, {token: "string.codeblock.start", next: "@codeblockLanguage"}],
+            [/^\s*```/, {token: "string.codeblock.start", next: "@codeblockLanguage"}],
             // katex block
-            [/^\s*\$\$.*$/, {token: "string", next: "@katexblock"}],
+            [/^\s*\$\$\s*$/, {token: "string.katexblock.start", next: "@katexblock"}],
             // markup within lines
             {include: "@linecontent"}
         ],
@@ -89,22 +89,23 @@ const markdownLanguage: IMonarchLanguage = {
             ]
         ],
         codeblock: [
-            [/^\s*~~~\s*$/, {token: "string", next: "@pop"}],
-            [/^\s*```\s*$/, {token: "string", next: "@pop"}],
+            [/^\s*~~~\s*$/, {token: "string.codeblock.end", next: "@pop"}],
+            [/^\s*```\s*$/, {token: "string.codeblock.end", next: "@pop"}],
             // [/.*$/, "variable.source"]
         ],
         codeblockLanguage: [
-            [/\s*((?:\w|[\/\-#])+).*$/, {token: "keyword", next: "codeblockWithLanguage", nextEmbedded: "$1"}]
+            [/\s*((?:\w|[\/\-#])+).*$/, {token: "keyword.codeblock.language.start", next: "codeblockWithLanguage", nextEmbedded: "$1"}],
+            [/\s*$/, {token: "keyword.codeblock.language.end", next: "@pop"}]
         ],
         // github style code blocks
         codeblockWithLanguage: [
-            [/~~~\s*$/, {token: "string", next: "@pop", nextEmbedded: "@pop"}],
-            [/```\s*$/, {token: "string", next: "@pop", nextEmbedded: "@pop"}],
+            [/^\s*~~~/, {token: "string.codeblock.end", next: "@pop", nextEmbedded: "@pop"}],
+            [/^\s*```/, {token: "string.codeblock.end", next: "@pop", nextEmbedded: "@pop"}],
             // [/[^~]+/, "variable.source"],
             // [/[^`]+/, "variable.source"]
         ],
         katexblock: [
-            [/^\s*\$\$.*$/, {token: "string", next: "@pop"}],
+            [/^\s*\$\$.*$/, {token: "string.katexblock.end", next: "@pop"}],
             // [/[^\$]+/, "variable.source"]
         ],
         linecontent: [
