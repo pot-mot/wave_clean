@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import {v7 as uuid} from "uuid"
-import {Pane, Splitpanes} from 'splitpanes'
-import 'splitpanes/dist/splitpanes.css'
 import MarkdownEditor from "@/components/markdown/editor/MarkdownEditor.vue";
 import MarkdownPreview from "@/components/markdown/preview/MarkdownPreview.vue";
 import {computed, ref, useTemplateRef} from "vue";
 import {MarkdownEditorEmits, MarkdownEditorProps} from "@/components/markdown/editor/MarkdownEditorType.ts";
 import {PreviewType} from "@/components/markdown/compositeEditor/PreviewType.ts";
+import Splitpanes from "@/components/splitpanes/Splitpanes.vue";
+import Pane from "@/components/splitpanes/Pane.vue";
 
 const id = `markdown-composite-editor-${uuid()}`
 const editorPaneId = `${id}-editor-pane`
@@ -21,6 +21,7 @@ const previewType = defineModel<PreviewType>('previewType', {
     default: 'edit-only',
 })
 
+const containerRef = useTemplateRef<HTMLDivElement>('containerRef')
 const markdownEditorRef = useTemplateRef<InstanceType<typeof MarkdownEditor>>('markdownEditorRef')
 const markdownPreviewRef = useTemplateRef<InstanceType<typeof MarkdownPreview>>('markdownPreviewRef')
 const editorRef = computed(() => {
@@ -42,6 +43,7 @@ const toggleFullScreen = () => {
 }
 
 defineExpose({
+    containerRef,
     markdownEditorRef,
     markdownPreviewRef,
     editorRef,
@@ -60,10 +62,13 @@ defineExpose({
                     <button @click="toggleFullScreen">full-screen</button>
                 </div>
 
-                <div class="container">
-                    <Splitpanes v-show="previewType === 'edit-preview'">
-                        <Pane size="50" :id="editorPaneId"/>
-                        <Pane size="50" :id="previewPaneId"/>
+                <div class="container" ref="containerRef">
+                    <Splitpanes
+                        v-show="previewType === 'edit-preview'"
+                        :maximize-panes="false"
+                    >
+                        <Pane :size="50" :id="editorPaneId"/>
+                        <Pane :size="50" :id="previewPaneId"/>
                     </Splitpanes>
 
                     <Teleport defer :disabled="previewType === 'edit-only'" :to="`#${editorPaneId}`">
