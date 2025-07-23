@@ -24,6 +24,7 @@ import "monaco-editor/esm/vs/editor/contrib/suggest/browser/suggestController.js
 // token解析
 import "monaco-editor/esm/vs/editor/contrib/tokenization/browser/tokenization.js";
 import {initMarkdownEnterCompletion} from "@/components/markdown/editor/completion/enterCompletion.ts";
+import {editorTouchSelectionHelp} from "@/components/markdown/editor/touchSelection/editorTouchSelectionHelp.ts";
 
 const modelValue = defineModel<string>({
     required: true
@@ -50,6 +51,9 @@ onMounted(async () => {
     if (!element) {
         throw new Error("MarkdownEditor init fail, element not existed")
     }
+
+    const isTouch = typeof window !== 'undefined' && 'ontouchstart' in window
+
     const editorInstance = editor.create(element, {
         language: "markdown",
         value: modelValue.value,
@@ -74,12 +78,18 @@ onMounted(async () => {
         automaticLayout: true,
         dropIntoEditor: {enabled: true},
         wordBasedSuggestions: "off",
+        contextmenu: !isTouch,
 
         autoClosingBrackets: 'languageDefined', // 是否自动添加结束括号(包括中括号) "always" | "languageDefined" | "beforeWhitespace" | "never"
         autoClosingDelete: 'never', // 是否自动删除结束括号(包括中括号) "always" | "never" | "auto"
         autoClosingQuotes: 'languageDefined', // 是否自动添加结束的单引号 双引号 "always" | "languageDefined" | "beforeWhitespace" | "never"
         autoSurround: "languageDefined",
     })
+
+    if (isTouch) {
+        editorTouchSelectionHelp(editorInstance, element)
+        import("@/components/markdown/editor/touchSelection/editor-touch-selection-style.css")
+    }
 
     initMarkdownEnterCompletion(editorInstance)
 

@@ -49,6 +49,19 @@ const toggleFullScreen = () => {
     isFullScreen.value = !isFullScreen.value
 }
 
+const undo = () => {
+    editorRef.value?.trigger('keyboard', 'undo', null)
+}
+
+const redo = () => {
+    editorRef.value?.trigger('keyboard', 'redo', null)
+}
+
+const search = () => {
+    // monaco-editor/esm/vs/editor/contrib/find/browser/findModel.js
+    editorRef.value?.trigger('actions', 'actions.find', null)
+}
+
 defineExpose({
     containerRef,
     markdownEditorRef,
@@ -67,6 +80,15 @@ defineExpose({
                         <button @click="previewType = 'edit-only'">edit-only</button>
                         <button @click="previewType = 'preview-only'">preview-only</button>
                         <button @click="previewType = 'edit-preview'">edit-preview</button>
+                    </div>
+
+                    <div>
+                        <button @click="search">search</button>
+                    </div>
+
+                    <div>
+                        <button @click="undo">undo</button>
+                        <button @click="redo">redo</button>
                     </div>
 
                     <div>
