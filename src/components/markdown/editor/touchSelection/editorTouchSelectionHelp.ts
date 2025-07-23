@@ -1,8 +1,52 @@
 // Thanks for https://github.com/Hydralerne/axios-code/blob/main/touch/main.js
 
-import {editor, Selection, Position} from "monaco-editor/esm/vs/editor/editor.api.js"
-import IStandaloneCodeEditor = editor.IStandaloneCodeEditor
+import {editor, Position, Selection} from "monaco-editor/esm/vs/editor/editor.api.js"
 import {copyText, readClipBoardText} from "@/utils/clipBoard/useClipBoard.ts"
+import {throttle} from "lodash-es";
+import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
+import EditorOption = editor.EditorOption;
+import ScrollType = editor.ScrollType;
+
+const updateSelectionStart = (selection: Selection, position: Position): Selection => {
+    return new Selection(
+        position.lineNumber,
+        position.column,
+        selection.endLineNumber,
+        selection.endColumn
+    )
+}
+
+const updateSelectionEnd = (selection: Selection, position: Position): Selection => {
+    return new Selection(
+        selection.startLineNumber,
+        selection.startColumn,
+        position.lineNumber,
+        position.column
+    )
+}
+
+const revealIfTouchVisibleTopOrBottom = throttle((editor: IStandaloneCodeEditor, touch: Touch, lineHeight: number) => {
+    const model = editor.getModel()
+    if (!model) return
+
+    const visibleRanges = editor.getVisibleRanges()
+    if (visibleRanges.length !== 1) return
+    const visibleRange = visibleRanges[0]
+
+    const maxLineNumber = model.getLineCount()
+
+    const previousTarget = editor.getTargetAtClientPoint(touch.clientX, touch.clientY - lineHeight)
+    if (previousTarget === null && visibleRange.startLineNumber > 1) {
+        // 触发向上滚动
+        editor.setScrollTop(editor.getScrollTop() - lineHeight, ScrollType.Smooth)
+    }
+
+    const nextTarget = editor.getTargetAtClientPoint(touch.clientX, touch.clientY)
+    if (nextTarget === null && visibleRange.endLineNumber < maxLineNumber) {
+        // 触发向下滚动
+        editor.setScrollTop(editor.getScrollTop() + lineHeight, ScrollType.Smooth)
+    }
+}, 100)
 
 export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element: HTMLElement) => {
     const editorOverlayGuard = element.querySelector('.overflow-guard')
@@ -12,11 +56,37 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
     if (!margin || !(margin instanceof HTMLElement)) throw new Error("no margin")
     const leftLength = margin.offsetWidth
 
-    let disabledMove = false
+    let selectionsShow = false
     let selectionsContainer: HTMLDivElement | null = null
     let leftSelector: HTMLDivElement | null = null
     let rightSelector: HTMLDivElement | null = null
+    const showSelections = () => {
+        if (!selectionsContainer) return
+        if (selectionsShow) return
+        selectionsShow = true
+        selectionsContainer.classList.remove('hidden')
+    }
+    const hideSelections = () => {
+        if (!selectionsContainer) return
+        if (!selectionsShow) return
+        selectionsShow = false
+        selectionsContainer.classList.add('hidden')
+    }
+
+    let selectorMenuShow = false
     let selectorMenu: HTMLDivElement | null = null
+    const showSelectorMenu = () => {
+        if (!selectorMenu) return
+        if (selectorMenuShow) return
+        selectorMenuShow = true
+        selectorMenu.classList.remove('hidden')
+    }
+    const hideSelectorMenu = () => {
+        if (!selectorMenu) return
+        if (!selectorMenuShow) return
+        selectorMenuShow = false
+        selectorMenu.classList.add('hidden')
+    }
 
     editor.onDidDispose(() => {
         selectionsContainer?.remove()
@@ -63,107 +133,9 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
         editor.executeEdits('', [{range: selection, text}])
     }
 
-    const initializeSelector = () => {
-        // Create the selectors container
-        selectionsContainer = document.createElement('div')
-        selectionsContainer.className = 'selections hidden'
-
-        // Create the right-selector and left-selector divs
-        rightSelector = document.createElement('div')
-        rightSelector.className = 'selector right-selector'
-        leftSelector = document.createElement('div')
-        leftSelector.className = 'selector left-selector'
-
-        // Append the selectors to the container
-        selectionsContainer.appendChild(rightSelector)
-        selectionsContainer.appendChild(leftSelector)
-
-        editorOverlayGuard.append(selectionsContainer)
-        editor.onDidScrollChange((e) => {
-            if (selectionsContainer) {
-                selectionsContainer.style.top = `-${e.scrollTop}px`
-            }
-        })
-
-        const handleSelectorTouch = (selector: HTMLDivElement, isLeft: boolean) => {
-            let initialSelection: Selection | null = null
-            let touchMoved = false  // Track if touchmove occurred
-
-            selector.addEventListener('touchstart', (event) => {
-                initialSelection = editor.getSelection()
-                touchMoved = false  // Reset touchMoved flag
-                event.preventDefault()
-                disabledMove = true
-            })
-
-            selector.addEventListener('touchmove', (event) => {
-                const touch = event.changedTouches[0] ?? event.touches[0]
-                const target = editor.getTargetAtClientPoint(touch.clientX, touch.clientY)
-
-                if (target && target.position && initialSelection) {
-                    const newSelection = isLeft
-                        ? new Selection(
-                            target.position.lineNumber,
-                            target.position.column,
-                            initialSelection.endLineNumber,
-                            initialSelection.endColumn
-                        )
-                        : new Selection(
-                            initialSelection.startLineNumber,
-                            initialSelection.startColumn,
-                            target.position.lineNumber,
-                            target.position.column
-                        )
-                    editor.setSelection(newSelection)
-                    touchMoved = true  // Mark that touchmove occurred
-                }
-                event.preventDefault()
-            })
-
-            selector.addEventListener('touchend', (event) => {
-                if (!touchMoved) {
-                    const touch = event.changedTouches[0] ?? event.touches[0]
-                    const target = editor.getTargetAtClientPoint(touch.clientX, touch.clientY)
-
-                    if (target && target.position && initialSelection) {
-                        const newSelection = isLeft
-                            ? new Selection(
-                                target.position.lineNumber,
-                                target.position.column,
-                                initialSelection.endLineNumber,
-                                initialSelection.endColumn
-                            )
-                            : new Selection(
-                                initialSelection.startLineNumber,
-                                initialSelection.startColumn,
-                                target.position.lineNumber,
-                                target.position.column
-                            )
-                        editor.setSelection(newSelection)
-                    }
-                }
-                initialSelection = null
-                touchMoved = false
-            })
-        }
-
-        handleSelectorTouch(leftSelector, true)
-        handleSelectorTouch(rightSelector, false)
-    }
-
-    editor.onDidChangeCursorSelection((e) => {
-        if (!selectionsContainer || !selectorMenu) return
-
-        const selection = e.selection
+    const syncSelectionTransform = (selection: Selection) => {
         const startPosition = selection.getStartPosition()
         const endPosition = selection.getEndPosition()
-
-        if (selection.isEmpty()) {
-            // Hide the selections container when there's no selection
-            selectionsContainer.classList.add('hidden')
-            selectorMenu.classList.add('hidden')
-            return
-        }
 
         // Get the top position of the start and end lines
         const startLineTop = editor.getTopForLineNumber(startPosition.lineNumber)
@@ -180,170 +152,144 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
             const rightSelectorX = endCoords.left - leftLength
             const rightSelectorY = endLineTop
 
-            // Update the left-selector position
-            leftSelector.style.transform = `translateX(calc(${leftSelectorX}px - 1.5em)) translateY(${leftSelectorY}px)`
-            // Update the right-selector position
-            rightSelector.style.transform = `translateX(${rightSelectorX}px) translateY(${rightSelectorY}px)`
+            leftSelector.style.transform = `translateX(calc(${leftSelectorX}px - 0.75em)) translateY(${leftSelectorY}px) rotate(45deg)`
+            rightSelector.style.transform = `translateX(calc(${rightSelectorX}px - 0.75em)) translateY(${rightSelectorY}px) rotate(45deg)`
+        }
+    }
+
+    const initSelections = () => {
+        selectionsContainer = document.createElement('div')
+        selectionsContainer.className = 'selections hidden'
+
+        leftSelector = document.createElement('div')
+        leftSelector.className = 'selector left-selector'
+        selectionsContainer.appendChild(leftSelector)
+
+        rightSelector = document.createElement('div')
+        rightSelector.className = 'selector right-selector'
+        selectionsContainer.appendChild(rightSelector)
+
+        editorOverlayGuard.append(selectionsContainer)
+        editor.onDidScrollChange((e) => {
+            if (selectionsContainer) {
+                selectionsContainer.style.top = `-${e.scrollTop}px`
+            }
+        })
+
+
+        const setupSelectorTouchEvent = (
+            selector: HTMLDivElement,
+            updateSelection: (selection: Selection, position: Position) => Selection
+        ) => {
+            let timeout: number | undefined
+
+            selector.addEventListener('touchstart', (event) => {
+                const touch = event.changedTouches[0] ?? event.touches[0]
+                const initialSelection = editor.getSelection()
+                const lineHeight = editor.getOption(EditorOption.lineHeight)
+                timeout = setTimeout(() => {
+                    if (touch && selectorMenu) {
+                        const elementRect = element.getBoundingClientRect()
+                        const selectorRect = selector.getBoundingClientRect()
+                        const x = selectorRect.left - elementRect.left
+                        const y = selectorRect.top - elementRect.top - lineHeight
+                        selectorMenu.style.transform = `translateX(calc(${x}px - 50%)) translateY(calc(${y}px - 100%))`
+                        showSelectorMenu()
+                    }
+                }, 500)
+
+                const handleMove = (event: TouchEvent) => {
+                    const touch = event.changedTouches[0] ?? event.touches[0]
+                    const target = editor.getTargetAtClientPoint(touch.clientX, touch.clientY - lineHeight / 2)
+                    if (timeout !== undefined) {
+                        clearTimeout(timeout)
+                        timeout = undefined
+                    }
+                    if (target && target.position && initialSelection) {
+                        editor.setSelection(updateSelection(initialSelection, target.position))
+                    }
+
+                    revealIfTouchVisibleTopOrBottom(editor, touch, lineHeight)
+                }
+
+                const handleEnd = (event: TouchEvent) => {
+                    handleMove(event)
+                    document.removeEventListener('touchmove', handleMove)
+                    document.removeEventListener('touchend', handleEnd)
+                    document.removeEventListener('touchcancel', handleEnd)
+                }
+
+                document.addEventListener('touchmove', handleMove)
+                document.addEventListener('touchend', handleEnd)
+                document.addEventListener('touchcancel', handleEnd)
+            })
         }
 
-        // Show the selections container when there is a selection
-        selectionsContainer.classList.remove('hidden')
-    })
+        setupSelectorTouchEvent(leftSelector, updateSelectionStart)
+        setupSelectorTouchEvent(rightSelector, updateSelectionEnd)
 
-    initializeSelector()
-
-
-    // selectorMenu
-    selectorMenu = document.createElement('div')
-    selectorMenu.className = 'selector-menu hidden'
-
-    // Create and append menu items to the inner menu container
-    const menuItems = [
-        {className: 'copy', text: 'Copy', action: copy},
-        {className: 'cut', text: 'Cut', action: cut},
-        {className: 'paste', text: 'Paste', action: paste},
-        {className: 'select', text: 'Select all', action: selectAll},
-    ]
-
-    menuItems.forEach(item => {
-        if (!selectorMenu) throw new Error('selectorMenu is not defined')
-
-        const menuItemElement = document.createElement('div')
-        menuItemElement.className = `selector-menu-item ${item.className}`
-        menuItemElement.innerHTML = `<span>${item.text}</span>`
-        menuItemElement.ontouchstart = () => {
-            menuItemElement.classList.add('hovered')
-        }
-        menuItemElement.ontouchmove = () => {
-            menuItemElement.classList.remove('hovered')
-        }
-        menuItemElement.ontouchend = () => {
-            menuItemElement.classList.remove('hovered')
-            item.action()
-            selectorMenu?.classList.add('hidden')
-        }
-        selectorMenu.appendChild(menuItemElement)
-    })
-
-    selectorMenu.addEventListener('touchstart', (event) => {
-        event.preventDefault()
-        disabledMove = true
-    })
-
-    selectorMenu.addEventListener('touchmove', (event) => {
-        event.preventDefault()
-        disabledMove = true
-    })
-
-    selectorMenu.addEventListener('touchend', (event) => {
-        event.preventDefault()
-        disabledMove = false
-    })
-
-    editorOverlayGuard.append(selectorMenu)
-
-    let touchTimeout: number
-    let touchCount = 0
-    let startPosition: Position
-    let isSelecting = false
-
-    const isPositionInSelection = (position: Position) => {
         const selection = editor.getSelection()
-        if (!selection || selection.isEmpty()) {
-            return false
-        }
-
-        const startPosition = selection.getStartPosition()
-        const endPosition = selection.getEndPosition()
-
-        // Compare the position with the selection range
-        return (
-            position.lineNumber > startPosition.lineNumber ||
-            (position.lineNumber === startPosition.lineNumber && position.column >= startPosition.column)
-        ) && (
-            position.lineNumber < endPosition.lineNumber ||
-            (position.lineNumber === endPosition.lineNumber && position.column <= endPosition.column)
-        )
+        if (selection) syncSelectionTransform(selection)
     }
 
-    element.addEventListener('touchstart', (event) => {
-        if (event.target instanceof HTMLElement &&
-            (
-                (selectorMenu && selectorMenu.contains(event.target)) ||
-                (selectionsContainer && selectionsContainer.contains(event.target))
-            )
-        ) {
-            event.stopPropagation()
-            event.preventDefault()
-        }
-        touchCount++
-        if (touchTimeout) {
-            clearTimeout(touchTimeout)
-        }
-
-        touchTimeout = setTimeout(() => {
-            // in here, want get YValue based on offset top like the value of the rouched line to document
-            isSelecting = true
-            if (!isPositionInSelection(startPosition)) {
-                editor.setPosition(startPosition)
-            }
-
-            const scrollPosition = editor.getScrolledVisiblePosition(startPosition)
-            if (scrollPosition) {
-                showContextMenu(scrollPosition)
-            }
-        }, 500) // 0.5 second long press to show context menu
-        const touch = event.touches[0]
-        const target = editor.getTargetAtClientPoint(touch.clientX, touch.clientY)
-        if (target && target.position) {
-            startPosition = target.position
-        }
+    editor.onDidChangeCursorSelection((e) => {
+        if (!selectionsContainer || !selectorMenu) return
+        syncSelectionTransform(e.selection)
+        hideSelectorMenu()
     })
 
-    element.addEventListener('touchend', () => {
-        if (touchTimeout) {
-            clearTimeout(touchTimeout)
-        }
-        if (isSelecting) {
-            isSelecting = false
-        }
-        if (disabledMove) {
-            disabledMove = false
-        }
-    })
+    initSelections()
 
-    element.addEventListener('touchmove', (event) => {
-        if (touchTimeout) {
-            clearTimeout(touchTimeout)
-        }
+    const initSelectorMenu = () => {
+        selectorMenu = document.createElement('div')
+        selectorMenu.className = 'selector-menu hidden'
 
-        if (disabledMove) {
-            event.preventDefault()
-            event.stopPropagation()
-        }
+        // Create and append menu items to the inner menu container
+        const menuItems = [
+            {className: 'copy', text: 'Copy', action: copy},
+            {className: 'cut', text: 'Cut', action: cut},
+            {className: 'paste', text: 'Paste', action: paste},
+            {className: 'select', text: 'Select all', action: selectAll},
+            {className: 'close', text: 'close', action: () => {}}
+        ]
 
-        if (startPosition && isSelecting) {
-            event.preventDefault()
-            event.stopPropagation()
-            const touch = event.touches[0]
-            const target = editor.getTargetAtClientPoint(touch.clientX, touch.clientY)
-            if (target && target.position) {
-                editor.setSelection(new Selection(startPosition.lineNumber, startPosition.column, target.position.lineNumber, target.position.column))
-                isSelecting = true
+        menuItems.forEach(item => {
+            if (!selectorMenu) throw new Error('selectorMenu is not defined')
+
+            const menuItemElement = document.createElement('div')
+            menuItemElement.className = `selector-menu-item ${item.className}`
+            menuItemElement.innerHTML = `<span>${item.text}</span>`
+            menuItemElement.ontouchend = () => {
+                item.action()
+                selectorMenu?.classList.add('hidden')
             }
-        }
-    })
+            selectorMenu.appendChild(menuItemElement)
+        })
 
-    const showContextMenu = (position: {top: number, left: number, height: number}) => {
-        if (!selectorMenu) throw new Error('selectorMenu is not defined')
+        selectorMenu.addEventListener('touchstart', (event) => {
+            event.preventDefault()
+        })
 
-        let x = position.left - selectorMenu.offsetWidth / 2
-        let y = position.top - selectorMenu.offsetHeight - 3
-        console.log(x, y)
+        selectorMenu.addEventListener('touchmove', (event) => {
+            event.preventDefault()
+        })
 
-        selectorMenu.style.transform = `translateY(${y}px) translateX(${x}px)`
-        selectorMenu.classList.remove('hidden')
+        selectorMenu.addEventListener('touchend', (event) => {
+            event.preventDefault()
+        })
+
+        editorOverlayGuard.append(selectorMenu)
     }
+    initSelectorMenu()
+
+    element.addEventListener('touchstart', () => {
+        showSelections()
+    })
+
+    editor.onDidBlurEditorWidget(() => {
+        hideSelections()
+        hideSelectorMenu()
+    })
 
     element.addEventListener('click', (event) => {
         event.stopPropagation()
