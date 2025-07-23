@@ -7,6 +7,17 @@ import {MarkdownEditorEmits, MarkdownEditorProps} from "@/components/markdown/ed
 import {PreviewType} from "@/components/markdown/compositeEditor/PreviewType.ts";
 import Splitpanes from "@/components/splitpanes/Splitpanes.vue";
 import Pane from "@/components/splitpanes/Pane.vue";
+import IconUndo from "@/components/icons/IconUndo.vue";
+import IconRedo from "@/components/icons/IconRedo.vue";
+import IconFullScreen from "@/components/icons/IconFullScreen.vue";
+import IconSearch from "@/components/icons/IconSearch.vue";
+import IconImage from "@/components/icons/IconImage.vue";
+import {insertImage} from "@/components/markdown/editor/image/markdownImageImport.ts";
+import {noTauriInvokeSubstitution} from "@/utils/error/noTauriInvokeSubstitution.ts";
+import {readFileUsingInput, readFileUsingTauri} from "@/utils/file/fileRead.ts";
+import IconMarkdownEditOnly from "@/components/icons/IconMarkdownEditOnly.vue";
+import IconMarkdownPreviewOnly from "@/components/icons/IconMarkdownPreviewOnly.vue";
+import IconMarkdownEditPreview from "@/components/icons/IconMarkdownEditPreview.vue";
 
 const id = `markdown-composite-editor-${uuid()}`
 const editorPaneId = `${id}-editor-pane`
@@ -45,8 +56,17 @@ const emits = defineEmits<MarkdownEditorEmits>()
 
 const isFullScreen = ref(false)
 
+const splitpanesHorizontal = ref(false)
+
 const toggleFullScreen = () => {
     isFullScreen.value = !isFullScreen.value
+}
+
+const changePreviewType = (type: PreviewType) => {
+    if (type === 'edit-preview' && containerRef.value) {
+        splitpanesHorizontal.value = containerRef.value.offsetWidth < containerRef.value.offsetHeight
+    }
+    previewType.value = type
 }
 
 const undo = () => {
@@ -60,6 +80,23 @@ const redo = () => {
 const search = () => {
     // monaco-editor/esm/vs/editor/contrib/find/browser/findModel.js
     editorRef.value?.trigger('actions', 'actions.find', null)
+}
+
+const importImage = async () => {
+    if (!editorRef.value) return
+
+    const fileList = await noTauriInvokeSubstitution<FileList | null>(
+        async () => {
+            return await readFileUsingTauri({
+                filters: [{name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp']}]
+            })
+        },
+        async () => {
+            return await readFileUsingInput("image/*")
+        },
+    )
+    if (!fileList) return
+    await insertImage(editorRef.value, fileList)
 }
 
 defineExpose({
@@ -76,23 +113,57 @@ defineExpose({
         <Teleport :to="fullScreenTeleportTarget" :disabled="!isFullScreen">
             <div class="markdown-composite-editor-wrapper" :class="{fullscreen: isFullScreen}">
                 <div class="toolbar">
-                    <div>
-                        <button @click="previewType = 'edit-only'">edit-only</button>
-                        <button @click="previewType = 'preview-only'">preview-only</button>
-                        <button @click="previewType = 'edit-preview'">edit-preview</button>
+                    <div class="left">
+                        <div class="segment">
+                            <button
+                                @click="changePreviewType('edit-only')"
+                                :class="{enabled: previewType === 'edit-only'}"
+                            >
+                                <IconMarkdownEditOnly/>
+                            </button>
+                            <button
+                                @click="changePreviewType('edit-preview')"
+                                :class="{enabled: previewType === 'edit-preview'}"
+                            >
+                                <IconMarkdownEditPreview/>
+                            </button>
+                            <button
+                                @click="changePreviewType('preview-only')"
+                                :class="{enabled: previewType === 'preview-only'}"
+                            >
+                                <IconMarkdownPreviewOnly/>
+                            </button>
+                        </div>
+
+                        <div class="segment">
+                            <button @click="search">
+                                <IconSearch/>
+                            </button>
+                        </div>
+
+                        <div class="segment">
+                            <button @click="undo">
+                                <IconUndo/>
+                            </button>
+                            <button @click="redo">
+                                <IconRedo/>
+                            </button>
+                        </div>
+
+                        <div class="segment">
+                            <button @click="importImage">
+                                <IconImage/>
+                            </button>
+                        </div>
                     </div>
 
-                    <div>
-                        <button @click="search">search</button>
-                    </div>
-
-                    <div>
-                        <button @click="undo">undo</button>
-                        <button @click="redo">redo</button>
-                    </div>
-
-                    <div>
-                        <button @click="toggleFullScreen">full-screen</button>
+                    <div class="right">
+                        <button
+                            @click="toggleFullScreen"
+                            :class="{enabled: isFullScreen}"
+                        >
+                            <IconFullScreen/>
+                        </button>
                     </div>
                 </div>
 
@@ -101,6 +172,7 @@ defineExpose({
                         v-show="previewType === 'edit-preview'"
                         :maximize-panes="false"
                         :zoom="zoom"
+                        :horizontal="splitpanesHorizontal"
                     >
                         <Pane :size="50" :id="editorPaneId"/>
                         <Pane :size="50" :id="previewPaneId"/>
@@ -139,6 +211,11 @@ defineExpose({
 .markdown-composite-editor-wrapper {
     height: 100%;
     width: 100%;
+    display: grid;
+    grid-template-areas:
+        "toolbar"
+        "container";
+    grid-template-rows: auto 1fr;
 }
 
 .fullscreen {
@@ -151,14 +228,36 @@ defineExpose({
 }
 
 .toolbar {
-    height: 2rem;
+    grid-area: toolbar;
+
     display: flex;
     justify-content: space-between;
     background-color: var(--background-color);
+    padding: 0 0.5rem;
+    overflow: auto;
+}
+
+.toolbar > .left {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.toolbar > .left > .segment {
+    white-space: nowrap;
+}
+
+.toolbar button {
+    padding: 0.5rem;
+    border: none;
+}
+
+.toolbar button.enabled {
+    background-color: var(--background-color-hover);
 }
 
 .container {
-    height: calc(100% - 2rem);
+    grid-area: container;
+
     overflow: hidden;
     background-color: var(--background-color);
 }

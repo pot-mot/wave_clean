@@ -6,7 +6,7 @@ import {
 } from "@/components/markdown/editor/MarkdownEditorElement.ts";
 import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
 
-const insertImage = async (editor: IStandaloneCodeEditor, files: FileList | never) => {
+export const insertImage = async (editor: IStandaloneCodeEditor, files: FileList | never) => {
     for (const file of files) {
         if (!file.type.startsWith("image/")) continue
 
