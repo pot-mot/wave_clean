@@ -189,14 +189,22 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
                 const lineHeight = editor.getOption(EditorOption.lineHeight)
                 timeout = setTimeout(() => {
                     if (touch && selectorMenu) {
+                        showSelectorMenu()
                         const elementRect = element.getBoundingClientRect()
                         const selectorRect = selector.getBoundingClientRect()
-                        const x = selectorRect.left - elementRect.left
-                        const y = selectorRect.top - elementRect.top - lineHeight
-                        selectorMenu.style.transform = `translateX(calc(${x}px - 50%)) translateY(calc(${y}px - 100%))`
-                        showSelectorMenu()
+                        const menuRect = selectorMenu.getBoundingClientRect()
+
+                        let x = selectorRect.left - elementRect.left - menuRect.width / 2
+                        if (x > elementRect.width - menuRect.width) x = elementRect.width - menuRect.width
+                        if (x < 0) x = 0
+
+                        let y = selectorRect.top - elementRect.top - menuRect.height - lineHeight
+                        if (y > elementRect.height - menuRect.height) y = elementRect.height - menuRect.height
+                        if (y < -24) y = -24
+
+                        selectorMenu.style.transform = `translateX(${x}px) translateY(${y}px)`
                     }
-                }, 500)
+                }, 200)
 
                 const handleMove = (event: TouchEvent) => {
                     const touch = event.changedTouches[0] ?? event.touches[0]
@@ -213,6 +221,7 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
                 }
 
                 const handleEnd = (event: TouchEvent) => {
+                    event.preventDefault()
                     handleMove(event)
                     document.removeEventListener('touchmove', handleMove)
                     document.removeEventListener('touchend', handleEnd)
@@ -250,7 +259,10 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
             {className: 'cut', text: 'Cut', action: cut},
             {className: 'paste', text: 'Paste', action: paste},
             {className: 'select', text: 'Select all', action: selectAll},
-            {className: 'close', text: 'close', action: () => {}}
+            {
+                className: 'close', text: 'close', action: () => {
+                }
+            }
         ]
 
         menuItems.forEach(item => {
