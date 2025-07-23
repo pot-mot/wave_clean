@@ -3,7 +3,6 @@ import vue from "@vitejs/plugin-vue";
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import {fileURLToPath, URL} from "node:url";
 import {prismjsPlugin} from "vite-plugin-prismjs"
-import legacy from "@vitejs/plugin-legacy";
 
 const host = process.env.TAURI_DEV_HOST;
 
@@ -48,13 +47,6 @@ export default defineConfig(async () => ({
             ],
             'plugins': ['inline-color'],
             css: true
-        }),
-        // https://www.mulingyuer.com/archives/1106
-        // https://app.unpkg.com/core-js
-        legacy({
-            modernPolyfills: [
-                'es.object.has-own',
-            ],
         }),
     ],
 

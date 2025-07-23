@@ -1,6 +1,6 @@
 import {open, OpenDialogOptions} from '@tauri-apps/plugin-dialog'
 import {readFile} from '@tauri-apps/plugin-fs'
-import {getMimeType} from "html-to-image/es/mimes";
+import {fileTypeFromBuffer} from "file-type";
 
 /**
  * 通过浏览器 input 元素选择文件（Web 环境）
@@ -48,7 +48,9 @@ export const readFileUsingTauri = async (options?: Omit<OpenDialogOptions, 'mult
         const data = await readFile(filePath)
         const fileName = extractFileName(filePath)
         const blob = new Blob([data])
-        return new File([blob], fileName, {type: getMimeType(fileName)})
+        const arrayBuffer = await blob.arrayBuffer()
+        const result = await fileTypeFromBuffer(arrayBuffer)
+        return new File([blob], fileName, {type: result?.mime})
     }))
 
     for (const file of files) {
