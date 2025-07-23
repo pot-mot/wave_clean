@@ -50,8 +50,11 @@ export default defineConfig(async () => ({
             css: true
         }),
         // https://www.mulingyuer.com/archives/1106
+        // https://app.unpkg.com/core-js
         legacy({
-            modernPolyfills: true,
+            modernPolyfills: [
+                'es.object.has-own',
+            ],
         }),
     ],
 
