@@ -1,8 +1,20 @@
 const interactionTagNames = ["INPUT", "TEXTAREA", "BUTTON"]
 
-export const interactionTagClassList = ["monaco-editor", "code-preview", "splitpanes__splitter"]
+export const interactionTagClassList = ["markdown-editor", "markdown-preview"]
 
-export const containsClassList = (e: HTMLElement, classNames: string[]) => {
+export const checkIsElement = (e: any): e is Element => {
+    return (e instanceof Element)
+}
+
+export const checkIsInputOrTextarea = (e: any): e is HTMLInputElement | HTMLTextAreaElement => {
+    return (e instanceof HTMLInputElement || e instanceof HTMLTextAreaElement)
+}
+
+export const checkIsMarkdownEditor = (e: any): e is HTMLElement => {
+    return (e instanceof HTMLElement && e.classList.contains("markdown-editor"))
+}
+
+export const containsClassList = (e: Element, classNames: string[]) => {
     for (let className of classNames) {
         if (e.classList.contains(className)) {
             return true
@@ -11,38 +23,56 @@ export const containsClassList = (e: HTMLElement, classNames: string[]) => {
     return false
 }
 
+export const judgeElement = (
+    el: Element | null,
+    judge: (el: Element) => boolean | undefined
+) => {
+    let current: Element | null = el
+
+    while (current) {
+        const result = judge(current)
+        if (result) return result
+        current = current.parentElement
+    }
+    return false
+}
+
 export const judgeTarget = (
     e: UIEvent,
-    judge: (el: HTMLElement) => boolean | undefined
+    judge: (el: Element) => boolean | undefined
 ) => {
-    let target = (e.target as HTMLElement | undefined | null)
-
-    while (target) {
-        const result = judge(target)
-        if (result) return result
-        target = target.parentElement
+    let current = e.target
+    if (checkIsElement(current)) {
+        return judgeElement(current, judge)
     }
     return false
 }
 
 /**
  * 判断元素是否是一个交互用元素
- * @param e
  */
+export const judgeInteraction = (el: Element): boolean => {
+    if ('contenteditable' in el) {
+        return true
+    }
+    if (interactionTagNames.includes(el.tagName)) {
+        return true
+    }
+    return containsClassList(el, interactionTagClassList);
+
+
+}
+
+export const judgeElementIsInteraction = (
+    el: Element | null
+) => {
+    return judgeElement(el, judgeInteraction)
+}
+
 export const judgeTargetIsInteraction = (
     e: UIEvent
 ) => {
-    return judgeTarget(e, (el) => {
-        if ('contenteditable' in el) {
-            return true
-        }
-        if (interactionTagNames.includes(el.tagName)) {
-            return true
-        }
-        if (containsClassList(el, interactionTagClassList)) {
-            return true
-        }
-    })
+    return judgeTarget(e, judgeInteraction)
 }
 
 export const checkElementParent = (el: Element | null, parent: Element) => {

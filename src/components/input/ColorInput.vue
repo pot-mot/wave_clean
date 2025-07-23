@@ -77,7 +77,7 @@ watch(() => showPicker.value, (value) => {
 
 .picker-mask {
     position: fixed;
-    z-index: var(--top-z-index);
+    z-index: var(--picker-z-index);
     top: 0;
     left: 0;
     width: 100vw;

@@ -1,65 +1,67 @@
-import {GraphEdge, GraphNode, VueFlowStore} from "@vue-flow/core";
-import {
-    CONTENT_EDGE_TYPE,
-    CONTENT_NODE_TYPE,
-    ContentEdge,
-    ContentNode,
-    MindMapData,
-    MindMapLayer
-} from "@/mindMap/useMindMap.ts";
+import {VueFlowStore} from "@vue-flow/core";
 import {getRaw} from "@/utils/json/getRaw.ts";
 import {v7 as uuid} from "uuid";
 import {blurActiveElement} from "@/utils/event/judgeEventTarget.ts";
 import {nextTick} from "vue";
 import {sendMessage} from "@/components/message/sendMessage.ts";
-import {exportAsJpg, exportAsPng, exportAsSvg} from "@/utils/file/htmlExport.ts";
-import {validateSizePositionEdgePartial} from "@/mindMap/typeValidate/validateMindMap.ts";
-import {downloadTextFile} from "@/utils/file/fileSave.ts";
+import {exportAsJpg, exportAsPng, exportAsSvg} from "@/utils/image/htmlExportAsImage.ts";
+import {downloadTextFile} from "@/utils/file/fileDownload.ts";
 import {jsonPrettyFormat} from "@/utils/json/jsonStringify.ts";
+import {nextFrame} from "@/utils/animationFrame/nextFrame.ts";
+import {MindMapLayer} from "@/mindMap/layer/MindMapLayer.ts";
+import {ContentNode, validateContentNode} from "@/mindMap/node/ContentNode.ts";
+import {ContentEdge, validateContentEdge} from "@/mindMap/edge/ContentEdge.ts";
+import {validateSizePositionEdgePartial} from "@/mindMap/edge/SizePositionEdge.ts";
+import {MindMapData} from "@/mindMap/MindMapData.ts";
 
 export type MindMapExportData = {
     nodes: ContentNode[],
     edges: ContentEdge[],
 }
 
-const toPureContentNode = (node: GraphNode): ContentNode => {
+const toPureContentNode = (node: ContentNode): ContentNode => {
     return {
         id: node.id,
         type: "CONTENT_NODE",
         position: node.position,
+        dimensions: node.dimensions,
         data: {
             content: node.data.content,
+            type: node.data.type,
             color: node.data.color,
+            withBorder: node.data.withBorder,
         },
     }
 }
 
-const toPureContentEdge = (edge: GraphEdge): ContentEdge => {
+const toPureContentEdge = (edge: ContentEdge): ContentEdge => {
     return {
         id: edge.id,
         type: "CONTENT_EDGE",
         source: edge.source,
-        sourceHandle: edge.sourceHandle!!,
+        sourceHandle: edge.sourceHandle,
         target: edge.target,
-        targetHandle: edge.targetHandle!!,
+        targetHandle: edge.targetHandle,
         data: {
             content: edge.data.content,
             arrowType: edge.data.arrowType,
+            color: edge.data.color,
+            withBorder: edge.data.withBorder,
         }
     }
 }
 
 export const exportMindMapData = (vueFlow: VueFlowStore): MindMapExportData => {
     return {
-        nodes: getRaw(vueFlow.getNodes.value.filter(it => it.type === CONTENT_NODE_TYPE).map(toPureContentNode)),
-        edges: getRaw(vueFlow.getEdges.value.filter(it => it.type === CONTENT_EDGE_TYPE).map(toPureContentEdge))
+        nodes: getRaw(vueFlow.getNodes.value.filter(it => validateContentNode(it)).map(toPureContentNode)),
+        edges: getRaw(vueFlow.getEdges.value.filter(it => validateContentEdge(it)).map(it => toPureContentEdge(it as ContentEdge)))
     }
 }
 
 export const exportMindMapSelectionData = (vueFlow: VueFlowStore): MindMapExportData => {
     return {
-        nodes: getRaw(vueFlow.getSelectedNodes.value.filter(it => it.type === CONTENT_NODE_TYPE).map(toPureContentNode)),
-        edges: getRaw(vueFlow.getSelectedEdges.value.filter(it => it.type === CONTENT_EDGE_TYPE).map(toPureContentEdge))
+        nodes: getRaw(vueFlow.getSelectedNodes.value.filter(it => validateContentNode(it)).map(toPureContentNode)),
+        edges: getRaw(vueFlow.getSelectedEdges.value.filter(it => validateContentEdge(it)).map(it => toPureContentEdge(it as ContentEdge)))
     }
 }
 
@@ -154,10 +156,25 @@ const exportMindMapToImage = async (
 }
 
 #${id} input,
-#${id} textarea {
+#${id} textarea,
+#${id} .markdown-preview {
     pointer-events: all !important;
     cursor: text !important;
-}  
+    user-select: text !important;
+}
+
+#${id} .markdown-preview .code-language {
+    right: 0.25em;
+}
+
+#${id} .markdown-preview .code-copy-button {
+    display: none;
+}
+
+#${id} *::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
 `
     document.head.appendChild(removeTransitionStyle)
     let el: HTMLElement | null = null
@@ -170,6 +187,8 @@ const exportMindMapToImage = async (
         blurActiveElement()
 
         await nextTick()
+
+        await nextFrame()
 
         el = document.createElement('div')
         el.id = id
@@ -206,7 +225,7 @@ const exportMindMapToImage = async (
 
         if (left === Infinity || top === Infinity || right === -Infinity || bottom === -Infinity) {
             sendMessage("cannot export empty", {type: "warning"})
-            return;
+            return
         }
 
         const width = Math.max(right - left + padding * 2, 1)
@@ -225,7 +244,11 @@ const exportMindMapToImage = async (
 
         el.append(...nodeEdgeEls)
 
+        await nextFrame()
+
         document.body.appendChild(el)
+
+        await nextFrame()
 
         return await exportImageAs(el, defaultFileName, type)
     } catch (e) {

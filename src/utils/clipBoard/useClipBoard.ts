@@ -1,6 +1,8 @@
 import {SchemaValidator} from "@/utils/type/typeGuard.ts";
-import {readText, writeText} from "@tauri-apps/plugin-clipboard-manager";
+import {readImage, readText, writeText} from "@tauri-apps/plugin-clipboard-manager";
 import {LazyData, lazyDataParse} from "@/utils/type/lazyDataParse.ts";
+import {noTauriInvokeSubstitution} from "@/utils/error/noTauriInvokeSubstitution.ts";
+import {tauriImageToBlob} from "@/utils/image/tauriImageToBlob.ts";
 
 export type ClipBoardTarget<INPUT, OUTPUT> = {
     importData: (data: INPUT) => void | Promise<void>,
@@ -10,14 +12,55 @@ export type ClipBoardTarget<INPUT, OUTPUT> = {
     stringifyData: (data: OUTPUT) => string
 }
 
+export const copyText = async (text: string) => {
+    await noTauriInvokeSubstitution(
+        async () => {
+            await writeText(text)
+        },
+        async () => {
+            await window.navigator.clipboard.writeText(text)
+        }
+    )
+}
+
+export const readClipBoardText = async () => {
+    return await noTauriInvokeSubstitution(
+        async () => {
+            return await readText()
+        },
+        async () => {
+            return await window.navigator.clipboard.readText()
+        }
+    )
+}
+
+const IMAGE_MIME_REGEX = /^image\/\w+/;
+
+export const readClipBoardImageBlob = async (): Promise<Blob | undefined> => {
+    return await noTauriInvokeSubstitution(
+        async () => {
+            const clipboardImage = await readImage()
+            const blob = await tauriImageToBlob(clipboardImage)
+            await clipboardImage.close()
+            return blob
+        },
+        async () => {
+            const clipboardItems = await navigator.clipboard.read();
+            for (const clipboardItem of clipboardItems) {
+                for (const type of clipboardItem.types) {
+                    if (IMAGE_MIME_REGEX.test(type)) {
+                        return await clipboardItem.getType(type)
+                    }
+                }
+            }
+        }
+    )
+}
+
 export const useClipBoard = <INPUT, OUTPUT>(target: ClipBoardTarget<INPUT, OUTPUT>) => {
     const copy = async (lazyData: LazyData<OUTPUT> = target.exportData): Promise<OUTPUT> => {
         const data = await lazyDataParse(lazyData)
-        try {
-            await writeText(target.stringifyData(data))
-        } catch (e) {
-            await window.navigator.clipboard.writeText(target.stringifyData(data))
-        }
+        await copyText(target.stringifyData(data))
         return data
     }
 
@@ -28,13 +71,7 @@ export const useClipBoard = <INPUT, OUTPUT>(target: ClipBoardTarget<INPUT, OUTPU
     }
 
     const paste = async (): Promise<INPUT | string | undefined> => {
-        let text: string | undefined
-        try {
-            text = await readText()
-        } catch (e) {
-            text = await window.navigator.clipboard.readText()
-        }
-
+        const text = await readClipBoardText()
         const data = JSON.parse(text)
         let errors: any
         if (target.validateInput(data, e => errors = e)) {

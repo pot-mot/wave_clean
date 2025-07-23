@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {useMindMap} from "@/mindMap/useMindMap.ts";
+import {MIND_MAP_CONTAINER_ID, useMindMap} from "@/mindMap/useMindMap.ts";
 import MobileToolbar from "@/mindMap/toolbar/mobile/MobileToolbar.vue";
 import DesktopToolbar from "@/mindMap/toolbar/desktop/DesktopToolbar.vue";
 import MindMapLayer from "@/mindMap/layer/MindMapLayer.vue";
@@ -16,6 +16,7 @@ const {
     undo,
     redo,
     save,
+    isSelectionNotEmpty,
     copy,
     cut,
     paste,
@@ -42,16 +43,23 @@ const handleKeyDown = async (e: KeyboardEvent) => {
                 e.preventDefault()
                 undo()
             }
+        } else if (e.key === 'y' || e.key === "Y") {
+            if (judgeTargetIsInteraction(e)) return
+
+            e.preventDefault()
+            redo()
         } else if (e.key === "s" || e.key === "S") {
             e.preventDefault()
             await save()
         } else if (e.key === "c" || e.key === "C") {
             if (judgeTargetIsInteraction(e)) return
+            if (!isSelectionNotEmpty.value) return
 
             e.preventDefault()
             await copy()
         } else if (e.key === "x" || e.key === "X") {
             if (judgeTargetIsInteraction(e)) return
+            if (!isSelectionNotEmpty.value) return
 
             e.preventDefault()
             await cut()
@@ -69,7 +77,7 @@ const handleKeyDown = async (e: KeyboardEvent) => {
     <div
         tabindex="-1"
         @keydown="handleKeyDown"
-        id="mind-map-wrapper"
+        :id="MIND_MAP_CONTAINER_ID"
         style="width: 100%; height: 100%; position: relative;"
     >
         <MindMapBackground :viewport="currentLayer.vueFlow.viewport.value"/>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {MindMapLayer, useMindMap} from "@/mindMap/useMindMap.ts";
+import {useMindMap} from "@/mindMap/useMindMap.ts";
 import LayerView from "@/mindMap/layer/LayerView.vue";
 import IconDelete from "@/components/icons/IconDelete.vue";
 import IconVisible from "@/components/icons/IconVisible.vue";
@@ -8,6 +8,7 @@ import IconInvisible from "@/components/icons/IconInvisible.vue";
 import DragList from "@/components/list/DragList.vue";
 import {computed} from "vue";
 import CollapseDetail from "@/components/collapse/CollapseDetail.vue";
+import {MindMapLayer} from "@/mindMap/layer/MindMapLayer.ts";
 
 const {
     layers,
@@ -97,8 +98,9 @@ const handleSwap = (a: number, b: number) => {
 
                     <template #body>
                         <button
-                            @click.stop="removeLayer(layer.id)"
                             class="layer-menu-item-delete"
+                            :class="{disabled: layers.length <= 1}"
+                            @click.stop="layers.length > 1 ? removeLayer(layer.id) : () => {}"
                         >
                             <IconDelete/>
                         </button>
@@ -164,7 +166,6 @@ const handleSwap = (a: number, b: number) => {
     grid-template-columns: 4rem calc(100% - 4.5rem);
     grid-gap: 0.5rem;
     opacity: 0.8;
-    z-index: var(--top-z-index);
     background-color: var(--primary-color);
 }
 
@@ -179,6 +180,12 @@ const handleSwap = (a: number, b: number) => {
     height: 1.5rem;
     width: 1.5rem;
     margin-top: 1.75rem;
+}
+
+.layer-menu-item-delete.disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+    --icon-color: var(--text-color);
 }
 
 .layer-menu-item-name {

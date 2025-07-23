@@ -28,7 +28,7 @@ export const getTextLineSize = (text: string, targetEl: HTMLElement) => {
     return {width, height}
 }
 
-export const getTextBlockWidth = (text: string, targetEl: HTMLElement) => {
+export const getTextBlockSize = (text: string, targetEl: HTMLElement) => {
     const computedStyle = window.getComputedStyle(targetEl)
     context.font = computedStyle.font
     const lines = text.split('\n')

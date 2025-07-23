@@ -429,12 +429,12 @@ const stopDragDown = () => {
     position: absolute;
     width: 100%;
     pointer-events: none;
-    z-index: var(--top-z-index);
+    z-index: var(--drag-view-z-index);
 }
 
 .drag-list-scroll-handle {
     height: 2rem;
-    z-index: var(--top-z-index);
+    z-index: var(--drag-view-z-index);
 }
 
 .drag-list-scroll-handle.up {

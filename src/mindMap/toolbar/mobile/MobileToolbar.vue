@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {useMindMap} from "@/mindMap/useMindMap.ts";
+import {MIND_MAP_CONTAINER_ID, useMindMap} from "@/mindMap/useMindMap.ts";
 import {computed, onBeforeUnmount, onMounted, ref} from "vue";
 import LayerMenu from "@/mindMap/layer/LayerMenu.vue";
 import MetaMenu from "@/mindMap/meta/MetaMenu.vue";
@@ -17,14 +17,16 @@ import IconDelete from "@/components/icons/IconDelete.vue";
 import IconMultiSelect from "@/components/icons/IconMultiSelect.vue";
 import IconSelectAll from "@/components/icons/IconSelectAll.vue";
 import DownloadSelect from "@/mindMap/file/DownloadSelect.vue";
-import {checkElementParent} from "@/utils/event/judgeEventTarget.ts";
+import {
+    checkIsInputOrTextarea,
+    checkIsMarkdownEditor,
+    getMatchedElementOrParent
+} from "@/utils/event/judgeEventTarget.ts";
 import {useFocusTargetStore} from "@/store/focusTargetStore.ts";
 import QuickInputBar from "@/mindMap/quickInput/QuickInputBar.vue";
 
 const {
     save,
-
-    currentLayer,
 
     canUndo,
     canRedo,
@@ -78,10 +80,10 @@ onBeforeUnmount(() => {
  */
 const focusTargetStore = useFocusTargetStore()
 
-const isVueFlowInputFocused = computed<boolean>(() => {
+const isMindMapInputFocused = computed<boolean>(() => {
     const focusTarget = focusTargetStore.focusTarget.value
-    return (focusTarget instanceof HTMLInputElement || focusTarget instanceof HTMLTextAreaElement) &&
-        currentLayer.value.vueFlow.vueFlowRef.value !== null && checkElementParent(focusTarget, currentLayer.value.vueFlow.vueFlowRef.value)
+    return (checkIsInputOrTextarea(focusTarget) || checkIsMarkdownEditor(focusTarget)) &&
+        getMatchedElementOrParent(focusTarget, el => el.id === MIND_MAP_CONTAINER_ID) !== null
 })
 </script>
 
@@ -112,7 +114,7 @@ const isVueFlowInputFocused = computed<boolean>(() => {
     <div
         class="toolbar right-top"
         :class="{
-            open: !isVueFlowInputFocused && !metaMenuOpen && !layersMenuOpen
+            open: !isMindMapInputFocused && !metaMenuOpen && !layersMenuOpen
         }"
     >
         <div class="container">
@@ -131,7 +133,7 @@ const isVueFlowInputFocused = computed<boolean>(() => {
     <div
         class="toolbar bottom"
         :class="{
-            open: !isVueFlowInputFocused && !metaMenuOpen
+            open: !isMindMapInputFocused && !metaMenuOpen
         }"
     >
         <div class="container">
@@ -139,12 +141,12 @@ const isVueFlowInputFocused = computed<boolean>(() => {
                 <IconSelectAll/>
             </button>
 
-            <button @click="toggleDefaultMouseAction()" :class="{enable: defaultMouseAction === 'selectionRect'}">
-                <IconSelectRect/>
-            </button>
-
             <button @click="toggleMultiSelect()" :class="{enable: canMultiSelect && defaultMouseAction !== 'selectionRect'}">
                 <IconMultiSelect/>
+            </button>
+
+            <button @click="toggleDefaultMouseAction()" :class="{enable: defaultMouseAction === 'selectionRect'}">
+                <IconSelectRect/>
             </button>
         </div>
 
@@ -163,9 +165,9 @@ const isVueFlowInputFocused = computed<boolean>(() => {
     </div>
 
     <div
-        class="toolbar bottom"
+        class="toolbar quick-input"
         :class="{
-            open: isVueFlowInputFocused && !metaMenuOpen
+            open: isMindMapInputFocused && !metaMenuOpen
         }"
     >
         <QuickInputBar/>
@@ -173,7 +175,7 @@ const isVueFlowInputFocused = computed<boolean>(() => {
 
     <div
         class="toolbar meta-menu"
-        :class="{open: !isVueFlowInputFocused && metaMenuOpen}"
+        :class="{open: !isMindMapInputFocused && metaMenuOpen}"
         @click.self="metaMenuOpen = false"
     >
         <div class="container">
@@ -183,7 +185,7 @@ const isVueFlowInputFocused = computed<boolean>(() => {
 
     <div
         class="toolbar layer-menu"
-        :class="{open: !isVueFlowInputFocused && layersMenuOpen}"
+        :class="{open: !isMindMapInputFocused && layersMenuOpen}"
         @click.self="layersMenuOpen = false"
     >
         <div class="container">
@@ -194,7 +196,7 @@ const isVueFlowInputFocused = computed<boolean>(() => {
 
 <style scoped>
 .toolbar {
-    z-index: 5;
+    z-index: var(--toolbar-z-index);
     position: absolute;
     background-color: var(--background-color);
     overflow-x: auto;
@@ -289,6 +291,28 @@ const isVueFlowInputFocused = computed<boolean>(() => {
 .toolbar.right-top button {
     width: 100%;
     height: 2.5rem;
+}
+
+.toolbar.quick-input {
+    width: 100%;
+    padding-right: 0.5rem;
+    line-height: 2.5rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+
+    z-index: var(--quick-input-toolbar-z-index);
+
+    bottom: 0;
+    border-top: var(--border);
+    border-color: var(--background-color-hover);
+
+    overflow-x: hidden;
+}
+
+.toolbar.quick-input.open {
+    opacity: 1;
+    pointer-events: all;
 }
 
 .toolbar.meta-menu,

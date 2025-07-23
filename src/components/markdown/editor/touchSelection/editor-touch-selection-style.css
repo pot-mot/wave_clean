@@ -1,0 +1,44 @@
+.selections {
+    position: absolute;
+    top: 0;
+    z-index: 10000;
+}
+
+.selections.hidden {
+    display: none;
+}
+
+.selector {
+    width: 1.5em;
+    height: 1.5em;
+    background: var(--primary-color);
+    position: absolute;
+    margin-top: 1.5em;
+    border-radius: 0 50% 50% 50%;
+}
+
+.selector-menu {
+    position: fixed;
+    display: flex;
+    height: 1.5rem;
+    line-height: 1.5rem;
+    background: var(--background-color-hover);
+    border-radius: 0.75rem;
+    max-width: 75vw;
+    width: fit-content;
+    overflow-x: auto;
+    overflow-y: hidden;
+    z-index: 10000000;
+}
+
+.selector-menu.hidden {
+    display: none;
+}
+
+.selector-menu-item {
+    height: 100%;
+    white-space: nowrap;
+    color: var(--text-color);
+    font-size: 0.8em;
+    padding: 0 0.5em;
+}

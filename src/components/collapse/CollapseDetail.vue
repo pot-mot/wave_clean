@@ -47,12 +47,12 @@
 
 <script setup lang="ts">
 import {onMounted, useTemplateRef, watch} from 'vue'
-import {CollapseProps, defaultCollapseProps} from "@/components/collapse/CollapseProps.ts";
+import {CollapseDetailProps, defaultCollapseDetailProps} from "@/components/collapse/CollapseDetailProps.ts";
 import IconCaretDown from "@/components/icons/IconCaretDown.vue";
 
 const isOpen = defineModel<boolean>({required: false, default: false})
 
-const props = withDefaults(defineProps<CollapseProps>(), defaultCollapseProps)
+const props = withDefaults(defineProps<CollapseDetailProps>(), defaultCollapseDetailProps)
 
 const bodyRef = useTemplateRef("bodyRef")
 

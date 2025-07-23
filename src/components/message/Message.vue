@@ -17,10 +17,16 @@
                     @mouseenter="handleMouseEnter(item)"
                     @mouseleave="handleMouseLeave(item)"
                 >
-                    <Component v-if="typeof item.content !== 'string'" :is="item.content"/>
-                    <div v-else>{{ item.content }}</div>
+                    <div class="message-content">
+                        <Component v-if="typeof item.content !== 'string'" :is="item.content"/>
+                        <div v-else>{{ item.content }}</div>
+                    </div>
+
                     <div v-if="item.canClose" class="close-icon" @click="close(index)">
                         <IconClose/>
+                    </div>
+                    <div v-if="item.repeatCount > 1" class="repeat-count">
+                        {{ item.repeatCount }}
                     </div>
                 </div>
             </div>
@@ -58,7 +64,7 @@ let messageItemIdIncrement = 0
 const messageItems = ref<MessageItem[]>([])
 
 const setMessageItemTimeout = (messageItem: MessageItem) => {
-    if (messageItem.timeout) {
+    if (messageItem.timeout !== undefined) {
         clearTimeout(messageItem.timeout)
     }
 
@@ -78,9 +84,26 @@ const open = (
 ) => {
     const {
         type,
-        canClose
+        canClose,
+        grouping,
     } = Object.assign({}, messageOpenDefaultOptions, options)
-    const messageItem: MessageItem = {id: ++messageItemIdIncrement, content, type, canClose}
+
+    if (grouping) {
+        const existingItem = messageItems.value.find(item => {
+            if (typeof content === 'string' && typeof item.content === 'string') {
+                return content === item.content
+            }
+            return false
+        })
+
+        if (existingItem) {
+            existingItem.repeatCount++
+            setMessageItemTimeout(existingItem)
+            return
+        }
+    }
+
+    const messageItem: MessageItem = {id: ++messageItemIdIncrement, content, type, canClose, repeatCount: 1}
     setMessageItemTimeout(messageItem)
     messageItems.value.push(messageItem)
 }
@@ -125,7 +148,7 @@ defineExpose({
     width: 100%;
     margin: auto;
     pointer-events: none;
-    z-index: var(--top-z-index);
+    z-index: var(--message-z-index);
 }
 
 .message-wrapper {
@@ -134,19 +157,27 @@ defineExpose({
 }
 
 .message {
+    position: relative;
     display: flex;
     height: fit-content;
     width: fit-content;
-    margin: auto;
     padding: 0.2rem 1rem;
-    white-space: pre;
-    font-size: 1rem;
-    line-height: 1.5rem;
+    margin: auto;
     border: var(--border);
     border-radius: var(--border-radius);
     pointer-events: all;
     max-width: 80%;
+    overflow: visible;
+}
+
+.message-content {
+    max-width: 100%;
     overflow: auto;
+    height: fit-content;
+    width: fit-content;
+    white-space: pre;
+    font-size: 1rem;
+    line-height: 1.5rem;
 }
 
 .message.primary {
@@ -177,6 +208,19 @@ defineExpose({
     color: var(--info-color);
     border-color: var(--info-color);
     background-color: var(--info-color-opacity-background);
+}
+
+.repeat-count {
+    position: absolute;
+    top: -0.5rem;
+    right: -0.5rem;
+    font-size: 0.75rem;
+    margin-left: 0.5rem;
+    background: var(--background-color);
+    border: var(--border);
+    border-color: inherit;
+    padding: 0.125rem;
+    border-radius: 0.25rem;
 }
 
 .close-icon {

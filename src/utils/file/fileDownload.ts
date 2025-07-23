@@ -2,6 +2,7 @@ import {downloadDir} from "@tauri-apps/api/path";
 import {save, SaveDialogOptions} from "@tauri-apps/plugin-dialog";
 import {sendMessage} from "@/components/message/sendMessage.ts";
 import {writeFile} from "@tauri-apps/plugin-fs";
+import {noTauriInvokeSubstitution} from "@/utils/error/noTauriInvokeSubstitution.ts";
 
 const encoder = new TextEncoder()
 
@@ -56,6 +57,8 @@ export const ensureFileSuffix = (
         : currentFileName + "." + suffix
 }
 
+const TEXT_PREFIX = 'data:text/plain;charset=utf-8,'
+
 export const downloadTextFile = async (
     text: string,
     options: {
@@ -68,14 +71,19 @@ export const downloadTextFile = async (
 
     const data = encoder.encode(text)
 
-    try {
-        return await downloadFileUsingTauriFile(data, filename)
-    } catch (e) {
-        const dataUrl = `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`;
-        downloadFileUsingAnchor(dataUrl, filename)
-        return "download path"
-    }
+    return await noTauriInvokeSubstitution(
+        async () => {
+            return await downloadFileUsingTauriFile(data, filename)
+        },
+        () => {
+            const dataUrl = `${TEXT_PREFIX}${encodeURIComponent(text)}`;
+            downloadFileUsingAnchor(dataUrl, filename)
+            return "download path"
+        }
+    )
 }
+
+const IMAGE_BASE64_PREFIX = /^data:image\/\w+;base64,/
 
 export const downloadImageFile = async (
     dataUrl: string,
@@ -87,7 +95,7 @@ export const downloadImageFile = async (
     let {filename} = options
     filename = ensureFileSuffix(filename, options.fileType)
 
-    const base64Data = dataUrl.replace(/^data:image\/\w+;base64,/, '')
+    const base64Data = dataUrl.replace(IMAGE_BASE64_PREFIX, '')
     const binaryString = atob(base64Data)
     const arrayBuffer = new Uint8Array(binaryString.length)
     for (let i = 0; i < binaryString.length; i++) {
@@ -95,15 +103,18 @@ export const downloadImageFile = async (
     }
     const data = new Uint8Array(arrayBuffer)
 
-    try {
-        return await downloadFileUsingTauriFile(data, filename)
-    } catch (e) {
-        downloadFileUsingAnchor(dataUrl, filename)
-        return "download path"
-    }
+    return await noTauriInvokeSubstitution(
+        async () => {
+            return await downloadFileUsingTauriFile(data, filename)
+        },
+        () => {
+            downloadFileUsingAnchor(dataUrl, filename)
+            return "download path"
+        }
+    )
 }
 
-const svgPrefix = 'data:image/svg+xml;charset=utf-8,';
+const SVG_PREFIX = 'data:image/svg+xml;charset=utf-8,'
 
 export const downloadSvgFile = async (
     dataUrl: string,
@@ -114,15 +125,18 @@ export const downloadSvgFile = async (
     let {filename} = options
     filename = ensureFileSuffix(filename, "svg")
 
-    const encodedSvgContent = dataUrl.slice(svgPrefix.length);
+    const encodedSvgContent = dataUrl.slice(SVG_PREFIX.length);
     const decodedSvgContent = decodeURIComponent(encodedSvgContent);
 
     const data = encoder.encode(decodedSvgContent);
 
-    try {
-        return await downloadFileUsingTauriFile(data, filename)
-    } catch (e) {
-        downloadFileUsingAnchor(dataUrl, filename)
-        return "download path"
-    }
+    return await noTauriInvokeSubstitution(
+        async () => {
+            return await downloadFileUsingTauriFile(data, filename)
+        },
+        () => {
+            downloadFileUsingAnchor(dataUrl, filename)
+            return "download path"
+        }
+    )
 }

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch} from "vue";
 import {BaseEdge, EdgeProps} from "@vue-flow/core";
-import {ContentEdgeData, RawMindMapLayer, SizePositionEdgePartial, useMindMap} from "@/mindMap/useMindMap.ts";
+import {useMindMap} from "@/mindMap/useMindMap.ts";
 import FitSizeBlockInput from "@/components/input/FitSizeBlockInput.vue";
 import {useEdgeUpdaterTouch} from "@/mindMap/edge/useEdgeUpdaterTouch.ts";
 import AutoResizeForeignObject from "@/mindMap/svg/AutoResizeForeignObject.vue";
@@ -14,8 +14,11 @@ import {getPaddingBezierPath} from "@/mindMap/edge/paddingBezierPath.ts";
 import IconArrowOneWayLeft from "@/components/icons/IconArrowOneWayLeft.vue";
 import IconArrowOneWayRight from "@/components/icons/IconArrowOneWayRight.vue";
 import {v7 as uuid} from "uuid"
+import {RawMindMapLayer} from "@/mindMap/layer/MindMapLayer.ts";
+import {SizePositionEdgePartial} from "@/mindMap/edge/SizePositionEdge.ts";
+import {ContentEdgeData} from "@/mindMap/edge/ContentEdge.ts";
 
-const {updateEdgeData, isSelectionPlural, canMultiSelect, findEdge, selectEdge, fitRect, remove, currentViewport} = useMindMap()
+const {updateEdgeData, isSelectionPlural, canMultiSelect, findEdge, selectEdge, fitRect, remove, zoom} = useMindMap()
 
 const props = defineProps<EdgeProps<ContentEdgeData> & {
     layer: RawMindMapLayer,
@@ -63,10 +66,6 @@ const handleBlur = () => {
 }
 
 // 工具栏
-const zoom = computed(() => {
-    return currentViewport.value !== undefined ? 1 / currentViewport.value.zoom : 1
-})
-
 const toolBarWidth = ref(0)
 const toolBarHeight = ref(0)
 
@@ -171,6 +170,19 @@ onBeforeUnmount(() => {
     pathObserver?.disconnect()
 })
 
+// 边框颜色
+const borderColor = computed(() => {
+    if (props.selected) {
+        return 'var(--primary-color)'
+    } else if (props.data.withBorder === true) {
+        return 'var(--border-color)'
+    } else if (props.data.withBorder !== undefined) {
+        return 'transparent'
+    } else {
+        return 'var(--border-color)'
+    }
+})
+
 // 聚焦
 const executeFocus = () => {
     fitRect({
@@ -245,10 +257,8 @@ const executeDelete = () => {
                 v-show="innerValue.length > 0 || inputShow"
                 :class="{untouchable: !inputShow}"
                 :font-size="12"
-                :padding="2"
-                :style="{
-                    borderColor: selected ? 'var(--primary-color)' : 'transparent',
-                }"
+                :padding="{top: 2, left: 4, right: 4, bottom: 2}"
+                :style="{borderColor}"
                 v-model="innerValue"
                 @blur="handleBlur"
             />
@@ -257,8 +267,8 @@ const executeDelete = () => {
         <AutoResizeForeignObject
             v-if="selected && inputShow"
             @resize="handleToolBarResize"
-            style="z-index: var(--top-z-index);"
-            :transform="`translate(${curveMidpoint.x - (toolBarWidth * zoom) / 2} ${curveMidpoint.y - inputHeight / 2 - (toolBarHeight + 10) * zoom}) scale(${zoom})`"
+            style="z-index: var(--edge-toolbar-z-index);"
+            :transform="`translate(${curveMidpoint.x - toolBarWidth / (zoom * 2)} ${curveMidpoint.y - inputHeight / 2 - (toolBarHeight + 10) / zoom}) scale(${1 / zoom})`"
         >
             <div class="toolbar">
                 <button @mousedown.capture.prevent.stop="executeFocus">
@@ -321,5 +331,13 @@ const executeDelete = () => {
 .content-edge-arrow {
     fill: var(--edge-color);
     transition: fill 0.3s ease;
+}
+
+:deep(.fit-size-block-input) {
+    color: var(--text-color);
+    background-color: var(--background-color);
+    border: var(--border);
+    border-radius: var(--border-radius);
+    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
 }
 </style>

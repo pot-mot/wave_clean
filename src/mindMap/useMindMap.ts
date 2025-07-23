@@ -1,31 +1,43 @@
 import {
     Connection,
-    Edge,
     GraphEdge,
     GraphNode,
-    Node,
-    Position,
     Rect,
     useVueFlow,
     ViewportTransform,
     VueFlowStore,
     XYPosition,
 } from "@vue-flow/core";
-import {computed, nextTick, readonly, ref, ShallowReactive, shallowReactive, ShallowRef, shallowRef, toRaw,} from "vue";
+import {
+    computed,
+    nextTick,
+    readonly,
+    ref,
+    ShallowReactive,
+    shallowReactive,
+    ShallowRef,
+    shallowRef,
+    toRaw,
+} from "vue";
 import {blurActiveElement, judgeTargetIsInteraction} from "@/utils/event/judgeEventTarget.ts";
 import {jsonSortPropStringify} from "@/utils/json/jsonStringify.ts";
-import {JustifyOptions, MindMapImportData, prepareImportIntoMindMap} from "@/mindMap/import/import.ts";
+import {
+    JustifyOptions,
+    MindMapImportData,
+    prepareImportIntoMindMap,
+    validateMindMapImportData
+} from "@/mindMap/import/import.ts";
 import {
     ExportFileType,
     exportMindMapData,
-    exportMindMapSelectionData, exportMindMapToFile,
+    exportMindMapSelectionData,
+    exportMindMapToFile,
     MindMapExportData
 } from "@/mindMap/export/export.ts";
-import {validateMindMapImportData} from "@/mindMap/typeValidate/validateMindMap.ts";
+import {MindMapData} from "@/mindMap/MindMapData.ts";
 import {checkFullConnection, FullConnection, reverseConnection} from "@/mindMap/edge/connection.ts";
 import {useMindMapHistory} from "@/mindMap/history/MindMapHistory.ts";
-import {CustomClipBoard, unimplementedClipBoard, useClipBoard} from "@/utils/clipBoard/useClipBoard.ts";
-import {getKeys} from "@/utils/type/typeGuard.ts";
+import {unimplementedClipBoard, useClipBoard} from "@/utils/clipBoard/useClipBoard.ts";
 import {useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
 import {LazyData} from "@/utils/type/lazyDataParse.ts";
 import {useDeviceStore} from "@/store/deviceStore.ts";
@@ -33,33 +45,20 @@ import {v7 as uuid} from "uuid"
 import {sendMessage} from "@/components/message/sendMessage.ts";
 import {getTouchRect} from "@/utils/event/getTouchRect.ts";
 import {createStore} from "@/store/createStore.ts";
+import {withLoading} from "@/components/loading/loadingApi.ts";
+import {
+    MindMapLayer,
+    MindMapLayerData,
+    MindMapLayerDiffData,
+    MindMapLayerDiffDataKeys
+} from "@/mindMap/layer/MindMapLayer.ts";
+import {ContentNodeData, ContentType_DEFAULT, NodeType_CONTENT} from "@/mindMap/node/ContentNode.ts";
+import {ContentEdgeData, EdgeType_CONTENT} from "@/mindMap/edge/ContentEdge.ts";
 
-export type MindMapGlobal = {
-    zIndexIncrement: number,
-    layers: ShallowReactive<MindMapLayer[]>,
-    currentLayer: ShallowRef<ShallowReactive<MindMapLayer>>,
-    toggleCurrentLayer: (layerId: string) => void,
-}
+// 鼠标默认行为
+type MouseAction = "panDrag" | "selectionRect"
 
-export type RawMindMapLayer = {
-    readonly id: string,
-    readonly vueFlow: VueFlowStore,
-    name: string,
-    visible: boolean,
-    opacity: number,
-} & CustomClipBoard<MindMapImportData, MindMapExportData>
-
-export type MindMapData = {
-    currentLayerId: string,
-    layers: {
-        id: string,
-        name: string,
-        visible: boolean,
-        opacity: number,
-        data: MindMapExportData
-    }[],
-    transform: ViewportTransform,
-} & Pick<MindMapGlobal, 'zIndexIncrement'>
+export const MIND_MAP_CONTAINER_ID = "MIND_MAP_CONTAINER_ID"
 
 export const createLayerId = () => {
     return `layer-${uuid()}`
@@ -67,6 +66,14 @@ export const createLayerId = () => {
 
 export const createNodeId = () => {
     return `node-${uuid()}`
+}
+
+export const createVueFlowId = () => {
+    return `vueflow-${uuid()}`
+}
+
+export const createEdgeId = (connection: Connection) => {
+    return `vueflow__edge-${connection.source}${connection.sourceHandle ?? ''}-${connection.target}${connection.targetHandle ?? ''}`
 }
 
 export const getDefaultMindMapData = (): MindMapData => {
@@ -94,64 +101,6 @@ export const getDefaultMindMapData = (): MindMapData => {
     }
 }
 
-export type MindMapLayer = ShallowReactive<RawMindMapLayer>
-
-export const MindMapLayerDataKeys = ['name', 'opacity'] as const
-export type MindMapLayerData = Pick<RawMindMapLayer, typeof MindMapLayerDataKeys[number]>
-
-export const CONTENT_NODE_TYPE = "CONTENT_NODE" as const
-export type ContentNodeData = {
-    content: string,
-    color?: string | undefined
-}
-export type ContentNode = Pick<Node, 'id' | 'position'> & {
-    data: ContentNodeData,
-    type: typeof CONTENT_NODE_TYPE,
-}
-
-export const ContentNodeHandles: Position[] = [Position.Left, Position.Right, Position.Top, Position.Bottom] as const
-
-export type SizePositionEdge = {
-    data: {
-        position: {
-            left: number,
-            top: number,
-        },
-        size: {
-            width: number,
-            height: number,
-        }
-    }
-}
-
-export type SizePositionEdgePartial = {
-    data: Partial<SizePositionEdge["data"]>
-}
-
-export type EdgeArrowType = 'one-way' | 'two-way' | 'none'
-
-export const CONTENT_EDGE_TYPE = "CONTENT_EDGE" as const
-export type ContentEdgeData = {
-    content: string,
-    arrowType?: EdgeArrowType | undefined
-} & SizePositionEdgePartial["data"]
-export type ContentEdge = Pick<Edge, 'id' | 'source' | 'target'> & {
-    data: ContentEdgeData,
-    type: typeof CONTENT_EDGE_TYPE,
-    sourceHandle: string,
-    targetHandle: string,
-}
-
-export const createVueFlowId = () => {
-    return `vueflow-${uuid()}`
-}
-
-export const createEdgeId = (connection: Connection) => {
-    return `vueflow__edge-${connection.source}${connection.sourceHandle ?? ''}-${connection.target}${connection.targetHandle ?? ''}`
-}
-
-export type MouseAction = "panDrag" | "selectionRect"
-
 export const createLayer = (id: string, name: string) => {
     const vueFlowId = createVueFlowId()
     return shallowReactive({
@@ -165,7 +114,14 @@ export const createLayer = (id: string, name: string) => {
     })
 }
 
-const dataToLayers = (data: Pick<MindMapData, 'layers' | 'currentLayerId'>): Pick<MindMapGlobal, 'layers'> & {
+// 将 MindMapData 中的静态图层数据转换为真实的响应式图层
+const layerDataToLayers = (
+    data: {
+        currentLayerId: string,
+        layers: MindMapLayerData[],
+    }
+): {
+    layers: ShallowReactive<MindMapLayer[]>,
     currentLayer: ShallowReactive<MindMapLayer>
 } => {
     const currentLayerIndex = data.layers.findIndex(layer => layer.id === data.currentLayerId)
@@ -192,10 +148,18 @@ const dataToLayers = (data: Pick<MindMapData, 'layers' | 'currentLayerId'>): Pic
     }
 }
 
+// 思维导图全局变量类型，对外暴露 zIndex自增、图层状态与图层切换API
+export type MindMapGlobal = {
+    zIndexIncrement: number,
+    layers: ShallowReactive<MindMapLayer[]>,
+    currentLayer: ShallowRef<ShallowReactive<MindMapLayer>>,
+    toggleCurrentLayer: (layerId: string) => void,
+}
+
 export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData()) => {
     const {isTouchDevice} = useDeviceStore()
 
-    const {currentLayer, layers} = dataToLayers(data)
+    const {currentLayer, layers} = layerDataToLayers(data)
 
     const global: MindMapGlobal = {
         zIndexIncrement: data.zIndexIncrement,
@@ -243,6 +207,9 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
     }
 
     const currentViewport = shallowRef<ViewportTransform>(global.currentLayer.value.vueFlow.viewport.value)
+    const zoom = computed(() => {
+        return currentViewport.value !== undefined ? currentViewport.value.zoom : 1
+    })
 
     const addLayer = () => {
         history.executeBatch(Symbol("layer:add"), () => {
@@ -304,14 +271,14 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         history.executeCommand("layer:visible:change", {layerId, visible})
     }
 
-    const changeLayerData = (layerId: string, data: Partial<MindMapLayerData>) => {
+    const changeLayerData = (layerId: string, data: Partial<MindMapLayerDiffData>) => {
         const layer = global.layers.find(layer => layer.id === layerId)
         if (layer === undefined) {
             console.error(`layer ${layerId} not exist`)
             return
         }
         let equalFlag = true
-        for (const key of getKeys(data)) {
+        for (const key of MindMapLayerDiffDataKeys) {
             if (layer[key] !== data[key]) {
                 equalFlag = false
                 break
@@ -345,9 +312,10 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
             node: {
                 id: createNodeId(),
                 position,
-                type: CONTENT_NODE_TYPE,
+                type: NodeType_CONTENT,
                 data: {
-                    content: ""
+                    content: "",
+                    type: ContentType_DEFAULT,
                 },
             }
         })
@@ -370,7 +338,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
             edge: {
                 ...connection,
                 id,
-                type: CONTENT_EDGE_TYPE,
+                type: EdgeType_CONTENT,
                 data: {
                     content: ""
                 },
@@ -384,7 +352,14 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         return vueFlow.screenToFlowCoordinate({x: window.innerWidth / 2, y: window.innerHeight / 2})
     }
 
-    const importData = (data: MindMapImportData, justifyOptions: JustifyOptions = {point: getCenterPosition(), type: "leftTop"}, vueFlow = getCurrentVueFlow()) => {
+    const importData = (
+        data: MindMapImportData,
+        justifyOptions: JustifyOptions = {
+            point: getCenterPosition(),
+            type: "leftTop"
+        },
+        vueFlow = getCurrentVueFlow()
+    ) => {
         blurActiveElement()
         const {newNodes, newEdges} = prepareImportIntoMindMap(vueFlow, data, justifyOptions)
         history.executeCommand("import", {layerId: currentLayerId.value, nodes: newNodes, edges: newEdges})
@@ -420,11 +395,11 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
      */
     const isSelectionNotEmpty = computed(() => {
         const vueFlow = getCurrentVueFlow()
-        return vueFlow.getSelectedNodes.value.length + vueFlow.getSelectedEdges.value.length > 0
+        return (vueFlow.getSelectedNodes.value.length + vueFlow.getSelectedEdges.value.length) > 0
     })
     const isSelectionPlural = computed(() => {
         const vueFlow = getCurrentVueFlow()
-        return vueFlow.getSelectedNodes.value.length + vueFlow.getSelectedEdges.value.length > 1
+        return (vueFlow.getSelectedNodes.value.length + vueFlow.getSelectedEdges.value.length) > 1
     })
     const canMultiSelect = computed(() => {
         const vueFlow = getCurrentVueFlow()
@@ -526,6 +501,16 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         return {nodes: innerNodes, edges: innerEdges}
     }
 
+
+    /**
+     * 同步边连接信息
+     */
+    const isConnecting = ref(false)
+    const connectSourceNodeId = ref<string>()
+
+    /**
+     * 默认鼠标行为
+     */
     const defaultMouseAction = ref<MouseAction>('panDrag')
 
     // 默认操作为拖拽
@@ -536,6 +521,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         vueFlow.panOnDrag.value = isTouchDevice.value ? true : [0, 2]
         selectionRectMouseButton = 2
         selectionRectEnable = false
+        focus()
     }
     // 默认操作为框选，通过鼠标右键拖拽
     const setDefaultSelectionRect = (
@@ -545,6 +531,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         vueFlow.panOnDrag.value = isTouchDevice.value ? false : [2]
         selectionRectMouseButton = 0
         selectionRectEnable = true
+        focus()
     }
     const toggleDefaultMouseAction = (
         vueFlow: VueFlowStore = getCurrentVueFlow()
@@ -598,6 +585,8 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
             onNodeDragStart,
             onNodeDragStop,
             onConnect,
+            onConnectStart,
+            onConnectEnd,
             onEdgeUpdateStart,
             onEdgeUpdate,
 
@@ -706,10 +695,20 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
             })
 
             /**
-             * 添加边
+             * 边连接
              */
             onConnect((connectData) => {
                 addEdge(connectData)
+            })
+
+            onConnectStart((data) => {
+                isConnecting.value = true
+                connectSourceNodeId.value = data.nodeId
+            })
+
+            onConnectEnd(() => {
+                isConnecting.value = false
+                connectSourceNodeId.value = undefined
             })
 
             /**
@@ -857,69 +856,64 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                 // 多选框
                 paneEl.addEventListener('mousedown', (e) => {
                     if (e.target !== paneEl) return
+                    if (!selectionRectEnable) return
+                    if (e.button !== selectionRectMouseButton) return
 
-                    // 如果开启了 selectionRectEnable，则将根据 selectionRectMouseButton 判断并进行拖曳创建选择框
-                    if (selectionRectEnable) {
+                    e.preventDefault()
+                    blurActiveElement()
+
+                    vueFlow.multiSelectionActive.value = true
+                    vueFlow.userSelectionActive.value = true
+                    cleanSelection()
+
+                    const start = {x: e.clientX, y: e.clientY}
+
+                    const onRectSelect = (e: MouseEvent) => {
                         e.preventDefault()
-                        vueFlow.multiSelectionActive.value = false
+                        const current = {x: e.clientX, y: e.clientY}
+                        let width = current.x - start.x
+                        let height = current.y - start.y
+                        const x = width > 0 ? start.x : current.x
+                        const y = height > 0 ? start.y : current.y
+                        width = width > 0 ? width : -width
+                        height = height > 0 ? height : -height
+
+                        const rect = {
+                            width,
+                            height,
+                            x,
+                            y,
+                            startX: start.x,
+                            startY: start.y,
+                        }
+                        vueFlow.userSelectionRect.value = rect
+
+                        const {nodes, edges} = getByClientRect(rect)
 
                         cleanSelection()
-                        blurActiveElement()
-
-                        if (e.button === selectionRectMouseButton) {
-                            vueFlow.userSelectionActive.value = true
-                            vueFlow.multiSelectionActive.value = true
-
-                            const start = {x: e.clientX, y: e.clientY}
-
-                            const onMove = (e: MouseEvent) => {
-                                e.preventDefault()
-                                const current = {x: e.clientX, y: e.clientY}
-                                let width = current.x - start.x
-                                let height = current.y - start.y
-                                const x = width > 0 ? start.x : current.x
-                                const y = height > 0 ? start.y : current.y
-                                width = width > 0 ? width : -width
-                                height = height > 0 ? height : -height
-
-                                const rect = {
-                                    width,
-                                    height,
-                                    x,
-                                    y,
-                                    startX: start.x,
-                                    startY: start.y,
-                                }
-                                vueFlow.userSelectionRect.value = rect
-
-                                const {nodes, edges} = getByClientRect(rect)
-
-                                cleanSelection()
-                                vueFlow.addSelectedNodes(nodes)
-                                vueFlow.addSelectedEdges(edges)
-                            }
-
-                            const onMouseUp = () => {
-                                vueFlow.userSelectionActive.value = false
-                                vueFlow.userSelectionRect.value = null
-
-                                document.documentElement.removeEventListener('mousemove', onMove)
-                                document.documentElement.removeEventListener('mouseup', onMouseUp)
-
-                                const newSelectedNodes = vueFlow.getSelectedNodes.value
-                                const newSelectedEdges = vueFlow.getSelectedEdges.value
-                                setTimeout(() => {
-                                    cleanSelection()
-                                    vueFlow.addSelectedNodes(newSelectedNodes)
-                                    vueFlow.addSelectedEdges(newSelectedEdges)
-                                    vueFlow.multiSelectionActive.value = false
-                                })
-                            }
-
-                            document.documentElement.addEventListener('mousemove', onMove)
-                            document.documentElement.addEventListener('mouseup', onMouseUp)
-                        }
+                        vueFlow.addSelectedNodes(nodes)
+                        vueFlow.addSelectedEdges(edges)
                     }
+
+                    const onRectSelectEnd = () => {
+                        document.documentElement.removeEventListener('mousemove', onRectSelect)
+                        document.documentElement.removeEventListener('mouseup', onRectSelectEnd)
+
+                        vueFlow.userSelectionActive.value = false
+                        vueFlow.userSelectionRect.value = null
+
+                        const newSelectedNodes = vueFlow.getSelectedNodes.value
+                        const newSelectedEdges = vueFlow.getSelectedEdges.value
+                        setTimeout(() => {
+                            cleanSelection()
+                            vueFlow.addSelectedNodes(newSelectedNodes)
+                            vueFlow.addSelectedEdges(newSelectedEdges)
+                            vueFlow.multiSelectionActive.value = false
+                        })
+                    }
+
+                    document.documentElement.addEventListener('mousemove', onRectSelect)
+                    document.documentElement.addEventListener('mouseup', onRectSelectEnd)
                 })
             } else {
                 // 设置屏幕位置
@@ -931,6 +925,15 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                         screenPosition.value = {x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY}
                     }
                 })
+
+                // 当触碰数量多于，阻止节点拖拽
+                el.addEventListener('touchstart', (e) => {
+                    if (e.touches.length > 1) {
+                        disableDrag()
+                    } else {
+                        enableDrag()
+                    }
+                }, {capture: true})
 
                 // 双击添加节点
                 let waitNextTouchEnd = false
@@ -982,69 +985,56 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                 // 多选框
                 paneEl.addEventListener('touchstart', (e) => {
                     if (e.target !== paneEl) return
+                    if (!selectionRectEnable) return
 
-                    // 如果开启了 selectionRect，则将根据 selectionRectMouseButton 判断并进行拖曳创建选择框
-                    if (selectionRectEnable) {
-                        blurActiveElement()
+                    e.preventDefault()
+                    blurActiveElement()
+
+                    vueFlow.userSelectionActive.value = true
+                    vueFlow.multiSelectionActive.value = true
+                    cleanSelection()
+
+                    const start = {x: e.touches[0].clientX, y: e.touches[0].clientY}
+
+                    const onRectSelect = (e: TouchEvent) => {
                         e.preventDefault()
-                        vueFlow.multiSelectionActive.value = false
+                        let {x, y, width, height} = getTouchRect(e, start)
+                        const rect = {
+                            width,
+                            height,
+                            x,
+                            y,
+                            startX: start.x,
+                            startY: start.y,
+                        }
+                        vueFlow.userSelectionRect.value = rect
+
+                        const {nodes, edges} = getByClientRect(rect)
 
                         cleanSelection()
-                        blurActiveElement()
-
-                        vueFlow.userSelectionActive.value = true
-                        vueFlow.multiSelectionActive.value = true
-
-                        const start = {x: e.touches[0].clientX, y: e.touches[0].clientY}
-
-                        const onMove = (e: TouchEvent) => {
-                            e.preventDefault()
-                            let {x, y, width, height} = getTouchRect(e, start)
-                            const rect = {
-                                width,
-                                height,
-                                x,
-                                y,
-                                startX: start.x,
-                                startY: start.y,
-                            }
-                            vueFlow.userSelectionRect.value = rect
-
-                            const {nodes, edges} = getByClientRect(rect)
-
-                            cleanSelection()
-                            vueFlow.addSelectedNodes(nodes)
-                            vueFlow.addSelectedEdges(edges)
-                        }
-
-                        const onTouchEnd = () => {
-                            vueFlow.userSelectionActive.value = false
-                            vueFlow.userSelectionRect.value = null
-
-                            document.documentElement.removeEventListener('touchmove', onMove)
-                            document.documentElement.removeEventListener('touchend', onTouchEnd)
-                            document.documentElement.removeEventListener('touchcancel', onTouchEnd)
-
-                            const newSelectedNodes = vueFlow.getSelectedNodes.value
-                            const newSelectedEdges = vueFlow.getSelectedEdges.value
-                            setTimeout(() => {
-                                cleanSelection()
-                                vueFlow.addSelectedNodes(newSelectedNodes)
-                                vueFlow.addSelectedEdges(newSelectedEdges)
-                                vueFlow.multiSelectionActive.value = false
-
-                                // 在框选结束后，如果已有选中，在触控端恢复拖拽
-                                if (isSelectionNotEmpty.value) {
-                                    toggleDefaultMouseAction()
-                                    selectionRectEnable = false
-                                }
-                            })
-                        }
-
-                        document.documentElement.addEventListener('touchmove', onMove, {passive: false})
-                        document.documentElement.addEventListener('touchend', onTouchEnd)
-                        document.documentElement.addEventListener('touchcancel', onTouchEnd)
+                        vueFlow.addSelectedNodes(nodes)
+                        vueFlow.addSelectedEdges(edges)
                     }
+
+                    const onRectSelectEnd = (e: TouchEvent) => {
+                        if (e.touches.length !== 0) return
+
+                        document.documentElement.removeEventListener('touchmove', onRectSelect)
+                        document.documentElement.removeEventListener('touchend', onRectSelectEnd)
+                        document.documentElement.removeEventListener('touchcancel', onRectSelectEnd)
+
+                        vueFlow.multiSelectionActive.value = false
+                        vueFlow.userSelectionActive.value = false
+                        vueFlow.userSelectionRect.value = null
+
+                        if (isSelectionNotEmpty.value) {
+                            setDefaultPanDrag()
+                        }
+                    }
+
+                    document.documentElement.addEventListener('touchmove', onRectSelect, {passive: false})
+                    document.documentElement.addEventListener('touchend', onRectSelectEnd)
+                    document.documentElement.addEventListener('touchcancel', onRectSelectEnd)
                 }, {passive: false})
             }
         })
@@ -1053,7 +1043,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
     const exportFileType = ref<ExportFileType>("PNG")
     const isExportFile = ref(false)
 
-    const exportJson = (): MindMapData => {
+    const getMindMapData = (): MindMapData => {
         return {
             currentLayerId: currentLayerId.value,
             layers: global.layers.map(layer => ({
@@ -1076,21 +1066,24 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
 
         isExportFile.value = true
 
-        sendMessage("download start")
-
         try {
-            const savePath = await exportMindMapToFile(useMindMapMetaStore().currentMindMap.value?.name, exportJson(), global.layers, type)
+            await withLoading("Export MindMap", async () => {
+                const savePath = await exportMindMapToFile(
+                    useMindMapMetaStore().currentMindMap.value?.name,
+                    getMindMapData(),
+                    global.layers,
+                    type
+                )
 
-            if (!savePath) {
-                sendMessage("export fail", {type: "error"})
-            } else {
-                sendMessage(`export success, file in ${savePath}`, {type: "success"})
-            }
-        } catch (e) {
-            sendMessage("export fail", {type: "error"})
+                if (!savePath) {
+                    sendMessage("Export MindMap Fail", {type: "error"})
+                } else {
+                    sendMessage(`Export MindMap Success, \nFile in ${savePath}`, {type: "success"})
+                }
+            })
+        } finally {
+            isExportFile.value = false
         }
-
-        isExportFile.value = false
     }
 
     return {
@@ -1109,6 +1102,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         focus,
 
         currentViewport: readonly(currentViewport),
+        zoom,
 
         canUndo: readonly(canUndo),
         canRedo: readonly(canRedo),
@@ -1130,6 +1124,9 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
             }
             focus()
         },
+
+        executeBatch: history.executeBatch,
+        executeAsyncBatch: history.executeAsyncBatch,
 
         getSelection,
         removeSelection,
@@ -1159,6 +1156,9 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         disableDrag,
         enableDrag,
 
+        isConnecting,
+        connectSourceNodeId,
+
         addNode,
         findNode: (id: string, vueFlow: VueFlowStore = getCurrentVueFlow()) => {
             return vueFlow.findNode(id)
@@ -1172,6 +1172,19 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         },
         updateNodeData: (id: string, data: Partial<ContentNodeData>, layerId: string = currentLayerId.value) => {
             history.executeCommand('node:data:change', {layerId, id, data})
+        },
+        recordNodeResize: (
+            id: string,
+            args: {
+                newSize: { width: number, height: number },
+                oldSize: { width: number, height: number },
+                newPosition: XYPosition,
+                oldPosition: XYPosition,
+            },
+            layerId: string = currentLayerId.value
+        ) => {
+            const options = {layerId, id, ...args}
+            history.pushCommand('node:resize', options, options)
         },
 
         addEdge,
@@ -1227,7 +1240,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         },
 
         set: async (data: MindMapData) => {
-            const {layers, currentLayer} = dataToLayers(data)
+            const {layers, currentLayer} = layerDataToLayers(data)
             global.zIndexIncrement = data.zIndexIncrement
             global.layers.splice(0, global.layers.length, ...layers)
             currentViewport.value = data.transform
@@ -1236,7 +1249,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         },
 
         exportFileType,
-        exportJson,
+        getMindMapData,
         exportFile,
 
         save: async () => {
