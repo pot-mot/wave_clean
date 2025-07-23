@@ -50,5 +50,9 @@ export const imagePreview = (currentElement: Element, previewElement: HTMLElemen
         }
     }
 
-    viewerApi({images: imageSrcList, options: {initialViewIndex, zIndex: 1000000}});
+    const zIndex = window
+        .getComputedStyle(document.documentElement)
+        .getPropertyValue('--image-viewer-z-index')
+
+    viewerApi({images: imageSrcList, options: {initialViewIndex, zIndex: parseInt(zIndex)}})
 }
