@@ -89,7 +89,7 @@ defineExpose({
     align-items: center;
     opacity: 1;
     z-index: var(--loading-z-index);
-    background: var(--mask-color);
+    background: var(--loading-background-color);
 }
 
 .loading-task-list {
