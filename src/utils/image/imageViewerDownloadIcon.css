@@ -1,0 +1,13 @@
+.viewer-download::before {
+    content: '';
+    background-image: url("data:image/svg+xml;charset=utf-8;base64,PHN2ZwogIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICB3aWR0aD0iMTYiCiAgaGVpZ2h0PSIxNiIKICB2aWV3Qm94PSIwIDAgMjQgMjQiCiAgZmlsbD0ibm9uZSIKICBzdHJva2U9IiNmZmYiCiAgc3Ryb2tlLXdpZHRoPSIyIgogIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIKICBzdHJva2UtbGluZWpvaW49InJvdW5kIgo+CiAgPHBhdGggZD0iTTQgMTd2MmEyIDIgMCAwIDAgMiAyaDEyYTIgMiAwIDAgMCAyIC0ydi0yIiAvPgogIDxwYXRoIGQ9Ik03IDExbDUgNWw1IC01IiAvPgogIDxwYXRoIGQ9Ik0xMiA0bDAgMTIiIC8+Cjwvc3ZnPgo=");
+    background-repeat: no-repeat;
+    background-size: 16px 16px;
+    background-position: 2px 2px;
+    color: transparent;
+    display: block;
+    font-size: 0;
+    height: 20px;
+    line-height: 0;
+    width: 20px;
+}

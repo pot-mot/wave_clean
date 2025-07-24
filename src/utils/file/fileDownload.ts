@@ -83,17 +83,23 @@ export const downloadTextFile = async (
     )
 }
 
-const IMAGE_BASE64_PREFIX = /^data:image\/\w+;base64,/
+export const IMAGE_BASE64_PREFIX = /^data:image\/(\w+);base64,/
 
 export const downloadImageFile = async (
     dataUrl: string,
     options: {
         filename: string,
-        fileType: string,
+        fileType?: string,
     }
 ): Promise<string | null> => {
-    let {filename} = options
-    filename = ensureFileSuffix(filename, options.fileType)
+    let {filename, fileType} = options
+    if (!fileType) {
+        fileType = dataUrl.match(IMAGE_BASE64_PREFIX)?.[1]
+    }
+    if (!fileType) {
+        throw new Error("fileType is required")
+    }
+    filename = ensureFileSuffix(filename, fileType)
 
     const base64Data = dataUrl.replace(IMAGE_BASE64_PREFIX, '')
     const binaryString = atob(base64Data)
@@ -114,7 +120,7 @@ export const downloadImageFile = async (
     )
 }
 
-const SVG_PREFIX = 'data:image/svg+xml;charset=utf-8,'
+export const SVG_PREFIX_REGEX = /^data:image\/svg\+xml(?:;charset=([^,]+))?(;base64)?,/
 
 export const downloadSvgFile = async (
     dataUrl: string,
@@ -125,13 +131,23 @@ export const downloadSvgFile = async (
     let {filename} = options
     filename = ensureFileSuffix(filename, "svg")
 
-    const encodedSvgContent = dataUrl.slice(SVG_PREFIX.length);
-    const decodedSvgContent = decodeURIComponent(encodedSvgContent);
-
-    const data = encoder.encode(decodedSvgContent);
-
     return await noTauriInvokeSubstitution(
         async () => {
+            // 提取字符集信息和内容
+            const [, , base64] = dataUrl.match(SVG_PREFIX_REGEX) || []
+            const svgContent = dataUrl.replace(SVG_PREFIX_REGEX, '')
+
+            let data: Uint8Array
+
+            if (base64) {
+                const binaryString = atob(svgContent);
+                data = new Uint8Array(binaryString.length)
+                    .map((_, i) => binaryString.charCodeAt(i));
+            } else {
+                const decodedContent = decodeURIComponent(svgContent);
+                data = encoder.encode(decodedContent);
+            }
+
             return await downloadFileUsingTauriFile(data, filename)
         },
         () => {

@@ -1,6 +1,10 @@
 import MarkdownIt from "markdown-it";
 import {api as viewerApi} from "v-viewer"
 import "viewerjs/dist/viewer.css";
+import "@/utils/image/imageViewerDownloadIcon.css"
+import {getMatchedElementOrParent} from "@/utils/event/judgeEventTarget.ts";
+import {downloadImageFile, downloadSvgFile, IMAGE_BASE64_PREFIX, SVG_PREFIX_REGEX} from "@/utils/file/fileDownload.ts";
+import {sendMessage} from "@/components/message/sendMessage.ts";
 
 export const MarkdownItImage = (md: MarkdownIt) => {
     // @ts-ignore
@@ -20,6 +24,23 @@ export const MarkdownItImage = (md: MarkdownIt) => {
 
 const serializer = new XMLSerializer()
 
+const handleImageDownload = async (e: Event) => {
+    if (!(e.target instanceof HTMLElement)) return
+    const viewerContainer = getMatchedElementOrParent(e.target, (el) => el.classList.contains("viewer-container"))
+    if (!viewerContainer) return
+    const image = viewerContainer.querySelector('.viewer-canvas > img')
+    if (!image || !(image instanceof HTMLImageElement)) return
+
+    const filename = `image-${Date.now()}`
+    if (SVG_PREFIX_REGEX.test(image.src)) {
+        await downloadSvgFile(image.src, {filename})
+    } else if (IMAGE_BASE64_PREFIX.test(image.src)){
+        await downloadImageFile(image.src, {filename})
+    } else {
+        sendMessage("Unsupported Download", {type: "warning"})
+    }
+}
+
 export const imagePreview = (currentElement: Element, previewElement: HTMLElement) => {
     const images = previewElement.querySelectorAll('img, svg')
     const imageSrcList: string[] = []
@@ -33,26 +54,60 @@ export const imagePreview = (currentElement: Element, previewElement: HTMLElemen
         if (images[i] instanceof HTMLImageElement && !images[i].classList.contains('error')) {
             imageSrcList.push((<HTMLImageElement>images[i]).src)
         } else if (images[i] instanceof SVGSVGElement) {
-            const clone = <SVGSVGElement>images[i].cloneNode(true);
-            const svgString = serializer.serializeToString(clone)
+            const svgString = serializer.serializeToString(images[i])
             // 将字符串编码为Base64格式
             const base64String = btoa(svgString)
             imageSrcList.push(`data:image/svg+xml;base64,${base64String}`)
-            clone.remove()
         }
 
         if (!isMatchCurrent) {
             if (currentElement === images[i]) {
                 isMatchCurrent = true
             } else {
-                initialViewIndex ++
+                initialViewIndex++
             }
         }
     }
 
-    const zIndex = window
-        .getComputedStyle(document.documentElement)
-        .getPropertyValue('--image-viewer-z-index')
+    let zIndex: number | undefined
+    try {
+        let zIndexString = window
+            .getComputedStyle(document.documentElement)
+            .getPropertyValue('--image-viewer-z-index')
+        zIndex = parseInt(zIndexString)
+    } finally {
+        if (!zIndex) {
+            zIndex = 5000000
+        }
+    }
 
-    viewerApi({images: imageSrcList, options: {initialViewIndex, zIndex: parseInt(zIndex)}})
+    viewerApi({
+        images: imageSrcList,
+        options: {
+            initialViewIndex,
+            zIndex,
+            title: false,
+            toolbar: {
+                play: false,
+                reset: false,
+
+                zoomIn: true,
+                oneToOne: true,
+                zoomOut: true,
+
+                prev: images.length > 1,
+                next: images.length > 1,
+
+                flipHorizontal: true,
+                flipVertical: true,
+                rotateLeft: true,
+                rotateRight: true,
+
+                download: {
+                    show: true,
+                    click: handleImageDownload
+                }
+            }
+        }
+    })
 }
