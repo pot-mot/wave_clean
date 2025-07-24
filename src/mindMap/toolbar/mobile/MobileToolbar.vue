@@ -82,6 +82,24 @@ onBeforeUnmount(() => {
  */
 const focusTargetStore = useFocusTargetStore()
 
+const isMindMapNodeOrEdgeFocused = computed(() => {
+    if (!currentLayer.value.vueFlow.vueFlowRef.value) {
+        return false
+    }
+    const currentLayerElement = currentLayer.value.vueFlow.vueFlowRef.value
+
+    const focusTarget = focusTargetStore.focusTarget.value
+    if (!(focusTarget instanceof Element)) {
+        return false
+    }
+
+    const nodeOrEdgeParent = getMatchedElementOrParent(focusTarget, (el) =>
+        el.classList.contains("content-edge") || el.classList.contains("content-edge")
+    )
+
+    return nodeOrEdgeParent !== null && checkElementParent(nodeOrEdgeParent, currentLayerElement)
+})
+
 const isMindMapInputFocused = computed<boolean>(() => {
     if (!currentLayer.value.vueFlow.vueFlowRef.value) {
         return false
@@ -158,7 +176,7 @@ const isMindMapInputFocused = computed<boolean>(() => {
     <div
         class="toolbar right-top"
         :class="{
-            open: !isMindMapInputFocused && !metaMenuOpen && !layersMenuOpen
+            open: !isMindMapNodeOrEdgeFocused && !isMindMapInputFocused && !metaMenuOpen && !layersMenuOpen
         }"
     >
         <div class="container">
