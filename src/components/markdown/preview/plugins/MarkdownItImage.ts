@@ -5,6 +5,7 @@ import "@/utils/image/imageViewerDownloadIcon.css"
 import {getMatchedElementOrParent} from "@/utils/event/judgeEventTarget.ts";
 import {downloadImageFile, downloadSvgFile, IMAGE_BASE64_PREFIX, SVG_PREFIX_REGEX} from "@/utils/file/fileDownload.ts";
 import {sendMessage} from "@/components/message/sendMessage.ts";
+import {withLoading} from "@/components/loading/loadingApi.ts";
 
 export const MarkdownItImage = (md: MarkdownIt) => {
     // @ts-ignore
@@ -31,14 +32,20 @@ const handleImageDownload = async (e: Event) => {
     const image = viewerContainer.querySelector('.viewer-canvas > img')
     if (!image || !(image instanceof HTMLImageElement)) return
 
-    const filename = `image-${Date.now()}`
-    if (SVG_PREFIX_REGEX.test(image.src)) {
-        await downloadSvgFile(image.src, {filename})
-    } else if (IMAGE_BASE64_PREFIX.test(image.src)){
-        await downloadImageFile(image.src, {filename})
-    } else {
-        sendMessage("Unsupported Download", {type: "warning"})
-    }
+    await withLoading("Export MindMap", async () => {
+        let path
+        const filename = `image-${Date.now()}`
+        if (SVG_PREFIX_REGEX.test(image.src)) {
+            path = await downloadSvgFile(image.src, {filename})
+        } else if (IMAGE_BASE64_PREFIX.test(image.src)) {
+            path = await downloadImageFile(image.src, {filename})
+        } else {
+            sendMessage("Save Unsupported", {type: "warning"})
+        }
+        if (path) {
+            sendMessage(`Save ${filename} Success\nAt ${path}`, {type: "success"})
+        }
+    })
 }
 
 export const imagePreview = (currentElement: Element, previewElement: HTMLElement) => {

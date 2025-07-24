@@ -1078,7 +1078,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                 if (!savePath) {
                     sendMessage("Export MindMap Fail", {type: "error"})
                 } else {
-                    sendMessage(`Export MindMap Success, \nFile in ${savePath}`, {type: "success"})
+                    sendMessage(`Export MindMap Success\nAt ${savePath}`, {type: "success"})
                 }
             })
         } finally {
