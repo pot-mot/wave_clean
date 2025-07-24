@@ -1,11 +1,12 @@
 // Thanks for https://github.com/Hydralerne/axios-code/blob/main/touch/main.js
 
 import {editor, Position, Selection} from "monaco-editor/esm/vs/editor/editor.api.js"
-import {copyText, readClipBoardText} from "@/utils/clipBoard/useClipBoard.ts"
+import {copyText, readClipBoardImageBlob, readClipBoardText} from "@/utils/clipBoard/useClipBoard.ts"
 import {throttle} from "lodash-es";
 import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
 import EditorOption = editor.EditorOption;
 import ScrollType = editor.ScrollType;
+import {blobToFile} from "@/utils/file/fileRead.ts";
 
 const updateSelectionStart = (selection: Selection, position: Position): Selection => {
     return new Selection(
@@ -129,8 +130,27 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
     const paste = async () => {
         const selection = editor.getSelection()
         if (!selection) return
+
+        const target = document.activeElement
+        if (!element.contains(target)) return
+
+        const dataTransfer = new DataTransfer()
+
+        const imageBlobs = await readClipBoardImageBlob()
+        if (imageBlobs) {
+            for (const imageBlob of imageBlobs) {
+                const imageFile = await blobToFile(imageBlob, "image")
+                dataTransfer.items.add(imageFile)
+            }
+        }
+
         const text = await readClipBoardText()
-        editor.executeEdits('', [{range: selection, text}])
+        dataTransfer.setData('text/plain', text)
+
+        const event = new ClipboardEvent("paste", {
+            clipboardData: dataTransfer,
+        })
+        target?.dispatchEvent(event)
     }
 
     const syncSelectionTransform = (selection: Selection) => {

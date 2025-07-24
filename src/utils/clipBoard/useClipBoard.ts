@@ -36,23 +36,29 @@ export const readClipBoardText = async () => {
 
 const IMAGE_MIME_REGEX = /^image\/\w+/;
 
-export const readClipBoardImageBlob = async (): Promise<Blob | undefined> => {
+export const readClipBoardImageBlob = async (): Promise<Blob[] | undefined> => {
     return await noTauriInvokeSubstitution(
         async () => {
             const clipboardImage = await readImage()
             const blob = await tauriImageToBlob(clipboardImage)
             await clipboardImage.close()
-            return blob
+            if (blob) {
+                return [blob]
+            }
+            return []
         },
         async () => {
+            const blobs = []
             const clipboardItems = await navigator.clipboard.read();
             for (const clipboardItem of clipboardItems) {
                 for (const type of clipboardItem.types) {
                     if (IMAGE_MIME_REGEX.test(type)) {
-                        return await clipboardItem.getType(type)
+                        const blob = await clipboardItem.getType(type)
+                        blobs.push(blob)
                     }
                 }
             }
+            return blobs
         }
     )
 }

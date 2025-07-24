@@ -29,6 +29,12 @@ export const extractFileName = (path: string): string => {
     return path.split(/[\\/]/).pop() || 'unknown';
 }
 
+export const blobToFile = async (blob: Blob, fileName: string): Promise<File> => {
+    const arrayBuffer = await blob.arrayBuffer()
+    const result = await fileTypeFromBuffer(arrayBuffer)
+    return new File([blob], fileName, {type: result?.mime})
+}
+
 /**
  * 通过 Tauri 原生对话框选择文件（桌面端环境）
  * @param options 文件选择配置
@@ -45,12 +51,12 @@ export const readFileUsingTauri = async (options?: Omit<OpenDialogOptions, 'mult
 
     const dataTransfer = new DataTransfer()
     const files = await Promise.all(filePaths.map(async (filePath) => {
-        const data = await readFile(filePath)
         const fileName = extractFileName(filePath)
+
+        const data = await readFile(filePath)
         const blob = new Blob([data])
-        const arrayBuffer = await blob.arrayBuffer()
-        const result = await fileTypeFromBuffer(arrayBuffer)
-        return new File([blob], fileName, {type: result?.mime})
+
+        return await blobToFile(blob, fileName)
     }))
 
     for (const file of files) {
