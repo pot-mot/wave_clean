@@ -484,6 +484,7 @@ const executeDelete = () => {
                         class="fit-parent"
                         editor-class="noDrag noWheel"
                         :preview-class="{noDrag: true, noWheel: isMarkdownEditorPreviewOverflow}"
+                        toolbar-class="noDrag"
                         v-model="markdownEditorValue"
                         :theme="markdownEditorTheme"
                         :zoom="isMarkdownEditorFullScreen ? 1 : zoom"

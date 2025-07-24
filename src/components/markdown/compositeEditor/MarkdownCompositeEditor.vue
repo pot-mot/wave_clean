@@ -44,6 +44,7 @@ type ClassPropType = string | Record<string, any> | string[]
 const props = withDefaults(defineProps<MarkdownEditorProps & {
     editorClass?: ClassPropType,
     previewClass?: ClassPropType,
+    toolbarClass?: ClassPropType,
     zoom?: number,
     fullScreenTeleportTarget?: string | HTMLElement,
     fullScreenZIndex?: string,
@@ -112,7 +113,7 @@ defineExpose({
     <div class="markdown-composite-editor">
         <Teleport :to="fullScreenTeleportTarget" :disabled="!isFullScreen">
             <div class="markdown-composite-editor-wrapper" :class="{fullscreen: isFullScreen}">
-                <div class="toolbar">
+                <div class="toolbar" :class="toolbarClass">
                     <div class="left">
                         <div class="segment">
                             <button
