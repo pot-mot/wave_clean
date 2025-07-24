@@ -74,9 +74,9 @@ export const imagePreview = (currentElement: Element, previewElement: HTMLElemen
         let zIndexString = window
             .getComputedStyle(document.documentElement)
             .getPropertyValue('--image-viewer-z-index')
-        zIndex = parseInt(zIndexString)
+        zIndex = Number(zIndexString)
     } finally {
-        if (!zIndex) {
+        if (!zIndex || isNaN(zIndex)) {
             zIndex = 5000000
         }
     }
