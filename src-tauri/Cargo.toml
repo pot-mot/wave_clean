@@ -3,7 +3,7 @@ name = "wave_clean"
 version = "0.1.0"
 description = "A Simple MindMap App"
 authors = ["potmot"]
-edition = "2025"
+edition = "2021"
 
 [lib]
 # The `_lib` suffix may seem redundant but it is necessary
