@@ -159,6 +159,7 @@ export const getDefaultMeta = () => {
         mindMaps: [],
         quickInputs: [
             {id: `${index--}`, label: 'TAB', value: '    '},
+            {id: `${index--}`, label: '`', value: '`'},
             {id: `${index--}`, label: '\'', value: '\''},
             {id: `${index--}`, label: '"', value: '"'},
             {id: `${index--}`, label: '-', value: '-'},

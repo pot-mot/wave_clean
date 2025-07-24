@@ -18,15 +18,17 @@ import IconMultiSelect from "@/components/icons/IconMultiSelect.vue";
 import IconSelectAll from "@/components/icons/IconSelectAll.vue";
 import DownloadSelect from "@/mindMap/file/DownloadSelect.vue";
 import {
+    checkElementParent,
     checkIsInputOrTextarea,
-    checkIsMarkdownEditor,
     getMatchedElementOrParent
 } from "@/utils/event/judgeEventTarget.ts";
 import {useFocusTargetStore} from "@/store/focusTargetStore.ts";
 import QuickInputBar from "@/mindMap/quickInput/QuickInputBar.vue";
+import {checkIsMarkdownEditorElement} from "@/components/markdown/editor/MarkdownEditorElement.ts";
 
 const {
     save,
+    currentLayer,
 
     canUndo,
     canRedo,
@@ -81,9 +83,51 @@ onBeforeUnmount(() => {
 const focusTargetStore = useFocusTargetStore()
 
 const isMindMapInputFocused = computed<boolean>(() => {
+    if (!currentLayer.value.vueFlow.vueFlowRef.value) {
+        return false
+    }
+    const currentLayerElement = currentLayer.value.vueFlow.vueFlowRef.value
+
     const focusTarget = focusTargetStore.focusTarget.value
-    return (checkIsInputOrTextarea(focusTarget) || checkIsMarkdownEditor(focusTarget)) &&
-        getMatchedElementOrParent(focusTarget, el => el.id === MIND_MAP_CONTAINER_ID) !== null
+    if (!(focusTarget instanceof Element)) {
+        return false
+    }
+
+    // 判断是否是基础输入类型
+    const isInputType = checkIsInputOrTextarea(focusTarget)
+    // 判断是否是Markdown编辑器
+    const isMarkdownEditor = checkIsMarkdownEditorElement(focusTarget)
+
+    if (isInputType || isMarkdownEditor) {
+        // 是否在思维导图容器内
+        const inLayer = checkElementParent(focusTarget, currentLayerElement)
+
+        if (inLayer) {
+            return true
+        }
+    }
+
+    if (isInputType) {
+        // 是否有Markdown编辑器父级
+        const markdownParent = getMatchedElementOrParent(focusTarget, (el) => checkIsMarkdownEditorElement(el))
+        if (markdownParent === null) {
+            return false
+        }
+
+        // Markdown编辑器父级是否在思维导图容器内
+        const parentInLayer = checkElementParent(markdownParent, currentLayerElement)
+        if (parentInLayer) {
+            return true
+        }
+
+        // Markdown编辑器父级是否在思维导图容器内
+        const parentInMindMapContainer = getMatchedElementOrParent(focusTarget, el => el.id === MIND_MAP_CONTAINER_ID) !== null
+        if (parentInMindMapContainer) {
+            return true
+        }
+    }
+
+    return false
 })
 </script>
 

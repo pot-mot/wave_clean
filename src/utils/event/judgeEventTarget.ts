@@ -10,10 +10,6 @@ export const checkIsInputOrTextarea = (e: any): e is HTMLInputElement | HTMLText
     return (e instanceof HTMLInputElement || e instanceof HTMLTextAreaElement)
 }
 
-export const checkIsMarkdownEditor = (e: any): e is HTMLElement => {
-    return (e instanceof HTMLElement && e.classList.contains("markdown-editor"))
-}
-
 export const containsClassList = (e: Element, classNames: string[]) => {
     for (let className of classNames) {
         if (e.classList.contains(className)) {

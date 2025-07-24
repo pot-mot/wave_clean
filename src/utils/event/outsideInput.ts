@@ -1,8 +1,6 @@
-import {checkIsInputOrTextarea, checkIsMarkdownEditor, getMatchedElementOrParent} from "@/utils/event/judgeEventTarget.ts";
-import {checkIsMarkdownEditorElement} from "@/components/markdown/editor/MarkdownEditorElement.ts";
-import {Range} from "monaco-editor/esm/vs/editor/editor.api.js";
+import {checkIsInputOrTextarea} from "@/utils/event/judgeEventTarget.ts";
 
-export const outsideInput = (target: Element | EventTarget | null, value: string) => {
+export const outsideInput = (target: Element | EventTarget | null | undefined, value: string) => {
     if (target === null || target === undefined) return
 
     if (checkIsInputOrTextarea(target)) {
@@ -16,26 +14,5 @@ export const outsideInput = (target: Element | EventTarget | null, value: string
 
         const changeEvent = new Event('change')
         target.dispatchEvent(changeEvent)
-    } else if (checkIsMarkdownEditor(target)) {
-        const parent = getMatchedElementOrParent(target, (el) => el.classList.contains('markdown-editor'))
-        if (parent && checkIsMarkdownEditorElement(parent) && parent.editor) {
-            const editor = parent.editor
-
-            const position = editor.getPosition()
-            if (!position) return
-
-            editor.executeEdits('outsideInput', [
-                {
-                    range: new Range(
-                        position.lineNumber,
-                        position.column,
-                        position.lineNumber,
-                        position.column
-                    ),
-                    text: value,
-                    forceMoveMarkers: true
-                }
-            ])
-        }
     }
 }
