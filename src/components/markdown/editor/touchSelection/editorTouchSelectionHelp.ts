@@ -259,10 +259,6 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
             {className: 'cut', text: 'Cut', action: cut},
             {className: 'paste', text: 'Paste', action: paste},
             {className: 'select', text: 'Select all', action: selectAll},
-            {
-                className: 'close', text: 'close', action: () => {
-                }
-            }
         ]
 
         menuItems.forEach(item => {
@@ -277,6 +273,32 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
             }
             selectorMenu.appendChild(menuItemElement)
         })
+
+        const closeItem = document.createElement('div')
+        closeItem.innerHTML = `<svg
+    xmlns="http://www.w3.org/2000/svg"
+    style="
+        display: inline-block;
+        user-select: none;
+        vertical-align: middle;
+        transform: translateY(-0.1rem);
+    "
+    height="1em"
+    width="1em"
+    viewBox="0 0 24 24"
+    stroke="var(--icon-color)"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    stroke-width="1.5"
+    fill="none"
+>
+    <path d="M18 6l-12 12" />
+    <path d="M6 6l12 12" />
+</svg>`
+        closeItem.ontouchend = () => {
+            selectorMenu?.classList.add('hidden')
+        }
+        selectorMenu.appendChild(closeItem)
 
         selectorMenu.addEventListener('touchstart', (event) => {
             event.preventDefault()
