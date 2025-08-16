@@ -33,6 +33,7 @@ import {
     ContentType_DEFAULT
 } from "@/mindMap/node/ContentNode.ts";
 import MarkdownCompositeEditor from "@/components/markdown/compositeEditor/MarkdownCompositeEditor.vue";
+import IconFullScreen from "@/components/icons/IconFullScreen.vue";
 
 const {isTouchDevice} = useDeviceStore()
 
@@ -161,6 +162,11 @@ const executeToggleMarkdownEdit = async () => {
         await nextTick()
         markdownEditorRef.value?.editorRef?.focus()
     }
+}
+
+// 切换编辑全屏
+const executeToggleMarkdownFullScreen = () => {
+    markdownEditorRef.value?.toggleFullScreen()
 }
 
 // 阻止编辑时切换选中
@@ -490,6 +496,7 @@ const executeDelete = () => {
                         :zoom="isMarkdownEditorFullScreen ? 1 : zoom"
                         :full-screen-teleport-target="`#${MIND_MAP_CONTAINER_ID}`"
                         full-screen-z-index="var(--editor-full-screen-z-index)"
+                        :show-toolbar="markdownEditorRef?.isFullScreen ?? false"
                         @blur="handleMarkdownEditorBlur"
                         @click.capture="stopCtrlClickWhenMarkdownEdit"
                     />
@@ -539,6 +546,13 @@ const executeDelete = () => {
             >
                 <IconCheck v-if="isMarkdownEdit"/>
                 <IconEdit v-else/>
+            </button>
+
+            <button
+                v-if="dataTypeOrDefault === 'markdown' && isMarkdownEdit"
+                @mousedown.capture.prevent.stop="executeToggleMarkdownFullScreen"
+            >
+                <IconFullScreen/>
             </button>
         </NodeToolbar>
     </div>

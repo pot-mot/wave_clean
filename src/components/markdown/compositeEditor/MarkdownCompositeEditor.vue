@@ -48,10 +48,12 @@ const props = withDefaults(defineProps<MarkdownEditorProps & {
     zoom?: number,
     fullScreenTeleportTarget?: string | HTMLElement,
     fullScreenZIndex?: string,
+    showToolbar?: boolean,
 }>(), {
     zoom: 1,
     fullScreenZIndex: "1000000",
     fullScreenTeleportTarget: 'body',
+    showToolbar: true,
 })
 const emits = defineEmits<MarkdownEditorEmits>()
 
@@ -106,6 +108,7 @@ defineExpose({
     markdownPreviewRef,
     editorRef,
     isFullScreen,
+    toggleFullScreen,
 })
 </script>
 
@@ -113,7 +116,7 @@ defineExpose({
     <div class="markdown-composite-editor">
         <Teleport :to="fullScreenTeleportTarget" :disabled="!isFullScreen">
             <div class="markdown-composite-editor-wrapper" :class="{fullscreen: isFullScreen}">
-                <div class="toolbar" :class="toolbarClass">
+                <div class="toolbar" :class="toolbarClass" v-if="showToolbar">
                     <div class="left">
                         <div class="segment">
                             <button
