@@ -12,8 +12,8 @@
 
     --text-color: #151515;
     --border-color: #555;
-    --background-color: #eee;
-    --background-color-hover: #ccc;
+    --background-color: #f7f7f7;
+    --background-color-hover: #ddd;
     --loading-background-color: rgba(0, 0, 0, 0.5);
     --mask-color: rgba(0, 0, 0, 0.1);
     --highlight-color: var(--primary-color);
