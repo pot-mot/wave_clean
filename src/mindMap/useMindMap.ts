@@ -375,7 +375,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
     }
 
 
-    const remove = (data: { nodes?: (GraphNode | string)[], edges?: (GraphEdge | string)[] }) => {
+    const remove = (data: { nodes?: (GraphNode | string)[], edges?: (GraphEdge | string)[] }, withMessage: boolean = true) => {
         const vueFlow = getCurrentVueFlow()
 
         blurActiveElement()
@@ -384,6 +384,9 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         vueFlow.vueFlowRef.value?.addEventListener('blur', () => {
             focus()
         }, {once: true})
+        if (withMessage) {
+            sendMessage("removed", {type: "success"})
+        }
     }
 
     const removeSelection = () => {
@@ -630,7 +633,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                     importData(data, {point: screenToFlowCoordinate(screenPosition.value), type: "topNode"})
                 },
                 removeData: (data: MindMapExportData) => {
-                    remove({nodes: data.nodes?.map(it => it.id), edges: data.edges?.map(it => it.id)})
+                    remove({nodes: data.nodes?.map(it => it.id), edges: data.edges?.map(it => it.id)}, false)
                 },
                 stringifyData: (data: MindMapExportData): string => {
                     return jsonSortPropStringify(data)
