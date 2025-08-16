@@ -286,7 +286,7 @@ watch(
 <style scoped>
 .toolbar {
     z-index: var(--toolbar-z-index);
-    position: fixed;
+    position: absolute;
     background-color: var(--background-color);
     overflow-x: auto;
 }
