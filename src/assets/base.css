@@ -8,6 +8,8 @@
     --toolbar-z-index: 2000000;
     --drag-view-z-index: 1000000;
     --edge-toolbar-z-index: 1000000;
+
+    --vh: 1vh;
 }
 
 * {
@@ -18,7 +20,7 @@
 
 html {
     overflow: hidden;
-    height: 100vh;
+    height: calc(100 * var(--vh));
     width: 100vw;
 }
 

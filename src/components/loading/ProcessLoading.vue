@@ -83,7 +83,7 @@ defineExpose({
     top: 0;
     left: 0;
     width: 100vw;
-    height: 100vh;
+    height: calc(100 * var(--vh));
     display: flex;
     justify-content: center;
     align-items: center;
@@ -93,7 +93,7 @@ defineExpose({
 }
 
 .loading-task-list {
-    max-height: 60vh;
+    max-height: calc(60 * var(--vh));
     overflow-y: auto;
 }
 

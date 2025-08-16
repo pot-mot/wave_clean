@@ -81,7 +81,7 @@ watch(() => showPicker.value, (value) => {
     top: 0;
     left: 0;
     width: 100vw;
-    height: 100vh;
+    height: calc(100 * var(--vh));
 }
 
 .chrome-picker {

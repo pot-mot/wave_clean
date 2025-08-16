@@ -223,7 +223,7 @@ defineExpose({
     position: fixed;
     top: 0;
     left: 0;
-    height: 100vh;
+    height: calc(100 * var(--vh));
     width: 100vw;
     z-index: v-bind(fullScreenZIndex);
 }
