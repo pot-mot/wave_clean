@@ -88,7 +88,7 @@ const layersMenuOpen = ref(false)
 <style scoped>
 .toolbar {
     z-index: var(--toolbar-z-index);
-    position: absolute;
+    position: fixed;
 }
 
 .toolbar button {

@@ -286,7 +286,7 @@ watch(
 <style scoped>
 .toolbar {
     z-index: var(--toolbar-z-index);
-    position: absolute;
+    position: fixed;
     background-color: var(--background-color);
     overflow-x: auto;
 }
@@ -427,7 +427,7 @@ watch(
 
 .toolbar.meta-menu {
     top: 0;
-    height: 100vh;
+    height: calc(100 * var(--vh));
     left: 0;
 }
 
@@ -448,7 +448,7 @@ watch(
 
 .toolbar.layer-menu {
     top: 0;
-    height: calc(100vh - 2.5rem);
+    height: calc(100 * var(--vh) - 2.5rem);
     right: 0;
 }
 
