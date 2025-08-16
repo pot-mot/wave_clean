@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {MIND_MAP_CONTAINER_ID, useMindMap} from "@/mindMap/useMindMap.ts";
-import {computed, onBeforeUnmount, onMounted, ref} from "vue";
+import {computed, onBeforeUnmount, onMounted, ref, watch} from "vue";
 import LayerMenu from "@/mindMap/layer/LayerMenu.vue";
 import MetaMenu from "@/mindMap/meta/MetaMenu.vue";
 import IconSave from "@/components/icons/IconSave.vue";
@@ -25,6 +25,7 @@ import {
 import {useFocusTargetStore} from "@/store/focusTargetStore.ts";
 import QuickInputBar from "@/mindMap/quickInput/QuickInputBar.vue";
 import {checkIsMarkdownEditorElement} from "@/components/markdown/editor/MarkdownEditorElement.ts";
+import IconAdd from "@/components/icons/IconAdd.vue";
 
 const {
     save,
@@ -52,6 +53,12 @@ const {
 const metaMenuOpen = ref(false)
 
 const layersMenuOpen = ref(false)
+
+const clipboardMenuOpen = ref(false)
+
+const toggleClipboardMenuShow = () => {
+    clipboardMenuOpen.value = !clipboardMenuOpen.value
+}
 
 /**
  * 监听返回键行为，拦截返回键并关闭当前菜单
@@ -147,6 +154,20 @@ const isMindMapInputFocused = computed<boolean>(() => {
 
     return false
 })
+
+watch(
+    () => {
+        return isMindMapNodeOrEdgeFocused.value ||
+            isMindMapInputFocused.value ||
+            metaMenuOpen.value ||
+            layersMenuOpen.value
+    },
+    (otherOpenValue) => {
+        if (otherOpenValue) {
+            clipboardMenuOpen.value = false
+        }
+    }
+)
 </script>
 
 <template>
@@ -167,8 +188,8 @@ const isMindMapInputFocused = computed<boolean>(() => {
                 <IconFit/>
             </button>
 
-            <button @click="removeSelection()" :class="{disabled: !isSelectionPlural}" style="padding-right: 1rem;">
-                <IconDelete :color="isSelectionPlural ? 'var(--danger-color)' : 'var(--icon-color)'"/>
+            <button @click="toggleClipboardMenuShow" :class="{enable: clipboardMenuOpen}" style="padding-right: 1rem;">
+                <IconAdd/>
             </button>
         </div>
     </div>
@@ -176,7 +197,7 @@ const isMindMapInputFocused = computed<boolean>(() => {
     <div
         class="toolbar right-top"
         :class="{
-            open: !isMindMapNodeOrEdgeFocused && !isMindMapInputFocused && !metaMenuOpen && !layersMenuOpen
+            open: clipboardMenuOpen
         }"
     >
         <div class="container">
@@ -188,6 +209,10 @@ const isMindMapInputFocused = computed<boolean>(() => {
             </button>
             <button @click="paste()">
                 <IconPaste/>
+            </button>
+
+            <button @click="removeSelection()" v-if="isSelectionPlural">
+                <IconDelete color="var(--danger-color)"/>
             </button>
         </div>
     </div>
@@ -203,7 +228,8 @@ const isMindMapInputFocused = computed<boolean>(() => {
                 <IconSelectAll/>
             </button>
 
-            <button @click="toggleMultiSelect()" :class="{enable: canMultiSelect && defaultMouseAction !== 'selectionRect'}">
+            <button @click="toggleMultiSelect()"
+                    :class="{enable: canMultiSelect && defaultMouseAction !== 'selectionRect'}">
                 <IconMultiSelect/>
             </button>
 
@@ -220,7 +246,8 @@ const isMindMapInputFocused = computed<boolean>(() => {
                 <IconRedo/>
             </button>
 
-            <button @click="layersMenuOpen = !layersMenuOpen" :class="{enable: layersMenuOpen}" style="padding-right: 1rem; margin-left: 0.5rem;">
+            <button @click="layersMenuOpen = !layersMenuOpen" :class="{enable: layersMenuOpen}"
+                    style="padding-right: 1rem; margin-left: 0.5rem;">
                 <IconLayer/>
             </button>
         </div>
@@ -386,6 +413,7 @@ const isMindMapInputFocused = computed<boolean>(() => {
     opacity: 0;
     transition: opacity 0.5s ease;
 }
+
 .toolbar.meta-menu.open,
 .toolbar.layer-menu.open {
     pointer-events: all;
@@ -413,6 +441,7 @@ const isMindMapInputFocused = computed<boolean>(() => {
     border-color: var(--background-color-hover);
     transform: translateX(-100%);
 }
+
 .toolbar.meta-menu.open > .container {
     transform: translateX(0);
 }
@@ -433,6 +462,7 @@ const isMindMapInputFocused = computed<boolean>(() => {
     border-color: var(--background-color-hover);
     transform: translateX(100%);
 }
+
 .toolbar.layer-menu.open > .container {
     transform: translateX(0);
 }
