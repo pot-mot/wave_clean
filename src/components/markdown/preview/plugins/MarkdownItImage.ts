@@ -76,23 +76,11 @@ export const imagePreview = (currentElement: Element, previewElement: HTMLElemen
         }
     }
 
-    let zIndex: number | undefined
-    try {
-        let zIndexString = window
-            .getComputedStyle(document.documentElement)
-            .getPropertyValue('--image-viewer-z-index')
-        zIndex = Number(zIndexString)
-    } finally {
-        if (!zIndex || isNaN(zIndex)) {
-            zIndex = 5000000
-        }
-    }
-
     viewerApi({
         images: imageSrcList,
         options: {
             initialViewIndex,
-            zIndex,
+            zIndex: 5000000,
             title: false,
             toolbar: {
                 play: false,
