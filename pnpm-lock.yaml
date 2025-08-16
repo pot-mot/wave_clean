@@ -35,6 +35,9 @@ importers:
       ajv:
         specifier: ^8.17.1
         version: 8.17.1
+      clipboard-polyfill:
+        specifier: ^4.1.1
+        version: 4.1.1
       core-js:
         specifier: ^3.44.0
         version: 3.44.0
@@ -1253,6 +1256,9 @@ packages:
 
   cjs-module-lexer@1.4.3:
     resolution: {integrity: sha512-9z8TZaGM1pfswYeXrUpzPrkx8UnWYdhJclsiYMm6x/w5+nN+8Tf/LnAgfLGQCm59qAOxU8WwHEq2vNwF6i4j+Q==}
+
+  clipboard-polyfill@4.1.1:
+    resolution: {integrity: sha512-nbvNLrcX0zviek5QHLFRAaLrx8y/s8+RF2stH43tuS+kP5XlHMrcD0UGBWq43Hwp6WuuK7KefRMP56S45ibZkA==}
 
   cliui@8.0.1:
     resolution: {integrity: sha512-BSeNnyus75C4//NQ9gQt1/csTXyo/8Sb+afLAkzAptFuMsod9HFokGNudZpi/oQV73hnVK+sR+5PVRMd+Dr7YQ==}
@@ -3855,6 +3861,8 @@ snapshots:
   ci-info@3.9.0: {}
 
   cjs-module-lexer@1.4.3: {}
+
+  clipboard-polyfill@4.1.1: {}
 
   cliui@8.0.1:
     dependencies:

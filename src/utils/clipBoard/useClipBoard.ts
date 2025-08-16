@@ -1,8 +1,9 @@
 import {SchemaValidator} from "@/utils/type/typeGuard.ts";
-import {readImage, readText, writeText} from "@tauri-apps/plugin-clipboard-manager";
+import {readImage, readText as tauriReadText, writeText as tauriWriteText} from "@tauri-apps/plugin-clipboard-manager";
 import {LazyData, lazyDataParse} from "@/utils/type/lazyDataParse.ts";
 import {noTauriInvokeSubstitution} from "@/utils/error/noTauriInvokeSubstitution.ts";
 import {tauriImageToBlob} from "@/utils/image/tauriImageToBlob.ts";
+import {readText as polyfillReadText, writeText as polyfillWriteText} from "clipboard-polyfill"
 
 export type ClipBoardTarget<INPUT, OUTPUT> = {
     importData: (data: INPUT) => void | Promise<void>,
@@ -15,10 +16,10 @@ export type ClipBoardTarget<INPUT, OUTPUT> = {
 export const copyText = async (text: string) => {
     await noTauriInvokeSubstitution(
         async () => {
-            await writeText(text)
+            await tauriWriteText(text)
         },
         async () => {
-            await window.navigator.clipboard.writeText(text)
+            await polyfillWriteText(text)
         }
     )
 }
@@ -26,10 +27,10 @@ export const copyText = async (text: string) => {
 export const readClipBoardText = async () => {
     return await noTauriInvokeSubstitution(
         async () => {
-            return await readText()
+            return await tauriReadText()
         },
         async () => {
-            return await window.navigator.clipboard.readText()
+            return await polyfillReadText()
         }
     )
 }
