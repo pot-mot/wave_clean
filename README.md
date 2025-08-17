@@ -1,28 +1,23 @@
-# Android
+# Wave Clean 思维导图
 
-## Init android env
+> 沧浪之水清兮，可以濯我缨。
+> 沧浪之水浊兮，可以濯我足。
 
-`pnpm tauri android init`
+## 项目简介
 
-1. linux / mac 
-    
-    `export ANDROID_HOME=~/Library/Android/sdk`
-    `export NDK_HOME=~/Library/Android/sdk/ndk/XX.Y.Z`
+一款基于 Tauri、 Vue3 的内嵌Markdown的思维导图。
 
-2. windows
-    
-    `ANDROID_HOME=C:\Users\<your-username>\AppData\Local\Android\Sdk`
-    `NDK_HOME=C:\Users\<your-username>\AppData\Local\Android\Sdk\ndk\XX.Y.Z`
+期望可以用于技术知识整理（濯缨）和日常碎片化记录（濯足），无额外负担的整理思绪。
 
-## Set sign
+## 核心特性
 
-https://v2.tauri.org.cn/distribute/sign/android/
+完全本地化：所有数据直接存储在本地设备，无任何网络依赖，可随意编辑原始json。
 
-### Generate Keystore
+内联图片：图片直接以base64形式内嵌，可随意复制下载。
 
-`keytool -genkey -v -keystore $env:USERPROFILE\upload-keystore.jks -storetype JKS -keyalg RSA -keysize 2048 -validity 10000 -alias upload`
+Markdown：支持 Markdown 节点，具有表格、代码块、复杂表格、mermaid流程图等功能。
 
+图层分组：与常规思维导图不同，本项目不支持嵌套分组，而是采用了图层作为分组方案。
 
-## Release Path
-`.\src-tauri\gen\android\app\build\outputs\apk\universal`
+移动端支持：优化了移动端体验，可以方便的拖动节点、切换聚焦编辑文本，且提供可自定义的快捷输入栏。
 
