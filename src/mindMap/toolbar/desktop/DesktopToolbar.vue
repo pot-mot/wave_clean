@@ -133,11 +133,13 @@ const layersMenuOpen = ref(false)
     left: 0;
     border-right: var(--border);
     border-color: var(--background-color-hover);
+    border-bottom-right-radius: var(--border-radius);
 }
 .toolbar.top-right {
     right: 0;
     border-left: var(--border);
     border-color: var(--background-color-hover);
+    border-bottom-left-radius: var(--border-radius);
 }
 
 .toolbar.meta-menu,
@@ -165,12 +167,15 @@ const layersMenuOpen = ref(false)
     height: 100%;
     width: 100%;
     transition: transform 0.5s ease;
+    overflow: hidden;
 }
 
 .toolbar.meta-menu > .container {
     border-top: var(--border);
     border-bottom: var(--border);
     border-right: var(--border);
+    border-top-right-radius: var(--border-radius);
+    border-bottom-right-radius: var(--border-radius);
     border-color: var(--background-color-hover);
     transform: translateX(-100%);
 }
@@ -182,6 +187,8 @@ const layersMenuOpen = ref(false)
     border-top: var(--border);
     border-bottom: var(--border);
     border-left: var(--border);
+    border-top-left-radius: var(--border-radius);
+    border-bottom-left-radius: var(--border-radius);
     border-color: var(--background-color-hover);
     transform: translateX(100%);
 }
