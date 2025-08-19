@@ -626,7 +626,8 @@ const executeDelete = () => {
 }
 
 .markdown-preview {
-    padding: 8px;
+    padding-left: 8px;
+    padding-top: 8px;
 }
 
 .markdown-preview,
