@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc --noEmit && vite build",
+    "build": "vue-tsc --noEmit && vite build --mode tauri",
+    "build-for-browser": "vue-tsc --noEmit && vite build --mode browser",
     "preview": "vite preview",
     "tauri": "tauri",
     "tauri-desktop": "tauri dev",
@@ -61,6 +62,7 @@
     "ts-jest": "^29.4.0",
     "typescript": "~5.8.3",
     "vite": "^6.3.5",
+    "vite-plugin-compression": "^0.5.1",
     "vue-tsc": "^2.2.12"
   }
 }
