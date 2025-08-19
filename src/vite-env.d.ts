@@ -7,7 +7,7 @@ declare module "*.vue" {
 }
 
 interface ImportMetaEnv {
-  readonly VITE_RUNTIME: 'browser' | 'tauri'
+  readonly VITE_TARGET_RUNTIME: 'browser' | 'tauri'
 }
 
 interface ImportMeta {
