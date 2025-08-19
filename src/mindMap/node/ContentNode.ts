@@ -15,7 +15,7 @@ export const ContentNode_Markdown_initWidth = 240
 export const ContentNode_Markdown_initHeight = 160
 
 export const ContentNode_Markdown_minWidth = 24
-export const ContentNode_Markdown_minHeight = 42
+export const ContentNode_Markdown_minHeight = 24
 
 // 内容节点数据
 export type ContentNodeData = {
