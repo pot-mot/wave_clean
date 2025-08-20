@@ -8,6 +8,11 @@ import EditorOption = editor.EditorOption;
 import ScrollType = editor.ScrollType;
 import {blobToFile} from "@/utils/file/fileRead.ts";
 
+type Selector = HTMLDivElement & {
+    bottomCursor: HTMLDivElement,
+    textCursor: HTMLDivElement,
+}
+
 const updateSelectionStart = (selection: Selection, position: Position): Selection => {
     return new Selection(
         position.lineNumber,
@@ -59,8 +64,8 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
 
     let selectionsShow = false
     let selectionsContainer: HTMLDivElement | null = null
-    let leftSelector: HTMLDivElement | null = null
-    let rightSelector: HTMLDivElement | null = null
+    let leftSelector: Selector | null = null
+    let rightSelector: Selector | null = null
     const showSelections = () => {
         if (!selectionsContainer) return
         if (selectionsShow) return
@@ -172,27 +177,56 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
             const rightSelectorX = endCoords.left - leftLength
             const rightSelectorY = endTop
 
+            leftSelector.style.transform = `translateX(${leftSelectorX}px) translateY(${leftSelectorY}px)`
+            rightSelector.style.transform = `translateX(${rightSelectorX}px) translateY(${rightSelectorY}px)`
             if (leftSelectorX === rightSelectorX && leftSelectorY === rightSelectorY) {
-                leftSelector.style.transform = `translateX(calc(${leftSelectorX}px - 0.75em)) translateY(calc(${leftSelectorY}px + 0.3em)) rotate(45deg)`
-                rightSelector.style.transform = `translateX(calc(${rightSelectorX}px - 0.75em)) translateY(calc(${rightSelectorY}px + 0.3em)) rotate(45deg)`
+                leftSelector.bottomCursor.style.transform = `translateX(-50%) translateY(25%) rotate(45deg)`
+                rightSelector.bottomCursor.style.transform = `translateX(-50%) translateY(25%) rotate(45deg)`
             } else {
-                leftSelector.style.transform = `translateX(calc(${leftSelectorX}px - 1.5em)) translateY(${leftSelectorY}px) rotate(90deg)`
-                rightSelector.style.transform = `translateX(calc(${rightSelectorX}px)) translateY(${rightSelectorY}px)`
+                leftSelector.bottomCursor.style.transform = `translateX(-100%) rotate(90deg)`
+                rightSelector.bottomCursor.style.transform = ``
             }
         }
     }
 
+    const toSelector = (element: HTMLDivElement): Selector => {
+        element.classList.add('selector')
+
+        const textCursor = document.createElement('div')
+        textCursor.classList.add('text-cursor')
+        element.appendChild(textCursor)
+
+        const bottomCursor = document.createElement('div')
+        bottomCursor.classList.add('bottom-cursor')
+        element.appendChild(bottomCursor)
+
+        const selector = element as Selector
+        selector.textCursor = textCursor
+        selector.bottomCursor = bottomCursor
+
+        return selector
+    }
+
     const initSelections = () => {
         selectionsContainer = document.createElement('div')
-        selectionsContainer.className = 'selections hidden'
+        selectionsContainer.classList.add('selections', 'hidden')
 
-        leftSelector = document.createElement('div')
-        leftSelector.className = 'selector left-selector'
-        selectionsContainer.appendChild(leftSelector)
+        const leftSelectorEl = document.createElement('div')
+        leftSelectorEl.classList.add('left')
+        leftSelector = toSelector(leftSelectorEl)
+        selectionsContainer.appendChild(leftSelectorEl)
 
-        rightSelector = document.createElement('div')
-        rightSelector.className = 'selector right-selector'
-        selectionsContainer.appendChild(rightSelector)
+        const rightSelectorEl = document.createElement('div')
+        rightSelectorEl.classList.add('right')
+        rightSelector = toSelector(rightSelectorEl)
+        selectionsContainer.appendChild(rightSelectorEl)
+
+        const lineHeight = editor.getOption(EditorOption.lineHeight)
+        // FIXME 当配置变更时，此处并不会同步更新
+        leftSelector.textCursor.style.height = `${lineHeight}px`
+        leftSelector.bottomCursor.style.marginTop = `${lineHeight}px`
+        rightSelector.textCursor.style.height = `${lineHeight}px`
+        rightSelector.bottomCursor.style.marginTop = `${lineHeight}px`
 
         editorOverlayGuard.append(selectionsContainer)
         editor.onDidScrollChange((e) => {
@@ -203,7 +237,7 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
 
 
         const setupSelectorTouchEvent = (
-            selector: HTMLDivElement,
+            selector: Selector,
             updateSelection: (selection: Selection, position: Position) => Selection
         ) => {
             let timeout: number | undefined
@@ -211,7 +245,6 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
             selector.addEventListener('touchstart', (event) => {
                 const touch = event.changedTouches[0] ?? event.touches[0]
                 const initialSelection = editor.getSelection()
-                const lineHeight = editor.getOption(EditorOption.lineHeight)
                 timeout = setTimeout(() => {
                     if (touch && selectorMenu) {
                         showSelectorMenu()
@@ -223,13 +256,13 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
                         if (x > elementRect.width - menuRect.width) x = elementRect.width - menuRect.width
                         if (x < 0) x = 0
 
-                        let y = selectorRect.top - elementRect.top - menuRect.height - lineHeight
+                        let y = selectorRect.top - elementRect.top - menuRect.height
                         if (y > elementRect.height - menuRect.height) y = elementRect.height - menuRect.height
-                        if (y < -24) y = -24
+                        if (y < 0) y = 0
 
                         selectorMenu.style.transform = `translateX(${x}px) translateY(${y}px)`
                     }
-                }, 200)
+                }, 400)
 
                 const handleMove = (event: TouchEvent) => {
                     const touch = event.changedTouches[0] ?? event.touches[0]
@@ -276,7 +309,7 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
 
     const initSelectorMenu = () => {
         selectorMenu = document.createElement('div')
-        selectorMenu.className = 'selector-menu hidden'
+        selectorMenu.classList.add('selector-menu', 'hidden')
 
         // Create and append menu items to the inner menu container
         const menuItems = [
@@ -290,7 +323,7 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
             if (!selectorMenu) throw new Error('selectorMenu is not defined')
 
             const menuItemElement = document.createElement('div')
-            menuItemElement.className = `selector-menu-item ${item.className}`
+            menuItemElement.classList.add('selector-menu-item', item.className)
             menuItemElement.innerHTML = `<span>${item.text}</span>`
             menuItemElement.ontouchend = () => {
                 item.action()

@@ -9,11 +9,21 @@
 }
 
 .selector {
-    width: 1.5em;
-    height: 1.5em;
-    background: var(--primary-color);
     position: absolute;
-    margin-top: 1.5em;
+}
+
+.selector > .text-cursor {
+    position: absolute;
+    background: transparent;
+    width: 0.4em;
+    transform: translateX(-50%);
+}
+
+.selector > .bottom-cursor {
+    position: absolute;
+    background: var(--primary-color);
+    height: 1.2em;
+    width: 1.2em;
     border-radius: 0 50% 50% 50%;
 }
 
