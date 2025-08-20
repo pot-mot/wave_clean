@@ -30,13 +30,7 @@ const updateSelectionEnd = (selection: Selection, position: Position): Selection
     )
 }
 
-const revealIfTouchVisibleTopOrBottom = (editor: IStandaloneCodeEditor, touch: Touch, lineHeight: number) => {
-    const model = editor.getModel()
-    if (!model) return
-
-    const visibleRanges = editor.getVisibleRanges()
-    if (visibleRanges.length === 0) return
-
+const scrollTopExtremityFit = (editor: IStandaloneCodeEditor, touch: Touch, lineHeight: number) => {
     const scrollTop = editor.getScrollTop()
 
     const scrollHeight = editor.getScrollHeight()
@@ -288,7 +282,7 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
                 let touch = event.changedTouches[0] ?? event.touches[0]
 
                 let revealTimer = setInterval(() => {
-                    revealIfTouchVisibleTopOrBottom(editor, touch, lineHeight)
+                    scrollTopExtremityFit(editor, touch, lineHeight)
                     const target = editor.getTargetAtClientPoint(touch.clientX, touch.clientY - lineHeight / 2)
                     if (target && target.position) {
                         editor.setSelection(updateSelection(initialSelection, target.position))
