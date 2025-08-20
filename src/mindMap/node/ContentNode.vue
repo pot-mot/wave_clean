@@ -505,7 +505,7 @@ const executeDelete = () => {
                         ref="markdownPreviewRef"
                         class="fit-parent"
                         :class="{untouchable: !isFocus, noDrag: isFocus, noWheel: isFocus && isMarkdownPreviewOverflow, 'hide-scroll': !isFocus}"
-                        :style="{borderColor, scrollbarGutter: isFocus ? 'auto' : 'unset'}"
+                        :style="{borderColor}"
                         :value="data.content"
                     />
                 </ResizeWrapper>
@@ -628,6 +628,7 @@ const executeDelete = () => {
 .markdown-preview {
     padding-left: 8px;
     padding-top: 8px;
+    scrollbar-gutter: stable;
 }
 
 .markdown-preview,
