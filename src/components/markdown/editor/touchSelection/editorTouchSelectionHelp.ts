@@ -378,11 +378,11 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
 
                 const handleEnd = (event: TouchEvent) => {
                     event.preventDefault()
+                    touch = event.changedTouches[0] ?? event.touches[0]
                     handleMove(event)
                     clearTimeout(revealTimer)
 
                     if (selectorMenu && editor.getSelection() !== null) {
-                        const touch = event.changedTouches[0] ?? event.touches[0]
                         showSelectionMenuByTouch(touch)
                     }
 
@@ -399,6 +399,32 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
 
         setupSelectorTouchEvent(leftSelector, updateSelectionStart)
         setupSelectorTouchEvent(rightSelector, updateSelectionEnd)
+
+        const setupTextCursorSelectWord = (textSelector: HTMLDivElement) => {
+            let lastTouchTime = 0
+            textSelector.addEventListener('touchstart', () => {
+                const selection = editor.getSelection()
+                if (!selection) return
+                if (selection?.startColumn !== selection.endColumn || selection.startLineNumber !== selection.endLineNumber) return
+
+                const model = editor.getModel()
+                if (!model) return
+
+                const currentTouchTime = Date.now()
+                if (currentTouchTime - lastTouchTime > 200) {
+                    lastTouchTime = currentTouchTime
+                    return
+                }
+
+                const word = model.getWordAtPosition(selection.getStartPosition())
+                if (word) {
+                    editor.setSelection(new Selection(selection.startLineNumber, word.startColumn, selection.startLineNumber, word.endColumn))
+                }
+            })
+        }
+
+        setupTextCursorSelectWord(leftSelector.textCursor)
+        setupTextCursorSelectWord(rightSelector.textCursor)
 
         const selection = editor.getSelection()
         if (selection) debounceSyncSelectionTransform(selection)
