@@ -2,7 +2,6 @@
 
 import {editor, Position, Selection} from "monaco-editor/esm/vs/editor/editor.api.js"
 import {copyText, readClipBoardImageBlob, readClipBoardText} from "@/utils/clipBoard/useClipBoard.ts"
-import {throttle} from "lodash-es";
 import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
 import EditorOption = editor.EditorOption;
 import ScrollType = editor.ScrollType;
@@ -31,7 +30,7 @@ const updateSelectionEnd = (selection: Selection, position: Position): Selection
     )
 }
 
-const revealIfTouchVisibleTopOrBottom = throttle((editor: IStandaloneCodeEditor, touch: Touch, lineHeight: number) => {
+const revealIfTouchVisibleTopOrBottom = (editor: IStandaloneCodeEditor, touch: Touch, lineHeight: number) => {
     const model = editor.getModel()
     if (!model) return
 
@@ -39,24 +38,26 @@ const revealIfTouchVisibleTopOrBottom = throttle((editor: IStandaloneCodeEditor,
     if (visibleRanges.length === 0) return
 
     const scrollTop = editor.getScrollTop()
-    const contentHeight = editor.getContentHeight()
-    const viewHeight = editor.getLayoutInfo().height
 
-    const canScrollUp = scrollTop > lineHeight
-    const canScrollDown = scrollTop < contentHeight - viewHeight
+    const scrollHeight = editor.getScrollHeight()
+    const viewHeight = editor.getLayoutInfo().height
+    const maxScrollTop = Math.max(0, scrollHeight - viewHeight)
+
+    const canScrollUp = scrollTop > 0
+    const canScrollDown = scrollTop < maxScrollTop
 
     const previousTarget = editor.getTargetAtClientPoint(touch.clientX, touch.clientY - lineHeight)
-    if (previousTarget === null && canScrollUp) {
+    const nextTarget = editor.getTargetAtClientPoint(touch.clientX, touch.clientY + lineHeight)
+    if (previousTarget === null && nextTarget !== null && canScrollUp) {
         // 触发向上滚动
-        editor.setScrollTop(editor.getScrollTop() - lineHeight, ScrollType.Smooth)
-    } else {
-        const nextTarget = editor.getTargetAtClientPoint(touch.clientX, touch.clientY + lineHeight)
-        if (nextTarget === null && canScrollDown) {
-            // 触发向下滚动
-            editor.setScrollTop(editor.getScrollTop() + lineHeight, ScrollType.Smooth)
-        }
+        const newScrollTop = Math.max(0, scrollTop - lineHeight)
+        editor.setScrollTop(newScrollTop, ScrollType.Smooth)
+    } else if (previousTarget !== null && nextTarget === null && canScrollDown) {
+        // 触发向下滚动
+        const newScrollTop = Math.min(maxScrollTop, scrollTop + lineHeight)
+        editor.setScrollTop(newScrollTop, ScrollType.Smooth)
     }
-}, 100)
+}
 
 export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element: HTMLElement) => {
     const editorOverlayGuard = element.querySelector('.overflow-guard')
@@ -263,8 +264,6 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
                         Math.pow(touch.clientY - (rightRect.top + rightRect.height / 2), 2)
                     );
 
-                    console.log(touch, leftDistance, rightDistance)
-
                     // 选择距离更近的 selector
                     const closerRect = leftDistance <= rightDistance ? leftRect : rightRect;
 
@@ -282,24 +281,29 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
                 }
             }
 
-            selector.addEventListener('touchstart', () => {
+            selector.addEventListener('touchstart', (event: TouchEvent) => {
                 const initialSelection = editor.getSelection()
+                if (!initialSelection) return
+
+                let touch = event.changedTouches[0] ?? event.touches[0]
+
+                let revealTimer = setInterval(() => {
+                    revealIfTouchVisibleTopOrBottom(editor, touch, lineHeight)
+                    const target = editor.getTargetAtClientPoint(touch.clientX, touch.clientY - lineHeight / 2)
+                    if (target && target.position) {
+                        editor.setSelection(updateSelection(initialSelection, target.position))
+                    }
+                }, 100)
 
                 const handleMove = (event: TouchEvent) => {
                     event.preventDefault()
-
-                    const touch = event.changedTouches[0] ?? event.touches[0]
-                    const target = editor.getTargetAtClientPoint(touch.clientX, touch.clientY - lineHeight / 2)
-                    if (target && target.position && initialSelection) {
-                        editor.setSelection(updateSelection(initialSelection, target.position))
-                    }
-
-                    revealIfTouchVisibleTopOrBottom(editor, touch, lineHeight)
+                    touch = event.changedTouches[0] ?? event.touches[0]
                 }
 
                 const handleEnd = (event: TouchEvent) => {
                     event.preventDefault()
                     handleMove(event)
+                    clearTimeout(revealTimer)
 
                     if (selectorMenu && editor.getSelection() !== null) {
                         const touch = event.changedTouches[0] ?? event.touches[0]
@@ -356,10 +360,12 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
                     selectorMenu?.classList.remove('show')
                 }
             },
-            {className: 'select', text: 'Select all', action: () => {
-                selectAll()
-                selectorMenu?.classList.add('show')
-            }},
+            {
+                className: 'select', text: 'Select all', action: () => {
+                    selectAll()
+                    selectorMenu?.classList.add('show')
+                }
+            },
         ]
 
         menuItems.forEach(item => {
