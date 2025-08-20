@@ -153,12 +153,17 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
         const selectedText = editor.getModel()?.getValueInRange(selection)
         if (!selectedText) return
         await copyText(selectedText)
-        editor.executeEdits('', [{range: selection, text: ''}])
+        editor.executeEdits('cut', [{range: selection, text: ''}])
     }
 
     const paste = async () => {
         const selection = editor.getSelection()
         if (!selection) return
+
+        const text = await readClipBoardText()
+        if (text) {
+            editor.executeEdits('paste', [{range: selection, text: text}])
+        }
 
         const target = document.activeElement
         if (!element.contains(target)) return
@@ -172,9 +177,6 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
                 dataTransfer.items.add(imageFile)
             }
         }
-
-        const text = await readClipBoardText()
-        dataTransfer.setData('text/plain', text)
 
         const event = new ClipboardEvent("paste", {
             clipboardData: dataTransfer,

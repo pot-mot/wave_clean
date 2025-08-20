@@ -3,7 +3,7 @@ import {readImage, readText as tauriReadText, writeText as tauriWriteText} from 
 import {LazyData, lazyDataParse} from "@/utils/type/lazyDataParse.ts";
 import {noTauriInvokeSubstitution} from "@/utils/error/noTauriInvokeSubstitution.ts";
 import {tauriImageToBlob} from "@/utils/image/tauriImageToBlob.ts";
-import {readText as polyfillReadText, writeText as polyfillWriteText} from "clipboard-polyfill"
+import {readText as polyfillReadText, writeText as polyfillWriteText, read as polyfillRead} from "clipboard-polyfill"
 
 export type ClipBoardTarget<INPUT, OUTPUT> = {
     importData: (data: INPUT) => void | Promise<void>,
@@ -50,7 +50,7 @@ export const readClipBoardImageBlob = async (): Promise<Blob[] | undefined> => {
         },
         async () => {
             const blobs = []
-            const clipboardItems = await navigator.clipboard.read();
+            const clipboardItems = await polyfillRead();
             for (const clipboardItem of clipboardItems) {
                 for (const type of clipboardItem.types) {
                     if (IMAGE_MIME_REGEX.test(type)) {
