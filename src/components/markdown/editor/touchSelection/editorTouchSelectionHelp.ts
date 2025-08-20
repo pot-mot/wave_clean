@@ -6,6 +6,7 @@ import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
 import EditorOption = editor.EditorOption;
 import ScrollType = editor.ScrollType;
 import {blobToFile} from "@/utils/file/fileRead.ts";
+import {sendMessage} from "@/components/message/sendMessage.ts";
 
 type Selector = HTMLDivElement & {
     bottomCursor: HTMLDivElement,
@@ -148,6 +149,7 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
             await copyText(selectedText)
             return true
         } catch (e) {
+            sendMessage(`copy fail: ${e}`, {type: 'error'})
             return false
         }
     }
@@ -162,6 +164,7 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
             editor.executeEdits('cut', [{range: selection, text: ''}])
             return true
         } catch (e) {
+            sendMessage(`cut fail: ${e}`, {type: 'error'})
             return false
         }
     }
@@ -198,6 +201,7 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
             target.dispatchEvent(event)
             return true
         } catch (e) {
+            sendMessage(`paste fail: ${e}`, {type: 'error'})
             return false
         }
     }
