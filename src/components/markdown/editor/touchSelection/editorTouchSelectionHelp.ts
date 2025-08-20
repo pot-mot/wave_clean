@@ -328,19 +328,15 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
                     const rightRect = rightSelector.getBoundingClientRect()
 
                     // 计算 touch 点到 left selector 的距离
-                    const leftDistance = Math.sqrt(
-                        Math.pow(touch.clientX - (leftRect.left + leftRect.width / 2), 2) +
+                    const leftDistancePow2 = Math.pow(touch.clientX - (leftRect.left + leftRect.width / 2), 2) +
                         Math.pow(touch.clientY - (leftRect.top + leftRect.height / 2), 2)
-                    );
 
                     // 计算 touch 点到 right selector 的距离
-                    const rightDistance = Math.sqrt(
-                        Math.pow(touch.clientX - (rightRect.left + rightRect.width / 2), 2) +
+                    const rightDistancePow2 = Math.pow(touch.clientX - (rightRect.left + rightRect.width / 2), 2) +
                         Math.pow(touch.clientY - (rightRect.top + rightRect.height / 2), 2)
-                    );
 
                     // 选择距离更近的 selector
-                    const closerRect = leftDistance <= rightDistance ? leftRect : rightRect;
+                    const closerRect = leftDistancePow2 <= rightDistancePow2 ? leftRect : rightRect;
 
                     const elementRect = element.getBoundingClientRect()
                     const menuRect = selectorMenu.getBoundingClientRect()
@@ -352,7 +348,7 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
                     let y = closerRect.top - elementRect.top - menuRect.height
                     if (y > elementRect.height - menuRect.height) y = elementRect.height - menuRect.height
 
-                    selectorMenu.style.transform = `translateX(${x}px) translateY(${y}px)`
+                    selectorMenu.style.transform = `translateX(${x + elementRect.left}px) translateY(${y + elementRect.top}px)`
                 }
             }
 
@@ -449,25 +445,25 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
             {
                 className: 'copy', text: 'Copy', action: async () => {
                     const result = await copy()
-                    if (result) selectorMenu?.classList.remove('show')
+                    if (result) hideSelectorMenu()
                 }
             },
             {
                 className: 'cut', text: 'Cut', action: async () => {
                     const result = await cut()
-                    if (result) selectorMenu?.classList.remove('show')
+                    if (result) hideSelectorMenu()
                 }
             },
             {
                 className: 'paste', text: 'Paste', action: async () => {
                     const result = await paste()
-                    if (result) selectorMenu?.classList.remove('show')
+                    if (result) hideSelectorMenu()
                 }
             },
             {
                 className: 'select', text: 'Select all', action: () => {
                     selectAll()
-                    selectorMenu?.classList.add('show')
+                    showSelectorMenu()
                 }
             },
         ]
@@ -522,7 +518,7 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
             event.preventDefault()
         })
 
-        editorOverlayGuard.append(selectorMenu)
+        document.documentElement.append(selectorMenu)
     }
     initSelectorMenu()
 

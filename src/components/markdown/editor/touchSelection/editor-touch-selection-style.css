@@ -30,27 +30,32 @@
 
 .selector-menu {
     position: fixed;
+    top: 0;
+    left: 0;
     display: none;
-    height: 1.5rem;
-    line-height: 1.5rem;
+    height: 2rem;
+    line-height: 2rem;
     padding: 0 0.5rem;
-    background: var(--background-color-hover);
-    border-radius: 0.75rem;
+    background: var(--background-color);
+    border: var(--border);
+    border-color: var(--background-color-hover);
+    border-radius: 1rem;
     max-width: 75vw;
     width: fit-content;
     overflow-x: auto;
     overflow-y: hidden;
-    z-index: 10000000;
+    z-index: 60000000;
 }
 
 .selector-menu.show {
     display: flex;
+    gap: 0.4rem;
 }
 
 .selector-menu-item {
     height: 100%;
     white-space: nowrap;
     color: var(--text-color);
-    font-size: 0.8em;
-    padding: 0 0.5em;
+    font-size: 0.8rem;
+    padding: 0 0.2rem;
 }
