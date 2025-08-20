@@ -242,26 +242,30 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
         ) => {
             let timeout: number | undefined
 
+            const showSelectionMenuByTouch = (touch: Touch) => {
+                if (touch && selectorMenu) {
+                    showSelectorMenu()
+                    const elementRect = element.getBoundingClientRect()
+                    const selectorRect = selector.getBoundingClientRect()
+                    const menuRect = selectorMenu.getBoundingClientRect()
+
+                    let x = selectorRect.left - elementRect.left - menuRect.width / 2
+                    if (x > elementRect.width - menuRect.width) x = elementRect.width - menuRect.width
+                    if (x < 0) x = 0
+
+                    let y = selectorRect.top - elementRect.top - menuRect.height
+                    if (y > elementRect.height - menuRect.height) y = elementRect.height - menuRect.height
+                    if (y < 0) y = 0
+
+                    selectorMenu.style.transform = `translateX(${x}px) translateY(${y}px)`
+                }
+            }
+
             selector.addEventListener('touchstart', (event) => {
                 const touch = event.changedTouches[0] ?? event.touches[0]
                 const initialSelection = editor.getSelection()
                 timeout = setTimeout(() => {
-                    if (touch && selectorMenu) {
-                        showSelectorMenu()
-                        const elementRect = element.getBoundingClientRect()
-                        const selectorRect = selector.getBoundingClientRect()
-                        const menuRect = selectorMenu.getBoundingClientRect()
-
-                        let x = selectorRect.left - elementRect.left - menuRect.width / 2
-                        if (x > elementRect.width - menuRect.width) x = elementRect.width - menuRect.width
-                        if (x < 0) x = 0
-
-                        let y = selectorRect.top - elementRect.top - menuRect.height
-                        if (y > elementRect.height - menuRect.height) y = elementRect.height - menuRect.height
-                        if (y < 0) y = 0
-
-                        selectorMenu.style.transform = `translateX(${x}px) translateY(${y}px)`
-                    }
+                    showSelectionMenuByTouch(touch)
                 }, 400)
 
                 const handleMove = (event: TouchEvent) => {
@@ -281,6 +285,12 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
                 const handleEnd = (event: TouchEvent) => {
                     event.preventDefault()
                     handleMove(event)
+
+                    if (selectorMenu && editor.getSelection() !== null) {
+                        const touch = event.changedTouches[0] ?? event.touches[0]
+                        showSelectionMenuByTouch(touch)
+                    }
+
                     document.removeEventListener('touchmove', handleMove)
                     document.removeEventListener('touchend', handleEnd)
                     document.removeEventListener('touchcancel', handleEnd)
