@@ -139,49 +139,67 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
         }
     }
 
-    const copy = async () => {
-        const selection = editor.getSelection()
-        if (!selection) return
-        const selectedText = editor.getModel()?.getValueInRange(selection)
-        if (!selectedText) return
-        await copyText(selectedText)
-    }
-
-    const cut = async () => {
-        const selection = editor.getSelection()
-        if (!selection) return
-        const selectedText = editor.getModel()?.getValueInRange(selection)
-        if (!selectedText) return
-        await copyText(selectedText)
-        editor.executeEdits('cut', [{range: selection, text: ''}])
-    }
-
-    const paste = async () => {
-        const selection = editor.getSelection()
-        if (!selection) return
-
-        const text = await readClipBoardText()
-        if (text) {
-            editor.executeEdits('paste', [{range: selection, text: text}])
+    const copy = async (): Promise<boolean> => {
+        try {
+            const selection = editor.getSelection()
+            if (!selection) return false
+            const selectedText = editor.getModel()?.getValueInRange(selection)
+            if (!selectedText) return false
+            await copyText(selectedText)
+            return true
+        } catch (e) {
+            return false
         }
+    }
 
-        const target = document.activeElement
-        if (!element.contains(target)) return
+    const cut = async (): Promise<boolean> => {
+        try {
+            const selection = editor.getSelection()
+            if (!selection) return false
+            const selectedText = editor.getModel()?.getValueInRange(selection)
+            if (!selectedText) return false
+            await copyText(selectedText)
+            editor.executeEdits('cut', [{range: selection, text: ''}])
+            return true
+        } catch (e) {
+            return false
+        }
+    }
 
-        const dataTransfer = new DataTransfer()
+    const paste = async (): Promise<boolean> => {
+        try {
+            const selection = editor.getSelection()
+            if (!selection) return false
 
-        const imageBlobs = await readClipBoardImageBlob()
-        if (imageBlobs) {
+            const text = await readClipBoardText()
+            let hasText = false
+            if (text) {
+                hasText = true
+                editor.executeEdits('paste', [{range: selection, text: text}])
+            }
+
+            const target = document.activeElement
+            if (!target || !element.contains(target)) {
+                return hasText
+            }
+
+            const dataTransfer = new DataTransfer()
+
+            const imageBlobs = await readClipBoardImageBlob()
+            if (!imageBlobs) return hasText
+
             for (const imageBlob of imageBlobs) {
                 const imageFile = await blobToFile(imageBlob, "image")
                 dataTransfer.items.add(imageFile)
             }
+            const event = new ClipboardEvent("paste", {
+                clipboardData: dataTransfer,
+            })
+            target.dispatchEvent(event)
+            return true
+        } catch (e) {
+            return false
         }
-
-        const event = new ClipboardEvent("paste", {
-            clipboardData: dataTransfer,
-        })
-        target?.dispatchEvent(event)
     }
 
     const sameSelectorBottomTransform = "translateX(-50%) translateY(25%) rotate(45deg)"
@@ -404,20 +422,20 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
         const menuItems = [
             {
                 className: 'copy', text: 'Copy', action: async () => {
-                    await copy()
-                    selectorMenu?.classList.remove('show')
+                    const result = await copy()
+                    if (result) selectorMenu?.classList.remove('show')
                 }
             },
             {
                 className: 'cut', text: 'Cut', action: async () => {
-                    await cut()
-                    selectorMenu?.classList.remove('show')
+                    const result = await cut()
+                    if (result) selectorMenu?.classList.remove('show')
                 }
             },
             {
                 className: 'paste', text: 'Paste', action: async () => {
-                    await paste()
-                    selectorMenu?.classList.remove('show')
+                    const result = await paste()
+                    if (result) selectorMenu?.classList.remove('show')
                 }
             },
             {
