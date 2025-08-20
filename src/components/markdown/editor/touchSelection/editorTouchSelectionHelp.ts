@@ -157,23 +157,28 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
         const startPosition = selection.getStartPosition()
         const endPosition = selection.getEndPosition()
 
-        // Get the top position of the start and end lines
-        const startLineTop = editor.getTopForLineNumber(startPosition.lineNumber)
-        const endLineTop = editor.getTopForLineNumber(endPosition.lineNumber)
-
         // Get the position of the start and end of the selection in client coordinates
         const startCoords = editor.getScrolledVisiblePosition(startPosition)
         const endCoords = editor.getScrolledVisiblePosition(endPosition)
 
         if (startCoords && endCoords && leftSelector && rightSelector) {
+            // Get the top position of the start and end lines
+            const startTop = editor.getTopForPosition(startPosition.lineNumber, startPosition.column)
+            const endTop = editor.getTopForPosition(endPosition.lineNumber, endPosition.column)
+
             // Calculate positions for the selectors based on line number top positions
             const leftSelectorX = startCoords.left - leftLength
-            const leftSelectorY = startLineTop
+            const leftSelectorY = startTop
             const rightSelectorX = endCoords.left - leftLength
-            const rightSelectorY = endLineTop
+            const rightSelectorY = endTop
 
-            leftSelector.style.transform = `translateX(calc(${leftSelectorX}px - 0.75em)) translateY(${leftSelectorY}px) rotate(45deg)`
-            rightSelector.style.transform = `translateX(calc(${rightSelectorX}px - 0.75em)) translateY(${rightSelectorY}px) rotate(45deg)`
+            if (leftSelectorX === rightSelectorX && leftSelectorY === rightSelectorY) {
+                leftSelector.style.transform = `translateX(calc(${leftSelectorX}px - 0.75em)) translateY(calc(${leftSelectorY}px + 0.3em)) rotate(45deg)`
+                rightSelector.style.transform = `translateX(calc(${rightSelectorX}px - 0.75em)) translateY(calc(${rightSelectorY}px + 0.3em)) rotate(45deg)`
+            } else {
+                leftSelector.style.transform = `translateX(calc(${leftSelectorX}px - 1.5em)) translateY(${leftSelectorY}px) rotate(90deg)`
+                rightSelector.style.transform = `translateX(calc(${rightSelectorX}px)) translateY(${rightSelectorY}px)`
+            }
         }
     }
 
