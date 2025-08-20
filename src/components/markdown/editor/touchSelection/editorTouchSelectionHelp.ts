@@ -30,6 +30,7 @@ const updateSelectionEnd = (selection: Selection, position: Position): Selection
     )
 }
 
+// 当触点移动到上下边缘时，尝试垂直滚动
 const scrollTopExtremityFit = (editor: IStandaloneCodeEditor, touch: Touch, lineHeight: number) => {
     const scrollTop = editor.getScrollTop()
 
@@ -53,29 +54,53 @@ const scrollTopExtremityFit = (editor: IStandaloneCodeEditor, touch: Touch, line
     }
 }
 
+// 当触点移动到左右边缘时，尝试水平滚动
+const scrollLeftExtremityFit = (editor: IStandaloneCodeEditor, touch: Touch, letterWidth: number) => {
+    const scrollLeft = editor.getScrollLeft()
+
+    const scrollWidth = editor.getScrollWidth()
+    const viewWidth = editor.getLayoutInfo().width
+    const maxScrollLeft = Math.max(0, scrollWidth - viewWidth)
+
+    const canScrollLeft = scrollLeft > 0
+    const canScrollRight = scrollLeft < maxScrollLeft
+
+    const previousTarget = editor.getTargetAtClientPoint(touch.clientX - letterWidth, touch.clientY)
+    const nextTarget = editor.getTargetAtClientPoint(touch.clientX + letterWidth, touch.clientY)
+    if (previousTarget === null && nextTarget !== null && canScrollLeft) {
+        // 触发向左滚动
+        const newScrollLeft = Math.max(0, scrollLeft - letterWidth)
+        editor.setScrollLeft(newScrollLeft, ScrollType.Smooth)
+    } else if (previousTarget !== null && nextTarget === null && canScrollRight) {
+        // 触发向右滚动
+        const newScrollLeft = Math.min(maxScrollLeft, scrollLeft + letterWidth)
+        editor.setScrollLeft(newScrollLeft, ScrollType.Smooth)
+    }
+}
+
 export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element: HTMLElement) => {
     const editorOverlayGuard = element.querySelector('.overflow-guard')
     if (!editorOverlayGuard || !(editorOverlayGuard instanceof HTMLElement)) throw new Error("no overlay guard")
 
     const margin = element.querySelector('.monaco-editor .margin')
     if (!margin || !(margin instanceof HTMLElement)) throw new Error("no margin")
-    const leftLength = margin.offsetWidth
+    const leftMargin = margin.offsetWidth
 
     let selectionsShow = false
-    let selectionsContainer: HTMLDivElement | null = null
+    let selections: HTMLDivElement | null = null
     let leftSelector: Selector | null = null
     let rightSelector: Selector | null = null
     const showSelections = () => {
-        if (!selectionsContainer) return
+        if (!selections) return
         if (selectionsShow) return
         selectionsShow = true
-        selectionsContainer.classList.add('show')
+        selections.classList.add('show')
     }
     const hideSelections = () => {
-        if (!selectionsContainer) return
+        if (!selections) return
         if (!selectionsShow) return
         selectionsShow = false
-        selectionsContainer.classList.remove('show')
+        selections.classList.remove('show')
     }
 
     let selectorMenuShow = false
@@ -94,12 +119,12 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
     }
 
     editor.onDidDispose(() => {
-        selectionsContainer?.remove()
+        selections?.remove()
         leftSelector?.remove()
         rightSelector?.remove()
         selectorMenu?.remove()
 
-        selectionsContainer = null
+        selections = null
         leftSelector = null
         rightSelector = null
         selectorMenu = null
@@ -157,36 +182,70 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
         target?.dispatchEvent(event)
     }
 
+    const sameSelectorBottomTransform = "translateX(-50%) translateY(25%) rotate(45deg)"
+    const leftSelectorBottomTransform = "translateX(-100%) rotate(90deg)"
+    const rightSelectorBottomTransform = ""
+
     const syncSelectionTransform = (selection: Selection) => {
+        if (!leftSelector || !rightSelector) return
+
         const startPosition = selection.getStartPosition()
         const endPosition = selection.getEndPosition()
 
         // Get the position of the start and end of the selection in client coordinates
+        const scrollLeft = editor.getScrollLeft()
         const startCoords = editor.getScrolledVisiblePosition(startPosition)
         const endCoords = editor.getScrolledVisiblePosition(endPosition)
 
-        if (startCoords && endCoords && leftSelector && rightSelector) {
-            // Get the top position of the start and end lines
-            const startTop = editor.getTopForPosition(startPosition.lineNumber, startPosition.column)
-            const endTop = editor.getTopForPosition(endPosition.lineNumber, endPosition.column)
+        if (!startCoords || !endCoords) return
 
-            // Calculate positions for the selectors based on line number top positions
-            const leftSelectorX = startCoords.left - leftLength
-            const leftSelectorY = startTop
-            const rightSelectorX = endCoords.left - leftLength
-            const rightSelectorY = endTop
+        // Get the top position of the start and end lines
+        const startTop = editor.getTopForPosition(startPosition.lineNumber, startPosition.column)
+        const endTop = editor.getTopForPosition(endPosition.lineNumber, endPosition.column)
 
-            leftSelector.style.transform = `translateX(${leftSelectorX}px) translateY(${leftSelectorY}px)`
-            rightSelector.style.transform = `translateX(${rightSelectorX}px) translateY(${rightSelectorY}px)`
-            if (leftSelectorX === rightSelectorX && leftSelectorY === rightSelectorY) {
-                leftSelector.bottomCursor.style.transform = `translateX(-50%) translateY(25%) rotate(45deg)`
-                rightSelector.bottomCursor.style.transform = `translateX(-50%) translateY(25%) rotate(45deg)`
-            } else {
-                leftSelector.bottomCursor.style.transform = `translateX(-100%) rotate(90deg)`
-                rightSelector.bottomCursor.style.transform = ``
-            }
+        // Calculate positions for the selectors based on line number top positions
+        const leftSelectorX = startCoords.left + scrollLeft - leftMargin
+        const leftSelectorY = startTop
+        const rightSelectorX = endCoords.left + scrollLeft - leftMargin
+        const rightSelectorY = endTop
+
+        leftSelector.style.opacity = "1"
+        rightSelector.style.opacity = "1"
+
+        leftSelector.style.transform = `translateX(${leftSelectorX}px) translateY(${leftSelectorY}px)`
+        rightSelector.style.transform = `translateX(${rightSelectorX}px) translateY(${rightSelectorY}px)`
+
+        if (leftSelectorX === rightSelectorX && leftSelectorY === rightSelectorY) {
+            leftSelector.bottomCursor.style.transform = sameSelectorBottomTransform
+            rightSelector.bottomCursor.style.transform = sameSelectorBottomTransform
+        } else {
+            leftSelector.bottomCursor.style.transform = leftSelectorBottomTransform
+            rightSelector.bottomCursor.style.transform = rightSelectorBottomTransform
         }
     }
+
+    const selectionSyncTimeout = 400
+    let lastSyncTime = 0
+    let syncSelectorTimer: number | undefined
+
+    const debounceSyncSelectionTransform = (selection: Selection) => {
+        clearTimeout(syncSelectorTimer)
+        if (!leftSelector || !rightSelector) return
+        const currentSyncTime = Date.now()
+        if (currentSyncTime - lastSyncTime < selectionSyncTimeout) {
+            lastSyncTime = currentSyncTime
+            leftSelector.style.opacity = "0"
+            rightSelector.style.opacity = "0"
+            syncSelectorTimer = setTimeout(() => {
+                syncSelectionTransform(selection)
+            }, selectionSyncTimeout)
+            return
+        } else {
+            lastSyncTime = currentSyncTime
+            syncSelectionTransform(selection)
+        }
+    }
+
 
     const toSelector = (element: HTMLDivElement): Selector => {
         element.classList.add('selector')
@@ -207,33 +266,35 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
     }
 
     const initSelections = () => {
-        selectionsContainer = document.createElement('div')
-        selectionsContainer.classList.add('selections')
+        selections = document.createElement('div')
+        selections.classList.add('selections')
 
         const leftSelectorEl = document.createElement('div')
         leftSelectorEl.classList.add('left')
         leftSelector = toSelector(leftSelectorEl)
-        selectionsContainer.appendChild(leftSelectorEl)
+        selections.appendChild(leftSelectorEl)
 
         const rightSelectorEl = document.createElement('div')
         rightSelectorEl.classList.add('right')
         rightSelector = toSelector(rightSelectorEl)
-        selectionsContainer.appendChild(rightSelectorEl)
+        selections.appendChild(rightSelectorEl)
 
         const lineHeight = editor.getOption(EditorOption.lineHeight)
+        const fontSize = editor.getOption(EditorOption.fontSize)
+
         // FIXME 当配置变更时，此处并不会同步更新
         leftSelector.textCursor.style.height = `${lineHeight}px`
         leftSelector.bottomCursor.style.marginTop = `${lineHeight}px`
         rightSelector.textCursor.style.height = `${lineHeight}px`
         rightSelector.bottomCursor.style.marginTop = `${lineHeight}px`
 
-        editorOverlayGuard.append(selectionsContainer)
+        editorOverlayGuard.append(selections)
         editor.onDidScrollChange((e) => {
-            if (selectionsContainer) {
-                selectionsContainer.style.top = `-${e.scrollTop}px`
+            if (selections) {
+                selections.style.top = `-${e.scrollTop}px`
+                selections.style.left = `-${e.scrollLeft}px`
             }
         })
-
 
         const setupSelectorTouchEvent = (
             selector: Selector,
@@ -283,6 +344,7 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
 
                 let revealTimer = setInterval(() => {
                     scrollTopExtremityFit(editor, touch, lineHeight)
+                    scrollLeftExtremityFit(editor, touch, fontSize)
                     const target = editor.getTargetAtClientPoint(touch.clientX, touch.clientY - lineHeight / 2)
                     if (target && target.position) {
                         editor.setSelection(updateSelection(initialSelection, target.position))
@@ -319,13 +381,15 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
         setupSelectorTouchEvent(rightSelector, updateSelectionEnd)
 
         const selection = editor.getSelection()
-        if (selection) syncSelectionTransform(selection)
+        if (selection) debounceSyncSelectionTransform(selection)
     }
 
     editor.onDidChangeCursorSelection((e) => {
-        if (!selectionsContainer || !selectorMenu) return
-        syncSelectionTransform(e.selection)
+        if (!selections || !selectorMenu) return
         hideSelectorMenu()
+        setTimeout(() => {
+            debounceSyncSelectionTransform(e.selection)
+        }, 0)
     })
 
     initSelections()
