@@ -10,7 +10,6 @@
     --edge-toolbar-z-index: 1000000;
 
     --vh: 1vh;
-    --visual-viewport-height: calc(100 * var(--vh));
 }
 
 * {
@@ -21,7 +20,6 @@
 
 html {
     overflow: hidden;
-    height: var(--visual-viewport-height);
     width: 100vw;
 }
 
