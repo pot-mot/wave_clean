@@ -36,21 +36,25 @@ const revealIfTouchVisibleTopOrBottom = throttle((editor: IStandaloneCodeEditor,
     if (!model) return
 
     const visibleRanges = editor.getVisibleRanges()
-    if (visibleRanges.length !== 1) return
-    const visibleRange = visibleRanges[0]
+    if (visibleRanges.length === 0) return
 
-    const maxLineNumber = model.getLineCount()
+    const scrollTop = editor.getScrollTop()
+    const contentHeight = editor.getContentHeight()
+    const viewHeight = editor.getLayoutInfo().height
+
+    const canScrollUp = scrollTop > 0
+    const canScrollDown =scrollTop < contentHeight - viewHeight
 
     const previousTarget = editor.getTargetAtClientPoint(touch.clientX, touch.clientY - lineHeight)
-    if (previousTarget === null && visibleRange.startLineNumber > 1) {
+    if (previousTarget === null && canScrollUp) {
         // 触发向上滚动
         editor.setScrollTop(editor.getScrollTop() - lineHeight, ScrollType.Smooth)
-    }
-
-    const nextTarget = editor.getTargetAtClientPoint(touch.clientX, touch.clientY)
-    if (nextTarget === null && visibleRange.endLineNumber < maxLineNumber) {
-        // 触发向下滚动
-        editor.setScrollTop(editor.getScrollTop() + lineHeight, ScrollType.Smooth)
+    } else {
+        const nextTarget = editor.getTargetAtClientPoint(touch.clientX, touch.clientY)
+        if (nextTarget === null && canScrollDown) {
+            // 触发向下滚动
+            editor.setScrollTop(editor.getScrollTop() + lineHeight, ScrollType.Smooth)
+        }
     }
 }, 100)
 
@@ -70,13 +74,13 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
         if (!selectionsContainer) return
         if (selectionsShow) return
         selectionsShow = true
-        selectionsContainer.classList.remove('hidden')
+        selectionsContainer.classList.add('show')
     }
     const hideSelections = () => {
         if (!selectionsContainer) return
         if (!selectionsShow) return
         selectionsShow = false
-        selectionsContainer.classList.add('hidden')
+        selectionsContainer.classList.remove('show')
     }
 
     let selectorMenuShow = false
@@ -85,13 +89,13 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
         if (!selectorMenu) return
         if (selectorMenuShow) return
         selectorMenuShow = true
-        selectorMenu.classList.remove('hidden')
+        selectorMenu.classList.add('show')
     }
     const hideSelectorMenu = () => {
         if (!selectorMenu) return
         if (!selectorMenuShow) return
         selectorMenuShow = false
-        selectorMenu.classList.add('hidden')
+        selectorMenu.classList.remove('show')
     }
 
     editor.onDidDispose(() => {
@@ -209,7 +213,7 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
 
     const initSelections = () => {
         selectionsContainer = document.createElement('div')
-        selectionsContainer.classList.add('selections', 'hidden')
+        selectionsContainer.classList.add('selections')
 
         const leftSelectorEl = document.createElement('div')
         leftSelectorEl.classList.add('left')
@@ -240,40 +244,52 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
             selector: Selector,
             updateSelection: (selection: Selection, position: Position) => Selection
         ) => {
-            let timeout: number | undefined
-
             const showSelectionMenuByTouch = (touch: Touch) => {
-                if (touch && selectorMenu) {
+                if (touch && selectorMenu && leftSelector && rightSelector) {
                     showSelectorMenu()
+
+                    const leftRect = leftSelector.getBoundingClientRect()
+                    const rightRect = rightSelector.getBoundingClientRect()
+
+                    // 计算 touch 点到 left selector 的距离
+                    const leftDistance = Math.sqrt(
+                        Math.pow(touch.clientX - (leftRect.left + leftRect.width / 2), 2) +
+                        Math.pow(touch.clientY - (leftRect.top + leftRect.height / 2), 2)
+                    );
+
+                    // 计算 touch 点到 right selector 的距离
+                    const rightDistance = Math.sqrt(
+                        Math.pow(touch.clientX - (rightRect.left + rightRect.width / 2), 2) +
+                        Math.pow(touch.clientY - (rightRect.top + rightRect.height / 2), 2)
+                    );
+
+                    console.log(touch, leftDistance, rightDistance)
+
+                    // 选择距离更近的 selector
+                    const closerRect = leftDistance <= rightDistance ? leftRect : rightRect;
+
                     const elementRect = element.getBoundingClientRect()
-                    const selectorRect = selector.getBoundingClientRect()
                     const menuRect = selectorMenu.getBoundingClientRect()
 
-                    let x = selectorRect.left - elementRect.left - menuRect.width / 2
+                    let x = closerRect.left - elementRect.left - menuRect.width / 2
                     if (x > elementRect.width - menuRect.width) x = elementRect.width - menuRect.width
                     if (x < 0) x = 0
 
-                    let y = selectorRect.top - elementRect.top - menuRect.height
+                    let y = closerRect.top - elementRect.top - menuRect.height
                     if (y > elementRect.height - menuRect.height) y = elementRect.height - menuRect.height
 
                     selectorMenu.style.transform = `translateX(${x}px) translateY(${y}px)`
                 }
             }
 
-            selector.addEventListener('touchstart', (event) => {
-                const touch = event.changedTouches[0] ?? event.touches[0]
+            selector.addEventListener('touchstart', () => {
                 const initialSelection = editor.getSelection()
-                timeout = setTimeout(() => {
-                    showSelectionMenuByTouch(touch)
-                }, 400)
 
                 const handleMove = (event: TouchEvent) => {
+                    event.preventDefault()
+
                     const touch = event.changedTouches[0] ?? event.touches[0]
                     const target = editor.getTargetAtClientPoint(touch.clientX, touch.clientY - lineHeight / 2)
-                    if (timeout !== undefined) {
-                        clearTimeout(timeout)
-                        timeout = undefined
-                    }
                     if (target && target.position && initialSelection) {
                         editor.setSelection(updateSelection(initialSelection, target.position))
                     }
@@ -295,7 +311,7 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
                     document.removeEventListener('touchcancel', handleEnd)
                 }
 
-                document.addEventListener('touchmove', handleMove)
+                document.addEventListener('touchmove', handleMove, {passive: false})
                 document.addEventListener('touchend', handleEnd)
                 document.addEventListener('touchcancel', handleEnd)
             })
@@ -318,14 +334,32 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
 
     const initSelectorMenu = () => {
         selectorMenu = document.createElement('div')
-        selectorMenu.classList.add('selector-menu', 'hidden')
+        selectorMenu.classList.add('selector-menu')
 
         // Create and append menu items to the inner menu container
         const menuItems = [
-            {className: 'copy', text: 'Copy', action: copy},
-            {className: 'cut', text: 'Cut', action: cut},
-            {className: 'paste', text: 'Paste', action: paste},
-            {className: 'select', text: 'Select all', action: selectAll},
+            {
+                className: 'copy', text: 'Copy', action: async () => {
+                    await copy()
+                    selectorMenu?.classList.remove('show')
+                }
+            },
+            {
+                className: 'cut', text: 'Cut', action: async () => {
+                    await cut()
+                    selectorMenu?.classList.remove('show')
+                }
+            },
+            {
+                className: 'paste', text: 'Paste', action: async () => {
+                    await paste()
+                    selectorMenu?.classList.remove('show')
+                }
+            },
+            {className: 'select', text: 'Select all', action: () => {
+                selectAll()
+                selectorMenu?.classList.add('show')
+            }},
         ]
 
         menuItems.forEach(item => {
@@ -334,10 +368,9 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
             const menuItemElement = document.createElement('div')
             menuItemElement.classList.add('selector-menu-item', item.className)
             menuItemElement.innerHTML = `<span>${item.text}</span>`
-            menuItemElement.ontouchend = () => {
+            menuItemElement.addEventListener('touchend', () => {
                 item.action()
-                selectorMenu?.classList.add('hidden')
-            }
+            })
             selectorMenu.appendChild(menuItemElement)
         })
 
@@ -362,9 +395,9 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
     <path d="M18 6l-12 12" />
     <path d="M6 6l12 12" />
 </svg>`
-        closeItem.ontouchend = () => {
-            selectorMenu?.classList.add('hidden')
-        }
+        closeItem.addEventListener('touchend', () => {
+            selectorMenu?.classList.remove('show')
+        })
         selectorMenu.appendChild(closeItem)
 
         selectorMenu.addEventListener('touchstart', (event) => {

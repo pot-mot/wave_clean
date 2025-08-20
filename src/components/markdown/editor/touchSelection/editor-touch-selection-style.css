@@ -2,10 +2,11 @@
     position: absolute;
     top: 0;
     z-index: 10000;
+    display: none;
 }
 
-.selections.hidden {
-    display: none;
+.selections.show {
+    display: block;
 }
 
 .selector {
@@ -29,7 +30,7 @@
 
 .selector-menu {
     position: fixed;
-    display: flex;
+    display: none;
     height: 1.5rem;
     line-height: 1.5rem;
     padding: 0 0.5rem;
@@ -42,8 +43,8 @@
     z-index: 10000000;
 }
 
-.selector-menu.hidden {
-    display: none;
+.selector-menu.show {
+    display: flex;
 }
 
 .selector-menu-item {
