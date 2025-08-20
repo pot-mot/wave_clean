@@ -42,15 +42,15 @@ const revealIfTouchVisibleTopOrBottom = throttle((editor: IStandaloneCodeEditor,
     const contentHeight = editor.getContentHeight()
     const viewHeight = editor.getLayoutInfo().height
 
-    const canScrollUp = scrollTop > 0
-    const canScrollDown =scrollTop < contentHeight - viewHeight
+    const canScrollUp = scrollTop > lineHeight
+    const canScrollDown = scrollTop < contentHeight - viewHeight
 
     const previousTarget = editor.getTargetAtClientPoint(touch.clientX, touch.clientY - lineHeight)
     if (previousTarget === null && canScrollUp) {
         // 触发向上滚动
         editor.setScrollTop(editor.getScrollTop() - lineHeight, ScrollType.Smooth)
     } else {
-        const nextTarget = editor.getTargetAtClientPoint(touch.clientX, touch.clientY)
+        const nextTarget = editor.getTargetAtClientPoint(touch.clientX, touch.clientY + lineHeight)
         if (nextTarget === null && canScrollDown) {
             // 触发向下滚动
             editor.setScrollTop(editor.getScrollTop() + lineHeight, ScrollType.Smooth)
