@@ -149,7 +149,7 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
             await copyText(selectedText)
             return true
         } catch (e) {
-            sendMessage(`copy fail: ${e}`, {type: 'error'})
+            sendMessage(`copy fail: ${e}`, {type: 'warning'})
             return false
         }
     }
@@ -164,7 +164,7 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
             editor.executeEdits('cut', [{range: selection, text: ''}])
             return true
         } catch (e) {
-            sendMessage(`cut fail: ${e}`, {type: 'error'})
+            sendMessage(`cut fail: ${e}`, {type: 'warning'})
             return false
         }
     }
@@ -201,7 +201,7 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
             target.dispatchEvent(event)
             return true
         } catch (e) {
-            sendMessage(`paste fail: ${e}`, {type: 'error'})
+            sendMessage(`paste fail: ${e}`, {type: 'warning'})
             return false
         }
     }

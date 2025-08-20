@@ -1215,7 +1215,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                 focus()
                 return result
             } catch (e) {
-                sendMessage("copy fail", {type: "warning"})
+                sendMessage(`copy fail: ${e}`, {type: "warning"})
                 throw e
             }
         },
@@ -1226,7 +1226,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                 focus()
                 return result
             } catch (e) {
-                sendMessage("paste fail", {type: "warning"})
+                sendMessage(`paste fail: ${e}`, {type: "warning"})
                 throw e
             }
         },
@@ -1237,7 +1237,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                 focus()
                 return result
             } catch (e) {
-                sendMessage("cut fail", {type: "warning"})
+                sendMessage(`cut fail: ${e}`, {type: "warning"})
                 throw e
             }
         },
