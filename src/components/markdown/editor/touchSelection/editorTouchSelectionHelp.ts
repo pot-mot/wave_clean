@@ -255,7 +255,6 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
 
                     let y = selectorRect.top - elementRect.top - menuRect.height
                     if (y > elementRect.height - menuRect.height) y = elementRect.height - menuRect.height
-                    if (y < 0) y = 0
 
                     selectorMenu.style.transform = `translateX(${x}px) translateY(${y}px)`
                 }
