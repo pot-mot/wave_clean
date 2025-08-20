@@ -40,7 +40,7 @@
     border: var(--border);
     border-color: var(--background-color-hover);
     border-radius: 1rem;
-    max-width: 75vw;
+    max-width: 90vw;
     width: fit-content;
     overflow-x: auto;
     overflow-y: hidden;
