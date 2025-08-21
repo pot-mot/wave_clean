@@ -143,7 +143,7 @@ defineExpose({
 
 <style scoped>
 .message-container {
-    position: fixed;
+    position: absolute;
     top: 1.5rem;
     width: 100%;
     margin: auto;

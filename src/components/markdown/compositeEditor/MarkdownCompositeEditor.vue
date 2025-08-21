@@ -223,7 +223,7 @@ defineExpose({
 }
 
 .fullscreen {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
     height: calc(100 * var(--vh));

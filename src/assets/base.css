@@ -11,6 +11,8 @@
 
     --vh: 1vh;
     --visual-height: calc(100 * var(--vh));
+    --visual-top: 0;
+    --visual-left: 0;
 }
 
 * {
@@ -20,6 +22,10 @@
 }
 
 html {
+    position: relative;
+    top: var(--visual-top);
+    left: var(--visual-left);
+
     overflow: hidden;
     height: var(--visual-height);
     width: 100vw;
