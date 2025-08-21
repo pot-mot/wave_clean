@@ -220,7 +220,7 @@ const executeDelete = () => {
         class="content-edge"
         :class="{selected: props.selected}"
         @mousedown.capture="handleEdgeMouseDown"
-        @touchstart.capture="handleEdgeMouseDown"
+        @touchstart.capture.passive="handleEdgeMouseDown"
         @click.capture="handleClick"
     >
         <defs>

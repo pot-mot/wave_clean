@@ -449,7 +449,7 @@ const executeDelete = () => {
             class="fit-parent"
             style="overflow: visible;"
             @mousedown.capture="handleNodeSelect"
-            @touchstart.capture="handleNodeSelect"
+            @touchstart.capture.passive="handleNodeSelect"
         >
             <div
                 v-if="dataTypeOrDefault === 'text'"

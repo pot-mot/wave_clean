@@ -394,7 +394,7 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
                 document.addEventListener('touchmove', handleMove, {passive: false})
                 document.addEventListener('touchend', handleEnd)
                 document.addEventListener('touchcancel', handleEnd)
-            })
+            }, {passive: true})
         }
 
         setupSelectorTouchEvent(leftSelector, updateSelectionStart)
@@ -420,7 +420,7 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
                 if (word) {
                     editor.setSelection(new Selection(selection.startLineNumber, word.startColumn, selection.startLineNumber, word.endColumn))
                 }
-            })
+            }, {passive: true})
         }
 
         setupTextCursorSelectWord(leftSelector.textCursor)
@@ -512,15 +512,15 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
 
         selectorMenu.addEventListener('touchstart', (event) => {
             event.preventDefault()
-        })
+        }, {passive: false})
 
         selectorMenu.addEventListener('touchmove', (event) => {
             event.preventDefault()
-        })
+        }, {passive: false})
 
         selectorMenu.addEventListener('touchend', (event) => {
             event.preventDefault()
-        })
+        }, {passive: false})
 
         document.documentElement.append(selectorMenu)
     }
@@ -528,7 +528,7 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
 
     element.addEventListener('touchstart', () => {
         showSelections()
-    })
+    }, {passive: true})
 
     editor.onDidBlurEditorWidget(() => {
         hideSelections()

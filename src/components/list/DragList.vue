@@ -182,7 +182,7 @@ const handleTouchMoveToEmitTouchEnter = (e: TouchEvent) => {
 
 onMounted(() => {
     if (isTouchDevice.value && container.value) {
-        container.value.addEventListener('touchmove', handleTouchMoveToEmitTouchEnter)
+        container.value.addEventListener('touchmove', handleTouchMoveToEmitTouchEnter, {passive: true})
     }
 })
 onBeforeUnmount(() => {
@@ -339,7 +339,7 @@ const stopDragDown = () => {
                         @mousedown="handleDragStartByMouse(index, item, $event)"
                         @mouseenter="handleItemDragEnter(index, item)"
 
-                        @touchstart="handleDragStartByTouch(index, item, $event)"
+                        @touchstart.passive="handleDragStartByTouch(index, item, $event)"
                         @touchenter="handleItemDragEnter(index, item)"
                     >
                         <slot :item="item"/>

@@ -266,14 +266,14 @@ defineExpose({
                 v-for="key of resizeBorderKeys"
                 :class="`resize-border ${key}`"
                 @mousedown.capture.stop.prevent="startResize(key, $event)"
-                @touchstart.capture.stop="startResize(key, $event)"
+                @touchstart.capture.stop.passive="startResize(key, $event)"
             />
 
             <div
                 v-for="key of resizeHandleKeys"
                 :class="`resize-handle ${key}`"
                 @mousedown.capture.stop.prevent="startResize(key, $event)"
-                @touchstart.capture.stop="startResize(key, $event)"
+                @touchstart.capture.stop.passive="startResize(key, $event)"
             />
         </template>
     </div>

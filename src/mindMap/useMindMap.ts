@@ -922,12 +922,12 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                 // 设置屏幕位置
                 paneEl.addEventListener('touchstart', (e) => {
                     screenPosition.value = {x: e.touches[0].clientX, y: e.touches[0].clientY}
-                })
+                }, {passive: true})
                 paneEl.addEventListener('touchmove', (e) => {
                     if (e.changedTouches.length > 0) {
                         screenPosition.value = {x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY}
                     }
-                })
+                }, {passive: true})
 
                 // 当触碰数量多于，阻止节点拖拽
                 el.addEventListener('touchstart', (e) => {
@@ -936,7 +936,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                     } else {
                         enableDrag()
                     }
-                }, {capture: true})
+                }, {capture: true, passive: true})
 
                 // 双击添加节点
                 let waitNextTouchEnd = false
@@ -973,7 +973,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                         lastTouchTime = currentTime
                         lastTouchPosition = currentTouchPosition
                     }
-                })
+                }, {passive: true})
                 paneEl.addEventListener('touchend', (e) => {
                     if (e.target !== paneEl) return
                     if (!waitNextTouchEnd) {
@@ -983,7 +983,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                             lastTouchPosition = null
                         }, 150)
                     }
-                })
+                }, {passive: true})
 
                 // 多选框
                 paneEl.addEventListener('touchstart', (e) => {
@@ -1036,7 +1036,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                     }
 
                     document.documentElement.addEventListener('touchmove', onRectSelect, {passive: false})
-                    document.documentElement.addEventListener('touchend', onRectSelectEnd)
+                    document.documentElement.addEventListener('touchend', onRectSelectEnd, {passive: true})
                     document.documentElement.addEventListener('touchcancel', onRectSelectEnd)
                 }, {passive: false})
             }

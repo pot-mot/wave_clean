@@ -393,7 +393,7 @@ const addSplitter = (paneIndex: number, nextPaneNode: HTMLElement, isVeryFirst =
         elm.onmousedown = event => onMouseDown(event, splitterIndex)
 
         if (typeof window !== 'undefined' && 'ontouchstart' in window) {
-            elm.ontouchstart = event => onMouseDown(event, splitterIndex)
+            elm.addEventListener('touchstart', event => onMouseDown(event, splitterIndex), {passive: true})
         }
         elm.onclick = event => onSplitterClick(event, splitterIndex + 1)
     }
