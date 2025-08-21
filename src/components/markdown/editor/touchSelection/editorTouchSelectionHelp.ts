@@ -119,7 +119,19 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
         selectorMenu.classList.remove('show')
     }
 
+    let resizeOb: ResizeObserver | null = new ResizeObserver(() => {
+        hideSelections()
+        hideSelectorMenu()
+
+        const selection = editor.getSelection()
+        if (selection) debounceSyncSelectionTransform(selection)
+    })
+    resizeOb.observe(element)
+
     editor.onDidDispose(() => {
+        resizeOb?.disconnect()
+        resizeOb = null
+
         selections?.remove()
         leftSelector?.remove()
         rightSelector?.remove()
@@ -346,11 +358,21 @@ export const editorTouchSelectionHelp = (editor: IStandaloneCodeEditor, element:
                     const menuRect = selectorMenu.getBoundingClientRect()
 
                     let x = closerRect.left - elementRect.left - menuRect.width / 2
-                    if (x > elementRect.width - menuRect.width) x = elementRect.width - menuRect.width
+                    if (x + menuRect.width > elementRect.width) x = elementRect.width - menuRect.width
                     if (x < 0) x = 0
 
                     let y = closerRect.top - elementRect.top - menuRect.height
-                    if (y > elementRect.height - menuRect.height) y = elementRect.height - menuRect.height
+                    if (y + menuRect.height > elementRect.height) y = elementRect.height - menuRect.height
+                    if (y < 0) y = 0
+
+                    // 防止超出视野范围
+                    if (window.visualViewport) {
+                        if (x + menuRect.width > window.visualViewport.width)x = window.visualViewport.width - menuRect.width
+                        if (y + menuRect.height > window.visualViewport.height)y = window.visualViewport.height - menuRect.height
+                    } else {
+                        if (x + menuRect.width > document.body.clientWidth)x = document.body.clientWidth - menuRect.width
+                        if (y + menuRect.height > document.body.clientHeight)y = document.body.clientHeight - menuRect.height
+                    }
 
                     selectorMenu.style.transform = `translateX(${x + elementRect.left}px) translateY(${y + elementRect.top}px)`
                 }
