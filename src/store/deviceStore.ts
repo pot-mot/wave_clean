@@ -15,6 +15,7 @@ export const useDeviceStore = createStore(() => {
         }
         const vh = visualHeight.value * 0.01
         document.documentElement.style.setProperty('--vh', `${vh}px`)
+        document.documentElement.style.setProperty('--visual-height', `${visualHeight.value}px`)
     }, 200)
 
     onMounted(() => {

@@ -286,7 +286,7 @@ watch(
 <style scoped>
 .toolbar {
     z-index: var(--toolbar-z-index);
-    position: absolute;
+    position: fixed;
     background-color: var(--background-color);
     overflow-x: auto;
 }
@@ -344,7 +344,8 @@ watch(
 }
 
 .toolbar.bottom {
-    bottom: 0;
+    top: var(--visual-height);
+    transform: translateY(-100%);
     border-top: var(--border);
     border-color: var(--background-color-hover);
 }
@@ -392,7 +393,8 @@ watch(
 
     z-index: var(--quick-input-toolbar-z-index);
 
-    bottom: 0;
+    top: var(--visual-height);
+    transform: translateY(-100%);
     border-top: var(--border);
     border-color: var(--background-color-hover);
 
