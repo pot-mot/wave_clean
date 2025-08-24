@@ -309,8 +309,22 @@ const handleVisibility = computed<boolean>(() => {
     return isFocus.value || isConnecting.value
 })
 
-// 复制
-const executeCopy = () => {
+// 通过按钮的复制和点击粘贴
+let cleanClickPasteTimeout: number | undefined = undefined
+
+const clickPaste = (e: MouseEvent) => {
+    if (e.target instanceof HTMLElement) {
+        if (getMatchedElementOrParent(e.target, (el) => el.classList.contains("vue-flow__nodes") || el.classList.contains("vue-flow__edges")) !== null) {
+            return
+        } else if (getMatchedElementOrParent(e.target, (el) => el.classList.contains("vue-flow__pane")) !== null) {
+            paste()
+            document.documentElement.removeEventListener('click', clickPaste)
+            clearTimeout(cleanClickPasteTimeout)
+        }
+    }
+}
+
+const executeButtonCopy = () => {
     const node = _node.value
     if (node === undefined) return
 
@@ -319,22 +333,11 @@ const executeCopy = () => {
 
     // 在复制后的下一次点击中执行粘贴
     // 一段时间后移除粘贴动作
-    let timeout = setTimeout(() => {
-        document.documentElement.removeEventListener('click', handleNextClick)
-        clearTimeout(timeout)
+    cleanClickPasteTimeout = setTimeout(() => {
+        document.documentElement.removeEventListener('click', clickPaste)
+        clearTimeout(cleanClickPasteTimeout)
     }, 10000)
-    const handleNextClick = (e: MouseEvent) => {
-        if (e.target instanceof HTMLElement) {
-            if (getMatchedElementOrParent(e.target, (el) => el.classList.contains("vue-flow__nodes") || el.classList.contains("vue-flow__edges")) !== null) {
-                return
-            } else if (getMatchedElementOrParent(e.target, (el) => el.classList.contains("vue-flow__pane")) !== null) {
-                paste()
-                document.documentElement.removeEventListener('click', handleNextClick)
-                clearTimeout(timeout)
-            }
-        }
-    }
-    document.documentElement.addEventListener('click', handleNextClick)
+    document.documentElement.addEventListener('click', clickPaste)
 }
 
 // 边框颜色
@@ -516,7 +519,7 @@ const executeDelete = () => {
         </div>
 
         <NodeToolbar :node-id="id" :is-visible="selected && isFocus" class="toolbar">
-            <button @mousedown.capture.prevent.stop="executeCopy">
+            <button @mousedown.capture.prevent.stop="executeButtonCopy">
                 <IconCopy/>
             </button>
 
