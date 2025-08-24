@@ -66,27 +66,27 @@ export default defineConfig(async (env) => {
     return {
         plugins,
 
-            // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
-            //
-            // 1. prevent vite from obscuring rust errors
-            clearScreen: false,
+        // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
+        //
+        // 1. prevent vite from obscuring rust errors
+        clearScreen: false,
         // 2. tauri expects a fixed port, fail if that port is not available
         server: {
-        port: 1420,
+            port: 1420,
             strictPort: true,
             host: host || false,
             hmr: host
-            ? {
-                protocol: "ws",
-                host,
-                port: 1421,
-            }
-            : undefined,
+                ? {
+                    protocol: "ws",
+                    host,
+                    port: 1421,
+                }
+                : undefined,
             watch: {
-            // 3. tell vite to ignore watching `src-tauri`
-            ignored: ["**/src-tauri/**"],
+                // 3. tell vite to ignore watching `src-tauri`
+                ignored: ["**/src-tauri/**"],
+            },
         },
-    },
         resolve: {
             alias: {
                 '@': fileURLToPath(new URL('./src', import.meta.url))
@@ -97,15 +97,15 @@ export default defineConfig(async (env) => {
                 output: {
                     manualChunks: {
                         'vue': ['vue'],
-                            'vue-flow': ['@vue-flow/core', '@vue-flow/node-toolbar'],
-                            'lodash': ['lodash-es'],
-                            'monaco-editor': ['monaco-editor'],
-                            'prismjs': ['prismjs'],
-                            'markdown-it': ['markdown-it', 'markdown-it-emoji', 'markdown-it-mark', 'markdown-it-multimd-table', 'markdown-it-sub', 'markdown-it-sup', 'markdown-it-task-lists'],
-                            'mermaid': ['mermaid'],
-                            'katex': ['katex'],
-                            'image-viewer': ['v-viewer', 'viewerjs'],
-                            'html-to-image': ['html-to-image'],
+                        'vue-flow': ['@vue-flow/core', '@vue-flow/node-toolbar'],
+                        'lodash': ['lodash-es'],
+                        'monaco-editor': ['monaco-editor'],
+                        'prismjs': ['prismjs'],
+                        'markdown-it': ['markdown-it', 'markdown-it-emoji', 'markdown-it-mark', 'markdown-it-multimd-table', 'markdown-it-sub', 'markdown-it-sup', 'markdown-it-task-lists'],
+                        'mermaid': ['mermaid'],
+                        'katex': ['katex'],
+                        'image-viewer': ['v-viewer', 'viewerjs'],
+                        'html-to-image': ['html-to-image'],
                     }
                 }
             }
