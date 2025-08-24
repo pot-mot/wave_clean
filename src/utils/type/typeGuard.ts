@@ -8,6 +8,10 @@ export const isString = (arg: any): arg is string => {
     return typeof arg === 'string';
 }
 
+export const isFunction = (arg: any): arg is Function => {
+    return typeof arg === 'function';
+}
+
 export const getKeys = <T extends object>(data: T): (keyof T)[] => {
     return Object.keys(data) as (keyof T)[]
 }

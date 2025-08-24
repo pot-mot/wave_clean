@@ -2,7 +2,7 @@
 import IconDelete from "@/components/icons/IconDelete.vue";
 import {useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
 import {computed, ref} from "vue";
-import {sendMessage} from "@/components/message/sendMessage.ts";
+import {sendMessage} from "@/components/message/messageApi.ts";
 import IconAdd from "@/components/icons/IconAdd.vue";
 import DragModelList from "@/components/list/DragModelList.vue";
 import {formatDatetimeToLocal} from "@/utils/datetime/datetimeFormat.ts";

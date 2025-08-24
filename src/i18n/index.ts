@@ -1,29 +1,39 @@
-type BaseLocale = { [key: string]: string | ((...args: any[]) => string) }
+export type MainLocale = {
+    BUTTON_copy: string
+    BUTTON_cut: string
+    BUTTON_paste: string
 
-type MainLocale = {
+    BUTTON_edit: string
+    BUTTON_submit: string
+    BUTTON_delete: string
+    BUTTON_clear: string
+    BUTTON_save: string
+    BUTTON_cancel: string
+    BUTTON_load: string
+    BUTTON_export: string
+    BUTTON_test: string
 
-} & BaseLocale
+    MESSAGE_delete_confirm: (deleteTarget: string) => string
+}
+
+type BaseLocale = {
+    [K : string]: string | ((...args: any[]) => string)
+}
 
 type LocaleKey<
     Locale extends BaseLocale = MainLocale
 > =
-    string & keyof Locale
+    keyof Locale
 
 type LocaleKeyWithArgs<
     Locale extends BaseLocale = MainLocale,
-    K extends string & keyof Locale = LocaleKey<Locale>,
+    K extends keyof Locale = keyof Locale,
     V extends Locale[K] = Locale[K]
 > =
     { key: K, args: V extends (...args: infer A) => string ? A : [] }
 
-type LocalKeyParam<
-    Locale extends BaseLocale
-> = LocaleKey<Locale> | LocaleKeyWithArgs<Locale>
+export type LocalKeyParam<
+    Locale extends BaseLocale = MainLocale
+> =
+    LocaleKey<Locale> | LocaleKeyWithArgs<Locale>
 
-export type MainLocaleKeyParam = LocalKeyParam<MainLocale>
-
-export type ProjectLocale = MainLocale & {
-
-}
-
-export type ProjectLocaleKeyParam = LocalKeyParam<ProjectLocale>

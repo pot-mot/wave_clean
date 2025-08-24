@@ -2,7 +2,7 @@
 import IconDelete from "@/components/icons/IconDelete.vue";
 import {QuickInputItem, useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
 import {ref} from "vue";
-import {sendMessage} from "@/components/message/sendMessage.ts";
+import {sendMessage} from "@/components/message/messageApi.ts";
 import IconAdd from "@/components/icons/IconAdd.vue";
 import DragModelList from "@/components/list/DragModelList.vue";
 import {v7 as uuid} from "uuid"

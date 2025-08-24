@@ -4,7 +4,7 @@ import "viewerjs/dist/viewer.css";
 import "@/utils/image/imageViewerDownloadIcon.css"
 import {getMatchedElementOrParent} from "@/utils/event/judgeEventTarget.ts";
 import {downloadImageFile, downloadSvgFile, IMAGE_BASE64_PREFIX, SVG_PREFIX_REGEX} from "@/utils/file/fileDownload.ts";
-import {sendMessage} from "@/components/message/sendMessage.ts";
+import {sendMessage} from "@/components/message/messageApi.ts";
 import {withLoading} from "@/components/loading/loadingApi.ts";
 
 export const MarkdownItImage = (md: MarkdownIt) => {

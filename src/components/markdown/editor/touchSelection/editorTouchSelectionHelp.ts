@@ -6,7 +6,7 @@ import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
 import EditorOption = editor.EditorOption;
 import ScrollType = editor.ScrollType;
 import {blobToFile} from "@/utils/file/fileRead.ts";
-import {sendMessage} from "@/components/message/sendMessage.ts";
+import {sendMessage} from "@/components/message/messageApi.ts";
 
 type Selector = HTMLDivElement & {
     bottomCursor: HTMLDivElement,

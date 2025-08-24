@@ -3,7 +3,7 @@ import {computed, nextTick, ref, watch} from "vue";
 import {getDefaultMindMapData, useMindMap} from "@/mindMap/useMindMap.ts";
 import {MindMapData, validateMindMapData} from "@/mindMap/MindMapData.ts";
 import {jsonSortPropStringify} from "@/utils/json/jsonStringify.ts";
-import {sendMessage} from "@/components/message/sendMessage.ts";
+import {sendMessage} from "@/components/message/messageApi.ts";
 import type {JSONSchemaType} from "ajv/lib/types/json-schema.ts";
 import {createSchemaValidator} from "@/utils/type/typeGuard.ts";
 import {Theme} from "@tauri-apps/api/window";

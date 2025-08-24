@@ -42,7 +42,7 @@ import {useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
 import {LazyData} from "@/utils/type/lazyDataParse.ts";
 import {useDeviceStore} from "@/store/deviceStore.ts";
 import {v7 as uuid} from "uuid"
-import {sendMessage} from "@/components/message/sendMessage.ts";
+import {sendMessage} from "@/components/message/messageApi.ts";
 import {getTouchRect} from "@/utils/event/getTouchRect.ts";
 import {createStore} from "@/store/createStore.ts";
 import {withLoading} from "@/components/loading/loadingApi.ts";

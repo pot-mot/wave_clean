@@ -6,7 +6,7 @@ import "@/components/markdown/preview/codeStyle/code.css"
 import {imagePreview} from "@/components/markdown/preview/plugins/MarkdownItImage.ts";
 import {getMatchedElementOrParent} from "@/utils/event/judgeEventTarget.ts";
 import {copyText} from "@/utils/clipBoard/useClipBoard.ts";
-import {sendMessage} from "@/components/message/sendMessage.ts";
+import {sendMessage} from "@/components/message/messageApi.ts";
 import {copyButtonFindCodeBlockPre} from "@/components/markdown/preview/plugins/MarkdownItPrismCode.ts";
 import {useThemeStore} from "@/store/themeStore.ts";
 

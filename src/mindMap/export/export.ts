@@ -3,7 +3,7 @@ import {getRaw} from "@/utils/json/getRaw.ts";
 import {v7 as uuid} from "uuid";
 import {blurActiveElement} from "@/utils/event/judgeEventTarget.ts";
 import {nextTick} from "vue";
-import {sendMessage} from "@/components/message/sendMessage.ts";
+import {sendMessage} from "@/components/message/messageApi.ts";
 import {exportAsJpg, exportAsPng, exportAsSvg} from "@/utils/image/htmlExportAsImage.ts";
 import {downloadTextFile} from "@/utils/file/fileDownload.ts";
 import {jsonPrettyFormat} from "@/utils/json/jsonStringify.ts";
