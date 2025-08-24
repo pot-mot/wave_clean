@@ -1,6 +1,6 @@
 import {createApp} from "vue";
 import Message from "@/components/message/Message.vue";
-import {MessageContent, MessageOpenOptions} from "@/components/message/MessageItem.ts";
+import type {MessageContent, MessageOpenOptions} from "@/components/message/MessageItem.ts";
 
 type MessageInstance = InstanceType<typeof Message>
 let newInstance: MessageInstance | null = null

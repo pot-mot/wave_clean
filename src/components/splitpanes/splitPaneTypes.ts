@@ -1,4 +1,4 @@
-import {ComputedRef, InjectionKey, Ref} from 'vue';
+import type {ComputedRef, InjectionKey, Ref} from 'vue';
 
 export type Pane = {
     id: number
