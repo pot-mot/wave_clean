@@ -7,7 +7,7 @@ import QuickInputMenu from "@/mindMap/quickInput/QuickInputMenu.vue";
 import {useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
 import {computed, ref} from "vue";
 import {useDeviceStore} from "@/store/deviceStore.ts";
-import ColorInput from "@/components/input/ColorInput.vue";
+import ColorInput from "@/components/color/ColorInput.vue";
 
 const metaStore = useMindMapMetaStore()
 
