@@ -1,39 +1,3 @@
-<template>
-    <div class="message-container">
-        <TransitionGroup
-            tag="div"
-            name="messages"
-            style="position: relative;"
-            :duration="{enter: enterDuration, leave: leaveDuration}"
-            @after-leave="handleAfterLeave"
-        >
-            <div
-                v-for="(item, index) in messageItems"
-                :key="item.id"
-                class="message-wrapper"
-            >
-                <div
-                    class="message" :class="item.type"
-                    @mouseenter="handleMouseEnter(item)"
-                    @mouseleave="handleMouseLeave(item)"
-                >
-                    <div class="message-content">
-                        <Component v-if="typeof item.content !== 'string'" :is="item.content"/>
-                        <div v-else>{{ item.content }}</div>
-                    </div>
-
-                    <div v-if="item.canClose" class="close-icon" @click="close(index)">
-                        <IconClose/>
-                    </div>
-                    <div v-if="item.repeatCount > 1" class="repeat-count">
-                        {{ item.repeatCount }}
-                    </div>
-                </div>
-            </div>
-        </TransitionGroup>
-    </div>
-</template>
-
 <script setup lang="ts">
 import {ref} from "vue";
 import IconClose from "@/components/icons/IconClose.vue";
@@ -140,6 +104,42 @@ defineExpose({
     open
 })
 </script>
+
+<template>
+    <div class="message-container">
+        <TransitionGroup
+            tag="div"
+            name="messages"
+            style="position: relative;"
+            :duration="{enter: enterDuration, leave: leaveDuration}"
+            @after-leave="handleAfterLeave"
+        >
+            <div
+                v-for="(item, index) in messageItems"
+                :key="item.id"
+                class="message-wrapper"
+            >
+                <div
+                    class="message" :class="item.type"
+                    @mouseenter="handleMouseEnter(item)"
+                    @mouseleave="handleMouseLeave(item)"
+                >
+                    <div class="message-content">
+                        <Component v-if="typeof item.content !== 'string'" :is="item.content"/>
+                        <div v-else>{{ item.content }}</div>
+                    </div>
+
+                    <div v-if="item.canClose" class="close-icon" @click="close(index)">
+                        <IconClose/>
+                    </div>
+                    <div v-if="item.repeatCount > 1" class="repeat-count">
+                        {{ item.repeatCount }}
+                    </div>
+                </div>
+            </div>
+        </TransitionGroup>
+    </div>
+</template>
 
 <style scoped>
 .message-container {
