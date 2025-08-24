@@ -1,23 +1,3 @@
-<template>
-    <div class="color-input">
-        <div class="color-preview" ref="colorPreviewRef" @click="showPicker = !showPicker" :style="{ backgroundColor: value }"/>
-
-        <Teleport to="body">
-            <div v-if="showPicker" class="picker-mask" @click.self="showPicker = false">
-                <ChromePicker
-                    v-model="value"
-                    :disableAlpha="true"
-                    class="chrome-picker"
-                    :style="{
-                        top: `${pickerPosition.top}px`,
-                        left: `${pickerPosition.left}px`,
-                    }"
-                />
-            </div>
-        </Teleport>
-    </div>
-</template>
-
 <script setup lang="ts">
 import 'vue-color/style.css'
 import {ChromePicker} from "vue-color";
@@ -57,6 +37,26 @@ watch(() => showPicker.value, (value) => {
     }
 })
 </script>
+
+<template>
+    <div class="color-input">
+        <div class="color-preview" ref="colorPreviewRef" @click="showPicker = !showPicker" :style="{ backgroundColor: value }"/>
+
+        <Teleport to="body">
+            <div v-if="showPicker" class="picker-mask" @click.self="showPicker = false">
+                <ChromePicker
+                    v-model="value"
+                    :disableAlpha="true"
+                    class="chrome-picker"
+                    :style="{
+                        top: `${pickerPosition.top}px`,
+                        left: `${pickerPosition.left}px`,
+                    }"
+                />
+            </div>
+        </Teleport>
+    </div>
+</template>
 
 <style scoped>
 .color-input {
