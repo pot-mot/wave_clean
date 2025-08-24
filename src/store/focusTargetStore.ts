@@ -3,55 +3,26 @@ import {onBeforeUnmount, onMounted, shallowRef} from "vue";
 
 export const useFocusTargetStore = createStore(() => {
     const focusTarget = shallowRef<EventTarget | Element | null>(null)
-
-    const handleFocus = (e: FocusEvent) => {
-        e.preventDefault()
-        e.stopPropagation()
-        e.stopImmediatePropagation()
-        if (e.target !== window && (e.target instanceof HTMLElement || e.target instanceof SVGElement)) {
-            e.target.focus({preventScroll: true})
-            focusTarget.value = e.target
-        }
-        return false
+    const setActiveElementByActiveElement = () => {
+        focusTarget.value = document.activeElement
     }
-
-    const handleFocusIn = (e: FocusEvent) => {
-        e.preventDefault()
-        e.stopPropagation()
-        e.stopImmediatePropagation()
-        return false
+    const setActiveElementByFocusIn = (e: Event) => {
+        focusTarget.value = e.target
     }
-
-    const handleBlur = (e: FocusEvent) => {
-        e.preventDefault()
-        e.stopPropagation()
-        e.stopImmediatePropagation()
-        if (focusTarget.value === e.target) {
-            focusTarget.value = null
-        }
-        return false
+    const cleanActiveElement = () => {
+        focusTarget.value = null
     }
-
-    const handleFocusOut = (e: FocusEvent) => {
-        e.preventDefault()
-        e.stopPropagation()
-        e.stopImmediatePropagation()
-        return false
-    }
-
 
     onMounted(() => {
-        window.addEventListener('focus', handleFocus, {capture: true})
-        window.addEventListener('focusin', handleFocusIn, {capture: true})
-        window.addEventListener('blur', handleBlur, {capture: true})
-        window.addEventListener('focusout', handleFocusOut, {capture: true})
+        document.addEventListener('focusin', setActiveElementByFocusIn)
+        document.addEventListener('focusout', cleanActiveElement)
+        window.addEventListener('resize', setActiveElementByActiveElement)
     })
     onBeforeUnmount(() => {
-        window.removeEventListener('focus', handleFocus)
-        window.removeEventListener('focusin', handleFocusIn)
-        window.removeEventListener('blur', handleBlur)
-        window.addEventListener('focusout', handleFocusOut)
-        focusTarget.value = null
+        document.removeEventListener('focusin', setActiveElementByFocusIn)
+        document.removeEventListener('focusout', cleanActiveElement)
+        window.removeEventListener('resize', setActiveElementByActiveElement)
+        cleanActiveElement()
     })
 
     return {
