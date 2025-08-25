@@ -1,4 +1,4 @@
-export const createStore = <T>(factory: () => T): () => T => {
+export const createStore = <T extends Record<string, any>>(factory: () => T): () => T => {
     let storeInstance: T | undefined
     let isCreating = false
 

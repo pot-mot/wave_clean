@@ -44,7 +44,7 @@ import {useDeviceStore} from "@/store/deviceStore.ts";
 import {v7 as uuid} from "uuid"
 import {sendMessage} from "@/components/message/messageApi.ts";
 import {getTouchRect} from "@/utils/event/getTouchRect.ts";
-import {createStore} from "@/store/createStore.ts";
+import {createStore} from "@/utils/store/createStore.ts";
 import {withLoading} from "@/components/loading/loadingApi.ts";
 import {
     MindMapLayer,

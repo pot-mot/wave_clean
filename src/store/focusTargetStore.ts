@@ -1,5 +1,5 @@
-import {createStore} from "@/store/createStore.ts";
-import {onBeforeUnmount, onMounted, shallowRef} from "vue";
+import {createStore} from "@/utils/store/createStore.ts";
+import {onBeforeUnmount, onMounted, readonly, shallowRef} from "vue";
 
 export const useFocusTargetStore = createStore(() => {
     const focusTarget = shallowRef<EventTarget | Element | null>(null)
@@ -26,6 +26,6 @@ export const useFocusTargetStore = createStore(() => {
     })
 
     return {
-        focusTarget,
+        focusTarget: readonly(focusTarget),
     }
 })

@@ -10,7 +10,7 @@ import {Theme} from "@tauri-apps/api/window";
 import {useThemeStore} from "@/store/themeStore.ts";
 import {debounce} from "lodash-es";
 import {v7 as uuid} from "uuid";
-import {createStore} from "@/store/createStore.ts";
+import {createStore} from "@/utils/store/createStore.ts";
 import {cleanMarkdownRenderCache} from "@/components/markdown/preview/markdownRender.ts";
 import {withLoading} from "@/components/loading/loadingApi.ts";
 
