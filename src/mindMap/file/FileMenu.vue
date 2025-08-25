@@ -209,9 +209,7 @@ const handleRename = (key: string, e: Event) => {
 }
 
 .file-delete-button {
-    height: 2rem;
-    margin-top: 0.5rem;
-    line-height: 2rem;
-    padding: 0 0.5rem;
+    height: 1.5rem;
+    width: 1.5rem;
 }
 </style>
