@@ -25,7 +25,7 @@ import {
 import {useFocusTargetStore} from "@/store/focusTargetStore.ts";
 import QuickInputBar from "@/mindMap/quickInput/QuickInputBar.vue";
 import {checkIsMarkdownEditorElement} from "@/components/markdown/editor/MarkdownEditorElement.ts";
-import IconAdd from "@/components/icons/IconAdd.vue";
+import IconDotsVertical from "@/components/icons/IconDotsVertical.vue";
 
 const {
     save,
@@ -189,7 +189,7 @@ watch(
             </button>
 
             <button @click="toggleClipboardMenuShow" :class="{enable: clipboardMenuOpen}" style="padding-right: 1rem;">
-                <IconAdd/>
+                <IconDotsVertical/>
             </button>
         </div>
     </div>
