@@ -98,8 +98,8 @@ const handleSwap = (a: number, b: number) => {
 
                     <template #body>
                         <button
+                            v-if="layers.length > 1"
                             class="layer-menu-item-delete"
-                            :class="{disabled: layers.length <= 1}"
                             @click.stop="layers.length > 1 ? removeLayer(layer.id) : () => {}"
                         >
                             <IconDelete/>
@@ -175,17 +175,15 @@ const handleSwap = (a: number, b: number) => {
     margin-top: 0.5rem;
 }
 
-.layer-menu-item-visible,
-.layer-menu-item-delete {
+.layer-menu-item-visible {
     height: 1.5rem;
     width: 1.5rem;
     margin-top: 1.75rem;
 }
 
-.layer-menu-item-delete.disabled {
-    cursor: not-allowed;
-    opacity: 0.5;
-    --icon-color: var(--text-color);
+.layer-menu-item-delete {
+    height: 1.5rem;
+    width: 1.5rem;
 }
 
 .layer-menu-item-name {
