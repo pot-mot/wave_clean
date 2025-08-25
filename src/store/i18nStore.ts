@@ -19,13 +19,13 @@ export type LanguageType = keyof typeof languageOptions
 
 export const languageTypes = Object.keys(languageOptions) as LanguageType[]
 
+const language = ref<LanguageType>('zh-cn')
+
+const mainLocale = computed<MainLocale>(() => {
+    return languageOptions[language.value].main
+})
+
 export const useI18nStore = createStore(() => {
-    const language = ref<LanguageType>('zh-cn')
-
-    const mainLocale = computed<MainLocale>(() => {
-        return languageOptions[language.value].main
-    })
-
     return {
         language,
         mainLocale,
@@ -33,10 +33,8 @@ export const useI18nStore = createStore(() => {
 })
 
 export const translate = (keyParam: LocalKeyParam): string => {
-    const mainLocale = useI18nStore().mainLocale.value
-
     if (isString(keyParam)) {
-        const translateItem = mainLocale[keyParam]
+        const translateItem = mainLocale.value[keyParam]
 
         if (isString(translateItem)) {
             return translateItem
@@ -47,7 +45,7 @@ export const translate = (keyParam: LocalKeyParam): string => {
     } else if (typeof keyParam === "object") {
         const {key, args} = keyParam
 
-        const translateItem = mainLocale[key]
+        const translateItem = mainLocale.value[key]
 
         if (isString(translateItem)) {
             return translateItem
