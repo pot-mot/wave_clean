@@ -1,7 +1,7 @@
-import {computed, ref} from "vue";
+import {computed, readonly, ref} from "vue";
 import {localeZhCn} from "@/i18n/zhCn.ts"
 import {localeEn} from '@/i18n/en.ts'
-import {LocalKeyParam, MainLocale} from "@/i18n";
+import type {LocalKeyParam, MainLocale} from "@/i18n";
 import {sendMessage} from "@/components/message/messageApi.ts";
 import {createStore} from "@/utils/store/createStore.ts";
 import {isString, isFunction} from "@/utils/type/typeGuard.ts";
@@ -27,7 +27,10 @@ const mainLocale = computed<MainLocale>(() => {
 
 export const useI18nStore = createStore(() => {
     return {
-        language,
+        language: readonly(language),
+        setLanguage: (newLanguage: LanguageType) => {
+            language.value = newLanguage
+        },
         mainLocale,
     }
 })
