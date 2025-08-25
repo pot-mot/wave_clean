@@ -224,7 +224,7 @@
 
 .markdown-preview img,
 .markdown-preview video {
-    max-width: 100%;
+    max-width: calc(100% - 2px);
     display: block;
     margin-top: 0.5em;
     margin-bottom: 0.5em;
