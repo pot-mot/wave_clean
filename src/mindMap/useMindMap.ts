@@ -107,8 +107,9 @@ export const createLayer = (id: string, name: string) => {
         id,
         vueFlow: useVueFlow(vueFlowId),
         name,
-        visible: true,
         opacity: 1,
+        visible: true,
+        lock: false,
 
         ...unimplementedClipBoard,
     })
@@ -271,6 +272,16 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         history.executeCommand("layer:visible:change", {layerId, visible})
     }
 
+    const changeLayerLock = (layerId: string, lock: boolean) => {
+        const layer = global.layers.find(layer => layer.id === layerId)
+        if (layer === undefined) {
+            console.error(`layer ${layerId} not exist`)
+            return
+        }
+        if (layer.lock === lock) return
+        history.executeCommand("layer:lock:change", {layerId, lock})
+    }
+
     const changeLayerData = (layerId: string, data: Partial<MindMapLayerDiffData>) => {
         const layer = global.layers.find(layer => layer.id === layerId)
         if (layer === undefined) {
@@ -307,6 +318,10 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
     }
 
     const addNode = (position: XYPosition, layerId: string = currentLayerId.value) => {
+        if (layers.find(layer => layer.id === layerId)?.lock) {
+            sendMessage("layer is locked")
+            return
+        }
         return history.executeCommand("node:add", {
             layerId,
             node: {
@@ -328,6 +343,11 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
     }
 
     const addEdge = (connection: Connection, layerId: string = currentLayerId.value) => {
+        if (layers.find(layer => layer.id === layerId)?.lock) {
+            sendMessage("layer is locked")
+            return
+        }
+
         if (checkConnectionExist(connection)) return
         if (!checkFullConnection(connection)) return
 
@@ -358,8 +378,13 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
             point: getCenterPosition(),
             type: "leftTop"
         },
-        vueFlow = getCurrentVueFlow()
+        vueFlow: VueFlowStore = getCurrentVueFlow()
     ) => {
+        if (layers.find(layer => layer.vueFlow.id === vueFlow.id)?.lock) {
+            sendMessage("layer is locked")
+            return
+        }
+
         blurActiveElement()
         const {newNodes, newEdges} = prepareImportIntoMindMap(vueFlow, data, justifyOptions)
         history.executeCommand("import", {layerId: currentLayerId.value, nodes: newNodes, edges: newEdges})
@@ -375,8 +400,15 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
     }
 
 
-    const remove = (data: { nodes?: (GraphNode | string)[], edges?: (GraphEdge | string)[] }, withMessage: boolean = true) => {
-        const vueFlow = getCurrentVueFlow()
+    const remove = (
+        data: { nodes?: (GraphNode | string)[], edges?: (GraphEdge | string)[] },
+        withMessage: boolean = true,
+        vueFlow: VueFlowStore = getCurrentVueFlow()
+    ) => {
+        if (layers.find(layer => layer.vueFlow.id === vueFlow.id)?.lock) {
+            sendMessage("layer is locked")
+            return
+        }
 
         blurActiveElement()
         history.executeCommand('remove', {...data, layerId: currentLayerId.value})
@@ -1054,6 +1086,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                 name: layer.name,
                 opacity: layer.opacity,
                 visible: layer.visible,
+                lock: layer.lock,
                 data: exportMindMapData(layer.vueFlow)
             })),
             transform: currentViewport.value,
@@ -1098,6 +1131,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         removeLayer,
         toggleLayer,
         changeLayerVisible,
+        changeLayerLock,
         changeLayerData,
         dragLayer,
         swapLayer,
@@ -1221,6 +1255,10 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         },
         paste: async (layer: MindMapLayer = global.currentLayer.value) => {
             try {
+                if (layer.lock) {
+                    sendMessage("layer is locked")
+                    return
+                }
                 const result = await layer.paste()
                 sendMessage("paste", {type: "success"})
                 focus()
@@ -1232,6 +1270,10 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         },
         cut: async (layer: MindMapLayer = global.currentLayer.value) => {
             try {
+                if (layer.lock) {
+                    sendMessage("layer is locked")
+                    return
+                }
                 const result = await layer.cut()
                 sendMessage("cut", {type: "success"})
                 focus()

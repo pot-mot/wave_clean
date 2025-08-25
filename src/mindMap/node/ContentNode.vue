@@ -125,6 +125,12 @@ const markdownEditorValue = ref<string>(props.data.content)
 
 const isMarkdownEdit = ref(false)
 
+watch(() => props.layer.lock, (locked) => {
+    if (locked) {
+        isMarkdownEdit.value = false
+    }
+}, {immediate: true})
+
 const isMarkdownEditorFullScreen = computed<boolean>(() => markdownEditorRef.value?.isFullScreen ?? false)
 const isMarkdownEditorPreviewOverflow = computed<boolean>(() => markdownEditorRef.value?.markdownPreviewRef?.isOverflow ?? false)
 const isMarkdownPreviewOverflow = computed<boolean>(() => markdownPreviewRef.value?.isOverflow ?? false)
@@ -306,7 +312,7 @@ const onHandleMouseDown = (e: MouseEvent) => {
 
 // 连接点显示
 const handleVisibility = computed<boolean>(() => {
-    return isFocus.value || isConnecting.value
+    return (isFocus.value || isConnecting.value) && !props.layer.lock
 })
 
 // 通过按钮的复制和点击粘贴
@@ -442,6 +448,7 @@ const executeDelete = () => {
     <div
         class="content-node"
         style="overflow: visible;"
+        :class="{noDrag: layer.lock}"
     >
         <div
             class="fit-parent"
@@ -459,6 +466,7 @@ const executeDelete = () => {
                     :class="{untouchable: !isFocus, noDrag: isFocus}"
                     :style="{borderColor}"
                     v-model="inputValue"
+                    :readonly="layer.lock"
                     @resize="handleInputResize"
                     @blur="handleInputBlur"
                 />
@@ -476,7 +484,7 @@ const executeDelete = () => {
                     :zoom="zoom"
                     :min-width="ContentNode_Markdown_minWidth"
                     :min-height="ContentNode_Markdown_minHeight"
-                    :disabled="!isFocus"
+                    :disabled="!isFocus || layer.lock"
                     :class="{noWheel: isResizing}"
                     @resize="handleMarkdownEditorResize"
                     @resize-start="handleMarkdownEditorResizeStart"
@@ -527,19 +535,19 @@ const executeDelete = () => {
                 <IconFocus/>
             </button>
 
-            <button @mousedown.capture.prevent.stop="executeToggleType">
+            <button @mousedown.capture.prevent.stop="executeToggleType" v-if="!layer.lock">
                 <IconMarkdown v-if="dataTypeOrDefault === 'text'"/>
                 <IconMarkdownOff v-else-if="dataTypeOrDefault === 'markdown'"/>
             </button>
 
-            <button @mousedown.capture.prevent.stop="executeDelete">
+            <button @mousedown.capture.prevent.stop="executeDelete" v-if="!layer.lock">
                 <IconDelete/>
             </button>
 
             <br>
 
             <button
-                v-if="dataTypeOrDefault === 'markdown'"
+                v-if="dataTypeOrDefault === 'markdown' && !layer.lock"
                 @mousedown.capture.prevent.stop="executeToggleMarkdownEdit"
             >
                 <IconCheck v-if="isMarkdownEdit"/>

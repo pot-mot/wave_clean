@@ -23,9 +23,14 @@ export type MindMapHistoryCommands = {
         string,
         Omit<RawMindMapLayer, "vueFlow"> & { data: MindMapExportData, index: number }
     >,
-    "layer:visible:change": CommandDefinition<
-        { layerId: string, visible: boolean }
-    >,
+    "layer:visible:change": CommandDefinition<{
+        layerId: string,
+        visible: boolean
+    }>,
+    "layer:lock:change": CommandDefinition<{
+        layerId: string,
+        lock: boolean,
+    }>,
     "layer:data:change": CommandDefinition<{
         layerId: string,
         newData: Partial<MindMapLayerDiffData>,
@@ -199,13 +204,26 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
     history.registerCommand("layer:visible:change", {
         applyAction: ({layerId, visible}) => {
             const layer = getLayer(layerId)
-            const currentVisible = layer.visible
+            const currentVisible = layer.visible ?? true
             layer.visible = visible
             return {layerId, visible: currentVisible}
         },
         revertAction: ({layerId, visible}) => {
             const layer = getLayer(layerId)
             layer.visible = visible
+        }
+    })
+
+    history.registerCommand("layer:lock:change", {
+        applyAction: ({layerId, lock}) => {
+            const layer = getLayer(layerId)
+            const currentLock = layer.lock ?? false
+            layer.lock = lock
+            return {layerId, lock: currentLock}
+        },
+        revertAction: ({layerId, lock}) => {
+            const layer = getLayer(layerId)
+            layer.lock = lock
         }
     })
 

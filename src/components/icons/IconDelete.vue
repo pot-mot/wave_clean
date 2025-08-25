@@ -1,6 +1,6 @@
 <template>
     <!-- https://tablericons.com/ trash -->
-    <BaseIcon :color="'var(--danger-color)'">
+    <BaseIcon>
         <path d="M4 7l16 0" />
         <path d="M10 11l0 6" />
         <path d="M14 11l0 6" />
@@ -12,3 +12,9 @@
 <script setup lang="ts">
 import BaseIcon from "@/components/icons/BaseIcon.vue";
 </script>
+
+<style scoped>
+.base-icon {
+    --icon-color: var(--danger-color);
+}
+</style>

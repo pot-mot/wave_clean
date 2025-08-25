@@ -260,6 +260,7 @@ const executeDelete = () => {
                 :padding="{top: 2, left: 4, right: 4, bottom: 2}"
                 :style="{borderColor}"
                 v-model="innerValue"
+                :readonly="layer.lock"
                 @blur="handleBlur"
             />
         </AutoResizeForeignObject>
@@ -275,7 +276,7 @@ const executeDelete = () => {
                     <IconFocus/>
                 </button>
 
-                <button @mousedown.capture.prevent.stop="executeToggleArrowType">
+                <button @mousedown.capture.prevent.stop="executeToggleArrowType" v-if="!layer.lock">
                     <template v-if="data.arrowType === 'one-way'">
                         <IconArrowOneWayLeft v-if="sourceX < targetX"/>
                         <IconArrowOneWayRight v-else/>
@@ -284,7 +285,7 @@ const executeDelete = () => {
                     <IconArrowNone v-else/>
                 </button>
 
-                <button @mousedown.capture.prevent.stop="executeDelete">
+                <button @mousedown.capture.prevent.stop="executeDelete" v-if="!layer.lock">
                     <IconDelete/>
                 </button>
             </div>

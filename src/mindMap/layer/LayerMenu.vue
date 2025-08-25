@@ -9,6 +9,8 @@ import DragList from "@/components/list/DragList.vue";
 import {computed} from "vue";
 import CollapseDetail from "@/components/collapse/CollapseDetail.vue";
 import {MindMapLayer} from "@/mindMap/layer/MindMapLayer.ts";
+import IconLock from "@/components/icons/IconLock.vue";
+import IconLockOpen from "@/components/icons/IconLockOpen.vue";
 
 const {
     layers,
@@ -17,6 +19,7 @@ const {
     removeLayer,
     toggleLayer,
     changeLayerVisible,
+    changeLayerLock,
     changeLayerData,
     swapLayer,
     dragLayer,
@@ -24,6 +27,10 @@ const {
 
 const toggleLayerVisible = (layer: MindMapLayer) => {
     changeLayerVisible(layer.id, !layer.visible)
+}
+
+const toggleLayerLock = (layer: MindMapLayer) => {
+    changeLayerLock(layer.id, !layer.lock)
 }
 
 const reversedLayers = computed(() => {
@@ -97,13 +104,23 @@ const handleSwap = (a: number, b: number) => {
                     </template>
 
                     <template #body>
-                        <button
-                            v-if="layers.length > 1"
-                            class="layer-menu-item-delete"
-                            @click.stop="layers.length > 1 ? removeLayer(layer.id) : () => {}"
-                        >
-                            <IconDelete/>
-                        </button>
+                        <div class="layer-menu-item-options">
+                            <button
+                                class="layer-menu-item-lock"
+                                @click.stop="toggleLayerLock(layer)"
+                            >
+                                <IconLock v-if="layer.lock"/>
+                                <IconLockOpen v-else/>
+                            </button>
+
+                            <button
+                                class="layer-menu-item-delete"
+                                :class="{disabled: layers.length <= 1}"
+                                @click.stop="layers.length > 1 ? removeLayer(layer.id) : () => {}"
+                            >
+                                <IconDelete/>
+                            </button>
+                        </div>
                     </template>
                 </CollapseDetail>
             </template>
@@ -176,14 +193,13 @@ const handleSwap = (a: number, b: number) => {
 }
 
 .layer-menu-item-visible {
+    margin-top: 1.75rem;
     height: 1.5rem;
     width: 1.5rem;
-    margin-top: 1.75rem;
 }
 
-.layer-menu-item-delete {
-    height: 1.5rem;
-    width: 1.5rem;
+.layer-menu-item-visible:hover {
+    background-color: var(--background-color-hover);
 }
 
 .layer-menu-item-name {
@@ -211,5 +227,28 @@ const handleSwap = (a: number, b: number) => {
     padding: 0 0.5rem;
     outline: none;
     cursor: text;
+}
+
+
+.layer-menu-item-options {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding: 0 0.5rem 0.5rem;
+}
+
+.layer-menu-item-options button {
+    height: 1.5rem;
+    width: 1.5rem;
+}
+
+.layer-menu-item-options button.disabled {
+    background-color: var(--background-color-hover);
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.layer-menu-item-options button:hover {
+    background-color: var(--background-color-hover);
 }
 </style>

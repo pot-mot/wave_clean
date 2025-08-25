@@ -16,8 +16,9 @@ export type RawMindMapLayer = {
     readonly id: string,
     readonly vueFlow: VueFlowStore,
     name: string,
-    visible: boolean,
     opacity: number,
+    visible?: boolean | undefined | null,
+    lock?: boolean | undefined,
 } & CustomClipBoard<MindMapImportData, MindMapExportData>
 
 // 思维导图图层类型（响应式）
@@ -27,8 +28,9 @@ export type MindMapLayer = ShallowReactive<RawMindMapLayer>
 export type MindMapLayerData = {
     id: string,
     name: string,
-    visible: boolean,
     opacity: number,
+    visible?: boolean | undefined | null,
+    lock?: boolean | undefined | null,
     data: {
         nodes: ContentNode[],
         edges: ContentEdge[],
@@ -40,8 +42,15 @@ export const MindMapLayerData_JsonSchema: JSONSchemaType<MindMapLayerData> = {
     properties: {
         "id": {type: "string"},
         "name": {type: "string"},
-        "visible": {type: "boolean"},
         "opacity": {type: "number"},
+        "visible": {
+            type: "boolean",
+            nullable: true
+        },
+        "lock": {
+            type: "boolean",
+            nullable: true
+        },
         "data": {
             type: "object",
             properties: {
@@ -51,7 +60,7 @@ export const MindMapLayerData_JsonSchema: JSONSchemaType<MindMapLayerData> = {
             required: ["nodes", "edges"]
         }
     },
-    required: ["id", "name", "visible", "opacity", "data"]
+    required: ["id", "name", "opacity", "data"]
 }
 
 export const validateMindMapLayerData = createSchemaValidator<MindMapLayerData>(MindMapLayerData_JsonSchema)
