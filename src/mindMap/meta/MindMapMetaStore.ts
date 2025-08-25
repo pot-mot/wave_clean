@@ -153,32 +153,36 @@ const PartialMeta_JsonSchema: JSONSchemaType<Partial<Meta>> = {
 
 export const validatePartialMeta = createSchemaValidator<Partial<Meta>>(PartialMeta_JsonSchema)
 
-export const getDefaultMeta = () => {
+const getDefaultQuickInputs = () => {
     let index = -1
+    return [
+        {id: `${index--}`, label: 'TAB', value: '    '},
+        {id: `${index--}`, label: '`', value: '`'},
+        {id: `${index--}`, label: '\'', value: '\''},
+        {id: `${index--}`, label: '"', value: '"'},
+        {id: `${index--}`, label: '-', value: '-'},
+        {id: `${index--}`, label: '_', value: '_'},
+        {id: `${index--}`, label: '<', value: '<'},
+        {id: `${index--}`, label: '>', value: '>'},
+        {id: `${index--}`, label: '(', value: '('},
+        {id: `${index--}`, label: ')', value: ')'},
+        {id: `${index--}`, label: '[', value: '['},
+        {id: `${index--}`, label: ']', value: ']'},
+        {id: `${index--}`, label: '[', value: '['},
+        {id: `${index--}`, label: ']', value: ']'},
+        {id: `${index--}`, label: '{', value: '{'},
+        {id: `${index--}`, label: '}', value: '}'},
+        {id: `${index--}`, label: '^', value: '^'},
+        {id: `${index--}`, label: '/', value: '/'},
+        {id: `${index--}`, label: '|', value: '|'},
+        {id: `${index--}`, label: '\\', value: '\\'},
+    ]
+}
+
+export const getDefaultMeta = () => {
     return {
         mindMaps: [],
-        quickInputs: [
-            {id: `${index--}`, label: 'TAB', value: '    '},
-            {id: `${index--}`, label: '`', value: '`'},
-            {id: `${index--}`, label: '\'', value: '\''},
-            {id: `${index--}`, label: '"', value: '"'},
-            {id: `${index--}`, label: '-', value: '-'},
-            {id: `${index--}`, label: '_', value: '_'},
-            {id: `${index--}`, label: '<', value: '<'},
-            {id: `${index--}`, label: '>', value: '>'},
-            {id: `${index--}`, label: '(', value: '('},
-            {id: `${index--}`, label: ')', value: ')'},
-            {id: `${index--}`, label: '[', value: '['},
-            {id: `${index--}`, label: ']', value: ']'},
-            {id: `${index--}`, label: '[', value: '['},
-            {id: `${index--}`, label: ']', value: ']'},
-            {id: `${index--}`, label: '{', value: '{'},
-            {id: `${index--}`, label: '}', value: '}'},
-            {id: `${index--}`, label: '^', value: '^'},
-            {id: `${index--}`, label: '/', value: '/'},
-            {id: `${index--}`, label: '|', value: '|'},
-            {id: `${index--}`, label: '\\', value: '\\'},
-        ],
+        quickInputs: getDefaultQuickInputs(),
     }
 }
 
@@ -282,10 +286,14 @@ export const useMindMapMetaStore = createStore(() => {
     }
 
     const currentMindMap = computed<MindMapMetaData | undefined>(() => {
-            return meta.value.mindMaps.find(it => it.key === meta.value.currentKey)
-        })
+        return meta.value.mindMaps.find(it => it.key === meta.value.currentKey)
+    });
 
-    ;(async () => {
+    const resetQuickInput = () => {
+        meta.value.quickInputs = getDefaultQuickInputs()
+    }
+
+    (async () => {
         await nextTick()
 
         await withLoading("Loading Meta", async () => {
@@ -334,5 +342,6 @@ export const useMindMapMetaStore = createStore(() => {
         save,
         toggle,
         currentMindMap,
+        resetQuickInput,
     }
 })

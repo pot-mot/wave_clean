@@ -6,8 +6,7 @@ import {tinycolor} from "vue-color";
 import {setMermaidTheme} from "@/components/markdown/preview/plugins/MarkdownItMermaid.ts";
 import {cleanMarkdownRenderCache} from "@/components/markdown/preview/markdownRender.ts";
 
-const initTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-const theme = ref<Theme>(initTheme)
+const theme = ref<Theme>('light')
 
 watch(() => theme.value, (newTheme) => {
     cleanMarkdownRenderCache()
@@ -19,19 +18,25 @@ watch(() => theme.value, (newTheme) => {
     setMermaidTheme(newTheme)
 }, {immediate: true})
 
-const initPrimaryColor = window.getComputedStyle(document.documentElement).getPropertyValue("--primary-color").toLowerCase()
-document.documentElement.style.setProperty("--primary-color-opacity-background", tinycolor(initPrimaryColor).setAlpha(0.1).toRgbString())
-
-const primaryColor = ref<string>(initPrimaryColor)
+const defaultPrimaryColor = '#1E90FF'
+const primaryColor = ref<string>(defaultPrimaryColor)
 watch(() => primaryColor.value, (newPrimaryColor) => {
     document.documentElement.style.setProperty("--primary-color", newPrimaryColor)
     document.documentElement.style.setProperty("--primary-color-opacity-background", tinycolor(newPrimaryColor).setAlpha(0.1).toRgbString())
 })
 
 export const initThemeStore = async () => {
-    const {isTouchDevice} = useDeviceStore()
-
     try {
+        const {isTouchDevice} = useDeviceStore()
+
+        const initTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        theme.value = initTheme
+
+        const initPrimaryColor = window.getComputedStyle(document.documentElement).getPropertyValue("--primary-color").toLowerCase()
+        if (initPrimaryColor) {
+            primaryColor.value = initPrimaryColor
+        }
+
         if (!isTouchDevice.value) {
             // setup window theme
             const currentWindow = getCurrentWindow()
@@ -57,6 +62,9 @@ export const useThemeStore = createStore(() => {
         primaryColor: readonly(primaryColor),
         setPrimaryColor: (newPrimaryColor: string) => {
             primaryColor.value = newPrimaryColor
+        },
+        resetPrimaryColor: () => {
+            primaryColor.value = defaultPrimaryColor
         },
     };
 })
