@@ -4,7 +4,6 @@ import {MarkdownEditorElement} from "@/components/markdown/editor/MarkdownEditor
 import {MarkdownEditorEmits, MarkdownEditorProps} from "@/components/markdown/editor/MarkdownEditorType.ts";
 
 import {editor} from "monaco-editor/esm/vs/editor/editor.api.js";
-import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
 // 导入小图标
 import "monaco-editor/esm/vs/base/browser/ui/codicons/codiconStyles.js";
 // 导入主题
@@ -24,7 +23,11 @@ import "monaco-editor/esm/vs/editor/contrib/suggest/browser/suggestController.js
 // token解析
 import "monaco-editor/esm/vs/editor/contrib/tokenization/browser/tokenization.js";
 import {initMarkdownEnterCompletion} from "@/components/markdown/editor/completion/enterCompletion.ts";
-import {editorTouchSelectionHelp} from "@/components/markdown/editor/touchSelection/editorTouchSelectionHelp.ts";
+import {DefaultToolName, editorTouchSelectionHelp} from "monaco-touch-selection";
+import "monaco-touch-selection/dist/style.css"
+import "@/components/markdown/editor/touchSelection/touch-selection-style-overwrite.css"
+import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
+import {getTouchClipboard} from "@/components/markdown/editor/touchSelection/touchClipboard.ts";
 
 const modelValue = defineModel<string>({
     required: true
@@ -87,8 +90,37 @@ onMounted(async () => {
     })
 
     if (isTouch) {
-        editorTouchSelectionHelp(editorInstance, element)
-        import("@/components/markdown/editor/touchSelection/editor-touch-selection-style.css")
+        const {
+            copy,
+            cut,
+            paste,
+        } = getTouchClipboard(editorInstance, element)
+        editorTouchSelectionHelp(editorInstance, {
+            tools: ({defaultTools, closeMenu}) => {
+                const copyTool = defaultTools.get(DefaultToolName.Copy)
+                if (copyTool) {
+                    copyTool.action = async () => {
+                        const result = await copy()
+                        if (result) closeMenu()
+                    }
+                }
+                const cutTool = defaultTools.get(DefaultToolName.Cut)
+                if (cutTool) {
+                    cutTool.action = async () => {
+                        const result = await cut()
+                        if (result) closeMenu()
+                    }
+                }
+                const pasteTool = defaultTools.get(DefaultToolName.Paste)
+                if (pasteTool) {
+                    pasteTool.action = async () => {
+                        const result = await paste()
+                        if (result) closeMenu()
+                    }
+                }
+                return defaultTools.values()
+            }
+        })
     }
 
     initMarkdownEnterCompletion(editorInstance)

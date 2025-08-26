@@ -48,7 +48,7 @@ const touch = ref<{
 const splitterTaps = ref<{
     splitter?: number,
     timeoutId?: number
-}>({ // Used to detect double click on touch devices.
+}>({ // Used to detect double click on touchSelection devices.
 })
 
 const splitpanesClasses = computed(() => ({
@@ -85,7 +85,7 @@ const bindEvents = () => {
     document.addEventListener('mousemove', onMouseMove, {passive: false})
     document.addEventListener('mouseup', onMouseUp)
 
-    // Passive: false to prevent scrolling while touch dragging.
+    // Passive: false to prevent scrolling while touchSelection dragging.
     if ('ontouchstart' in window) {
         document.addEventListener('touchmove', onMouseMove, {passive: false})
         document.addEventListener('touchend', onMouseUp)
@@ -120,7 +120,7 @@ const onMouseDown = (event: MouseEvent | TouchEvent, splitterIndex: number) => {
 
 const onMouseMove = (event: MouseEvent | TouchEvent) => {
     if (touch.value.mouseDown) {
-        // Prevent scrolling while touch dragging (only works with an active event, eg. passive: false).
+        // Prevent scrolling while touchSelection dragging (only works with an active event, eg. passive: false).
         event.preventDefault()
         touch.value.dragging = true
         requestAnimationFrame(() => {
@@ -148,7 +148,7 @@ const onMouseUp = (event: MouseEvent | TouchEvent) => {
     }, 100)
 }
 
-// If touch device, detect double tap manually (2 taps separated by less than 500ms).
+// If touchSelection device, detect double tap manually (2 taps separated by less than 500ms).
 const onSplitterClick = (event: MouseEvent | TouchEvent, splitterIndex: number) => {
     if ('ontouchstart' in window) {
         event.preventDefault()
@@ -692,7 +692,7 @@ const readjustSizes = (leftToAllocate: number, ungrowable: number[], unshrinkabl
     console.warn('Splitpanes: Could not distribute all the empty space between panes due to their constraints.')
   } *\/
 
-  emitEvent('resized', { index: touch.value.activeSplitter }, true)
+  emitEvent('resized', { index: touchSelection.value.activeSplitter }, true)
 } */
 
 // Watchers.
