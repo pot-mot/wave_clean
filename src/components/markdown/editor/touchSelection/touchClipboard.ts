@@ -1,4 +1,4 @@
-import {editor} from "monaco-editor";
+import {editor} from "monaco-editor/esm/vs/editor/editor.api.js";
 import ICodeEditor = editor.ICodeEditor;
 import {copyText, readClipBoardImageBlob, readClipBoardText} from "@/utils/clipBoard/useClipBoard.ts";
 import {sendMessage} from "@/components/message/messageApi.ts";
