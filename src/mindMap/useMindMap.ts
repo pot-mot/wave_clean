@@ -916,17 +916,21 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                         width = width > 0 ? width : -width
                         height = height > 0 ? height : -height
 
-                        const rect = {
+                        vueFlow.userSelectionRect.value = {
                             width,
                             height,
                             x: x - clientRect.x,
                             y: y - clientRect.y,
-                            startX: start.x - clientRect.x,
-                            startY: start.y - clientRect.y,
+                            startX: x - clientRect.x,
+                            startY: y - clientRect.y,
                         }
-                        vueFlow.userSelectionRect.value = rect
 
-                        const {nodes, edges} = getByClientRect(rect)
+                        const {nodes, edges} = getByClientRect({
+                            width,
+                            height,
+                            x,
+                            y,
+                        })
 
                         cleanSelection()
                         vueFlow.addSelectedNodes(nodes)
@@ -1040,17 +1044,22 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                     const onRectSelect = (e: TouchEvent) => {
                         e.preventDefault()
                         let {x, y, width, height} = getTouchRect(e, start)
-                        const rect = {
+
+                        vueFlow.userSelectionRect.value = {
                             width,
                             height,
                             x: x - clientRect.x,
                             y: y - clientRect.y,
-                            startX: start.x - clientRect.x,
-                            startY: start.y - clientRect.y,
+                            startX: x - clientRect.x,
+                            startY: y - clientRect.y,
                         }
-                        vueFlow.userSelectionRect.value = rect
 
-                        const {nodes, edges} = getByClientRect(rect)
+                        const {nodes, edges} = getByClientRect({
+                            width,
+                            height,
+                            x,
+                            y,
+                        })
 
                         cleanSelection()
                         vueFlow.addSelectedNodes(nodes)
