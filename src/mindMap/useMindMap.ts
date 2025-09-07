@@ -890,9 +890,12 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
 
                 // 多选框
                 paneEl.addEventListener('mousedown', (e) => {
+                    if (!vueFlowRef.value) return
                     if (e.target !== paneEl) return
                     if (!selectionRectEnable) return
                     if (e.button !== selectionRectMouseButton) return
+
+                    const clientRect = vueFlowRef.value.getBoundingClientRect()
 
                     e.preventDefault()
                     blurActiveElement()
@@ -916,10 +919,10 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                         const rect = {
                             width,
                             height,
-                            x,
-                            y,
-                            startX: start.x,
-                            startY: start.y,
+                            x: x - clientRect.x,
+                            y: y - clientRect.y,
+                            startX: start.x - clientRect.x,
+                            startY: start.y - clientRect.y,
                         }
                         vueFlow.userSelectionRect.value = rect
 
@@ -1019,8 +1022,11 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
 
                 // 多选框
                 paneEl.addEventListener('touchstart', (e) => {
+                    if (!vueFlowRef.value) return
                     if (e.target !== paneEl) return
                     if (!selectionRectEnable) return
+
+                    const clientRect = vueFlowRef.value.getBoundingClientRect()
 
                     e.preventDefault()
                     blurActiveElement()
@@ -1037,10 +1043,10 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                         const rect = {
                             width,
                             height,
-                            x,
-                            y,
-                            startX: start.x,
-                            startY: start.y,
+                            x: x - clientRect.x,
+                            y: y - clientRect.y,
+                            startX: start.x - clientRect.x,
+                            startY: start.y - clientRect.y,
                         }
                         vueFlow.userSelectionRect.value = rect
 
