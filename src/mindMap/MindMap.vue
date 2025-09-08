@@ -3,7 +3,6 @@ import {MIND_MAP_CONTAINER_ID, useMindMap} from "@/mindMap/useMindMap.ts";
 import MobileToolbar from "@/mindMap/toolbar/mobile/MobileToolbar.vue";
 import DesktopToolbar from "@/mindMap/toolbar/desktop/DesktopToolbar.vue";
 import MindMapLayer from "@/mindMap/layer/MindMapLayer.vue";
-import {nextTick, ref, watch} from "vue";
 import MindMapBackground from "@/mindMap/background/MindMapBackground.vue";
 import {judgeTargetIsInteraction} from "@/utils/event/judgeEventTarget.ts";
 import {useDeviceStore} from "@/store/deviceStore.ts";
@@ -21,14 +20,6 @@ const {
     cut,
     paste,
 } = useMindMap()
-
-const backgroundKey = ref(true)
-
-watch(() => currentLayer.value, async () => {
-    backgroundKey.value = false
-    await nextTick()
-    backgroundKey.value = true
-})
 
 const handleKeyDown = async (e: KeyboardEvent) => {
     if (e.ctrlKey) {
