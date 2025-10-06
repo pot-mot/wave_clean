@@ -54,7 +54,6 @@ import {
 } from "@/mindMap/layer/MindMapLayer.ts";
 import {ContentNodeData, ContentType_DEFAULT, NodeType_CONTENT} from "@/mindMap/node/ContentNode.ts";
 import {ContentEdgeData, EdgeType_CONTENT} from "@/mindMap/edge/ContentEdge.ts";
-import {throttle} from "lodash-es";
 
 // 鼠标默认行为
 type MouseAction = "panDrag" | "selectionRect"
@@ -203,32 +202,6 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         vueFlow.removeSelectedNodes(vueFlow.getSelectedNodes.value)
         vueFlow.removeSelectedEdges(vueFlow.getSelectedEdges.value)
     }
-    const throttleResetSelection = throttle((nodeIdSet: Set<string>, edgeIdSet: Set<string>) => {
-        const vueFlow = getCurrentVueFlow()
-        for (const node of vueFlow.getNodes.value) {
-            if (nodeIdSet.has(node.id)) {
-                if (!node.selected) {
-                    node.selected = true
-                }
-            } else {
-                if (node.selected) {
-                    node.selected = false
-                }
-            }
-        }
-        for (const edge of vueFlow.getEdges.value) {
-            if (edgeIdSet.has(edge.id)) {
-                if (!edge.selected) {
-                    edge.selected = true
-                }
-            } else {
-                if (edge.selected) {
-                    edge.selected = false
-                }
-            }
-        }
-    }, 200)
-
     const focus = () => {
         const vueFlow = getCurrentVueFlow()
         vueFlow.vueFlowRef.value?.focus()
@@ -418,10 +391,11 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
 
         const currentMultiSelectionActive = vueFlow.multiSelectionActive.value
         vueFlow.multiSelectionActive.value = true
-        throttleResetSelection(
-            new Set(newNodes.map(it => it.id)),
-            new Set(newEdges.map(it => it.id)),
-        )
+        cleanSelection()
+        const graphNodes = newNodes.map(it => vueFlow.findNode(it.id)).filter(it => it !== undefined)
+        const graphEdges = newEdges.map(it => vueFlow.findEdge(it.id)).filter(it => it !== undefined)
+        vueFlow.addSelectedNodes(graphNodes)
+        vueFlow.addSelectedEdges(graphEdges)
         vueFlow.multiSelectionActive.value = currentMultiSelectionActive
     }
 
@@ -963,18 +937,26 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                             y,
                         })
 
-                        throttleResetSelection(
-                            new Set(nodes.map(it => it.id)),
-                            new Set(edges.map(it => it.id))
-                        )
+                        cleanSelection()
+                        vueFlow.addSelectedNodes(nodes)
+                        vueFlow.addSelectedEdges(edges)
                     }
 
                     const onRectSelectEnd = () => {
                         document.documentElement.removeEventListener('mousemove', onRectSelect)
                         document.documentElement.removeEventListener('mouseup', onRectSelectEnd)
 
+                        vueFlow.userSelectionActive.value = false
                         selectionRect.value = null
-                        vueFlow.multiSelectionActive.value = false
+
+                        const newSelectedNodes = vueFlow.getSelectedNodes.value
+                        const newSelectedEdges = vueFlow.getSelectedEdges.value
+                        setTimeout(() => {
+                            cleanSelection()
+                            vueFlow.addSelectedNodes(newSelectedNodes)
+                            vueFlow.addSelectedEdges(newSelectedEdges)
+                            vueFlow.multiSelectionActive.value = false
+                        })
                     }
 
                     document.documentElement.addEventListener('mousemove', onRectSelect)
@@ -1084,10 +1066,9 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                             y,
                         })
 
-                        throttleResetSelection(
-                            new Set(nodes.map(it => it.id)),
-                            new Set(edges.map(it => it.id))
-                        )
+                        cleanSelection()
+                        vueFlow.addSelectedNodes(nodes)
+                        vueFlow.addSelectedEdges(edges)
                     }
 
                     const onRectSelectEnd = (e: TouchEvent) => {
