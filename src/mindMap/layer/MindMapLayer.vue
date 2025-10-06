@@ -72,15 +72,6 @@ initLayer(props.layer)
     opacity: calc(0.6 * v-bind(layerOpacity));
 }
 
-:deep(.vue-flow__nodesselection-rect) {
-    box-sizing: content-box;
-    border-radius: var(--border-radius);
-    border-style: solid;
-    border-color: var(--primary-color);
-    padding: 1rem;
-    transform: translateX(-1rem) translateY(-1rem);
-}
-
 :deep(.vue-flow__pane.draggable) {
     cursor: default;
 }

@@ -6,6 +6,7 @@ import MindMapLayer from "@/mindMap/layer/MindMapLayer.vue";
 import MindMapBackground from "@/mindMap/background/MindMapBackground.vue";
 import {judgeTargetIsInteraction} from "@/utils/event/judgeEventTarget.ts";
 import {useDeviceStore} from "@/store/deviceStore.ts";
+import MindMapSelectionRect from "@/mindMap/selectionRect/MindMapSelectionRect.vue";
 
 const {isTouchDevice} = useDeviceStore()
 
@@ -15,6 +16,7 @@ const {
     undo,
     redo,
     save,
+    selectionRect,
     isSelectionNotEmpty,
     copy,
     cut,
@@ -78,6 +80,8 @@ const handleKeyDown = async (e: KeyboardEvent) => {
             :key="layer.id"
             :layer="layer"
         />
+
+        <MindMapSelectionRect :rect="selectionRect"/>
 
         <template v-if="isTouchDevice">
             <MobileToolbar/>

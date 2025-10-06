@@ -54,6 +54,7 @@ import {
 } from "@/mindMap/layer/MindMapLayer.ts";
 import {ContentNodeData, ContentType_DEFAULT, NodeType_CONTENT} from "@/mindMap/node/ContentNode.ts";
 import {ContentEdgeData, EdgeType_CONTENT} from "@/mindMap/edge/ContentEdge.ts";
+import {throttle} from "lodash-es";
 
 // 鼠标默认行为
 type MouseAction = "panDrag" | "selectionRect"
@@ -202,6 +203,32 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         vueFlow.removeSelectedNodes(vueFlow.getSelectedNodes.value)
         vueFlow.removeSelectedEdges(vueFlow.getSelectedEdges.value)
     }
+    const throttleResetSelection = throttle((nodeIdSet: Set<string>, edgeIdSet: Set<string>) => {
+        const vueFlow = getCurrentVueFlow()
+        for (const node of vueFlow.getNodes.value) {
+            if (nodeIdSet.has(node.id)) {
+                if (!node.selected) {
+                    node.selected = true
+                }
+            } else {
+                if (node.selected) {
+                    node.selected = false
+                }
+            }
+        }
+        for (const edge of vueFlow.getEdges.value) {
+            if (edgeIdSet.has(edge.id)) {
+                if (!edge.selected) {
+                    edge.selected = true
+                }
+            } else {
+                if (edge.selected) {
+                    edge.selected = false
+                }
+            }
+        }
+    }, 200)
+
     const focus = () => {
         const vueFlow = getCurrentVueFlow()
         vueFlow.vueFlowRef.value?.focus()
@@ -391,11 +418,10 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
 
         const currentMultiSelectionActive = vueFlow.multiSelectionActive.value
         vueFlow.multiSelectionActive.value = true
-        cleanSelection()
-        const graphNodes = newNodes.map(it => vueFlow.findNode(it.id)).filter(it => it !== undefined)
-        const graphEdges = newEdges.map(it => vueFlow.findEdge(it.id)).filter(it => it !== undefined)
-        vueFlow.addSelectedNodes(graphNodes)
-        vueFlow.addSelectedEdges(graphEdges)
+        throttleResetSelection(
+            new Set(newNodes.map(it => it.id)),
+            new Set(newEdges.map(it => it.id)),
+        )
         vueFlow.multiSelectionActive.value = currentMultiSelectionActive
     }
 
@@ -486,6 +512,12 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
      */
     let selectionRectEnable: boolean = false
     let selectionRectMouseButton: number = 0
+    const selectionRect = ref<{
+        x: number,
+        y: number,
+        width: number,
+        height: number
+    } | null>(null)
 
     const getByClientRect = (
         rect: {
@@ -896,33 +928,32 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                     if (e.button !== selectionRectMouseButton) return
 
                     const clientRect = vueFlowRef.value.getBoundingClientRect()
+                    const rectX = clientRect.x
+                    const rectY = clientRect.y
 
                     e.preventDefault()
                     blurActiveElement()
 
                     vueFlow.multiSelectionActive.value = true
-                    vueFlow.userSelectionActive.value = true
                     cleanSelection()
 
-                    const start = {x: e.clientX, y: e.clientY}
+                    const startX = e.clientX
+                    const startY = e.clientY
 
                     const onRectSelect = (e: MouseEvent) => {
                         e.preventDefault()
-                        const current = {x: e.clientX, y: e.clientY}
-                        let width = current.x - start.x
-                        let height = current.y - start.y
-                        const x = width > 0 ? start.x : current.x
-                        const y = height > 0 ? start.y : current.y
-                        width = width > 0 ? width : -width
-                        height = height > 0 ? height : -height
+                        const currentX = e.clientX
+                        const currentY = e.clientY
+                        const width = Math.abs(currentX - startX)
+                        const height = Math.abs(currentY - startY)
+                        const x = Math.min(startX, currentX)
+                        const y = Math.min(startY, currentY)
 
-                        vueFlow.userSelectionRect.value = {
+                        selectionRect.value = {
                             width,
                             height,
-                            x: x - clientRect.x,
-                            y: y - clientRect.y,
-                            startX: x - clientRect.x,
-                            startY: y - clientRect.y,
+                            x: x - rectX,
+                            y: y - rectY,
                         }
 
                         const {nodes, edges} = getByClientRect({
@@ -932,26 +963,18 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                             y,
                         })
 
-                        cleanSelection()
-                        vueFlow.addSelectedNodes(nodes)
-                        vueFlow.addSelectedEdges(edges)
+                        throttleResetSelection(
+                            new Set(nodes.map(it => it.id)),
+                            new Set(edges.map(it => it.id))
+                        )
                     }
 
                     const onRectSelectEnd = () => {
                         document.documentElement.removeEventListener('mousemove', onRectSelect)
                         document.documentElement.removeEventListener('mouseup', onRectSelectEnd)
 
-                        vueFlow.userSelectionActive.value = false
-                        vueFlow.userSelectionRect.value = null
-
-                        const newSelectedNodes = vueFlow.getSelectedNodes.value
-                        const newSelectedEdges = vueFlow.getSelectedEdges.value
-                        setTimeout(() => {
-                            cleanSelection()
-                            vueFlow.addSelectedNodes(newSelectedNodes)
-                            vueFlow.addSelectedEdges(newSelectedEdges)
-                            vueFlow.multiSelectionActive.value = false
-                        })
+                        selectionRect.value = null
+                        vueFlow.multiSelectionActive.value = false
                     }
 
                     document.documentElement.addEventListener('mousemove', onRectSelect)
@@ -1029,13 +1052,15 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                     if (!vueFlowRef.value) return
                     if (e.target !== paneEl) return
                     if (!selectionRectEnable) return
+                    if (e.touches.length < 1) return
 
                     const clientRect = vueFlowRef.value.getBoundingClientRect()
+                    const rectX = clientRect.x
+                    const rectY = clientRect.y
 
                     e.preventDefault()
                     blurActiveElement()
 
-                    vueFlow.userSelectionActive.value = true
                     vueFlow.multiSelectionActive.value = true
                     cleanSelection()
 
@@ -1045,13 +1070,11 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                         e.preventDefault()
                         let {x, y, width, height} = getTouchRect(e, start)
 
-                        vueFlow.userSelectionRect.value = {
+                        selectionRect.value = {
                             width,
                             height,
-                            x: x - clientRect.x,
-                            y: y - clientRect.y,
-                            startX: x - clientRect.x,
-                            startY: y - clientRect.y,
+                            x: x - rectX,
+                            y: y - rectY,
                         }
 
                         const {nodes, edges} = getByClientRect({
@@ -1061,9 +1084,10 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                             y,
                         })
 
-                        cleanSelection()
-                        vueFlow.addSelectedNodes(nodes)
-                        vueFlow.addSelectedEdges(edges)
+                        throttleResetSelection(
+                            new Set(nodes.map(it => it.id)),
+                            new Set(edges.map(it => it.id))
+                        )
                     }
 
                     const onRectSelectEnd = (e: TouchEvent) => {
@@ -1073,9 +1097,8 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                         document.documentElement.removeEventListener('touchend', onRectSelectEnd)
                         document.documentElement.removeEventListener('touchcancel', onRectSelectEnd)
 
+                        selectionRect.value = null
                         vueFlow.multiSelectionActive.value = false
-                        vueFlow.userSelectionActive.value = false
-                        vueFlow.userSelectionRect.value = null
 
                         if (isSelectionNotEmpty.value) {
                             setDefaultPanDrag()
@@ -1191,6 +1214,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
             return layer.vueFlow.fitBounds(rect, {duration: 800, padding: 0.4})
         },
 
+        selectionRect: readonly(selectionRect),
         isSelectionNotEmpty,
         isSelectionPlural,
         canMultiSelect,
