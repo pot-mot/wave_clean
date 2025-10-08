@@ -886,6 +886,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                 // 鼠标移入非交互元素时，允许拖拽，否则禁止画布拖拽
                 let currentPanOnDrag = vueFlow.panOnDrag.value
                 paneEl.addEventListener('mouseover', (e) => {
+                    if (selectionRectEnable) return
                     if (vueFlow.panOnDrag.value !== false && judgeTargetIsInteraction(e)) {
                         currentPanOnDrag = vueFlow.panOnDrag.value
                         vueFlow.panOnDrag.value = false
