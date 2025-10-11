@@ -17,11 +17,11 @@
     "tauri-android-build": "tauri android build"
   },
   "dependencies": {
-    "@tauri-apps/api": "^2.6.0",
-    "@tauri-apps/plugin-clipboard-manager": "~2.2.3",
-    "@tauri-apps/plugin-dialog": "~2.2.2",
-    "@tauri-apps/plugin-fs": "~2.3.0",
-    "@tauri-apps/plugin-opener": "^2.4.0",
+    "@tauri-apps/api": "^2.8.0",
+    "@tauri-apps/plugin-clipboard-manager": "~2.3.0",
+    "@tauri-apps/plugin-dialog": "~2.4.0",
+    "@tauri-apps/plugin-fs": "~2.4.2",
+    "@tauri-apps/plugin-opener": "^2.5.0",
     "@types/prismjs": "^1.26.5",
     "@vue-flow/core": "^1.46.0",
     "@vue-flow/node-toolbar": "^1.1.1",
