@@ -1,8 +1,8 @@
 import {createSchemaValidator} from "@/utils/type/typeGuard.ts";
 import type {JSONSchemaType} from "ajv/lib/types/json-schema.ts";
-import {ViewportTransform} from "@vue-flow/core";
-import {MindMapLayerData, MindMapLayerData_JsonSchema} from "@/mindMap/layer/MindMapLayer.ts";
-import {MindMapDataResource, MindMapDataResource_JsonSchema} from "@/mindMap/resources/MindMapResouce.ts";
+import {type ViewportTransform} from "@vue-flow/core";
+import {type MindMapLayerData, MindMapLayerData_JsonSchema} from "@/mindMap/layer/MindMapLayer.ts";
+import {type MindMapDataResource, MindMapDataResource_JsonSchema} from "@/mindMap/resources/MindMapResouce.ts";
 
 // 思维导图数据
 export type MindMapData = {

@@ -1,5 +1,5 @@
 import {describe, beforeEach, it, expect, vitest} from 'vitest'
-import {BatchCommandData, CommandDefinition, CommandHistory, useCommandHistory} from '@/history/commandHistory';
+import {type BatchCommandData, type CommandDefinition, type CommandHistory, useCommandHistory} from '@/history/commandHistory';
 
 describe('useCommandHistory', () => {
     type TestCommandMap = {

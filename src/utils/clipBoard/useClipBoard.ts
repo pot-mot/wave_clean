@@ -1,6 +1,6 @@
-import {SchemaValidator} from "@/utils/type/typeGuard.ts";
+import type {SchemaValidator} from "@/utils/type/typeGuard.ts";
 import {readImage, readText as tauriReadText, writeText as tauriWriteText} from "@tauri-apps/plugin-clipboard-manager";
-import {LazyData, lazyDataParse} from "@/utils/type/lazyDataParse.ts";
+import {type LazyData, lazyDataParse} from "@/utils/type/lazyDataParse.ts";
 import {noTauriInvokeSubstitution} from "@/utils/error/noTauriInvokeSubstitution.ts";
 import {tauriImageToBlob} from "@/utils/image/tauriImageToBlob.ts";
 import {readText as polyfillReadText, writeText as polyfillWriteText, read as polyfillRead} from "clipboard-polyfill"

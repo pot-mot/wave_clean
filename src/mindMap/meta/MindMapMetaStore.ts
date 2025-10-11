@@ -1,12 +1,12 @@
 import {jsonFileOperations} from "@/utils/file/JsonFileOperations.ts";
 import {computed, nextTick, ref, watch} from "vue";
 import {getDefaultMindMapData, useMindMap} from "@/mindMap/useMindMap.ts";
-import {MindMapData, validateMindMapData} from "@/mindMap/MindMapData.ts";
+import {type MindMapData, validateMindMapData} from "@/mindMap/MindMapData.ts";
 import {jsonSortPropStringify} from "@/utils/json/jsonStringify.ts";
 import {sendMessage} from "@/components/message/messageApi.ts";
 import type {JSONSchemaType} from "ajv/lib/types/json-schema.ts";
 import {createSchemaValidator} from "@/utils/type/typeGuard.ts";
-import {Theme} from "@tauri-apps/api/window";
+import {type Theme} from "@tauri-apps/api/window";
 import {useThemeStore} from "@/store/themeStore.ts";
 import {debounce} from "lodash-es";
 import {v7 as uuid} from "uuid";

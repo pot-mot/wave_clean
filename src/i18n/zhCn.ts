@@ -1,4 +1,4 @@
-import {MainLocale} from "@/i18n/index.ts";
+import {type MainLocale} from "@/i18n/index.ts";
 
 export const localeZhCn: MainLocale = {
     BUTTON_copy: "复制",

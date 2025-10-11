@@ -1,4 +1,4 @@
-import MarkdownIt, {Options} from "markdown-it";
+import MarkdownIt, {type Options} from "markdown-it";
 //@ts-ignore
 import MarkdownItSub from 'markdown-it-sub';
 //@ts-ignore

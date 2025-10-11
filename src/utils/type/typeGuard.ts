@@ -16,7 +16,7 @@ export const getKeys = <T extends object>(data: T): (keyof T)[] => {
     return Object.keys(data) as (keyof T)[]
 }
 
-import Ajv, {ErrorObject} from "ajv";
+import Ajv, {type ErrorObject} from "ajv";
 const ajv = new Ajv({ allErrors: true }); // 启用所有错误信息
 
 export type SchemaValidatorErrorHandler = (errors: ErrorObject[] | null | undefined) => void

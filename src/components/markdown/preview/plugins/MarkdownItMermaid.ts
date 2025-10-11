@@ -1,7 +1,7 @@
 import mermaid from "mermaid"
 import {renderPrismCodeBlock} from "@/components/markdown/preview/plugins/MarkdownItPrismCode.ts";
 import {v7 as uuid} from "uuid"
-import {Theme} from "@tauri-apps/api/window";
+import {type Theme} from "@tauri-apps/api/window";
 
 const defaultOptions = {
     startOnLoad: false,

@@ -1,4 +1,4 @@
-import {editor, IPosition, IRange, ISelection} from "monaco-editor/esm/vs/editor/editor.api.js"
+import {editor, type IPosition, type IRange, type ISelection} from "monaco-editor/esm/vs/editor/editor.api.js"
 
 export const COMMAND_Group = "editor.custom.group"
 export const COMMAND_setPosition = "editor.custom.setPosition"

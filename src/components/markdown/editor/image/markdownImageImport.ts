@@ -4,7 +4,7 @@ import {onBeforeUnmount, onMounted} from "vue";
 import {
     getParentMarkdownEditorElement
 } from "@/components/markdown/editor/MarkdownEditorElement.ts";
-import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
+type IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
 
 export const insertImage = async (editor: IStandaloneCodeEditor, files: FileList | never) => {
     for (const file of files) {

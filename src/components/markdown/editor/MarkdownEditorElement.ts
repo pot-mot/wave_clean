@@ -1,5 +1,5 @@
 import {editor} from "monaco-editor/esm/vs/editor/editor.api.js";
-import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
+type IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
 import {getMatchedElementOrParent} from "@/utils/event/judgeEventTarget.ts";
 
 export type MarkdownEditorElement = HTMLElement & {

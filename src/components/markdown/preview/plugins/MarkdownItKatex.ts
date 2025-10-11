@@ -3,7 +3,7 @@ import MarkdownIt from 'markdown-it';
 import StateInline from "markdown-it/lib/rules_inline/state_inline";
 // @ts-ignore
 import StateBlock from "markdown-it/lib/rules_block/state_block";
-import katex, {KatexOptions} from 'katex';
+import katex, {type KatexOptions} from 'katex';
 import "katex/dist/katex.min.css"
 import {renderPrismCodeBlock} from "@/components/markdown/preview/plugins/MarkdownItPrismCode.ts";
 

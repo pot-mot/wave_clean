@@ -1,4 +1,4 @@
-import {MainLocale} from "@/i18n/index.ts";
+import {type MainLocale} from "@/i18n/index.ts";
 
 export const localeEn: MainLocale = {
     BUTTON_copy: "Copy",

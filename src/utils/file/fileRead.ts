@@ -1,4 +1,4 @@
-import {open, OpenDialogOptions} from '@tauri-apps/plugin-dialog'
+import {open, type OpenDialogOptions} from '@tauri-apps/plugin-dialog'
 import {readFile} from '@tauri-apps/plugin-fs'
 import {fileTypeFromBuffer} from "file-type";
 

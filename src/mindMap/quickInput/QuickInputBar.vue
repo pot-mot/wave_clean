@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {QuickInputItem, useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
+import {type QuickInputItem, useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
 import {useFocusTargetStore} from "@/store/focusTargetStore.ts";
 import {outsideInput} from "@/utils/event/outsideInput.ts";
 import CollapseItem from "@/components/collapse/CollapseItem.vue";

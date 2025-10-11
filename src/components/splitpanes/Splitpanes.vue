@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import {h, ref, computed, onMounted, onBeforeUnmount, nextTick, provide, useSlots, watch} from 'vue'
 import {
-    ChangedPanes,
-    DragInfo,
+    type ChangedPanes,
+    type DragInfo,
     injectKey,
-    Pane,
-    RequestUpdatePayload, SplitpanesEmits,
-    SplitpanesProps
+    type Pane,
+    type RequestUpdatePayload,
+    type SplitpanesEmits,
+    type SplitpanesProps
 } from "@/components/splitpanes/splitPaneTypes.ts";
 
 const emits = defineEmits<

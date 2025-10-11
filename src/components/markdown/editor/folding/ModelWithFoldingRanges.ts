@@ -1,6 +1,6 @@
 import {editor, languages} from "monaco-editor/esm/vs/editor/editor.api.js"
-import IModel = editor.IModel
-import FoldingRange = languages.FoldingRange;
+type IModel = editor.IModel
+type FoldingRange = languages.FoldingRange;
 
 export type ModelWithFoldingRanges = IModel & {
     foldingRanges?: FoldingRange[]

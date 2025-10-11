@@ -1,8 +1,8 @@
 // Thanks for https://blog.csdn.net/qq_15686015/article/details/129560147, https://blog.kaciras.com/article/36/Integrate-monaco-editor-into-my-blog
 import {languages, Range} from "monaco-editor/esm/vs/editor/editor.api.js";
-import CompletionItemProvider = languages.CompletionItemProvider
+type CompletionItemProvider = languages.CompletionItemProvider
+type CompletionItem = languages.CompletionItem
 import CompletionItemKind = languages.CompletionItemKind
-import CompletionItem = languages.CompletionItem
 import {
     COMMAND_setPosition,
 } from "@/components/markdown/editor/command/customCommand.ts";

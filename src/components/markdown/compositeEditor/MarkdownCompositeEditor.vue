@@ -3,8 +3,8 @@ import {v7 as uuid} from "uuid"
 import MarkdownEditor from "@/components/markdown/editor/MarkdownEditor.vue";
 import MarkdownPreview from "@/components/markdown/preview/MarkdownPreview.vue";
 import {computed, ref, useTemplateRef} from "vue";
-import {MarkdownEditorEmits, MarkdownEditorProps} from "@/components/markdown/editor/MarkdownEditorType.ts";
-import {PreviewType} from "@/components/markdown/compositeEditor/PreviewType.ts";
+import type {MarkdownEditorEmits, MarkdownEditorProps} from "@/components/markdown/editor/MarkdownEditorType.ts";
+import type {PreviewType} from "@/components/markdown/compositeEditor/PreviewType.ts";
 import Splitpanes from "@/components/splitpanes/Splitpanes.vue";
 import Pane from "@/components/splitpanes/Pane.vue";
 import IconUndo from "@/components/icons/IconUndo.vue";

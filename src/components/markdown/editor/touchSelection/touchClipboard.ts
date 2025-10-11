@@ -1,9 +1,9 @@
 import {editor} from "monaco-editor/esm/vs/editor/editor.api.js";
-import ICodeEditor = editor.ICodeEditor;
+type ICodeEditor = editor.ICodeEditor;
 import {copyText, readClipBoardImageBlob, readClipBoardText} from "@/utils/clipBoard/useClipBoard.ts";
 import {sendMessage} from "@/components/message/messageApi.ts";
 import {blobToFile} from "@/utils/file/fileRead.ts";
-import {MarkdownEditorElement} from "@/components/markdown/editor/MarkdownEditorElement.ts";
+import type {MarkdownEditorElement} from "@/components/markdown/editor/MarkdownEditorElement.ts";
 
 export const getTouchClipboard = (editor: ICodeEditor, element: MarkdownEditorElement) => {
     const copy = async (): Promise<boolean> => {

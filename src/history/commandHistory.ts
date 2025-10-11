@@ -1,5 +1,5 @@
 import {cloneDeep} from "lodash-es";
-import {BaseHistory, FullUndefinedHistoryEventsArgs, HistoryEvents} from "@/history/BaseHistory.ts";
+import type {BaseHistory, FullUndefinedHistoryEventsArgs, HistoryEvents} from "@/history/BaseHistory.ts";
 import mitt from "mitt";
 
 export type CommandDefinition<ApplyOptions, RevertOptions = ApplyOptions> = {

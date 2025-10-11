@@ -1,7 +1,7 @@
 // https://github.com/Yash-Singh1/monaco-mermaid
 import {languages, editor} from "monaco-editor/esm/vs/editor/editor.api.js";
-import IMonarchLanguage = languages.IMonarchLanguage
-import CompletionItemProvider = languages.CompletionItemProvider;
+type IMonarchLanguage = languages.IMonarchLanguage;
+type CompletionItemProvider = languages.CompletionItemProvider;
 
 const requirementDiagrams = [
     'requirement',

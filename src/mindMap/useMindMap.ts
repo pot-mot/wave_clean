@@ -1,45 +1,45 @@
 import {
-    Connection,
-    GraphEdge,
-    GraphNode,
-    Rect,
+    type Connection,
+    type GraphEdge,
+    type GraphNode,
+    type Rect,
     useVueFlow,
-    ViewportTransform,
-    VueFlowStore,
-    XYPosition,
+    type ViewportTransform,
+    type VueFlowStore,
+    type XYPosition,
 } from "@vue-flow/core";
 import {
     computed,
     nextTick,
     readonly,
     ref,
-    ShallowReactive,
+    type ShallowReactive,
     shallowReactive,
-    ShallowRef,
+    type ShallowRef,
     shallowRef,
     toRaw,
 } from "vue";
 import {blurActiveElement, judgeTargetIsInteraction} from "@/utils/event/judgeEventTarget.ts";
 import {jsonSortPropStringify} from "@/utils/json/jsonStringify.ts";
 import {
-    JustifyOptions,
-    MindMapImportData,
+    type JustifyOptions,
+    type MindMapImportData,
     prepareImportIntoMindMap,
     validateMindMapImportData
 } from "@/mindMap/import/import.ts";
 import {
-    ExportFileType,
+    type ExportFileType,
     exportMindMapData,
     exportMindMapSelectionData,
     exportMindMapToFile,
-    MindMapExportData
+    type MindMapExportData
 } from "@/mindMap/export/export.ts";
-import {MindMapData} from "@/mindMap/MindMapData.ts";
-import {checkFullConnection, FullConnection, reverseConnection} from "@/mindMap/edge/connection.ts";
+import type {MindMapData} from "@/mindMap/MindMapData.ts";
+import {checkFullConnection, type FullConnection, reverseConnection} from "@/mindMap/edge/connection.ts";
 import {useMindMapHistory} from "@/mindMap/history/MindMapHistory.ts";
 import {unimplementedClipBoard, useClipBoard} from "@/utils/clipBoard/useClipBoard.ts";
 import {useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
-import {LazyData} from "@/utils/type/lazyDataParse.ts";
+import type {LazyData} from "@/utils/type/lazyDataParse.ts";
 import {useDeviceStore} from "@/store/deviceStore.ts";
 import {v7 as uuid} from "uuid"
 import {sendMessage} from "@/components/message/messageApi.ts";
@@ -47,13 +47,13 @@ import {getTouchRect} from "@/utils/event/getTouchRect.ts";
 import {createStore} from "@/utils/store/createStore.ts";
 import {withLoading} from "@/components/loading/loadingApi.ts";
 import {
-    MindMapLayer,
-    MindMapLayerData,
-    MindMapLayerDiffData,
+    type MindMapLayer,
+    type MindMapLayerData,
+    type MindMapLayerDiffData,
     MindMapLayerDiffDataKeys
 } from "@/mindMap/layer/MindMapLayer.ts";
-import {ContentNodeData, ContentType_DEFAULT, NodeType_CONTENT} from "@/mindMap/node/ContentNode.ts";
-import {ContentEdgeData, EdgeType_CONTENT} from "@/mindMap/edge/ContentEdge.ts";
+import {type ContentNodeData, ContentType_DEFAULT, NodeType_CONTENT} from "@/mindMap/node/ContentNode.ts";
+import {type ContentEdgeData, EdgeType_CONTENT} from "@/mindMap/edge/ContentEdge.ts";
 
 // 鼠标默认行为
 type MouseAction = "panDrag" | "selectionRect"

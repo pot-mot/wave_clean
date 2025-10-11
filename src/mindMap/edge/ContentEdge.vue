@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch} from "vue";
-import {BaseEdge, EdgeProps} from "@vue-flow/core";
+import {BaseEdge, type EdgeProps} from "@vue-flow/core";
 import {useMindMap} from "@/mindMap/useMindMap.ts";
 import FitSizeBlockInput from "@/components/input/FitSizeBlockInput.vue";
 import {useEdgeUpdaterTouch} from "@/mindMap/edge/useEdgeUpdaterTouch.ts";
@@ -14,9 +14,9 @@ import {getPaddingBezierPath} from "@/mindMap/edge/paddingBezierPath.ts";
 import IconArrowOneWayLeft from "@/components/icons/IconArrowOneWayLeft.vue";
 import IconArrowOneWayRight from "@/components/icons/IconArrowOneWayRight.vue";
 import {v7 as uuid} from "uuid"
-import {RawMindMapLayer} from "@/mindMap/layer/MindMapLayer.ts";
-import {SizePositionEdgePartial} from "@/mindMap/edge/SizePositionEdge.ts";
-import {ContentEdgeData} from "@/mindMap/edge/ContentEdge.ts";
+import {type RawMindMapLayer} from "@/mindMap/layer/MindMapLayer.ts";
+import {type SizePositionEdgePartial} from "@/mindMap/edge/SizePositionEdge.ts";
+import {type ContentEdgeData} from "@/mindMap/edge/ContentEdge.ts";
 
 const {updateEdgeData, isSelectionPlural, canMultiSelect, findEdge, selectEdge, fitRect, remove, zoom} = useMindMap()
 

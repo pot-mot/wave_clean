@@ -1,4 +1,4 @@
-import {Connection} from "@vue-flow/core";
+import {type Connection} from "@vue-flow/core";
 
 export type FullConnection = {
     source: string,

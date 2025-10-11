@@ -1,7 +1,7 @@
 import type {Draft, Immutable} from 'immer'
 import {produce} from 'immer'
-import {computed, ComputedRef, shallowRef} from 'vue'
-import {BaseHistory, FullUndefinedHistoryEventsArgs, HistoryEvents} from "@/history/BaseHistory.ts";
+import {computed, type ComputedRef, shallowRef} from 'vue'
+import type {BaseHistory, FullUndefinedHistoryEventsArgs, HistoryEvents} from "@/history/BaseHistory.ts";
 import mitt from "mitt";
 
 type StateUpdater<T> = (draft: Draft<T>) => void

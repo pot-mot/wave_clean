@@ -1,12 +1,12 @@
-import {VueFlowStore, XYPosition} from "@vue-flow/core";
+import {type VueFlowStore, type XYPosition} from "@vue-flow/core";
 import {
     createEdgeId,
     createNodeId
 } from "@/mindMap/useMindMap.ts";
 import {toRaw} from "vue";
-import {FullConnection, reverseConnection} from "@/mindMap/edge/connection.ts";
-import {ContentNode, ContentNode_JsonSchema, ContentNodeHandles} from "@/mindMap/node/ContentNode.ts";
-import {ContentEdge, ContentEdge_JsonSchema} from "@/mindMap/edge/ContentEdge.ts";
+import {type FullConnection, reverseConnection} from "@/mindMap/edge/connection.ts";
+import {type ContentNode, ContentNode_JsonSchema, ContentNodeHandles} from "@/mindMap/node/ContentNode.ts";
+import {type ContentEdge, ContentEdge_JsonSchema} from "@/mindMap/edge/ContentEdge.ts";
 import type {JSONSchemaType} from "ajv/lib/types/json-schema.ts";
 import {createSchemaValidator} from "@/utils/type/typeGuard.ts";
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {computed, onBeforeUnmount, onMounted, useTemplateRef, watch} from "vue";
-import {MarkdownEditorElement} from "@/components/markdown/editor/MarkdownEditorElement.ts";
-import {MarkdownEditorEmits, MarkdownEditorProps} from "@/components/markdown/editor/MarkdownEditorType.ts";
+import type {MarkdownEditorElement} from "@/components/markdown/editor/MarkdownEditorElement.ts";
+import type {MarkdownEditorEmits, MarkdownEditorProps} from "@/components/markdown/editor/MarkdownEditorType.ts";
 
 import {editor} from "monaco-editor/esm/vs/editor/editor.api.js";
 // 导入小图标
@@ -26,7 +26,7 @@ import {initMarkdownEnterCompletion} from "@/components/markdown/editor/completi
 import {DefaultToolName, editorTouchSelectionHelp} from "monaco-touch-selection";
 import "monaco-touch-selection/dist/style.css"
 import "@/components/markdown/editor/touchSelection/touch-selection-style-overwrite.css"
-import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
+type IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
 import {getTouchClipboard} from "@/components/markdown/editor/touchSelection/touchClipboard.ts";
 
 const modelValue = defineModel<string>({

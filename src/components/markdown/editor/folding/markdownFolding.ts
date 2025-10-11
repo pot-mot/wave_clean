@@ -1,6 +1,6 @@
 import {languages} from "monaco-editor/esm/vs/editor/editor.api.js";
-import FoldingRangeProvider = languages.FoldingRangeProvider
-import FoldingRange = languages.FoldingRange
+type FoldingRangeProvider = languages.FoldingRangeProvider
+type FoldingRange = languages.FoldingRange
 import {setFoldingRanges} from "@/components/markdown/editor/folding/ModelWithFoldingRanges.ts";
 
 type FoldingBlock = {

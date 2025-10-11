@@ -1,5 +1,5 @@
 import {editor, KeyCode, Position, Range} from "monaco-editor/esm/vs/editor/editor.api.js"
-import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
+type IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
 import {getIndent} from "@/components/markdown/editor/indent/getIndent.ts";
 
 type onEnterAppendTextOptions = {

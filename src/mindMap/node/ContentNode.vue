@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {Handle, NodeProps} from "@vue-flow/core";
+import {Handle, type NodeProps} from "@vue-flow/core";
 import {
     MIND_MAP_CONTAINER_ID,
     useMindMap
@@ -14,21 +14,21 @@ import {blurActiveElement, getMatchedElementOrParent} from "@/utils/event/judgeE
 import {useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
 import MarkdownPreview from "@/components/markdown/preview/MarkdownPreview.vue";
 import ResizeWrapper from "@/components/resizer/ResizeWrapper.vue";
-import {ResizeEventArgs} from "@/components/resizer/ResizeWrapperType.ts";
+import {type ResizeEventArgs} from "@/components/resizer/ResizeWrapperType.ts";
 import IconEdit from "@/components/icons/IconEdit.vue";
 import IconCheck from "@/components/icons/IconCheck.vue";
 import IconMarkdown from "@/components/icons/IconMarkdown.vue";
 import IconMarkdownOff from "@/components/icons/IconMarkdownOff.vue";
-import {RawMindMapLayer} from "@/mindMap/layer/MindMapLayer.ts";
+import {type RawMindMapLayer} from "@/mindMap/layer/MindMapLayer.ts";
 import {
-    ContentNode,
+    type ContentNode,
     ContentNode_Markdown_initHeight,
     ContentNode_Markdown_initWidth,
     ContentNode_Markdown_minHeight,
     ContentNode_Markdown_minWidth,
-    ContentNodeData,
+    type ContentNodeData,
     ContentNodeHandles,
-    ContentType,
+    type ContentType,
     ContentType_DEFAULT
 } from "@/mindMap/node/ContentNode.ts";
 import MarkdownCompositeEditor from "@/components/markdown/compositeEditor/MarkdownCompositeEditor.vue";

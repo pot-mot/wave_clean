@@ -4,7 +4,7 @@ import ContentNode from "@/mindMap/node/ContentNode.vue";
 import ContentEdge from "@/mindMap/edge/ContentEdge.vue";
 import {useMindMap} from "@/mindMap/useMindMap.ts";
 import {computed} from "vue";
-import {MindMapLayer} from "@/mindMap/layer/MindMapLayer.ts";
+import {type MindMapLayer} from "@/mindMap/layer/MindMapLayer.ts";
 
 const props = defineProps<{
     layer: MindMapLayer,

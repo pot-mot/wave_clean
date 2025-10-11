@@ -1,5 +1,5 @@
-import {SizePositionEdgePartial} from "@/mindMap/edge/SizePositionEdge.ts";
-import {Edge} from "@vue-flow/core";
+import {type SizePositionEdgePartial} from "@/mindMap/edge/SizePositionEdge.ts";
+import {type Edge} from "@vue-flow/core";
 import type {JSONSchemaType} from "ajv/lib/types/json-schema.ts";
 import {createSchemaValidator} from "@/utils/type/typeGuard.ts";
 

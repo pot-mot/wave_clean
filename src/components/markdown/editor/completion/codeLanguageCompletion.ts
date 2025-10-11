@@ -1,6 +1,6 @@
 import {languages, Range} from "monaco-editor/esm/vs/editor/editor.api.js";
-import CompletionItemProvider = languages.CompletionItemProvider;
-import CompletionItem = languages.CompletionItem;
+type CompletionItemProvider = languages.CompletionItemProvider;
+type CompletionItem = languages.CompletionItem;
 import CompletionItemKind = languages.CompletionItemKind;
 import {getCurrentFoldingRange, getFoldingRanges} from "@/components/markdown/editor/folding/ModelWithFoldingRanges.ts";
 import {allLanguages} from "@/components/markdown/preview/plugins/MarkdownItPrismCode.ts";

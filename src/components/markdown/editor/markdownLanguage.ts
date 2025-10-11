@@ -1,7 +1,7 @@
 // import "monaco-editor/esm/vs/basic-languages/markdown/markdown.js";
 import {languages} from "monaco-editor/esm/vs/editor/editor.api.js";
-import IMonarchLanguage = languages.IMonarchLanguage
-import LanguageConfiguration = languages.LanguageConfiguration
+type IMonarchLanguage = languages.IMonarchLanguage;
+type LanguageConfiguration = languages.LanguageConfiguration;
 import {markdownCharCompletionProvider} from "@/components/markdown/editor/completion/charCompletion.ts";
 import {markdownFoldingRangeProvider} from "@/components/markdown/editor/folding/markdownFolding.ts";
 import {markdownCodeLanguageCompletionProvider} from "@/components/markdown/editor/completion/codeLanguageCompletion.ts";

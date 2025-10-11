@@ -1,18 +1,19 @@
-import {CommandDefinition, useCommandHistory} from "@/history/commandHistory.ts";
-import {GraphEdge, GraphNode, useVueFlow, VueFlowStore, XYPosition} from "@vue-flow/core";
-import {FullConnection} from "@/mindMap/edge/connection.ts";
+import {type CommandDefinition, useCommandHistory} from "@/history/commandHistory.ts";
+import {type GraphEdge, type GraphNode, useVueFlow, type VueFlowStore, type XYPosition} from "@vue-flow/core";
+import {type FullConnection} from "@/mindMap/edge/connection.ts";
 import {
     createEdgeId,
-    createVueFlowId, MindMapGlobal
+    createVueFlowId,
+    type MindMapGlobal
 } from "@/mindMap/useMindMap.ts";
 import {ref, shallowReactive} from "vue";
-import {exportMindMapData, MindMapExportData} from "@/mindMap/export/export.ts";
+import {exportMindMapData, type MindMapExportData} from "@/mindMap/export/export.ts";
 import {prepareImportIntoMindMap} from "@/mindMap/import/import.ts";
 import {getRaw} from "@/utils/json/getRaw.ts";
 import {getKeys} from "@/utils/type/typeGuard.ts";
-import {MindMapLayer, MindMapLayerDiffData, RawMindMapLayer} from "@/mindMap/layer/MindMapLayer.ts";
-import {ContentNode, ContentNodeData, validateContentNode} from "@/mindMap/node/ContentNode.ts";
-import {ContentEdge, ContentEdgeData, validateContentEdge} from "@/mindMap/edge/ContentEdge.ts";
+import {type MindMapLayer, type MindMapLayerDiffData, type RawMindMapLayer} from "@/mindMap/layer/MindMapLayer.ts";
+import {type ContentNode, type ContentNodeData, validateContentNode} from "@/mindMap/node/ContentNode.ts";
+import {type ContentEdge, type ContentEdgeData, validateContentEdge} from "@/mindMap/edge/ContentEdge.ts";
 
 export type MindMapHistoryCommands = {
     "layer:add": CommandDefinition<

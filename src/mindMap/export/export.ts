@@ -1,4 +1,4 @@
-import {VueFlowStore} from "@vue-flow/core";
+import {type VueFlowStore} from "@vue-flow/core";
 import {getRaw} from "@/utils/json/getRaw.ts";
 import {v7 as uuid} from "uuid";
 import {blurActiveElement} from "@/utils/event/judgeEventTarget.ts";
@@ -8,11 +8,11 @@ import {exportAsJpg, exportAsPng, exportAsSvg} from "@/utils/image/htmlExportAsI
 import {downloadTextFile} from "@/utils/file/fileDownload.ts";
 import {jsonPrettyFormat} from "@/utils/json/jsonStringify.ts";
 import {nextFrame} from "@/utils/animationFrame/nextFrame.ts";
-import {MindMapLayer} from "@/mindMap/layer/MindMapLayer.ts";
-import {ContentNode, validateContentNode} from "@/mindMap/node/ContentNode.ts";
-import {ContentEdge, validateContentEdge} from "@/mindMap/edge/ContentEdge.ts";
+import {type MindMapLayer} from "@/mindMap/layer/MindMapLayer.ts";
+import {type ContentNode, validateContentNode} from "@/mindMap/node/ContentNode.ts";
+import {type ContentEdge, validateContentEdge} from "@/mindMap/edge/ContentEdge.ts";
 import {validateSizePositionEdgePartial} from "@/mindMap/edge/SizePositionEdge.ts";
-import {MindMapData} from "@/mindMap/MindMapData.ts";
+import {type MindMapData} from "@/mindMap/MindMapData.ts";
 
 export type MindMapExportData = {
     nodes: ContentNode[],

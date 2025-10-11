@@ -1,5 +1,5 @@
 import {downloadDir} from "@tauri-apps/api/path";
-import {save, SaveDialogOptions} from "@tauri-apps/plugin-dialog";
+import {save, type SaveDialogOptions} from "@tauri-apps/plugin-dialog";
 import {sendMessage} from "@/components/message/messageApi.ts";
 import {writeFile} from "@tauri-apps/plugin-fs";
 import {noTauriInvokeSubstitution} from "@/utils/error/noTauriInvokeSubstitution.ts";

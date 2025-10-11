@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import IconDelete from "@/components/icons/IconDelete.vue";
-import {QuickInputItem, useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
+import {type QuickInputItem, useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
 import {ref} from "vue";
 import {sendMessage} from "@/components/message/messageApi.ts";
 import IconAdd from "@/components/icons/IconAdd.vue";

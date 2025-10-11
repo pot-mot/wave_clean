@@ -1,5 +1,5 @@
 import {readonly, ref, watch} from "vue";
-import {Theme, getCurrentWindow} from "@tauri-apps/api/window";
+import {type Theme, getCurrentWindow} from "@tauri-apps/api/window";
 import {useDeviceStore} from "@/store/deviceStore.ts";
 import {createStore} from "@/utils/store/createStore.ts";
 import {tinycolor} from "vue-color";

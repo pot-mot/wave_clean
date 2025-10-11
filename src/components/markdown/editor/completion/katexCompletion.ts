@@ -1,11 +1,11 @@
 import {languages, Range} from "monaco-editor/esm/vs/editor/editor.api.js";
-import CompletionItemProvider = languages.CompletionItemProvider;
-import CompletionItem = languages.CompletionItem;
+type CompletionItemProvider = languages.CompletionItemProvider;
+type CompletionItem = languages.CompletionItem;
+type Command = languages.Command;
 import CompletionItemKind = languages.CompletionItemKind;
 import {getCurrentFoldingRange, getFoldingRanges} from "@/components/markdown/editor/folding/ModelWithFoldingRanges.ts";
 import {md} from "@/components/markdown/preview/markdownRender.ts";
 import {katexExamples} from "@/components/markdown/editor/katex/katexExamples.ts";
-import Command = languages.Command;
 import {COMMAND_removeRange} from "@/components/markdown/editor/command/customCommand.ts";
 import {katexLanguages} from "@/components/markdown/preview/plugins/MarkdownItPrismCode.ts";
 

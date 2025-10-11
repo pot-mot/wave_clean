@@ -8,7 +8,7 @@ import IconInvisible from "@/components/icons/IconInvisible.vue";
 import DragList from "@/components/list/DragList.vue";
 import {computed} from "vue";
 import CollapseDetail from "@/components/collapse/CollapseDetail.vue";
-import {MindMapLayer} from "@/mindMap/layer/MindMapLayer.ts";
+import {type MindMapLayer} from "@/mindMap/layer/MindMapLayer.ts";
 import IconLock from "@/components/icons/IconLock.vue";
 import IconLockOpen from "@/components/icons/IconLockOpen.vue";
 
