@@ -19,7 +19,9 @@ const handleSwap = (oldIndex: number, newIndex: number) => {
     if (
         oldIndex < 0 || oldIndex > data.value.length ||
         newIndex < 0 || newIndex > data.value.length ||
-        newIndex === oldIndex
+        newIndex === oldIndex ||
+        !data.value[oldIndex] ||
+        !data.value[newIndex]
     ) return
     const tmp = data.value[oldIndex]
     data.value[oldIndex] = data.value[newIndex]

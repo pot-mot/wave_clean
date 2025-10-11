@@ -65,7 +65,7 @@ export const renderPrismCodeBlock = (rawCode: string, language: string): string 
 
         let renderedCode = cache.get(key)
         if (renderedCode === undefined) {
-            if (prismLanguages.has(language)) {
+            if (prismLanguages.has(language) && Prism.languages[language]) {
                 renderedCode = Prism.highlight(rawCode, Prism.languages[language], language)
                 cache.set(key, renderedCode)
             } else {
@@ -79,7 +79,8 @@ export const renderPrismCodeBlock = (rawCode: string, language: string): string 
             for (let i = 1; i < codeLines.length; i++) {
                 lineNumbers.push(String(i));
             }
-            if (codeLines[codeLines.length - 1].trim().length > 0) {
+            const lastLine = codeLines[codeLines.length - 1]
+            if (lastLine && lastLine.trim().length > 0) {
                 lineNumbers.push(String(codeLines.length))
             }
         }
@@ -99,7 +100,8 @@ export const renderPrismCodeBlock = (rawCode: string, language: string): string 
             for (let i = 1; i < codeLines.length; i++) {
                 lineNumbers.push(String(i));
             }
-            if (codeLines[codeLines.length - 1].trim().length > 0) {
+            const lastLine = codeLines[codeLines.length - 1]
+            if (lastLine && lastLine.trim().length > 0) {
                 lineNumbers.push(String(codeLines.length))
             }
         }
@@ -137,12 +139,14 @@ const renderCodeBlock = (text: string, language: string = ''): string => {
 export const MarkdownItPrismCode = (md: MarkdownIt) => {
     md.renderer.rules.fence = (tokens, idx) => {
         const token = tokens[idx]
+        if (!token) throw new Error('token is null')
         const language = token.info.toLowerCase().trim()
         return renderCodeBlock(token.content, language)
     }
 
     md.renderer.rules.code_block = (tokens, idx) => {
         const token = tokens[idx]
+        if (!token) throw new Error('token is null')
         return renderCodeBlock(token.content)
     }
 }

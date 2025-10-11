@@ -19,7 +19,7 @@ export const markdownMermaidCompletionProvider: CompletionItemProvider = {
             })
 
             const tokens = md.parse(value, {})
-            if (tokens.length > 0) {
+            if (tokens.length > 0 && tokens[0]) {
                 if (
                     (tokens[0].type === 'fence' && mermaidLanguages.has(tokens[0].info))
                 ) {

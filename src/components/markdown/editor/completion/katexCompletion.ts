@@ -44,7 +44,7 @@ export const markdownKatexCompletionProvider: CompletionItemProvider = {
             })
 
             const tokens = md.parse(value, {})
-            if (tokens.length > 0) {
+            if (tokens.length > 0 && tokens[0]) {
                 if (
                     tokens[0].type === 'math_block' ||
                     (tokens[0].type === 'fence' && katexLanguages.has(tokens[0].info))

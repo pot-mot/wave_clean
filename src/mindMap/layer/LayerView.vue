@@ -12,7 +12,7 @@ const container = useTemplateRef<HTMLDivElement>("container")
 
 const size = ref({width: 0, height: 0})
 const resizeOb = new ResizeObserver((entries) => {
-    if (entries.length === 0) return
+    if (!entries[0]) return
 
     size.value.width = entries[0].contentRect.width
     size.value.height = entries[0].contentRect.height

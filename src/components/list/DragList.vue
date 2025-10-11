@@ -169,7 +169,7 @@ const handleDragEndByMouse = () => {
 const {handleTouchMove} = useTouchEnterLeave()
 
 const handleTouchMoveToEmitTouchEnter = (e: TouchEvent) => {
-    if (container.value) {
+    if (container.value && e.changedTouches[0]) {
         const clientXY = {x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY}
 
         const handles = container.value.querySelectorAll('.drag-list-scroll-handle')
@@ -200,7 +200,7 @@ const handleDragStartByTouch = (index: number, item: T, event: TouchEvent) => {
         touchDragStartFlag.delete(index)
     }
     setTimeout(() => {
-        if (!touchDragStartFlag.has(index)) {
+        if (!touchDragStartFlag.has(index) || !event.touches[0]) {
             document.documentElement.removeEventListener("touchmove", deleteFlag)
             document.documentElement.removeEventListener("touchend", deleteFlag)
             document.documentElement.removeEventListener("touchcancel", deleteFlag)
@@ -219,6 +219,7 @@ const handleDragStartByTouch = (index: number, item: T, event: TouchEvent) => {
 }
 
 const handleDraggingByTouch = (event: TouchEvent) => {
+    if (!event.changedTouches[0]) return
     event.preventDefault()
     handleDragMove({x: event.changedTouches[0].clientX, y: event.changedTouches[0].clientY})
 }

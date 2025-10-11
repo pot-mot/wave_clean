@@ -33,6 +33,7 @@ const lineEnterActions: onEnterAction[] = [
     {
         beforeText: /^\s*(\d+)\. (.*)$/,
         appendText: ({match, indent}) => {
+            if (!match[1] || !match[2]) return ''
             const current = parseInt(match[1], 10)
             if (taskRegex.test(match[2])) {
                 return `\n${indent}${current + 1}. [ ] `
@@ -45,6 +46,7 @@ const lineEnterActions: onEnterAction[] = [
     {
         beforeText: /^\s*([-+*]) (.*)$/,
         appendText: ({match, indent}) => {
+            if (!match[1] || !match[2]) return ''
             if (taskRegex.test(match[2])) {
                 return `\n${indent}${match[1]} [ ] `
             }

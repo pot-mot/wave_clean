@@ -166,6 +166,7 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
         revertAction: (layerId) => {
             const layerIndex = getLayerIndex(layerId)
             const layer = global.layers.splice(layerIndex, 1)[0]
+            if (layer === undefined) throw new Error(`layer [${layerId}] is undefined`)
             const data = exportMindMapData(layer.vueFlow)
             layer.vueFlow.$destroy()
 
@@ -184,7 +185,9 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
     history.registerCommand("layer:remove", {
         applyAction: (layerId) => {
             const index = getLayerIndex(layerId)
-            const {vueFlow, ...layerPart} = global.layers.splice(index, 1)[0]
+            const layer = global.layers.splice(index, 1)[0]
+            if (layer === undefined) throw new Error(`layer [${layerId}] is undefined`)
+            const {vueFlow, ...layerPart} = layer
             const data = exportMindMapData(vueFlow)
             vueFlow.$destroy()
             return {...layerPart, data, index}
@@ -270,12 +273,14 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
 
     history.registerCommand("layer:swapped", {
         applyAction: ({oldIndex, newIndex}) => {
+            if (!global.layers[oldIndex] || !global.layers[newIndex]) return {oldIndex, newIndex}
             const tmp = global.layers[oldIndex]
             global.layers[oldIndex] = global.layers[newIndex]
             global.layers[newIndex] = tmp
             return {oldIndex, newIndex}
         },
         revertAction: ({oldIndex, newIndex}) => {
+            if (!global.layers[oldIndex] || !global.layers[newIndex]) return
             const tmp = global.layers[oldIndex]
             global.layers[oldIndex] = global.layers[newIndex]
             global.layers[newIndex] = tmp

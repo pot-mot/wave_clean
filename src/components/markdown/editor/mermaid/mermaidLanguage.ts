@@ -246,7 +246,7 @@ const mermaidLanguage: IMonarchLanguage = {
         .map((entry) =>
             Object.fromEntries(
                 Object.entries(entry[1]).map((deepEntry) => [
-                    entry[0] + deepEntry[0][0].toUpperCase() + deepEntry[0].slice(1),
+                    entry[0] + deepEntry?.[0]?.[0]?.toUpperCase() + deepEntry[0].slice(1),
                     deepEntry[1],
                 ])
             )
@@ -718,7 +718,7 @@ export const mermaidCompletionProvider: CompletionItemProvider = {
                 languages.CompletionItemInsertTextRule.InsertAsSnippet,
                 documentation: 'Git Graph Options',
             },
-            ...keywords.c4Diagram.blockKeywords.map((containerType) => ({
+            ...keywords.c4Diagram?.blockKeywords.map((containerType) => ({
                 label: containerType,
                 kind: languages.CompletionItemKind.Snippet,
                 insertText: [
@@ -729,7 +729,7 @@ export const mermaidCompletionProvider: CompletionItemProvider = {
                 insertTextRules:
                 languages.CompletionItemInsertTextRule.InsertAsSnippet,
                 documentation: 'C4 Diagram ' + containerType + ' Boundary',
-            })),
+            })) ?? [],
             ...requirementDiagrams.map((requirementDiagramType) => ({
                 label: requirementDiagramType,
                 kind: languages.CompletionItemKind.Snippet,
@@ -745,7 +745,7 @@ export const mermaidCompletionProvider: CompletionItemProvider = {
                 languages.CompletionItemInsertTextRule.InsertAsSnippet,
                 documentation: requirementDiagramType
                     .split(/(?=[A-Z])/)
-                    .map((part) => part[0].toUpperCase() + part.slice(1))
+                    .map((part) => part[0]?.toUpperCase() + part.slice(1))
                     .join(' '),
             })),
             ...[

@@ -15,7 +15,8 @@ const getFoldingBlockEnd = (
     lines: string[],
     i: number,
 ): number | undefined => {
-    const line = lines[i];
+    const line = lines[i]
+    if (line === undefined) return
 
     const startReg = typeof foldingBlock.startReg === 'function'
         ? foldingBlock.startReg(line)
@@ -31,7 +32,8 @@ const getFoldingBlockEnd = (
 
     if (!endReg) return
     for (let j = i + 1; j < lines.length; j++) {
-        if (endReg.test(lines[j])) {
+        const endLine = lines[j]
+        if (endLine !== undefined && endReg.test(endLine)) {
             return j;
         }
     }
@@ -74,7 +76,9 @@ export const markdownFoldingRangeProvider: FoldingRangeProvider = {
         const lines = model.getLinesContent()
 
         for (let i = 0; i < lines.length; i++) {
-            if (imageDataUrlReg.test(lines[i])) continue
+            const line = lines[i]
+            if (line === undefined) continue
+            if (imageDataUrlReg.test(line)) continue
 
             for (const block of markdownFoldingBlocks) {
                 const result = getFoldingBlockEnd(block, lines, i)

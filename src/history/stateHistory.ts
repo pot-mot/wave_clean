@@ -62,9 +62,10 @@ export const useStateHistory = <T, StateType = Immutable<T>>(baseState: StateTyp
         eventBus.emit("beforeUndo")
 
         const beforeState = undoStack.pop()
-        if (beforeState !== undefined) {
+        const undoState = undoStack[undoStack.length - 1]
+        if (beforeState !== undefined && undoState !== undefined) {
             redoStack.push(beforeState);
-            changeState(undoStack[undoStack.length - 1])
+            changeState(undoState)
 
             eventBus.emit("undo", beforeState)
         }

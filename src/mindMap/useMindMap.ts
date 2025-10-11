@@ -142,6 +142,7 @@ const layerDataToLayers = (
         return layer
     }))
     const currentLayer = layers[currentLayerIndex]
+    if (!currentLayer) throw new Error("current layer is undefined")
 
     return {
         layers,
@@ -243,9 +244,14 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                     return
                 }
                 if (currentIndex === 0) {
-                    toggleLayer(global.layers[1].id)
-                } else {
-                    toggleLayer(global.layers[currentIndex - 1].id)
+                    if (global.layers[1]) {
+                        toggleLayer(global.layers[1].id)
+                    }
+                } else if (global.layers[currentIndex - 1]) {
+                    const previousLayer = global.layers[currentIndex - 1]
+                    if (previousLayer) {
+                        toggleLayer(previousLayer.id)
+                    }
                 }
             }
             history.executeCommand("layer:remove", layerId)
@@ -968,10 +974,12 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
             } else {
                 // 设置屏幕位置
                 paneEl.addEventListener('touchstart', (e) => {
-                    screenPosition.value = {x: e.touches[0].clientX, y: e.touches[0].clientY}
+                    if (e.touches[0]) {
+                        screenPosition.value = {x: e.touches[0].clientX, y: e.touches[0].clientY}
+                    }
                 }, {passive: true})
                 paneEl.addEventListener('touchmove', (e) => {
-                    if (e.changedTouches.length > 0) {
+                    if (e.changedTouches[0]) {
                         screenPosition.value = {x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY}
                     }
                 }, {passive: true})
@@ -995,6 +1003,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                 paneEl.addEventListener('touchstart', (e) => {
                     if (e.target !== paneEl) return
                     if (!layer.visible) return
+                    if (!e.touches[0]) return
 
                     const currentTime = new Date().getTime()
                     const currentTouchPosition = {x: e.touches[0].clientX, y: e.touches[0].clientY}
@@ -1037,7 +1046,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                     if (!vueFlowRef.value) return
                     if (e.target !== paneEl) return
                     if (!selectionRectEnable) return
-                    if (e.touches.length < 1) return
+                    if (!e.touches[0]) return
 
                     const clientRect = vueFlowRef.value.getBoundingClientRect()
                     const rectX = clientRect.x
