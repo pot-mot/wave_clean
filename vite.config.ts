@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import {defineConfig, PluginOption} from "vite";
 import vue from "@vitejs/plugin-vue";
 import vueJsx from '@vitejs/plugin-vue-jsx'
@@ -91,6 +92,10 @@ export default defineConfig(async (env) => {
             alias: {
                 '@': fileURLToPath(new URL('./src', import.meta.url))
             }
+        },
+        test: {
+            globals: false,
+            environment: 'jsdom',
         },
         build: {
             rollupOptions: {
