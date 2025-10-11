@@ -1,3 +1,4 @@
+import {describe, it, expect} from 'vitest'
 import {useStateHistory} from "@/history/stateHistory.ts";
 
 describe('useStateHistory', () => {

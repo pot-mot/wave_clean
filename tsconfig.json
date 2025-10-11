@@ -43,8 +43,5 @@
     {
       "path": "./tsconfig.node.json"
     }
-  ],
-  "types": [
-    "jest"
   ]
 }

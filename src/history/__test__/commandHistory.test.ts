@@ -1,3 +1,4 @@
+import {describe, beforeEach, it, expect, vitest} from 'vitest'
 import {BatchCommandData, CommandDefinition, CommandHistory, useCommandHistory} from '@/history/commandHistory.ts';
 
 describe('useCommandHistory', () => {
@@ -13,8 +14,8 @@ describe('useCommandHistory', () => {
 
     describe('registerCommand', () => {
         it('registers a command with apply and revert actions', () => {
-            const applyMock = jest.fn();
-            const revertMock = jest.fn();
+            const applyMock = vitest.fn();
+            const revertMock = vitest.fn();
             history.registerCommand('testCommand', {
                 applyAction: applyMock,
                 revertAction: revertMock,
@@ -27,8 +28,8 @@ describe('useCommandHistory', () => {
 
     describe('executeCommand', () => {
         it('executes command and pushes to undo stack', () => {
-            const applyMock = jest.fn();
-            const revertMock = jest.fn();
+            const applyMock = vitest.fn();
+            const revertMock = vitest.fn();
             history.registerCommand('testCommand', {
                 applyAction: applyMock,
                 revertAction: revertMock,
@@ -43,8 +44,8 @@ describe('useCommandHistory', () => {
 
     describe('undo and redo', () => {
         it('undoes command and moves to redo stack', () => {
-            const applyMock = jest.fn();
-            const revertMock = jest.fn();
+            const applyMock = vitest.fn();
+            const revertMock = vitest.fn();
             history.registerCommand('testCommand', {
                 applyAction: applyMock,
                 revertAction: revertMock,
@@ -65,8 +66,8 @@ describe('useCommandHistory', () => {
 
     describe('batch operations', () => {
         it('executes commands in batch', () => {
-            const applyMock = jest.fn();
-            const revertMock = jest.fn();
+            const applyMock = vitest.fn();
+            const revertMock = vitest.fn();
             history.registerCommand('testCommand', {
                 applyAction: applyMock,
                 revertAction: revertMock,
@@ -99,8 +100,8 @@ describe('useCommandHistory', () => {
 
     describe('nested batches', () => {
         it('handles nested batch operations', () => {
-            const applyMock = jest.fn();
-            const revertMock = jest.fn();
+            const applyMock = vitest.fn();
+            const revertMock = vitest.fn();
             history.registerCommand('testCommand', {
                 applyAction: applyMock,
                 revertAction: revertMock,
