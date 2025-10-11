@@ -1,5 +1,5 @@
 import {describe, it, expect} from 'vitest'
-import {useStateHistory} from "@/history/stateHistory.ts";
+import {useStateHistory} from "@/history/stateHistory";
 
 describe('useStateHistory', () => {
     it('test updater', () => {
