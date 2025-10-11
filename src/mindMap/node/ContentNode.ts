@@ -1,4 +1,4 @@
-import {type GraphNode, type Position} from "@vue-flow/core";
+import {type GraphNode, Position} from "@vue-flow/core";
 import type {JSONSchemaType} from "ajv/lib/types/json-schema.ts";
 import {createSchemaValidator} from "@/utils/type/typeGuard.ts";
 
