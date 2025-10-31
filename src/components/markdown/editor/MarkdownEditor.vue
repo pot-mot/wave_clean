@@ -28,6 +28,7 @@ import "monaco-touch-selection/dist/style.css"
 import "@/components/markdown/editor/touchSelection/touch-selection-style-overwrite.css"
 type IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
 import {getTouchClipboard} from "@/components/markdown/editor/touchSelection/touchClipboard.ts";
+import {checkElementParent, judgeTarget} from "@/utils/event/judgeEventTarget.ts";
 
 const modelValue = defineModel<string>({
     required: true
@@ -168,11 +169,38 @@ defineExpose({
     elementRef,
     editorRef,
 })
+
+const protectFoldingTouch = (e: TouchEvent) => {
+    if (judgeTarget(e, (el) =>
+        el.classList.contains("codicon-folding-expanded") ||
+        el.classList.contains("codicon-folding-collapsed")
+    )) {
+        e.preventDefault()
+        e.stopPropagation()
+        e.stopImmediatePropagation();
+
+        const touches = e.touches.length > 0 ? e.touches : e.changedTouches
+        if (!touches[0]) return
+
+        const touch = touches[0]
+        const simulatedMouseEvent = new MouseEvent("mousedown", {
+            bubbles: true,
+            cancelable: true,
+            clientX: touch.clientX,
+            clientY: touch.clientY,
+            screenX: touch.screenX,
+            screenY: touch.screenY,
+        });
+
+        (e.target as HTMLElement).dispatchEvent(simulatedMouseEvent)
+    }
+}
 </script>
 
 <template>
     <div
         class="markdown-editor"
         ref="elementRef"
+        @touchstart="protectFoldingTouch"
     />
 </template>
