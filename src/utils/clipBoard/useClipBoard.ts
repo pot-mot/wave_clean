@@ -4,6 +4,7 @@ import {type LazyData, lazyDataParse} from "@/utils/type/lazyDataParse.ts";
 import {noTauriInvokeSubstitution} from "@/utils/error/noTauriInvokeSubstitution.ts";
 import {tauriImageToBlob} from "@/utils/image/tauriImageToBlob.ts";
 import {readText as polyfillReadText, writeText as polyfillWriteText, read as polyfillRead} from "clipboard-polyfill"
+import {platform} from '@tauri-apps/plugin-os';
 
 export type ClipBoardTarget<INPUT, OUTPUT> = {
     importData: (data: INPUT) => void | Promise<void>,
@@ -40,6 +41,9 @@ const IMAGE_MIME_REGEX = /^image\/\w+/;
 export const readClipBoardImageBlob = async (): Promise<Blob[] | undefined> => {
     return await noTauriInvokeSubstitution(
         async () => {
+            const currentPlatform = platform()
+            if (currentPlatform !== "windows" && currentPlatform !== "macos") return []
+
             const clipboardImage = await readImage()
             const blob = await tauriImageToBlob(clipboardImage)
             await clipboardImage.close()
