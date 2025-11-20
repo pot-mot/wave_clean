@@ -16,6 +16,7 @@ export const getTouchClipboard = (editor: ICodeEditor, element: MarkdownEditorEl
             return true
         } catch (e) {
             sendMessage(`copy fail: ${e}`, {type: 'warning'})
+            console.warn(e)
             return false
         }
     }
@@ -31,6 +32,7 @@ export const getTouchClipboard = (editor: ICodeEditor, element: MarkdownEditorEl
             return true
         } catch (e) {
             sendMessage(`cut fail: ${e}`, {type: 'warning'})
+            console.warn(e)
             return false
         }
     }
@@ -68,6 +70,7 @@ export const getTouchClipboard = (editor: ICodeEditor, element: MarkdownEditorEl
             return true
         } catch (e) {
             sendMessage(`paste fail: ${e}`, {type: 'warning'})
+            console.warn(e)
             return false
         }
     }

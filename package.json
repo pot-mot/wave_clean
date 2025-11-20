@@ -44,7 +44,7 @@
     "mermaid": "^11.9.0",
     "mitt": "^3.0.1",
     "monaco-editor": "^0.52.2",
-    "monaco-touch-selection": "^1.0.2",
+    "monaco-touch-selection": "^1.1.1",
     "prismjs": "^1.30.0",
     "uuid": "^11.1.0",
     "v-viewer": "^3.0.22",

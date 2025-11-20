@@ -2,13 +2,9 @@ export const noTauriInvokeSubstitution = async <R> (
     tauriAction: () => (R | Promise<R>),
     substituteAction: () => (R | Promise<R>),
 ): Promise<R> => {
-    try {
+    if (!import.meta.env.VITE_TARGET_RUNTIME || import.meta.env.VITE_TARGET_RUNTIME === 'tauri') {
         return await tauriAction()
-    } catch (e) {
-        if (e instanceof Error && e.message === "Cannot read properties of undefined (reading 'invoke')") {
-            return await substituteAction()
-        } else {
-            throw e
-        }
+    } else {
+        return await substituteAction()
     }
 }
