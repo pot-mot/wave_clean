@@ -54,6 +54,7 @@ import {
 } from "@/mindMap/layer/MindMapLayer.ts";
 import {type ContentNodeData, ContentType_DEFAULT, NodeType_CONTENT} from "@/mindMap/node/ContentNode.ts";
 import {type ContentEdgeData, EdgeType_CONTENT} from "@/mindMap/edge/ContentEdge.ts";
+import {translate} from "@/store/i18nStore.ts";
 
 // 鼠标默认行为
 type MouseAction = "panDrag" | "selectionRect"
@@ -893,7 +894,10 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
 
                 paneEl.addEventListener('mousedown', (e) => {
                     if (e.target !== paneEl) return
-                    if (!layer.visible) return
+                    if (!layer.visible) {
+                        sendMessage(translate("layer_is_invisible"))
+                        return
+                    }
 
                     const currentTime = new Date().getTime()
                     const currentMousePosition = {x: e.clientX, y: e.clientY}
@@ -1038,7 +1042,10 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
 
                 paneEl.addEventListener('touchstart', (e) => {
                     if (e.target !== paneEl) return
-                    if (!layer.visible) return
+                    if (!layer.visible) {
+                        sendMessage(translate("layer_is_invisible"))
+                        return
+                    }
                     if (!e.touches[0]) return
 
                     const currentTime = new Date().getTime()

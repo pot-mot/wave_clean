@@ -16,6 +16,8 @@ export type MainLocale = {
     lock: string
     unlock: string
 
+    layer_is_invisible: string
+
     MESSAGE_delete_confirm: (deleteTarget: string) => string
 }
 

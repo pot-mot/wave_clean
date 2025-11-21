@@ -18,5 +18,7 @@ export const localeZhCn: MainLocale = {
     lock: "锁定",
     unlock: "解锁",
 
+    layer_is_invisible: "当前图层不可见",
+
     MESSAGE_delete_confirm: (deleteTarget: string) => `确定要删除 ${deleteTarget} 吗？`
 }

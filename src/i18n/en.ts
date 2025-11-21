@@ -18,5 +18,7 @@ export const localeEn: MainLocale = {
     lock: "Lock",
     unlock: "Unlock",
 
+    layer_is_invisible: "Current Layer is Invisible",
+
     MESSAGE_delete_confirm: (deleteTarget: string) => `Are you sure to delete ${deleteTarget}?`
 }
