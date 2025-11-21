@@ -12,6 +12,8 @@ import {type MindMapLayer} from "@/mindMap/layer/MindMapLayer.ts";
 import IconLock from "@/components/icons/IconLock.vue";
 import IconLockOpen from "@/components/icons/IconLockOpen.vue";
 import IconLayerMerge from "@/components/icons/IconLayerMerge.vue";
+import IconOnion from "@/components/icons/IconOnion.vue";
+import {useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
 
 const {
     layers,
@@ -26,6 +28,10 @@ const {
     swapLayer,
     dragLayer,
 } = useMindMap()
+
+const {
+    meta
+} = useMindMapMetaStore()
 
 const toggleLayerVisible = (layer: MindMapLayer) => {
     changeLayerVisible(layer.id, !layer.visible)
@@ -65,6 +71,11 @@ const handleDrag = (a: number, b: number) => {
 const handleSwap = (a: number, b: number) => {
     swapLayer(reverseIndex(a), reverseIndex(b))
 }
+
+
+const toggleOnion = () => {
+    meta.value.onionEnabled = !meta.value.onionEnabled
+}
 </script>
 
 <template>
@@ -72,6 +83,9 @@ const handleSwap = (a: number, b: number) => {
         <div class="layer-menu-header">
             <button @click="addLayer" class="layer-add-button">
                 <IconAdd/>
+            </button>
+            <button @click="toggleOnion" class="onion-toggle-button" :class="{enabled: meta.onionEnabled}">
+                <IconOnion/>
             </button>
         </div>
 
@@ -164,6 +178,7 @@ const handleSwap = (a: number, b: number) => {
 
 .layer-menu-header {
     height: 2rem;
+    position: relative;
 }
 
 .layer-add-button {
@@ -265,5 +280,24 @@ const handleSwap = (a: number, b: number) => {
 
 .layer-menu-item-options button:hover {
     background-color: var(--background-color-hover);
+}
+
+.onion-toggle-button {
+    position: absolute;
+    top: 0.2rem;
+    right: 0.2rem;
+    --icon-size: 1.2rem;
+    cursor: pointer;
+    padding: 0.2rem;
+    border-radius: 0.25rem;
+    border: none;
+}
+
+.onion-toggle-button:hover {
+    background-color: var(--background-color-hover);
+}
+
+.onion-toggle-button.enabled {
+    --icon-color: var(--primary-color);
 }
 </style>

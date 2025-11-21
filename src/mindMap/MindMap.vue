@@ -76,9 +76,10 @@ const handleKeyDown = async (e: KeyboardEvent) => {
         <MindMapBackground :viewport="currentLayer.vueFlow.viewport.value"/>
 
         <MindMapLayer
-            v-for="layer in layers"
+            v-for="(layer, index) in layers"
             :key="layer.id"
             :layer="layer"
+            :index="index"
         />
 
         <MindMapSelectionRect :rect="selectionRect"/>

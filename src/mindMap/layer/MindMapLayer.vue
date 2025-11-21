@@ -5,14 +5,31 @@ import ContentEdge from "@/mindMap/edge/ContentEdge.vue";
 import {useMindMap} from "@/mindMap/useMindMap.ts";
 import {computed} from "vue";
 import {type MindMapLayer} from "@/mindMap/layer/MindMapLayer.ts";
+import {useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
 
 const props = defineProps<{
     layer: MindMapLayer,
+    index: number,
 }>()
 
-const {currentLayer, initLayer} = useMindMap()
+const {meta} = useMindMapMetaStore()
 
-const layerOpacity = computed(() => props.layer.opacity)
+const {currentLayer, initLayer, currentLayerIndex} = useMindMap()
+
+const isCurrent = computed(() => {
+    return props.layer.id === currentLayer.value.id
+})
+
+const layerOpacity = computed(() => {
+    if (isCurrent.value) {
+        return props.layer.opacity
+    } else if (meta.value.onionEnabled && currentLayerIndex.value !== -1) {
+        const diff = Math.abs(currentLayerIndex.value - props.index)
+        return props.layer.opacity * Math.max(0.1, 0.8 - (diff * 0.2))
+    } else {
+        return props.layer.opacity * 0.5
+    }
+})
 
 initLayer(props.layer)
 </script>
@@ -21,8 +38,8 @@ initLayer(props.layer)
     <VueFlow
         :id="layer.vueFlow.id"
         :class="{
-            current: layer.id === currentLayer.id,
-            notCurrent: layer.id !== currentLayer.id,
+            current: isCurrent,
+            notCurrent: !isCurrent,
             visible: layer.visible,
             invisible: !layer.visible,
         }"
@@ -65,12 +82,8 @@ initLayer(props.layer)
     opacity: 0;
 }
 
-.vue-flow.current.visible {
-    opacity: calc(1 * v-bind(layerOpacity));
-}
-
-.vue-flow.notCurrent.visible {
-    opacity: calc(0.6 * v-bind(layerOpacity));
+.vue-flow.visible {
+    opacity: v-bind(layerOpacity);
 }
 
 :deep(.vue-flow__pane.draggable) {

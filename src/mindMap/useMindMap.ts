@@ -181,6 +181,9 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
             focus()
         }
     }
+    const currentLayerIndex = computed<number>(() => {
+        return global.layers.findIndex(layer => layer.id === global.currentLayer.value.id)
+    })
 
     const screenPosition = ref<XYPosition>({x: 0, y: 0})
 
@@ -1201,6 +1204,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
     return {
         layers: global.layers,
         currentLayer: global.currentLayer,
+        currentLayerIndex,
         initLayer,
 
         addLayer,
