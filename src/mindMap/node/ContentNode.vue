@@ -37,6 +37,7 @@ import IconFullScreen from "@/components/icons/IconFullScreen.vue";
 const {meta} = useMindMapMetaStore()
 
 const {
+    currentLayer,
     updateNodeData,
     isSelectionPlural,
     canMultiSelect,
@@ -311,8 +312,8 @@ const onHandleMouseDown = (e: MouseEvent) => {
 }
 
 // 连接点显示
-const handleVisibility = computed<boolean>(() => {
-    return (isFocus.value || isConnecting.value) && !props.layer.lock
+const isHandleVisible = computed<boolean>(() => {
+    return (isFocus.value || isConnecting.value) && !props.layer.lock && props.layer.id === currentLayer.value.id
 })
 
 // 通过按钮的复制和点击粘贴
@@ -522,7 +523,7 @@ const executeDelete = () => {
                 :id="handle"
                 :position="handle"
                 @mousedown="onHandleMouseDown"
-                :class="{show: handleVisibility}"
+                :class="{visible: isHandleVisible}"
             />
         </div>
 
@@ -592,7 +593,7 @@ const executeDelete = () => {
     overflow: visible;
 }
 
-:deep(.vue-flow__handle).show::before {
+:deep(.vue-flow__handle).visible::before {
     content: '';
     position: absolute;
     top: 50%;
@@ -608,11 +609,11 @@ const executeDelete = () => {
     border-radius: 100%;
 }
 
-:deep(.vue-flow__handle.mousedown).show::before {
+:deep(.vue-flow__handle.mousedown).visible::before {
     background: var(--primary-color);
 }
 
-:deep(.vue-flow__handle.connecting).show::before {
+:deep(.vue-flow__handle.connecting).visible::before {
     background: var(--primary-color);
 }
 
