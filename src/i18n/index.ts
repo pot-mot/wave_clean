@@ -1,17 +1,20 @@
 export type MainLocale = {
-    BUTTON_copy: string
-    BUTTON_cut: string
-    BUTTON_paste: string
+    copy: string
+    cut: string
+    paste: string
 
-    BUTTON_edit: string
-    BUTTON_submit: string
-    BUTTON_delete: string
-    BUTTON_clear: string
-    BUTTON_save: string
-    BUTTON_cancel: string
-    BUTTON_load: string
-    BUTTON_export: string
-    BUTTON_test: string
+    edit: string
+    submit: string
+    delete: string
+    clear: string
+    save: string
+    cancel: string
+    load: string
+    export: string
+    test: string
+    merge_down: string
+    lock: string
+    unlock: string
 
     MESSAGE_delete_confirm: (deleteTarget: string) => string
 }

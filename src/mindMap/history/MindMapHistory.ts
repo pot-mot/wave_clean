@@ -11,9 +11,14 @@ import {exportMindMapData, type MindMapExportData} from "@/mindMap/export/export
 import {prepareImportIntoMindMap} from "@/mindMap/import/import.ts";
 import {getRaw} from "@/utils/json/getRaw.ts";
 import {getKeys} from "@/utils/type/typeGuard.ts";
-import {type MindMapLayer, type MindMapLayerDiffData, type RawMindMapLayer} from "@/mindMap/layer/MindMapLayer.ts";
+import {
+    type MindMapLayer,
+    type MindMapLayerDiffData,
+    type RawMindMapLayer
+} from "@/mindMap/layer/MindMapLayer.ts";
 import {type ContentNode, type ContentNodeData, validateContentNode} from "@/mindMap/node/ContentNode.ts";
 import {type ContentEdge, type ContentEdgeData, validateContentEdge} from "@/mindMap/edge/ContentEdge.ts";
+import {unimplementedClipBoard} from "@/utils/clipBoard/useClipBoard.ts";
 
 export type MindMapHistoryCommands = {
     "layer:add": CommandDefinition<
@@ -38,6 +43,19 @@ export type MindMapHistoryCommands = {
     }, {
         layerId: string,
         oldData: Partial<MindMapLayerDiffData>,
+    }>,
+    "layer:merge": CommandDefinition<{
+        baseLayerIndex: number,
+        mergedLayerIndex: number,
+    }, {
+        baseLayerIndex: number,
+        baseLayerOldData: MindMapExportData,
+        mergedNodes: ContentNode[],
+        mergedEdges: ContentEdge[],
+
+        mergedLayerIndex: number,
+        mergedLayerInfo: Omit<RawMindMapLayer, 'vueFlow' | 'copy' | 'paste' | 'cut'>,
+        mergedLayerOldData: MindMapExportData,
     }>,
     "layer:toggle": CommandDefinition<string>,
     "layer:dragged": CommandDefinition<{
@@ -202,6 +220,82 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
             vueFlow.addNodes(newNodes)
             vueFlow.addEdges(newEdges)
             global.layers.splice(index, 0, layer)
+        }
+    })
+
+    history.registerCommand("layer:merge", {
+        applyAction: ({baseLayerIndex, mergedLayerIndex}): {
+            baseLayerIndex: number,
+            baseLayerOldData: MindMapExportData,
+            mergedNodes: ContentNode[],
+            mergedEdges: ContentEdge[],
+
+            mergedLayerIndex: number,
+            mergedLayerInfo: Omit<RawMindMapLayer, 'vueFlow' | 'copy' | 'paste' | 'cut'>,
+            mergedLayerOldData: MindMapExportData,
+        } => {
+            const baseLayer = global.layers[baseLayerIndex]
+            if (baseLayer === undefined) throw new Error(`layers doesn't have index [${baseLayerIndex}]`)
+            const mergedLayer = global.layers[mergedLayerIndex]
+            if (mergedLayer === undefined) throw new Error(`layers doesn't have index [${mergedLayerIndex}]`)
+
+            if (baseLayer.id === mergedLayer.id || baseLayer === mergedLayer) {
+                throw new Error("baseLayer and mergedLayer cannot be the same")
+            }
+            global.layers.splice(mergedLayerIndex, 1)
+
+            // 导入新图层数据
+            const baseLayerOldData = exportMindMapData(baseLayer.vueFlow)
+            const mergedLayerOldData = exportMindMapData(mergedLayer.vueFlow)
+            const {newNodes, newEdges} = prepareImportIntoMindMap(baseLayer.vueFlow, mergedLayerOldData)
+            baseLayer.vueFlow.addNodes(newNodes)
+            baseLayer.vueFlow.addEdges(newEdges)
+
+            mergedLayer.vueFlow.$destroy()
+
+            return {
+                baseLayerIndex,
+                baseLayerOldData,
+                mergedNodes: newNodes,
+                mergedEdges: newEdges,
+                mergedLayerIndex,
+                mergedLayerInfo: {
+                    id: mergedLayer.id,
+                    name: mergedLayer.name,
+                    opacity: mergedLayer.opacity,
+                    visible: mergedLayer.visible,
+                    lock: mergedLayer.lock,
+                },
+                mergedLayerOldData,
+            }
+        },
+        revertAction: (
+            {
+                baseLayerIndex,
+                mergedNodes,
+                mergedEdges,
+
+                mergedLayerIndex,
+                mergedLayerInfo,
+                mergedLayerOldData,
+            }
+        ) => {
+            const baseLayer = global.layers[baseLayerIndex]
+            if (baseLayer === undefined) throw new Error(`layers doesn't have index [${baseLayerIndex}]`)
+
+            const vueFlow = useVueFlow(createVueFlowId())
+            const layer: MindMapLayer = shallowReactive({
+                ...mergedLayerInfo,
+                vueFlow,
+                ...unimplementedClipBoard,
+            })
+            const {newNodes, newEdges} = prepareImportIntoMindMap(vueFlow, mergedLayerOldData)
+            vueFlow.addNodes(newNodes)
+            vueFlow.addEdges(newEdges)
+            global.layers.splice(mergedLayerIndex, 0, layer)
+
+            baseLayer.vueFlow.removeNodes(mergedNodes.map(it => it.id))
+            baseLayer.vueFlow.removeEdges(mergedEdges.map(it => it.id))
         }
     })
 

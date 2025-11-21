@@ -11,12 +11,14 @@ import CollapseDetail from "@/components/collapse/CollapseDetail.vue";
 import {type MindMapLayer} from "@/mindMap/layer/MindMapLayer.ts";
 import IconLock from "@/components/icons/IconLock.vue";
 import IconLockOpen from "@/components/icons/IconLockOpen.vue";
+import IconLayerMerge from "@/components/icons/IconLayerMerge.vue";
 
 const {
     layers,
     currentLayer,
     addLayer,
     removeLayer,
+    mergeLayer,
     toggleLayer,
     changeLayerVisible,
     changeLayerLock,
@@ -81,7 +83,7 @@ const handleSwap = (a: number, b: number) => {
             @swap="handleSwap"
             @remove="it => removeLayer(it.id)"
         >
-            <template #default="{item: layer}">
+            <template #default="{item: layer, index}">
                 <CollapseDetail>
                     <template #head>
                         <div class="layer-menu-item" @click="toggleLayer(layer.id)">
@@ -106,11 +108,23 @@ const handleSwap = (a: number, b: number) => {
                     <template #body>
                         <div class="layer-menu-item-options">
                             <button
+                                class="layer-menu-item-merge"
+                                v-if="layers.length > 1 && (layers.length - 1 - index) !== 0"
+                                @click.stop="mergeLayer(layers.length - 1 - index)"
+                            >
+                                <IconLayerMerge/>
+                            </button>
+
+                            <button
                                 class="layer-menu-item-lock"
                                 @click.stop="toggleLayerLock(layer)"
                             >
-                                <IconLock v-if="layer.lock"/>
-                                <IconLockOpen v-else/>
+                                <template  v-if="layer.lock">
+                                    <IconLock/>
+                                </template>
+                                <template v-else>
+                                    <IconLockOpen/>
+                                </template>
                             </button>
 
                             <button
@@ -239,7 +253,8 @@ const handleSwap = (a: number, b: number) => {
 
 .layer-menu-item-options button {
     height: 1.5rem;
-    width: 1.5rem;
+    min-width: 1.5rem;
+    padding: 0 0.25rem;
 }
 
 .layer-menu-item-options button.disabled {

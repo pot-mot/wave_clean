@@ -1,19 +1,22 @@
 import {type MainLocale} from "@/i18n/index.ts";
 
 export const localeZhCn: MainLocale = {
-    BUTTON_copy: "复制",
-    BUTTON_cut: "剪切",
-    BUTTON_paste: "粘贴",
+    copy: "复制",
+    cut: "剪切",
+    paste: "粘贴",
 
-    BUTTON_edit: "编辑",
-    BUTTON_submit: "提交",
-    BUTTON_delete: "删除",
-    BUTTON_clear: "清理",
-    BUTTON_save: "保存",
-    BUTTON_cancel: "取消",
-    BUTTON_load: "导入",
-    BUTTON_export: "导出",
-    BUTTON_test: "测试",
+    edit: "编辑",
+    submit: "提交",
+    delete: "删除",
+    clear: "清理",
+    save: "保存",
+    cancel: "取消",
+    load: "导入",
+    export: "导出",
+    test: "测试",
+    merge_down: "向下合并",
+    lock: "锁定",
+    unlock: "解锁",
 
     MESSAGE_delete_confirm: (deleteTarget: string) => `确定要删除 ${deleteTarget} 吗？`
 }

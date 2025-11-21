@@ -258,6 +258,42 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         })
     }
 
+    const mergeLayer = (index: number) => {
+        if (index <= 0 || index >= global.layers.length || global.layers.length <= 1) return
+
+        const mergedLayerId = global.layers[index]?.id
+        if (mergedLayerId === undefined) {
+            console.error(`layer ${mergedLayerId} not exist`)
+            return
+        }
+        const mergedLayer = global.layers.find(layer => layer.id === mergedLayerId)
+        if (mergedLayer === undefined) {
+            console.error(`layer ${mergedLayerId} not exist`)
+            return
+        }
+
+        const baseLayerId = global.layers[index - 1]?.id
+        if (baseLayerId === undefined) {
+            console.error(`layer ${baseLayerId} not exist`)
+            return
+        }
+        const baseLayer = global.layers.find(layer => layer.id === baseLayerId)
+        if (baseLayer === undefined) {
+            console.error(`layer ${baseLayerId} not exist`)
+            return
+        }
+
+        history.executeBatch(Symbol("layer:merge"), () => {
+            if (currentLayerId.value === mergedLayerId) {
+                history.executeCommand("layer:toggle", baseLayerId)
+            }
+            history.executeCommand("layer:merge", {
+                mergedLayerIndex: index,
+                baseLayerIndex: index - 1,
+            })
+        })
+    }
+
     const toggleLayer = (layerId: string) => {
         if (layerId === global.currentLayer.value.id) return
         const layer = global.layers.find(layer => layer.id === layerId)
@@ -1162,6 +1198,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
 
         addLayer,
         removeLayer,
+        mergeLayer,
         toggleLayer,
         changeLayerVisible,
         changeLayerLock,
