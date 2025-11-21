@@ -8,10 +8,13 @@ import {useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
 import {computed, ref} from "vue";
 import {useDeviceStore} from "@/store/deviceStore.ts";
 import ColorInput from "@/components/color/ColorInput.vue";
+import {type LanguageType, translate, useI18nStore} from "@/store/i18nStore.ts";
 
 const metaStore = useMindMapMetaStore()
 
 const themeStore = useThemeStore()
+
+const {language, setLanguage} = useI18nStore()
 
 const {isTouchDevice} = useDeviceStore()
 
@@ -53,12 +56,20 @@ const subMenuType = ref<SubMenuType>('file')
 
         <div class="theme-menu">
             <span>
-                primary color
+                {{ translate("primary_color") }}
                 <ColorInput v-model="primaryColor"/>
             </span>
 
             <span>
-                theme
+                {{ translate("language") }}
+                <select :value="language" @change="(e) => setLanguage((e.target as HTMLSelectElement).value as LanguageType)">
+                    <option value="zh-cn">{{ translate('language_zh_cn') }}</option>
+                    <option value="en">{{ translate('language_en') }}</option>
+                </select>
+            </span>
+
+            <span>
+                {{ translate("theme") }}
                 <button @click="themeStore.toggleTheme()">
                     <IconLight v-if="themeStore.theme.value === 'light'"/>
                     <IconDark v-else-if="themeStore.theme.value === 'dark'"/>

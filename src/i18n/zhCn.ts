@@ -18,6 +18,12 @@ export const localeZhCn: MainLocale = {
     lock: "锁定",
     unlock: "解锁",
 
+    primary_color: "颜色",
+    language: "语言",
+    language_zh_cn: "中文",
+    language_en: "English",
+    theme: "主题",
+
     layer_is_invisible: "当前图层不可见",
 
     MESSAGE_delete_confirm: (deleteTarget: string) => `确定要删除 ${deleteTarget} 吗？`

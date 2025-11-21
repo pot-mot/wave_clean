@@ -18,6 +18,12 @@ export const localeEn: MainLocale = {
     lock: "Lock",
     unlock: "Unlock",
 
+    primary_color: "color",
+    language: "lang",
+    language_zh_cn: "中文",
+    language_en: "English",
+    theme: "theme",
+
     layer_is_invisible: "Current Layer is Invisible",
 
     MESSAGE_delete_confirm: (deleteTarget: string) => `Are you sure to delete ${deleteTarget}?`

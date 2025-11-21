@@ -13,6 +13,7 @@ import {v7 as uuid} from "uuid";
 import {createStore} from "@/utils/store/createStore.ts";
 import {cleanMarkdownRenderCache} from "@/components/markdown/preview/markdownRender.ts";
 import {withLoading} from "@/components/loading/loadingApi.ts";
+import {type LanguageType, useI18nStore} from "@/store/i18nStore.ts";
 
 const metaFileName = '[[WAVE_CLEAN_EDIT_META]]'
 
@@ -35,7 +36,11 @@ export type Meta = {
 
     currentTheme?: Theme | undefined,
     primaryColor?: string | undefined,
+    currentLanguage?: LanguageType | undefined,
+
     quickInputs: QuickInputItem[],
+
+    onionEnabled?: boolean | undefined,
 }
 
 const Meta_JsonSchema: JSONSchemaType<Meta> = {
@@ -77,6 +82,11 @@ const Meta_JsonSchema: JSONSchemaType<Meta> = {
             type: "string",
             nullable: true,
         },
+        currentLanguage: {
+            type: "string",
+            enum: ["en", "zh-cn"],
+            nullable: true,
+        },
         quickInputs: {
             type: "array",
             items: {
@@ -88,6 +98,10 @@ const Meta_JsonSchema: JSONSchemaType<Meta> = {
                 },
                 required: ["label", "value"]
             }
+        },
+        onionEnabled: {
+            type: "boolean",
+            nullable: true,
         }
     },
     required: ["mindMaps", "quickInputs"],
@@ -135,6 +149,11 @@ const PartialMeta_JsonSchema: JSONSchemaType<Partial<Meta>> = {
             type: "string",
             nullable: true,
         },
+        currentLanguage: {
+            type: "string",
+            enum: ["en", "zh-cn"],
+            nullable: true,
+        },
         quickInputs: {
             type: "array",
             items: {
@@ -146,6 +165,10 @@ const PartialMeta_JsonSchema: JSONSchemaType<Partial<Meta>> = {
                 },
                 required: ["label", "value"]
             },
+            nullable: true,
+        },
+        onionEnabled: {
+            type: "boolean",
             nullable: true,
         }
     },
@@ -199,6 +222,12 @@ export const useMindMapMetaStore = createStore(() => {
     watch(() => themeStore.primaryColor.value, (color) => {
         if (color !== meta.value.primaryColor) {
             meta.value.primaryColor = color
+        }
+    }, {immediate: true})
+    const i18nStore = useI18nStore()
+    watch(() => i18nStore.language.value, (language) => {
+        if (language !== meta.value.currentLanguage) {
+            meta.value.currentLanguage = language
         }
     }, {immediate: true})
 
@@ -324,6 +353,9 @@ export const useMindMapMetaStore = createStore(() => {
             }
             if (meta.value.currentTheme) {
                 themeStore.setTheme(meta.value.currentTheme)
+            }
+            if (meta.value.currentLanguage) {
+                i18nStore.setLanguage(meta.value.currentLanguage)
             }
             if (meta.value.currentKey && meta.value.mindMaps.findIndex(it => it.key === meta.value.currentKey) !== -1) {
                 await toggle(meta.value.currentKey)
