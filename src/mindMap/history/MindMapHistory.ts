@@ -283,19 +283,24 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
             const baseLayer = global.layers[baseLayerIndex]
             if (baseLayer === undefined) throw new Error(`layers doesn't have index [${baseLayerIndex}]`)
 
+            baseLayer.vueFlow.removeNodes(mergedNodes.map(it => it.id))
+            baseLayer.vueFlow.removeEdges(mergedEdges.map(it => it.id))
+
             const vueFlow = useVueFlow(createVueFlowId())
             const layer: MindMapLayer = shallowReactive({
+                ...unimplementedClipBoard,
                 ...mergedLayerInfo,
                 vueFlow,
-                ...unimplementedClipBoard,
             })
             const {newNodes, newEdges} = prepareImportIntoMindMap(vueFlow, mergedLayerOldData)
             vueFlow.addNodes(newNodes)
             vueFlow.addEdges(newEdges)
             global.layers.splice(mergedLayerIndex, 0, layer)
-
-            baseLayer.vueFlow.removeNodes(mergedNodes.map(it => it.id))
-            baseLayer.vueFlow.removeEdges(mergedEdges.map(it => it.id))
+            vueFlow.viewport.value = {
+                x: baseLayer.vueFlow.viewport.value.x,
+                y: baseLayer.vueFlow.viewport.value.y,
+                zoom: baseLayer.vueFlow.viewport.value.zoom,
+            }
         }
     })
 
