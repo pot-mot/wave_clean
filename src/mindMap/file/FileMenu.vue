@@ -196,7 +196,7 @@ const handleRename = (key: string, e: Event) => {
 
 .file-name:focus {
     background-color: var(--background-color);
-    padding: 0 0.5rem;
+    padding: 0 0.25rem;
     border: var(--border);
     outline: none;
     cursor: text;

@@ -265,7 +265,7 @@ const toggleOnion = () => {
     background-color: var(--background-color);
     color: var(--text-color);
     border: var(--border);
-    padding: 0 0.5rem;
+    padding: 0 0.25rem;
     outline: none;
     cursor: text;
 }
