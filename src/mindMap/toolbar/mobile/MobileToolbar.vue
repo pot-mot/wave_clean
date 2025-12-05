@@ -386,7 +386,6 @@ watch(
 .toolbar.quick-input {
     width: 100%;
     padding-right: 0.5rem;
-    line-height: 2.5rem;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.5s ease;
@@ -398,7 +397,7 @@ watch(
     border-top: var(--border);
     border-color: var(--background-color-hover);
 
-    overflow-x: hidden;
+    overflow: hidden;
 }
 
 .toolbar.quick-input.open {

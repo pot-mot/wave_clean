@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {onMounted, useTemplateRef, watch} from 'vue'
+import {nextTick, onMounted, useTemplateRef, watch} from 'vue'
 import IconCaretDown from "@/components/icons/IconCaretDown.vue";
 
 const isOpen = defineModel<boolean>({required: false, default: false})
@@ -16,34 +16,24 @@ const props = withDefaults(defineProps<{
 
 const bodyRef = useTemplateRef("bodyRef")
 
-onMounted(() => {
+const handleOpenChange = () => {
     if (bodyRef.value) {
         bodyRef.value.style.transition = `max-height ${props.transitionDuration}ms ease-out`
         if (isOpen.value) {
             bodyRef.value.style.maxHeight = `min(${bodyRef.value.scrollHeight}px, ${props.maxHeight})`
-            setTimeout(() => {
-                if (bodyRef.value) bodyRef.value.style.maxHeight = ''
-            }, props.transitionDuration)
         } else {
             bodyRef.value.style.maxHeight = props.minHeight
         }
     }
+}
+
+onMounted(async () => {
+    await nextTick()
+    handleOpenChange()
 })
 
 watch(() => isOpen.value, () => {
-    if (bodyRef.value) {
-        if (isOpen.value) {
-            bodyRef.value.style.maxHeight = `min(${bodyRef.value.scrollHeight}px, ${props.maxHeight})`
-            setTimeout(() => {
-                if (bodyRef.value) bodyRef.value.style.maxHeight = ''
-            }, props.transitionDuration)
-        } else {
-            bodyRef.value.style.maxHeight = `${bodyRef.value.scrollHeight}px`
-            setTimeout(() => {
-                if (bodyRef.value) bodyRef.value.style.maxHeight = props.minHeight
-            })
-        }
-    }
+    handleOpenChange()
 })
 </script>
 
