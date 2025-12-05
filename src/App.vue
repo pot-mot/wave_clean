@@ -6,6 +6,8 @@ import {initFocusTargetStore} from "@/store/focusTargetStore.ts";
 import {initMonacoMarkdownLanguage} from "@/components/markdown/editor/markdownLanguage.ts";
 import {useMarkdownImageImport} from "@/components/markdown/editor/image/markdownImageImport.ts";
 import {registerCustomCommands} from "@/components/markdown/editor/command/customCommand.ts";
+import {initMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
+import {onBeforeMount} from "vue";
 
 initDeviceStore()
 initThemeStore()
@@ -14,6 +16,10 @@ initFocusTargetStore()
 registerCustomCommands()
 initMonacoMarkdownLanguage()
 useMarkdownImageImport()
+
+onBeforeMount(async () => {
+    await initMindMapMetaStore()
+})
 </script>
 
 <template>

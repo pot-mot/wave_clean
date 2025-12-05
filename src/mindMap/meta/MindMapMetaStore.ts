@@ -209,10 +209,9 @@ export const getDefaultMeta = () => {
     }
 }
 
-export const useMindMapMetaStore = createStore(() => {
-    const meta = ref<Meta>(getDefaultMeta())
+const meta = ref<Meta>(getDefaultMeta())
 
-    const mindMapStore = useMindMap()
+export const initMindMapMetaStore = async () => {
     const themeStore = useThemeStore()
     watch(() => themeStore.theme.value, (theme) => {
         if (theme !== meta.value.currentTheme) {
@@ -235,6 +234,52 @@ export const useMindMapMetaStore = createStore(() => {
         await jsonFileOperations.set(metaFileName, JSON.stringify(meta.value))
     }, 1000), {deep: true})
 
+    await nextTick()
+
+    await withLoading("Loading Meta", async () => {
+        const isExisted = await jsonFileOperations.isExisted(metaFileName)
+        if (!isExisted) {
+            await jsonFileOperations.create(metaFileName)
+            await jsonFileOperations.set(metaFileName, JSON.stringify(meta.value))
+        }
+        const metaValueStr = await jsonFileOperations.get(metaFileName)
+
+        let metaValue: Meta | undefined
+        try {
+            metaValue = JSON.parse(metaValueStr)
+        } catch (e) {
+            await jsonFileOperations.set(metaFileName, JSON.stringify(meta.value))
+            metaValue = meta.value
+        }
+        if (validateMeta(metaValue)) {
+            meta.value = metaValue
+        } else if (validatePartialMeta(metaValue)) {
+            Object.assign(meta.value, metaValue)
+            await jsonFileOperations.set(metaFileName, JSON.stringify(meta.value))
+        } else {
+            await jsonFileOperations.set(metaFileName, JSON.stringify(meta.value))
+        }
+        if (meta.value.primaryColor) {
+            themeStore.setPrimaryColor(meta.value.primaryColor)
+        }
+        if (meta.value.currentTheme) {
+            themeStore.setTheme(meta.value.currentTheme)
+        }
+        if (meta.value.currentLanguage) {
+            i18nStore.setLanguage(meta.value.currentLanguage)
+        }
+
+        const store = useMindMapMetaStore()
+        if (meta.value.currentKey && meta.value.mindMaps.findIndex(it => it.key === meta.value.currentKey) !== -1) {
+            await store.toggle(meta.value.currentKey)
+        } else {
+            const key = await store.add(0, "default")
+            await store.toggle(key)
+        }
+    })
+}
+
+export const useMindMapMetaStore = createStore(() => {
     const add = async (index: number, name: string) => {
         return await withLoading("Create MindMap", async () => {
             const timestamp = `${new Date().getTime()}`
@@ -282,6 +327,8 @@ export const useMindMapMetaStore = createStore(() => {
         return parsedData
     }
 
+    const mindMapStore = useMindMap()
+
     const save = async (key: string | undefined = meta.value.currentKey) => {
         if (key === undefined) {
             sendMessage("Please create a new MindMap", {type: "warning"})
@@ -321,50 +368,6 @@ export const useMindMapMetaStore = createStore(() => {
     const resetQuickInput = () => {
         meta.value.quickInputs = getDefaultQuickInputs()
     }
-
-    (async () => {
-        await nextTick()
-
-        await withLoading("Loading Meta", async () => {
-            const isExisted = await jsonFileOperations.isExisted(metaFileName)
-            if (!isExisted) {
-                await jsonFileOperations.create(metaFileName)
-                await jsonFileOperations.set(metaFileName, JSON.stringify(meta.value))
-            }
-            const metaValueStr = await jsonFileOperations.get(metaFileName)
-
-            let metaValue: Meta | undefined
-            try {
-                metaValue = JSON.parse(metaValueStr)
-            } catch (e) {
-                await jsonFileOperations.set(metaFileName, JSON.stringify(meta.value))
-                metaValue = meta.value
-            }
-            if (validateMeta(metaValue)) {
-                meta.value = metaValue
-            } else if (validatePartialMeta(metaValue)) {
-                Object.assign(meta.value, metaValue)
-                await jsonFileOperations.set(metaFileName, JSON.stringify(meta.value))
-            } else {
-                await jsonFileOperations.set(metaFileName, JSON.stringify(meta.value))
-            }
-            if (meta.value.primaryColor) {
-                themeStore.setPrimaryColor(meta.value.primaryColor)
-            }
-            if (meta.value.currentTheme) {
-                themeStore.setTheme(meta.value.currentTheme)
-            }
-            if (meta.value.currentLanguage) {
-                i18nStore.setLanguage(meta.value.currentLanguage)
-            }
-            if (meta.value.currentKey && meta.value.mindMaps.findIndex(it => it.key === meta.value.currentKey) !== -1) {
-                await toggle(meta.value.currentKey)
-            } else {
-                const key = await add(0, "default")
-                await toggle(key)
-            }
-        })
-    })()
 
     return {
         meta,
