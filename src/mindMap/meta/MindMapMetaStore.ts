@@ -1,6 +1,6 @@
 import {jsonFileOperations} from "@/utils/file/JsonFileOperations.ts";
 import {computed, nextTick, ref, watch} from "vue";
-import {getDefaultMindMapData, useMindMap} from "@/mindMap/useMindMap.ts";
+import {createLayerId, getDefaultMindMapData, useMindMap} from "@/mindMap/useMindMap.ts";
 import {type MindMapData, validateMindMapData} from "@/mindMap/MindMapData.ts";
 import {jsonSortPropStringify} from "@/utils/json/jsonStringify.ts";
 import {sendMessage} from "@/components/message/messageApi.ts";
@@ -274,7 +274,9 @@ export const initMindMapMetaStore = async () => {
             await store.toggle(meta.value.currentKey)
         } else {
             const key = await store.add(0, "default")
-            await store.toggle(key)
+            if (key) {
+                await store.toggle(key)
+            }
         }
     })
 }
@@ -282,13 +284,18 @@ export const initMindMapMetaStore = async () => {
 export const useMindMapMetaStore = createStore(() => {
     const add = async (index: number, name: string) => {
         return await withLoading("Create MindMap", async () => {
-            const timestamp = `${new Date().getTime()}`
-            const key = `${name}-${uuid()}`
-            meta.value.mindMaps.splice(index, 0, {key, name, createdTime: timestamp, lastEditTime: timestamp})
-            await jsonFileOperations.create(key)
-            await jsonFileOperations.set(key, jsonSortPropStringify(getDefaultMindMapData()))
-            sendMessage("Create MindMap Success", {type: "success"})
-            return key
+            try {
+                const timestamp = `${new Date().getTime()}`
+                const key = `${name}-${uuid()}`
+                meta.value.mindMaps.splice(index, 0, {key, name, createdTime: timestamp, lastEditTime: timestamp})
+                await jsonFileOperations.create(key)
+                await jsonFileOperations.set(key, jsonSortPropStringify(getDefaultMindMapData()))
+                sendMessage(translate("create_mindMap_success"), {type: "success"})
+                return key
+            } catch (e) {
+                sendMessage(`${translate("create_mindMap_fail")}\n${e}`, {type: "error"})
+                throw e
+            }
         })
     }
 
@@ -302,26 +309,31 @@ export const useMindMapMetaStore = createStore(() => {
 
     const remove = async (key: string) => {
         await withLoading("Remove MindMap", async () => {
-            meta.value.mindMaps = meta.value.mindMaps.filter(item => item.key !== key)
-            await jsonFileOperations.remove(key)
-            sendMessage("Remove MindMap Success", {type: "success"})
+            try {
+                meta.value.mindMaps = meta.value.mindMaps.filter(item => item.key !== key)
+                await jsonFileOperations.remove(key)
+                sendMessage(translate("remove_mindMap_success"), {type: "success"})
+            } catch (e) {
+                sendMessage(`${translate("remove_mindMap_fail")}\n${e}`, {type: "error"})
+                throw e
+            }
         })
     }
 
     const get = async (key: string): Promise<MindMapData> => {
         const item = meta.value.mindMaps.find(it => it.key === key)
         if (item === undefined) {
-            sendMessage(`MindMap not existed.`, {type: "error"})
+            sendMessage(`${translate("get_mindMap_fail")}\nMindMap not existed.`, {type: "error"})
             throw new Error(`MindMap [${key}] not existed`)
         }
         const data = await jsonFileOperations.get(key)
         if (data === undefined) {
-            sendMessage(`MindMap [${item.name}] file not existed.`, {type: "error"})
+            sendMessage(`${translate("get_mindMap_fail")}\nMindMap [${item.name}] file not existed.`, {type: "error"})
             throw new Error(`MindMap [${item.name} : ${key}] file not existed`)
         }
         const parsedData = JSON.parse(data)
         if (!validateMindMapData(parsedData)) {
-            sendMessage(`MindMap [${item.name}] data illegal.`, {type: "error"})
+            sendMessage(`${translate("get_mindMap_fail")}\nMindMap [${item.name}] data illegal.`, {type: "error"})
             throw new Error(`MindMap [${item.name} : ${key}] data illegal.`)
         }
         return parsedData
@@ -336,19 +348,24 @@ export const useMindMapMetaStore = createStore(() => {
         }
 
         await withLoading("Save MindMap", async () => {
-            await jsonFileOperations.set(key, JSON.stringify(mindMapStore.getMindMapData()))
-            const matched = meta.value.mindMaps.find(it => it.key === key)
-            if (matched !== undefined) {
-                matched.lastEditTime = `${new Date().getTime()}`
-            } else {
-                meta.value.mindMaps.push({
-                    key,
-                    name: translate("untitled_mindMap"),
-                    createdTime: `${new Date().getTime()}`,
-                    lastEditTime: `${new Date().getTime()}`,
-                })
+            try {
+                await jsonFileOperations.set(key, JSON.stringify(mindMapStore.getMindMapData()))
+                const matched = meta.value.mindMaps.find(it => it.key === key)
+                if (matched !== undefined) {
+                    matched.lastEditTime = `${new Date().getTime()}`
+                } else {
+                    meta.value.mindMaps.push({
+                        key,
+                        name: translate("untitled_mindMap"),
+                        createdTime: `${new Date().getTime()}`,
+                        lastEditTime: `${new Date().getTime()}`,
+                    })
+                }
+                sendMessage(translate("save_mindMap_success"), {type: "success"})
+            } catch (e) {
+                sendMessage(`${translate("save_mindMap_fail")}\n${e}`, {type: "error"})
+                throw e
             }
-            sendMessage("Save MindMap Success", {type: "success"})
         })
     }
 
@@ -361,8 +378,30 @@ export const useMindMapMetaStore = createStore(() => {
                 await mindMapStore.set(mindMap)
                 meta.value.currentKey = key
             } else {
-                sendMessage(`Toggle MindMap Fail, \nTarget MindMap not existed.`, {type: "error"})
+                sendMessage(`${translate("toggle_mindMap_fail")}, \nTarget MindMap not existed.`, {type: "error"})
                 throw new Error(`MindMap [${key}] not existed.`)
+            }
+        })
+    }
+
+    const load = async (index: number, name: string, mindMapData: MindMapData) => {
+        return await withLoading("Load MindMap", async () => {
+            try {
+                const key = await add(index, name)
+                mindMapData.layers.forEach(layer => {
+                    if (layer.id === mindMapData.currentLayerId) {
+                        mindMapData.currentLayerId = createLayerId()
+                        layer.id = mindMapData.currentLayerId
+                    } else {
+                        layer.id = createLayerId()
+                    }
+                })
+                await jsonFileOperations.set(key, JSON.stringify(mindMapData))
+                await toggle(key)
+                sendMessage(translate("load_mindMap_success"), {type: "success"})
+            } catch (e) {
+                sendMessage(`${translate("load_mindMap_fail")}\n${e}`, {type: "error"})
+                throw e
             }
         })
     }
@@ -383,6 +422,7 @@ export const useMindMapMetaStore = createStore(() => {
         get,
         save,
         toggle,
+        load,
         currentMindMap,
         resetQuickInput,
     }

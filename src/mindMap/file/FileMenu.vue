@@ -12,6 +12,9 @@ import {translate} from "@/store/i18nStore.ts";
 import IconDownload from "@/components/icons/IconDownload.vue";
 import {exportMindMapToJson} from "@/mindMap/export/export.ts";
 import {withLoading} from "@/components/loading/loadingApi.ts";
+import IconLoad from "@/components/icons/IconLoad.vue";
+import {readJson, removeJsonSuffix} from "@/utils/file/jsonRead.ts";
+import {validateMindMapData} from "@/mindMap/MindMapData.ts";
 
 const metaStore = useMindMapMetaStore()
 
@@ -30,6 +33,18 @@ const handleAdd = () => {
     newName.value = ""
 }
 
+const handleLoad = async () => {
+    try {
+        const mindMapData = await readJson(validateMindMapData)
+        if (mindMapData !== undefined) {
+            await metaStore.load(0, removeJsonSuffix(mindMapData.name), mindMapData.data)
+        }
+    } catch (e) {
+        sendMessage(`${translate("load_mindMap_fail")}`, {type: "error"})
+        throw e
+    }
+}
+
 const handleOpen = (key: string) => {
     metaStore.toggle(key)
 }
@@ -43,8 +58,14 @@ const handleRename = (key: string, e: Event) => {
 
 const handleDownload = async (mindMap: {name: string, key: string}) => {
     await withLoading("Download MindMap", async () => {
-        const mindMapData = await metaStore.get(mindMap.key)
-        await exportMindMapToJson(mindMap.name, mindMapData)
+        try {
+            const mindMapData = await metaStore.get(mindMap.key)
+            const savePath = await exportMindMapToJson(mindMap.name, mindMapData)
+            sendMessage(`${translate("export_mindMap_success")}\n${savePath}`, {type: "success"})
+        } catch (e) {
+            sendMessage(`${translate("export_mindMap_fail")}\n${e}`, {type: "error"})
+            throw e
+        }
     })
 }
 
@@ -74,6 +95,12 @@ const handleDelete = async (mindMap: {name: string, key: string}) => {
                 @click="handleAdd"
             >
                 <IconAdd/>
+            </button>
+            <button
+                class="load-file-button"
+                @click="handleLoad"
+            >
+                <IconLoad/>
             </button>
         </div>
 
@@ -157,7 +184,7 @@ const handleDelete = async (mindMap: {name: string, key: string}) => {
 .new-file-wrapper {
     display: grid;
     width: 100%;
-    grid-template-columns: 1fr auto;
+    grid-template-columns: 1fr auto auto;
     height: 1.5rem;
     line-height: 1.5rem;
 }
@@ -170,9 +197,15 @@ const handleDelete = async (mindMap: {name: string, key: string}) => {
 }
 
 .new-file-button {
-    width: 2rem;
+    width: 1.5rem;
     border-left: none;
     border-radius: 0;
+}
+
+.load-file-button {
+    margin-left: 0.5rem;
+    width: 1.5rem;
+    border: none;
 }
 
 .file-list {

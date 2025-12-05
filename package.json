@@ -4,7 +4,8 @@
   "version": "0.1.8",
   "type": "module",
   "scripts": {
-    "dev": "vite --mode browser",
+    "dev": "vite",
+    "dev-browser": "vite --mode browser",
     "test": "vitest run",
     "type-check": "vue-tsc --build --force",
     "build": "vue-tsc --noEmit && vite build --mode tauri",

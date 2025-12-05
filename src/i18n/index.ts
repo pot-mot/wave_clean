@@ -25,7 +25,19 @@ export type MainLocale = {
     layer: string
     quickInput: string
 
-    load_mindMap_from_file: string,
+    place_set_name_warning: string,
+    get_mindMap_fail: string,
+    toggle_mindMap_fail: string,
+    create_mindMap_success: string,
+    create_mindMap_fail: string,
+    save_mindMap_success: string,
+    save_mindMap_fail: string,
+    load_mindMap_success: string,
+    load_mindMap_fail: string,
+    export_mindMap_success: string
+    export_mindMap_fail: string
+    remove_mindMap_success: string
+    remove_mindMap_fail: string
 
     primary_color: string
     language: string

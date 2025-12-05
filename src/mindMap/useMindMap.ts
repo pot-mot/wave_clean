@@ -1183,17 +1183,22 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
 
         try {
             await withLoading("Export MindMap", async () => {
-                const savePath = await exportMindMapToFile(
-                    useMindMapMetaStore().currentMindMap.value?.name,
-                    getMindMapData(),
-                    global.layers,
-                    type
-                )
+                try {
+                    const savePath = await exportMindMapToFile(
+                        useMindMapMetaStore().currentMindMap.value?.name,
+                        getMindMapData(),
+                        global.layers,
+                        type
+                    )
 
-                if (!savePath) {
-                    sendMessage("Export MindMap Fail", {type: "error"})
-                } else {
-                    sendMessage(`Export MindMap Success\nAt ${savePath}`, {type: "success"})
+                    if (!savePath) {
+                        sendMessage(translate("export_mindMap_fail"), {type: "error"})
+                    } else {
+                        sendMessage(`${translate("export_mindMap_success")}\n${savePath}`, {type: "success"})
+                    }
+                } catch (e) {
+                    sendMessage(`${translate("export_mindMap_fail")}\n${e}`, {type: "error"})
+                    throw e
                 }
             })
         } finally {
