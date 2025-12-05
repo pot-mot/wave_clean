@@ -128,7 +128,7 @@ select {
     color: var(--text-color);
     border: var(--border);
     border-radius: 0;
-    border-color: var(--background-color-hover);
+    border-color: var(--border-color-light);
     background-color: var(--background-color);
     font-weight: inherit;
     font-family: inherit;
