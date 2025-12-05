@@ -34,10 +34,6 @@ const subMenuType = ref<SubMenuType>('file')
 
 <template>
     <div class="meta-menu">
-        <h1 class="current-title">
-            {{ metaStore.currentMindMap.value?.name ?? 'untitled'}}
-        </h1>
-
         <div class="sub-menu-container">
             <template v-if="isTouchDevice">
                 <div class="sub-menu-select">
@@ -80,17 +76,6 @@ const subMenuType = ref<SubMenuType>('file')
 </template>
 
 <style scoped>
-.current-title {
-    height: 2rem;
-    line-height: 2rem;
-    display: block;
-    padding: 0 0.5rem;
-    font-size: 1.1rem;
-    white-space: nowrap;
-    overflow-x: scroll;
-    overflow-y: hidden;
-}
-
 .meta-menu {
     height: 100%;
     width: 100%;
@@ -98,7 +83,7 @@ const subMenuType = ref<SubMenuType>('file')
     transition: background-color 0.5s;
 }
 .sub-menu-container {
-    height: calc(100% - 4rem);
+    height: calc(100% - 2rem);
 }
 
 .sub-menu-select {
