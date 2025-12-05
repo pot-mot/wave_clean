@@ -82,9 +82,8 @@ watch(() => showPicker.value, async (value) => {
 .color-input {
     position: relative;
     display: inline-block;
-    width: 1rem;
-    height: 1rem;
-    border: var(--border);
+    width: 1em;
+    height: 1em;
     vertical-align: middle;
     user-select: none;
 }
@@ -93,11 +92,13 @@ watch(() => showPicker.value, async (value) => {
     cursor: pointer;
     width: 100%;
     height: 100%;
+    border: var(--border);
+    border-radius: 3px;
 }
 
 .picker-mask {
     position: absolute;
-    z-index: var(--picker-z-index);
+    z-index: var(--mask-z-index);
     top: 0;
     left: 0;
     width: 100vw;
@@ -119,7 +120,7 @@ watch(() => showPicker.value, async (value) => {
     box-shadow: none;
     border-radius: 0;
     border: var(--border);
-    border-color: var(--background-color-hover);
+    border-color: var(--border-color-light);
     text-align: center;
     padding: 0;
 }

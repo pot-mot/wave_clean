@@ -32,11 +32,11 @@ const setMessageItemTimeout = (messageItem: MessageItem) => {
         clearTimeout(messageItem.timeout)
     }
 
-    messageItem.timeout = setTimeout(() => {
+    messageItem.timeout = window.setTimeout(() => {
         const index = messageItems.value.findIndex(it => it.id === messageItem.id)
         if (index === -1) return
         messageItems.value.splice(index, 1)
-        setTimeout(() => {
+        window.setTimeout(() => {
             emits("close", index)
         }, props.leaveDuration)
     }, props.timeout + props.enterDuration)
@@ -85,14 +85,14 @@ const close = (index: number) => {
     for (const message of removedMessages) {
         clearTimeout(message.timeout)
     }
-    setTimeout(() => {
+    window.setTimeout(() => {
         emits("close", index)
     }, props.leaveDuration)
 }
 
 const handleAfterLeave = () => {
     if (messageItems.value.length === 0) {
-        setTimeout(() => {
+        window.setTimeout(() => {
             if (messageItems.value.length === 0) {
                 emits("closeAll")
             }
@@ -171,13 +171,15 @@ defineExpose({
 }
 
 .message-content {
-    max-width: 100%;
-    overflow: auto;
     height: fit-content;
     width: fit-content;
+    max-width: 80vw;
+    overflow: auto;
     white-space: pre;
     font-size: 1rem;
     line-height: 1.5rem;
+    word-wrap: break-word;
+    word-break: break-word;
 }
 
 .message.primary {

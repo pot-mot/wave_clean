@@ -2,7 +2,7 @@
     --message-z-index: 15000000;
     --loading-z-index: 10000000;
     /*--image-viewer-z-index: 5000000;*/
-    --picker-z-index: 5000000;
+    --mask-z-index: 5000000;
     --quick-input-toolbar-z-index: 4000000;
     --editor-full-screen-z-index: 3000000;
     --toolbar-z-index: 2000000;
@@ -13,6 +13,9 @@
     --visual-height: calc(100 * var(--vh));
     --visual-top: 0;
     --visual-left: 0;
+
+    color: var(--text-color);
+    background-color: var(--background-color);
 }
 
 * {
@@ -149,9 +152,16 @@ select:focus {
 
 button {
     outline: none;
-    border-radius: 0;
-    background-color: var(--background-color);
     color: var(--text-color);
+    font-weight: inherit;
+    font-family: inherit;
+    background-color: var(--background-color);
     border: var(--border);
-    border-color: var(--background-color-hover);
+    border-color: var(--border-color-light);
+    user-select: none;
+}
+
+button:hover {
+    background-color: var(--background-color-hover);
+    border-color: var(--border-color);
 }

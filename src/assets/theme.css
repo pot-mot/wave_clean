@@ -1,4 +1,5 @@
-:root {
+:root,
+.light {
     --primary-color: #1E90FF;
     --primary-color-opacity-background: rgba(30, 144, 255, 0.1);
     --danger-color: #ed4f4f;
@@ -10,12 +11,13 @@
     --info-color: #1f1f1f;
     --info-color-opacity-background: rgba(210, 210, 210, 0.5);
 
-    --text-color: #151515;
-    --border-color: #555;
-    --background-color: #f7f7f7;
-    --background-color-hover: #ddd;
+    --text-color: #222;
+    --border-color: #777;
+    --border-color-light: #ccc;
+    --background-color: #fff;
+    --background-color-hover: #eee;
     --loading-background-color: rgba(0, 0, 0, 0.5);
-    --mask-color: rgba(0, 0, 0, 0.1);
+    --mask-color: rgba(0, 0, 0, 0.2);
     --highlight-color: var(--primary-color);
     --border: 1px solid var(--border-color);
     --border-radius: 0.5em;
@@ -30,12 +32,9 @@
     --icon-color: #666;
     --icon-color-light: #999;
     --icon-size: 1rem;
-
-    color: var(--text-color);
-    background-color: var(--background-color);
 }
 
-:root.dark {
+.dark {
     --danger-color-opacity-background: rgba(228, 48, 48, 0.5);
     --warning-color-opacity-background: rgba(186, 145, 69, 0.5);
     --success-color-opacity-background: rgba(74, 122, 51, 0.5);
@@ -44,6 +43,7 @@
 
     --text-color: #ccc;
     --border-color: #ccc;
+    --border-color-light: #777;
     --background-color: #333;
     --background-color-hover: #444;
 
@@ -54,6 +54,6 @@
     --split-color: #555;
     --split-color-hover: #888;
 
-    --icon-color: #bbb;
+    --icon-color: #999;
     --icon-color-light: #666;
 }
