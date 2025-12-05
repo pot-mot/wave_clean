@@ -39,6 +39,8 @@ export type MainLocale = {
     remove_mindMap_success: string
     remove_mindMap_fail: string
 
+    path_select_cancel: string
+
     primary_color: string
     language: string
     language_zh_cn: string

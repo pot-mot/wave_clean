@@ -61,7 +61,11 @@ const handleDownload = async (mindMap: {name: string, key: string}) => {
         try {
             const mindMapData = await metaStore.get(mindMap.key)
             const savePath = await exportMindMapToJson(mindMap.name, mindMapData)
-            sendMessage(`${translate("export_mindMap_success")}\n${savePath}`, {type: "success"})
+            if (typeof savePath === "string") {
+                sendMessage(`${translate("export_mindMap_success")}\n${savePath}`, {type: "success"})
+            } else if (savePath !== null) {
+                sendMessage(translate("export_mindMap_fail"), {type: "error"})
+            }
         } catch (e) {
             sendMessage(`${translate("export_mindMap_fail")}\n${e}`, {type: "error"})
             throw e

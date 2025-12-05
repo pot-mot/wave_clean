@@ -41,6 +41,8 @@ export const localeEn: MainLocale = {
     remove_mindMap_fail: "Remove MindMap Fail",
     remove_mindMap_success: "Remove MindMap Success",
 
+    path_select_cancel: "Path Select Canceled",
+
     primary_color: "color",
     language: "lang",
     language_zh_cn: "中文",

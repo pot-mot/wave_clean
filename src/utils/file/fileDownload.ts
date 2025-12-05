@@ -3,6 +3,7 @@ import {save, type SaveDialogOptions} from "@tauri-apps/plugin-dialog";
 import {sendMessage} from "@/components/message/messageApi.ts";
 import {writeFile} from "@tauri-apps/plugin-fs";
 import {noTauriInvokeSubstitution} from "@/utils/error/noTauriInvokeSubstitution.ts";
+import {translate} from "@/store/i18nStore.ts";
 
 const encoder = new TextEncoder()
 
@@ -39,7 +40,7 @@ export const downloadFileUsingTauriFile = async (
     })
 
     if (path === null) {
-        sendMessage("path select canceled")
+        sendMessage(translate("path_select_cancel"))
         return null
     }
 

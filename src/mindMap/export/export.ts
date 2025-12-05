@@ -277,7 +277,7 @@ export const exportMindMapToFile = async (
     layers: ReadonlyArray<MindMapLayer>,
     type: ExportFileType,
 ) => {
-    const defaultSaveName = `${currentMindMapName ?? 'untitled'}-${new Date().getTime()}`
+    const defaultSaveName = currentMindMapName ?? 'untitled'
 
     if (type === "JSON") {
         return await exportMindMapToJson(defaultSaveName, mindMapData)

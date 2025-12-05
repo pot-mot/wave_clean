@@ -1191,10 +1191,10 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                         type
                     )
 
-                    if (!savePath) {
-                        sendMessage(translate("export_mindMap_fail"), {type: "error"})
-                    } else {
+                    if (typeof savePath === "string") {
                         sendMessage(`${translate("export_mindMap_success")}\n${savePath}`, {type: "success"})
+                    } else if (savePath !== null) {
+                        sendMessage(translate("export_mindMap_fail"), {type: "error"})
                     }
                 } catch (e) {
                     sendMessage(`${translate("export_mindMap_fail")}\n${e}`, {type: "error"})

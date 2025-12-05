@@ -41,6 +41,8 @@ export const localeZhCn: MainLocale = {
     remove_mindMap_success: "删除成功",
     remove_mindMap_fail: "删除失败",
 
+    path_select_cancel: "路径选择取消",
+
     primary_color: "颜色",
     language: "语言",
     language_zh_cn: "中文",
