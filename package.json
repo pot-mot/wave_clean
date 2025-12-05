@@ -14,7 +14,8 @@
     "tauri-desktop": "tauri dev",
     "tauri-desktop-build": "tauri build",
     "tauri-android": "tauri android dev",
-    "tauri-android-build": "tauri android build"
+    "tauri-android-build": "tauri android build",
+    "tauri-android-build-aarch64": "tauri android build -t aarch64 --apk"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.8.0",
