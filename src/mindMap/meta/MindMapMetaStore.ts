@@ -13,7 +13,7 @@ import {v7 as uuid} from "uuid";
 import {createStore} from "@/utils/store/createStore.ts";
 import {cleanMarkdownRenderCache} from "@/components/markdown/preview/markdownRender.ts";
 import {withLoading} from "@/components/loading/loadingApi.ts";
-import {type LanguageType, useI18nStore} from "@/store/i18nStore.ts";
+import {type LanguageType, translate, useI18nStore} from "@/store/i18nStore.ts";
 
 const metaFileName = '[[WAVE_CLEAN_EDIT_META]]'
 
@@ -337,10 +337,16 @@ export const useMindMapMetaStore = createStore(() => {
 
         await withLoading("Save MindMap", async () => {
             await jsonFileOperations.set(key, JSON.stringify(mindMapStore.getMindMapData()))
-            for (const item of meta.value.mindMaps) {
-                if (item.key === key) {
-                    item.lastEditTime = `${new Date().getTime()}`
-                }
+            const matched = meta.value.mindMaps.find(it => it.key === key)
+            if (matched !== undefined) {
+                matched.lastEditTime = `${new Date().getTime()}`
+            } else {
+                meta.value.mindMaps.push({
+                    key,
+                    name: translate("untitled_mindMap"),
+                    createdTime: `${new Date().getTime()}`,
+                    lastEditTime: `${new Date().getTime()}`,
+                })
             }
             sendMessage("Save MindMap Success", {type: "success"})
         })

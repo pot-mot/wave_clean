@@ -15,6 +15,16 @@ export type MainLocale = {
     merge_down: string
     lock: string
     unlock: string
+    confirm: string
+
+    delete_confirm_title: (target: string) => string
+    delete_confirm_content: (target: string) => string
+
+    mindMap: string
+    untitled_mindMap: string
+    layer: string
+
+    load_mindMap_from_file: string,
 
     primary_color: string
     language: string

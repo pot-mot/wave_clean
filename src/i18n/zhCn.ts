@@ -17,6 +17,16 @@ export const localeZhCn: MainLocale = {
     merge_down: "向下合并",
     lock: "锁定",
     unlock: "解锁",
+    confirm: "确认",
+
+    delete_confirm_title: (target: string) => `${target}删除确认`,
+    delete_confirm_content: (target: string) => `确定要删除${target}吗？`,
+
+    mindMap: "脑图",
+    untitled_mindMap: "[未命名脑图]",
+    layer: "图层",
+
+    load_mindMap_from_file: "从文件导入",
 
     primary_color: "颜色",
     language: "语言",

@@ -17,6 +17,16 @@ export const localeEn: MainLocale = {
     merge_down: "Merge Down",
     lock: "Lock",
     unlock: "Unlock",
+    confirm: "Confirm",
+
+    delete_confirm_title: (target: string) => `${target} Delete Confirm`,
+    delete_confirm_content: (target: string) => `Are you sure to delete ${target}?`,
+
+    mindMap: "MindMap",
+    untitled_mindMap: "[Untitled MindMap]",
+    layer: "Layer",
+
+    load_mindMap_from_file: "Load From File",
 
     primary_color: "color",
     language: "lang",

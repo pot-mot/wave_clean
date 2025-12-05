@@ -7,6 +7,8 @@ import IconAdd from "@/components/icons/IconAdd.vue";
 import DragModelList from "@/components/list/DragModelList.vue";
 import {formatDatetimeToLocal} from "@/utils/datetime/datetimeFormat.ts";
 import CollapseDetail from "@/components/collapse/CollapseDetail.vue";
+import {sendConfirm} from "@/components/confirm/confirmApi.ts";
+import {translate} from "@/store/i18nStore.ts";
 
 const metaStore = useMindMapMetaStore()
 
@@ -25,8 +27,14 @@ const handleAdd = () => {
     name.value = ""
 }
 
-const handleDelete = (key: string) => {
-    metaStore.remove(key)
+const handleDelete = async (key: string) => {
+    await sendConfirm({
+        title: translate({key: "delete_confirm_title", args: [translate('mindMap')]}),
+        content: translate({key: "delete_confirm_content", args: [translate('mindMap')]}),
+        onConfirm: () => {
+            metaStore.remove(key)
+        }
+    })
 }
 
 const handleOpen = (key: string) => {

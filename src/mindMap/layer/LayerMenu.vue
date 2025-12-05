@@ -14,6 +14,8 @@ import IconLockOpen from "@/components/icons/IconLockOpen.vue";
 import IconLayerMerge from "@/components/icons/IconLayerMerge.vue";
 import IconOnion from "@/components/icons/IconOnion.vue";
 import {useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
+import {sendConfirm} from "@/components/confirm/confirmApi.ts";
+import {translate} from "@/store/i18nStore.ts";
 
 const {
     layers,
@@ -72,6 +74,16 @@ const handleSwap = (a: number, b: number) => {
     swapLayer(reverseIndex(a), reverseIndex(b))
 }
 
+const handleDelete = async (key: string) => {
+    if (layers.length <= 1) return
+    await sendConfirm({
+        title: translate({key: "delete_confirm_title", args: [translate('layer')]}),
+        content: translate({key: "delete_confirm_content", args: [translate('layer')]}),
+        onConfirm: () => {
+            removeLayer(key)
+        }
+    })
+}
 
 const toggleOnion = () => {
     meta.value.onionEnabled = !meta.value.onionEnabled
@@ -144,7 +156,7 @@ const toggleOnion = () => {
                             <button
                                 class="layer-menu-item-delete"
                                 :class="{disabled: layers.length <= 1}"
-                                @click.stop="layers.length > 1 ? removeLayer(layer.id) : () => {}"
+                                @click.stop="handleDelete(layer.id)"
                             >
                                 <IconDelete/>
                             </button>
@@ -275,7 +287,6 @@ const toggleOnion = () => {
 .layer-menu-item-options button.disabled {
     background-color: var(--background-color-hover);
     cursor: not-allowed;
-    pointer-events: none;
 }
 
 .layer-menu-item-options button:hover {
