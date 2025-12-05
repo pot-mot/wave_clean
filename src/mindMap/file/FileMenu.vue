@@ -9,6 +9,9 @@ import {formatDatetimeToLocal} from "@/utils/datetime/datetimeFormat.ts";
 import CollapseDetail from "@/components/collapse/CollapseDetail.vue";
 import {sendConfirm} from "@/components/confirm/confirmApi.ts";
 import {translate} from "@/store/i18nStore.ts";
+import IconDownload from "@/components/icons/IconDownload.vue";
+import {exportMindMapToJson} from "@/mindMap/export/export.ts";
+import {withLoading} from "@/components/loading/loadingApi.ts";
 
 const metaStore = useMindMapMetaStore()
 
@@ -16,25 +19,15 @@ const currentFile = computed(() => {
     return metaStore.meta.value.mindMaps.find(it => it.key === metaStore.meta.value.currentKey)
 })
 
-const name = ref("")
+const newName = ref("")
 
 const handleAdd = () => {
-    if (name.value.length === 0) {
+    if (newName.value.length === 0) {
         sendMessage("Please set a name", {type: "warning"})
         return
     }
-    metaStore.add(0, name.value)
-    name.value = ""
-}
-
-const handleDelete = async (key: string) => {
-    await sendConfirm({
-        title: translate({key: "delete_confirm_title", args: [translate('mindMap')]}),
-        content: translate({key: "delete_confirm_content", args: [translate('mindMap')]}),
-        onConfirm: () => {
-            metaStore.remove(key)
-        }
-    })
+    metaStore.add(0, newName.value)
+    newName.value = ""
 }
 
 const handleOpen = (key: string) => {
@@ -47,6 +40,24 @@ const handleRename = (key: string, e: Event) => {
         e.target.blur()
     }
 }
+
+const handleDownload = async (mindMap: {name: string, key: string}) => {
+    await withLoading("Download MindMap", async () => {
+        const mindMapData = await metaStore.get(mindMap.key)
+        await exportMindMapToJson(mindMap.name, mindMapData)
+    })
+}
+
+const handleDelete = async (mindMap: {name: string, key: string}) => {
+    await sendConfirm({
+        title: translate({key: "delete_confirm_title", args: [translate('mindMap')]}),
+        content: translate({key: "delete_confirm_content", args: [`${translate('mindMap')}[${mindMap.name}]`]}),
+        onConfirm: () => {
+            metaStore.remove(mindMap.key)
+        }
+    })
+}
+
 </script>
 
 <template>
@@ -54,7 +65,9 @@ const handleRename = (key: string, e: Event) => {
         <div class="new-file-wrapper">
             <input
                 class="new-file-name"
-                v-model="name" @keydown.enter="handleAdd"
+                v-model="newName"
+                :placeholder="translate('mindMap_title_placeholder')"
+                @keydown.enter="handleAdd"
             >
             <button
                 class="new-file-button"
@@ -95,12 +108,19 @@ const handleRename = (key: string, e: Event) => {
                     </template>
 
                     <template #body>
-                        <button
-                            class="file-delete-button"
-                            @click.stop="handleDelete(mindMap.key)"
-                        >
-                            <IconDelete/>
-                        </button>
+                        <div class="file-item-operations">
+                            <button
+                                @click.stop="handleDownload(mindMap)"
+                            >
+                                <IconDownload/>
+                            </button>
+
+                            <button
+                                @click.stop="handleDelete(mindMap)"
+                            >
+                                <IconDelete/>
+                            </button>
+                        </div>
                     </template>
                 </CollapseDetail>
 
@@ -216,8 +236,29 @@ const handleRename = (key: string, e: Event) => {
     color: var(--background-color);
 }
 
-.file-delete-button {
+.file-item-operations {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding: 0 0.5rem 0.5rem;
+}
+
+.file-item-operations button {
     height: 1.5rem;
     width: 1.5rem;
+}
+
+.file-item-operations button {
+    height: 1.5rem;
+    min-width: 1.5rem;
+}
+
+.file-item-operations button.disabled {
+    background-color: var(--background-color-hover);
+    cursor: not-allowed;
+}
+
+.file-item-operations button:hover {
+    background-color: var(--background-color-hover);
 }
 </style>

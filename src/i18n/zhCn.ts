@@ -25,6 +25,7 @@ export const localeZhCn: MainLocale = {
     mindMap: "脑图",
     untitled_mindMap: "[未命名脑图]",
     layer: "图层",
+    quickInput: "快捷输入",
 
     load_mindMap_from_file: "从文件导入",
 
@@ -35,6 +36,12 @@ export const localeZhCn: MainLocale = {
     theme: "主题",
 
     layer_is_invisible: "当前图层不可见",
+    layer_is_locked: "当前图层已锁定",
+
+    mindMap_title_placeholder: "新脑图名称",
+
+    quickInput_label: "展示文本",
+    quickInput_value: "快捷输入内容",
 
     MESSAGE_delete_confirm: (deleteTarget: string) => `确定要删除 ${deleteTarget} 吗？`
 }

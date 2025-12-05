@@ -260,7 +260,7 @@ const exportMindMapToImage = async (
     }
 }
 
-const exportMindMapToJson = async (
+export const exportMindMapToJson = async (
     defaultFileName: string,
     mindMapData: MindMapData,
 ) => {

@@ -23,6 +23,7 @@ export type MainLocale = {
     mindMap: string
     untitled_mindMap: string
     layer: string
+    quickInput: string
 
     load_mindMap_from_file: string,
 
@@ -33,6 +34,12 @@ export type MainLocale = {
     theme: string
 
     layer_is_invisible: string
+    layer_is_locked: string
+
+    mindMap_title_placeholder: string
+
+    quickInput_label: string
+    quickInput_value: string
 
     MESSAGE_delete_confirm: (deleteTarget: string) => string
 }

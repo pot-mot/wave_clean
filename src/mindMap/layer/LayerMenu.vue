@@ -74,13 +74,13 @@ const handleSwap = (a: number, b: number) => {
     swapLayer(reverseIndex(a), reverseIndex(b))
 }
 
-const handleDelete = async (key: string) => {
+const handleDelete = async (layer: {name: string, id: string}) => {
     if (layers.length <= 1) return
     await sendConfirm({
         title: translate({key: "delete_confirm_title", args: [translate('layer')]}),
-        content: translate({key: "delete_confirm_content", args: [translate('layer')]}),
+        content: translate({key: "delete_confirm_content", args: [`${translate('layer')}[${layer.name}]`]}),
         onConfirm: () => {
-            removeLayer(key)
+            removeLayer(layer.id)
         }
     })
 }
@@ -132,7 +132,7 @@ const toggleOnion = () => {
                     </template>
 
                     <template #body>
-                        <div class="layer-menu-item-options">
+                        <div class="layer-menu-item-operations">
                             <button
                                 class="layer-menu-item-merge"
                                 v-if="layers.length > 1 && (layers.length - 1 - index) !== 0"
@@ -156,7 +156,7 @@ const toggleOnion = () => {
                             <button
                                 class="layer-menu-item-delete"
                                 :class="{disabled: layers.length <= 1}"
-                                @click.stop="handleDelete(layer.id)"
+                                @click.stop="handleDelete(layer)"
                             >
                                 <IconDelete/>
                             </button>
@@ -271,25 +271,24 @@ const toggleOnion = () => {
 }
 
 
-.layer-menu-item-options {
+.layer-menu-item-operations {
     display: flex;
     justify-content: flex-end;
     gap: 1rem;
     padding: 0 0.5rem 0.5rem;
 }
 
-.layer-menu-item-options button {
+.layer-menu-item-operations button {
     height: 1.5rem;
     min-width: 1.5rem;
-    padding: 0 0.25rem;
 }
 
-.layer-menu-item-options button.disabled {
+.layer-menu-item-operations button.disabled {
     background-color: var(--background-color-hover);
     cursor: not-allowed;
 }
 
-.layer-menu-item-options button:hover {
+.layer-menu-item-operations button:hover {
     background-color: var(--background-color-hover);
 }
 

@@ -380,6 +380,7 @@ export const useMindMapMetaStore = createStore(() => {
         add,
         rename,
         remove,
+        get,
         save,
         toggle,
         currentMindMap,

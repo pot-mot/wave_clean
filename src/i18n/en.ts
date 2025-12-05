@@ -25,6 +25,7 @@ export const localeEn: MainLocale = {
     mindMap: "MindMap",
     untitled_mindMap: "[Untitled MindMap]",
     layer: "Layer",
+    quickInput: "QuickInput",
 
     load_mindMap_from_file: "Load From File",
 
@@ -35,6 +36,12 @@ export const localeEn: MainLocale = {
     theme: "theme",
 
     layer_is_invisible: "Current Layer is Invisible",
+    layer_is_locked: "Current Layer is Locked",
+
+    mindMap_title_placeholder: "New MindMap Title",
+
+    quickInput_label: "label",
+    quickInput_value: "value",
 
     MESSAGE_delete_confirm: (deleteTarget: string) => `Are you sure to delete ${deleteTarget}?`
 }
