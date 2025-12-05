@@ -6,6 +6,7 @@ import {sendMessage} from "@/components/message/messageApi.ts";
 import IconAdd from "@/components/icons/IconAdd.vue";
 import DragModelList from "@/components/list/DragModelList.vue";
 import {v7 as uuid} from "uuid"
+import {translate} from "@/store/i18nStore.ts";
 
 const metaStore = useMindMapMetaStore()
 
@@ -43,11 +44,13 @@ const handleDelete = (item: QuickInputItem) => {
         <div class="new-quick-input">
             <input
                 class="label-input"
+                :placeholder="translate('quickInput_label')"
                 v-model="input.label"
                 @click.stop
             >
             <input
                 class="value-input"
+                :placeholder="translate('quickInput_value')"
                 v-model="input.value"
                 @click.stop
             >

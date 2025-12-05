@@ -37,8 +37,12 @@ const subMenuType = ref<SubMenuType>('file')
         <div class="sub-menu-container">
             <template v-if="isTouchDevice">
                 <div class="sub-menu-select">
-                    <button @click="subMenuType = 'file'" :class="{enable: subMenuType === 'file'}">Mind Map</button>
-                    <button @click="subMenuType = 'quick-input'" :class="{enable: subMenuType === 'quick-input'}">Quick Input</button>
+                    <button @click="subMenuType = 'file'" :class="{enable: subMenuType === 'file'}">
+                        {{ translate('mindMap') }}
+                    </button>
+                    <button @click="subMenuType = 'quick-input'" :class="{enable: subMenuType === 'quick-input'}">
+                        {{ translate('quickInput') }}
+                    </button>
                 </div>
 
                 <div class="sub-menu-wrapper">
@@ -95,10 +99,13 @@ const subMenuType = ref<SubMenuType>('file')
 
 .sub-menu-select > button {
     transition: background-color 0.5s ease;
+    border-left: none;
+    border-top: none;
 }
 
 .sub-menu-select > button.enable {
     background-color: var(--background-color-hover);
+    border-color: var(--border-color-light);
 }
 
 .sub-menu-wrapper {
