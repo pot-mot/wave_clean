@@ -286,7 +286,7 @@ export const useMindMapMetaStore = createStore(() => {
         return await withLoading("Create MindMap", async () => {
             try {
                 const timestamp = `${new Date().getTime()}`
-                const key = `${name}-${uuid()}`
+                const key = `MindMap-${uuid()}`
                 meta.value.mindMaps.splice(index, 0, {key, name, createdTime: timestamp, lastEditTime: timestamp})
                 await jsonFileOperations.create(key)
                 await jsonFileOperations.set(key, jsonSortPropStringify(getDefaultMindMapData()))
