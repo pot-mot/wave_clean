@@ -118,6 +118,8 @@ const isMindMapInputFocused = computed<boolean>(() => {
         return false
     }
 
+    if (currentLayer.value.lock === false) return false
+
     // 判断是否是基础输入类型
     const isInputType = checkIsInputOrTextarea(focusTarget)
     // 判断是否是Markdown编辑器
