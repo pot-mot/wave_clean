@@ -151,8 +151,8 @@ const exportMindMapToImage = async (
 }
 
 #${id} {
-    background-color: var(--background-color);
-    z-index: -100;
+    background-color: var(--background-color) !important;
+    z-index: -100000  !important;
 }
 
 #${id} input,
@@ -164,16 +164,23 @@ const exportMindMapToImage = async (
 }
 
 #${id} .markdown-preview .code-language {
-    right: 0.25em;
+    right: 0.25em !important;
 }
 
 #${id} .markdown-preview .code-copy-button {
-    display: none;
+    display: none !important;
 }
 
-#${id} *::-webkit-scrollbar {
-    width: 0;
-    height: 0;
+#${id} * {
+    scrollbar-width: none !important; /* Firefox */
+    -ms-overflow-style: none !important; /* IE/Edge */
+}
+
+#${id} *::-webkit-scrollbar,
+#${id} *::-moz-scrollbar,
+#${id} *::-ms-scrollbar {
+    width: 0 !important;
+    height: 0 !important;
 }
 `
     document.head.appendChild(removeTransitionStyle)
