@@ -1,9 +1,9 @@
-import mermaid from "mermaid"
+import mermaid, {type MermaidConfig} from "mermaid"
 import {renderPrismCodeBlock} from "@/components/markdown/preview/plugins/MarkdownItPrismCode.ts";
 import {v7 as uuid} from "uuid"
 import {type Theme} from "@tauri-apps/api/window";
 
-const defaultOptions = {
+const defaultOptions: MermaidConfig = {
     startOnLoad: false,
     flowchart: {
         htmlLabels: true
@@ -18,8 +18,6 @@ export const cleanMermaidCache = () => {
     cache.clear()
 }
 
-const RawCodeAttr = "raw-code"
-
 export const setMermaidTheme = (newTheme: Theme) => {
     mermaid.initialize({
         ...defaultOptions,
@@ -29,14 +27,12 @@ export const setMermaidTheme = (newTheme: Theme) => {
 
 const renderMermaid = async (
     id: string,
+    rawCode: string
 ) => {
     const element = document.getElementById(id)
     if (!element) return
 
     if (!element.classList.contains('mermaid-wait')) return
-
-    const rawCode = element.getAttribute(RawCodeAttr)
-    if (!rawCode) return
 
     try {
         const renderId = `rendering-${id}`
@@ -71,9 +67,9 @@ export const renderMermaidBlock = (rawCode: string): string => {
     if (renderedCode === undefined) {
         const id = `mermaid-${uuid()}`
         setTimeout(async () => {
-            await renderMermaid(id)
+            await renderMermaid(id, rawCode)
         }, 0)
-        return `<div id="${id}" class="mermaid-wait" ${RawCodeAttr}="${rawCode}">${rawCode}</div>`
+        return `<div id="${id}" class="mermaid-wait">${rawCode}</div>`
     } else {
         return `
 <div class="mermaid">${renderedCode}</div>
