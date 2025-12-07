@@ -118,7 +118,9 @@ const isMindMapInputFocused = computed<boolean>(() => {
         return false
     }
 
-    if (currentLayer.value.lock === false) return false
+    if (currentLayer.value.lock) {
+        return false
+    }
 
     // 判断是否是基础输入类型
     const isInputType = checkIsInputOrTextarea(focusTarget)
