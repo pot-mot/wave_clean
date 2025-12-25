@@ -443,6 +443,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         vueFlow.addSelectedNodes(graphNodes)
         vueFlow.addSelectedEdges(graphEdges)
         vueFlow.multiSelectionActive.value = currentMultiSelectionActive
+        focus()
     }
 
 
@@ -907,7 +908,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                     const rectY = clientRect.y
 
                     e.preventDefault()
-                    blurActiveElement()
+                    focus()
 
                     vueFlow.multiSelectionActive.value = true
                     cleanSelection()
@@ -1050,7 +1051,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                     const rectY = clientRect.y
 
                     e.preventDefault()
-                    blurActiveElement()
+                    focus()
 
                     vueFlow.multiSelectionActive.value = true
                     cleanSelection()
