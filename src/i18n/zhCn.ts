@@ -19,6 +19,11 @@ export const localeZhCn: MainLocale = {
     unlock: "解锁",
     confirm: "确认",
 
+    undo_success: "撤销成功",
+    cannot_undo: "无法撤销",
+    redo_success: "重做成功",
+    cannot_redo: "无法重做",
+
     delete_confirm_title: (target: string) => `${target}删除确认`,
     delete_confirm_content: (target: string) => `确定要删除${target}吗？`,
 

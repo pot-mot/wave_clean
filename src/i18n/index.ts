@@ -17,6 +17,11 @@ export type MainLocale = {
     unlock: string
     confirm: string
 
+    undo_success: string
+    cannot_undo: string
+    redo_success: string
+    cannot_redo: string
+
     delete_confirm_title: (target: string) => string
     delete_confirm_content: (target: string) => string
 

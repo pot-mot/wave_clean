@@ -19,6 +19,11 @@ export const localeEn: MainLocale = {
     unlock: "Unlock",
     confirm: "Confirm",
 
+    undo_success: "Undo Success",
+    cannot_undo: "Cannot Undo",
+    redo_success: "Redo Success",
+    cannot_redo: "Cannot Redo",
+
     delete_confirm_title: (target: string) => `${target} Delete Confirm`,
     delete_confirm_content: (target: string) => `Are you sure to delete ${target}?`,
 

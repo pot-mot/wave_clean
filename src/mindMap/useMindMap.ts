@@ -1232,18 +1232,18 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         undo: () => {
             if (canUndo.value) {
                 history.undo()
-                sendMessage("undo", {type: "success"})
+                sendMessage(translate("undo_success"), {type: "success"})
             } else {
-                sendMessage("cannot undo", {type: "warning"})
+                sendMessage(translate("cannot_undo"), {type: "warning"})
             }
             focus()
         },
         redo: () => {
             if (canRedo.value) {
                 history.redo()
-                sendMessage("redo", {type: "success"})
+                sendMessage(translate("redo_success"), {type: "success"})
             } else {
-                sendMessage("cannot redo", {type: "warning"})
+                sendMessage(translate("cannot_redo"), {type: "warning"})
             }
             focus()
         },
