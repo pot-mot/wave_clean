@@ -38,11 +38,10 @@ const {
     fitView,
     defaultMouseAction,
     toggleDefaultMouseAction,
-    isSelectionPlural,
     canMultiSelect,
     toggleMultiSelect,
 
-    toggleSelectAll,
+    graphSelection,
     removeSelection,
 
     copy,
@@ -215,7 +214,7 @@ watch(
                 <IconPaste/>
             </button>
 
-            <button @click="removeSelection()" v-if="isSelectionPlural">
+            <button @click="removeSelection()" v-if="graphSelection.selectedCount.value > 1">
                 <IconDelete color="var(--danger-color)"/>
             </button>
         </div>
@@ -228,7 +227,7 @@ watch(
         }"
     >
         <div class="container">
-            <button @click="toggleSelectAll()" style="padding-left: 1rem;">
+            <button @click="graphSelection.toggleSelectAll()" style="padding-left: 1rem;">
                 <IconSelectAll/>
             </button>
 

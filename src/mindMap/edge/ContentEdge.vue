@@ -18,7 +18,16 @@ import {type RawMindMapLayer} from "@/mindMap/layer/MindMapLayer.ts";
 import {type SizePositionEdgePartial} from "@/mindMap/edge/SizePositionEdge.ts";
 import {type ContentEdgeData} from "@/mindMap/edge/ContentEdge.ts";
 
-const {updateEdgeData, isSelectionPlural, canMultiSelect, findEdge, selectEdge, fitRect, remove, zoom} = useMindMap()
+const {
+    updateEdgeData,
+    graphSelection,
+    canMultiSelect,
+    findEdge,
+    selectEdge,
+    fitRect,
+    remove,
+    zoom
+} = useMindMap()
 
 const props = defineProps<EdgeProps<ContentEdgeData> & {
     layer: RawMindMapLayer,
@@ -47,7 +56,7 @@ const inputShow = ref(false)
 const inputRef = useTemplateRef<InstanceType<typeof FitSizeBlockInput>>("inputRef")
 
 const handleEdgeMouseDown = () => {
-    if (isSelectionPlural.value) return
+    if (graphSelection.selectedCount.value > 1) return
     if (canMultiSelect.value) return
     selectEdge(props.id, props.layer.vueFlow)
 }

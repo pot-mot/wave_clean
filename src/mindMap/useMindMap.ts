@@ -478,10 +478,6 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         const vueFlow = getCurrentVueFlow()
         return (vueFlow.getSelectedNodes.value.length + vueFlow.getSelectedEdges.value.length) > 0
     })
-    const isSelectionPlural = computed(() => {
-        const vueFlow = getCurrentVueFlow()
-        return (vueFlow.getSelectedNodes.value.length + vueFlow.getSelectedEdges.value.length) > 1
-    })
     const canMultiSelect = computed(() => {
         const vueFlow = getCurrentVueFlow()
         return vueFlow.multiSelectionActive.value
@@ -676,9 +672,6 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
             onConnectEnd,
             onEdgeUpdateStart,
             onEdgeUpdate,
-
-            getSelectedNodes,
-            getSelectedEdges,
         } = vueFlow
 
         onInit(() => {
@@ -835,48 +828,6 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                     }
                 })
                 vueFlowRef.value?.removeEventListener('selectstart', stopSelectStart)
-            })
-
-            /**
-             * 键盘事件监听
-             */
-            el.addEventListener('keydown', (e) => {
-                // 按下 Delete 键删除选中的节点和边
-                if (e.key === "Delete" || e.key === "Backspace") {
-                    if (getSelectedNodes.value.length === 0 && getSelectedEdges.value.length === 0) return
-
-                    e.preventDefault()
-
-                    remove({nodes: getSelectedNodes.value, edges: getSelectedEdges.value})
-                }
-
-                // 按下 Ctrl 键进入多选模式，直到松开 Ctrl 键
-                else if (e.key === "Control") {
-                    enableMultiSelect(vueFlow)
-                    document.documentElement.addEventListener('keyup', (e) => {
-                        if (e.key === "Control" || e.ctrlKey) {
-                            disableMultiSelect(vueFlow)
-                        }
-                    }, {once: true})
-                } else if (e.key === "Shift") {
-                    if (judgeTargetIsInteraction(e)) return
-
-                    toggleDefaultMouseAction(vueFlow)
-                    document.documentElement.addEventListener('keyup', (e) => {
-                        if (e.key === "Shift" || e.shiftKey) {
-                            toggleDefaultMouseAction(vueFlow)
-                        }
-                    }, {once: true})
-                } else if (e.ctrlKey) {
-                    // 按下 Ctrl + a 键，全选
-                    if (e.key === "a" || e.key === "A") {
-                        if (judgeTargetIsInteraction(e)) return
-
-                        e.preventDefault()
-
-                        selectAll()
-                    }
-                }
             })
 
             if (!isTouchDevice.value) {
@@ -1262,16 +1213,28 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
             return layer.vueFlow.fitBounds(rect, {duration: 800, padding: 0.4})
         },
 
+        graphSelection: {
+            getSelection,
+            selectAll,
+            unselectAll: cleanSelection,
+            toggleSelectAll,
+            selectedNodes: computed(() => {
+                return getCurrentVueFlow().getSelectedNodes.value
+            }),
+            selectedEdges: computed(() => {
+                return getCurrentVueFlow().getSelectedEdges.value
+            }),
+            selectedCount: computed(() => {
+                const vueFlow = getCurrentVueFlow()
+                return (vueFlow.getSelectedNodes.value.length + vueFlow.getSelectedEdges.value.length)
+            })
+        },
+
         selectionRect: readonly(selectionRect),
-        isSelectionNotEmpty,
-        isSelectionPlural,
         canMultiSelect,
         disableMultiSelect,
         enableMultiSelect,
         toggleMultiSelect,
-
-        selectAll,
-        toggleSelectAll,
 
         defaultMouseAction: readonly(defaultMouseAction),
         toggleDefaultMouseAction,

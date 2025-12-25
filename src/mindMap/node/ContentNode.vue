@@ -39,7 +39,7 @@ const {meta} = useMindMapStore()
 const {
     currentLayer,
     updateNodeData,
-    isSelectionPlural,
+    graphSelection,
     canMultiSelect,
     isConnecting,
     findNode,
@@ -282,7 +282,7 @@ watch(() => markdownEditorRef.value?.containerRef, async (container) => {
 
 // 节点行为
 const handleNodeSelect = () => {
-    if (isSelectionPlural.value) return
+    if (graphSelection.selectedCount.value > 1) return
     if (canMultiSelect.value) return
     selectNode(props.id, props.layer.vueFlow)
 }
