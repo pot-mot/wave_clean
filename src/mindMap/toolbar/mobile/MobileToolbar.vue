@@ -16,7 +16,7 @@ import IconLayer from "@/components/icons/IconLayer.vue";
 import IconDelete from "@/components/icons/IconDelete.vue";
 import IconMultiSelect from "@/components/icons/IconMultiSelect.vue";
 import IconSelectAll from "@/components/icons/IconSelectAll.vue";
-import DownloadSelect from "@/mindMap/file/DownloadSelect.vue";
+import DownloadSelect from "@/mindMap/export/ExportSelect.vue";
 import {
     checkElementParent,
     checkIsInputOrTextarea,
