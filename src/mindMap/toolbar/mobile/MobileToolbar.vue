@@ -2,7 +2,7 @@
 import {MIND_MAP_CONTAINER_ID, useMindMap} from "@/mindMap/useMindMap.ts";
 import {computed, onBeforeUnmount, onMounted, ref, watch} from "vue";
 import LayerMenu from "@/mindMap/layer/LayerMenu.vue";
-import MetaMenu from "@/mindMap/meta/MetaMenu.vue";
+import MainMenu from "@/mindMap/mainMenu/MainMenu.vue";
 import IconSave from "@/components/icons/IconSave.vue";
 import IconCopy from "@/components/icons/IconCopy.vue";
 import IconCut from "@/components/icons/IconCut.vue";
@@ -272,7 +272,7 @@ watch(
         @click.self="metaMenuOpen = false"
     >
         <div class="container">
-            <MetaMenu/>
+            <MainMenu/>
         </div>
     </div>
 

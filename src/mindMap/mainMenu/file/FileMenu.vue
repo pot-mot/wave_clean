@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import IconDelete from "@/components/icons/IconDelete.vue";
-import {useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
+import {useMindMapStore} from "@/store/mindMapStore.ts";
 import {computed, ref} from "vue";
 import {sendMessage} from "@/components/message/messageApi.ts";
 import IconAdd from "@/components/icons/IconAdd.vue";
@@ -16,10 +16,10 @@ import IconLoad from "@/components/icons/IconLoad.vue";
 import {readJson, removeJsonSuffix} from "@/utils/file/jsonRead.ts";
 import {validateMindMapData} from "@/mindMap/MindMapData.ts";
 
-const metaStore = useMindMapMetaStore()
+const mindMapStore = useMindMapStore()
 
 const currentFile = computed(() => {
-    return metaStore.meta.value.mindMaps.find(it => it.key === metaStore.meta.value.currentKey)
+    return mindMapStore.meta.value.mindMaps.find(it => it.key === mindMapStore.meta.value.currentKey)
 })
 
 const newName = ref("")
@@ -29,7 +29,7 @@ const handleAdd = () => {
         sendMessage("Please set a name", {type: "warning"})
         return
     }
-    metaStore.add(0, newName.value)
+    mindMapStore.add(0, newName.value)
     newName.value = ""
 }
 
@@ -37,7 +37,7 @@ const handleLoad = async () => {
     try {
         const mindMapData = await readJson(validateMindMapData)
         if (mindMapData !== undefined) {
-            await metaStore.load(0, removeJsonSuffix(mindMapData.name), mindMapData.data)
+            await mindMapStore.load(0, removeJsonSuffix(mindMapData.name), mindMapData.data)
         }
     } catch (e) {
         sendMessage(`${translate("load_mindMap_fail")}`, {type: "error"})
@@ -46,12 +46,12 @@ const handleLoad = async () => {
 }
 
 const handleOpen = (key: string) => {
-    metaStore.toggle(key)
+    mindMapStore.toggle(key)
 }
 
 const handleRename = (key: string, e: Event) => {
     if (e.target instanceof HTMLInputElement) {
-        metaStore.rename(key, e.target.value)
+        mindMapStore.rename(key, e.target.value)
         e.target.blur()
     }
 }
@@ -59,7 +59,7 @@ const handleRename = (key: string, e: Event) => {
 const handleDownload = async (mindMap: {name: string, key: string}) => {
     await withLoading("Download MindMap", async () => {
         try {
-            const mindMapData = await metaStore.get(mindMap.key)
+            const mindMapData = await mindMapStore.get(mindMap.key)
             const savePath = await exportMindMapToJson(mindMap.name, mindMapData)
             if (typeof savePath === "string") {
                 sendMessage(`${translate("export_mindMap_success")}\n${savePath}`, {type: "success"})
@@ -78,7 +78,7 @@ const handleDelete = async (mindMap: {name: string, key: string}) => {
         title: translate({key: "delete_confirm_title", args: [translate('mindMap')]}),
         content: translate({key: "delete_confirm_content", args: [`${translate('mindMap')}[${mindMap.name}]`]}),
         onConfirm: () => {
-            metaStore.remove(mindMap.key)
+            mindMapStore.remove(mindMap.key)
         }
     })
 }
@@ -110,10 +110,10 @@ const handleDelete = async (mindMap: {name: string, key: string}) => {
 
         <DragModelList
             class="file-list"
-            v-model="metaStore.meta.value.mindMaps"
+            v-model="mindMapStore.meta.value.mindMaps"
             :current-item="currentFile"
             :to-key="mindMap => mindMap.key"
-            @remove="mindMap => metaStore.remove(mindMap.key)"
+            @remove="mindMap => mindMapStore.remove(mindMap.key)"
         >
             <template #default="{item: mindMap}">
                 <CollapseDetail>

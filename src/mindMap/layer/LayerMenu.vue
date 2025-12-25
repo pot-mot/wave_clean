@@ -13,7 +13,7 @@ import IconLock from "@/components/icons/IconLock.vue";
 import IconLockOpen from "@/components/icons/IconLockOpen.vue";
 import IconLayerMerge from "@/components/icons/IconLayerMerge.vue";
 import IconOnion from "@/components/icons/IconOnion.vue";
-import {useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
+import {useMindMapStore} from "@/store/mindMapStore.ts";
 import {sendConfirm} from "@/components/confirm/confirmApi.ts";
 import {translate} from "@/store/i18nStore.ts";
 
@@ -31,9 +31,7 @@ const {
     dragLayer,
 } = useMindMap()
 
-const {
-    meta
-} = useMindMapMetaStore()
+const {meta} = useMindMapStore()
 
 const toggleLayerVisible = (layer: MindMapLayer) => {
     changeLayerVisible(layer.id, !layer.visible)

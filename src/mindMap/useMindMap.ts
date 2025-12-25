@@ -38,7 +38,7 @@ import type {MindMapData} from "@/mindMap/MindMapData.ts";
 import {checkFullConnection, type FullConnection, reverseConnection} from "@/mindMap/edge/connection.ts";
 import {useMindMapHistory} from "@/mindMap/history/MindMapHistory.ts";
 import {unimplementedClipBoard, useClipBoard} from "@/utils/clipBoard/useClipBoard.ts";
-import {useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
+import {useMindMapStore} from "@/store/mindMapStore.ts";
 import type {LazyData} from "@/utils/type/lazyDataParse.ts";
 import {useDeviceStore} from "@/store/deviceStore.ts";
 import {v7 as uuid} from "uuid"
@@ -1185,7 +1185,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
             await withLoading("Export MindMap", async () => {
                 try {
                     const savePath = await exportMindMapToFile(
-                        useMindMapMetaStore().currentMindMap.value?.name,
+                        useMindMapStore().currentMindMap.value?.name,
                         getMindMapData(),
                         global.layers,
                         type
@@ -1385,7 +1385,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         exportFile,
 
         save: async () => {
-            await useMindMapMetaStore().save()
+            await useMindMapStore().save()
         },
     }
 })

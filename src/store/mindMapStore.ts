@@ -14,14 +14,9 @@ import {createStore} from "@/utils/store/createStore.ts";
 import {cleanMarkdownRenderCache} from "@/components/markdown/preview/markdownRender.ts";
 import {withLoading} from "@/components/loading/loadingApi.ts";
 import {type LanguageType, translate, useI18nStore} from "@/store/i18nStore.ts";
+import {getDefaultQuickInputs, type QuickInputItem} from "@/mindMap/quickInput/QuickInput.ts";
 
 const metaFileName = '[[WAVE_CLEAN_EDIT_META]]'
-
-export type QuickInputItem = {
-    id: string,
-    label: string,
-    value: string,
-}
 
 export type MindMapMetaData = {
     key: string,
@@ -30,7 +25,7 @@ export type MindMapMetaData = {
     lastEditTime?: string
 }
 
-export type Meta = {
+export type MindMapMeta = {
     currentKey?: string | undefined,
     mindMaps: MindMapMetaData[],
 
@@ -43,7 +38,7 @@ export type Meta = {
     onionEnabled?: boolean | undefined,
 }
 
-const Meta_JsonSchema: JSONSchemaType<Meta> = {
+const MindMapMeta_JsonSchema: JSONSchemaType<MindMapMeta> = {
     type: "object",
     properties: {
         currentKey: {
@@ -107,9 +102,9 @@ const Meta_JsonSchema: JSONSchemaType<Meta> = {
     required: ["mindMaps", "quickInputs"],
 }
 
-export const validateMeta = createSchemaValidator<Meta>(Meta_JsonSchema)
+export const validateMeta = createSchemaValidator<MindMapMeta>(MindMapMeta_JsonSchema)
 
-const PartialMeta_JsonSchema: JSONSchemaType<Partial<Meta>> = {
+const PartialMeta_JsonSchema: JSONSchemaType<Partial<MindMapMeta>> = {
     type: "object",
     properties: {
         currentKey: {
@@ -174,33 +169,7 @@ const PartialMeta_JsonSchema: JSONSchemaType<Partial<Meta>> = {
     },
 }
 
-export const validatePartialMeta = createSchemaValidator<Partial<Meta>>(PartialMeta_JsonSchema)
-
-const getDefaultQuickInputs = () => {
-    let index = -1
-    return [
-        {id: `${index--}`, label: 'TAB', value: '    '},
-        {id: `${index--}`, label: '`', value: '`'},
-        {id: `${index--}`, label: '\'', value: '\''},
-        {id: `${index--}`, label: '"', value: '"'},
-        {id: `${index--}`, label: '-', value: '-'},
-        {id: `${index--}`, label: '_', value: '_'},
-        {id: `${index--}`, label: '<', value: '<'},
-        {id: `${index--}`, label: '>', value: '>'},
-        {id: `${index--}`, label: '(', value: '('},
-        {id: `${index--}`, label: ')', value: ')'},
-        {id: `${index--}`, label: '[', value: '['},
-        {id: `${index--}`, label: ']', value: ']'},
-        {id: `${index--}`, label: '[', value: '['},
-        {id: `${index--}`, label: ']', value: ']'},
-        {id: `${index--}`, label: '{', value: '{'},
-        {id: `${index--}`, label: '}', value: '}'},
-        {id: `${index--}`, label: '^', value: '^'},
-        {id: `${index--}`, label: '/', value: '/'},
-        {id: `${index--}`, label: '|', value: '|'},
-        {id: `${index--}`, label: '\\', value: '\\'},
-    ]
-}
+export const validatePartialMindMapMeta = createSchemaValidator<Partial<MindMapMeta>>(PartialMeta_JsonSchema)
 
 export const getDefaultMeta = () => {
     return {
@@ -209,9 +178,9 @@ export const getDefaultMeta = () => {
     }
 }
 
-const meta = ref<Meta>(getDefaultMeta())
+const meta = ref<MindMapMeta>(getDefaultMeta())
 
-export const initMindMapMetaStore = async () => {
+export const initMindMapStore = async () => {
     const themeStore = useThemeStore()
     watch(() => themeStore.theme.value, (theme) => {
         if (theme !== meta.value.currentTheme) {
@@ -244,7 +213,7 @@ export const initMindMapMetaStore = async () => {
         }
         const metaValueStr = await jsonFileOperations.get(metaFileName)
 
-        let metaValue: Meta | undefined
+        let metaValue: MindMapMeta | undefined
         try {
             metaValue = JSON.parse(metaValueStr)
         } catch (e) {
@@ -253,7 +222,7 @@ export const initMindMapMetaStore = async () => {
         }
         if (validateMeta(metaValue)) {
             meta.value = metaValue
-        } else if (validatePartialMeta(metaValue)) {
+        } else if (validatePartialMindMapMeta(metaValue)) {
             Object.assign(meta.value, metaValue)
             await jsonFileOperations.set(metaFileName, JSON.stringify(meta.value))
         } else {
@@ -269,7 +238,7 @@ export const initMindMapMetaStore = async () => {
             i18nStore.setLanguage(meta.value.currentLanguage)
         }
 
-        const store = useMindMapMetaStore()
+        const store = useMindMapStore()
         if (meta.value.currentKey && meta.value.mindMaps.findIndex(it => it.key === meta.value.currentKey) !== -1) {
             await store.toggle(meta.value.currentKey)
         } else {
@@ -281,7 +250,7 @@ export const initMindMapMetaStore = async () => {
     })
 }
 
-export const useMindMapMetaStore = createStore(() => {
+export const useMindMapStore = createStore(() => {
     const add = async (index: number, name: string) => {
         return await withLoading("Create MindMap", async () => {
             try {

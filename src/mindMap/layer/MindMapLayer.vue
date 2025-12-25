@@ -5,14 +5,14 @@ import ContentEdge from "@/mindMap/edge/ContentEdge.vue";
 import {useMindMap} from "@/mindMap/useMindMap.ts";
 import {computed} from "vue";
 import {type MindMapLayer} from "@/mindMap/layer/MindMapLayer.ts";
-import {useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
+import {useMindMapStore} from "@/store/mindMapStore.ts";
 
 const props = defineProps<{
     layer: MindMapLayer,
     index: number,
 }>()
 
-const {meta} = useMindMapMetaStore()
+const {meta} = useMindMapStore()
 
 const {currentLayer, initLayer, currentLayerIndex} = useMindMap()
 

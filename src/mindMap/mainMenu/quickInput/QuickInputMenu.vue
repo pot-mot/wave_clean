@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import IconDelete from "@/components/icons/IconDelete.vue";
-import {type QuickInputItem, useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
+import {useMindMapStore} from "@/store/mindMapStore.ts";
 import {ref} from "vue";
 import {sendMessage} from "@/components/message/messageApi.ts";
 import IconAdd from "@/components/icons/IconAdd.vue";
 import DragModelList from "@/components/list/DragModelList.vue";
 import {v7 as uuid} from "uuid"
 import {translate} from "@/store/i18nStore.ts";
+import type {QuickInputItem} from "@/mindMap/quickInput/QuickInput.ts";
 
-const metaStore = useMindMapMetaStore()
+const {meta} = useMindMapStore()
 
 const currentItem = ref<QuickInputItem | undefined>(undefined)
 
@@ -30,12 +31,12 @@ const handleAdd = () => {
         sendMessage("Please set label and value", {type: "warning"})
         return
     }
-    metaStore.meta.value.quickInputs.push(input.value)
+    meta.value.quickInputs.push(input.value)
     input.value = getDefaultQuickInput()
 }
 
 const handleDelete = (item: QuickInputItem) => {
-    metaStore.meta.value.quickInputs = metaStore.meta.value.quickInputs.filter(it => it.id !== item.id)
+    meta.value.quickInputs = meta.value.quickInputs.filter(it => it.id !== item.id)
 }
 </script>
 
@@ -61,7 +62,7 @@ const handleDelete = (item: QuickInputItem) => {
 
         <DragModelList
             class="quick-input-list"
-            v-model="metaStore.meta.value.quickInputs"
+            v-model="meta.quickInputs"
             :current-item="currentItem"
             :to-key="quickInput => quickInput.id"
             @remove="quickInput => handleDelete(quickInput)"

@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import {type QuickInputItem, useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
+import {useMindMapStore} from "@/store/mindMapStore.ts";
 import {useFocusTargetStore} from "@/store/focusTargetStore.ts";
 import {outsideInput} from "@/utils/event/outsideInput.ts";
 import CollapseItem from "@/components/collapse/CollapseItem.vue";
+import type {QuickInputItem} from "@/mindMap/quickInput/QuickInput.ts";
 
-const metaStore = useMindMapMetaStore()
+const {meta} = useMindMapStore()
 
 const focusTargetStore = useFocusTargetStore()
 
@@ -22,7 +23,7 @@ const handleQuickInput = (quickInput: QuickInputItem) => {
         <div class="quick-input-bar">
             <button
                 class="quick-input-item"
-                v-for="quickInput in metaStore.meta.value.quickInputs"
+                v-for="quickInput in meta.quickInputs"
                 :key="quickInput.id"
                 @touchend.prevent="handleQuickInput(quickInput)"
             >

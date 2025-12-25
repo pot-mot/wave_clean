@@ -11,7 +11,7 @@ import IconDelete from "@/components/icons/IconDelete.vue";
 import IconCopy from "@/components/icons/IconCopy.vue";
 import IconFocus from "@/components/icons/IconFocus.vue";
 import {blurActiveElement, getMatchedElementOrParent} from "@/utils/event/judgeEventTarget.ts";
-import {useMindMapMetaStore} from "@/mindMap/meta/MindMapMetaStore.ts";
+import {useMindMapStore} from "@/store/mindMapStore.ts";
 import MarkdownPreview from "@/components/markdown/preview/MarkdownPreview.vue";
 import ResizeWrapper from "@/components/resizer/ResizeWrapper.vue";
 import {type ResizeEventArgs} from "@/components/resizer/ResizeWrapperType.ts";
@@ -34,7 +34,7 @@ import {
 import MarkdownCompositeEditor from "@/components/markdown/compositeEditor/MarkdownCompositeEditor.vue";
 import IconFullScreen from "@/components/icons/IconFullScreen.vue";
 
-const {meta} = useMindMapMetaStore()
+const {meta} = useMindMapStore()
 
 const {
     currentLayer,

@@ -2,7 +2,7 @@
 import {useMindMap} from "@/mindMap/useMindMap.ts";
 import LayerMenu from "@/mindMap/layer/LayerMenu.vue";
 import {ref} from "vue";
-import MetaMenu from "@/mindMap/meta/MetaMenu.vue";
+import MainMenu from "@/mindMap/mainMenu/MainMenu.vue";
 import IconSave from "@/components/icons/IconSave.vue";
 import IconUndo from "@/components/icons/IconUndo.vue";
 import IconRedo from "@/components/icons/IconRedo.vue";
@@ -69,7 +69,7 @@ const layersMenuOpen = ref(false)
         @keydown.esc="metaMenuOpen = false"
     >
         <div class="container">
-            <MetaMenu/>
+            <MainMenu/>
         </div>
     </div>
 
