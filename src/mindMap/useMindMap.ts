@@ -842,7 +842,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
              */
             el.addEventListener('keydown', (e) => {
                 // 按下 Delete 键删除选中的节点和边
-                if (e.key === "Delete") {
+                if (e.key === "Delete" || e.key === "Backspace") {
                     if (getSelectedNodes.value.length === 0 && getSelectedEdges.value.length === 0) return
 
                     e.preventDefault()

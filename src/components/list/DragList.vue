@@ -31,7 +31,7 @@ const container = useTemplateRef<HTMLDivElement>("container")
 const handleKeyDown = (e: KeyboardEvent) => {
     if (props.currentItem === undefined) return
 
-    if (e.key === "Delete") {
+    if (e.key === "Delete" || e.key === "Backspace") {
         e.preventDefault()
         emits("remove", props.currentItem)
     } else if (e.key === "ArrowUp") {
