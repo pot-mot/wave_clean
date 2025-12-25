@@ -463,7 +463,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
             focus()
         }, {once: true})
         if (withMessage) {
-            sendMessage("removed", {type: "success"})
+            sendMessage(translate("remove_success"), {type: "success"})
         }
     }
 
