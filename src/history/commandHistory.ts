@@ -1,6 +1,5 @@
-import {cloneDeep} from "lodash-es";
-import type {BaseHistory, FullUndefinedHistoryEventsArgs, HistoryEvents} from "@/history/BaseHistory.ts";
-import mitt from "mitt";
+import cloneDeep from "lodash-es/cloneDeep";
+import mitt, {type Emitter} from "mitt";
 
 export type CommandDefinition<ApplyOptions, RevertOptions = ApplyOptions> = {
     applyAction: (options: ApplyOptions) => RevertOptions
@@ -26,9 +25,9 @@ export type HistoryCommandOption<CommandMap extends CustomCommandMap, Key extend
     Omit<HistoryCommand<CommandMap, Key>, 'key'>
 
 export type SingleCommandData<CommandMap extends CustomCommandMap, Key extends keyof CommandMap = keyof CommandMap> = {
-    command: HistoryCommand<CommandMap, Key>,
-    options: Parameters<CommandMap[Key]['applyAction']>[0];
-    revertOptions: Parameters<CommandMap[Key]['revertAction']>[0],
+    command: HistoryCommand<CommandMap, Key>
+    options: Parameters<CommandMap[Key]['applyAction']>[0]
+    revertOptions: Parameters<CommandMap[Key]['revertAction']>[0]
 }
 
 export type BatchCommandData<CommandMap extends CustomCommandMap> = CommandData<CommandMap>[]
@@ -43,34 +42,42 @@ const revertType = 'revert'
 const pushType = 'push'
 type CommandChangeInputType = typeof applyType | typeof revertType | typeof pushType
 
-export type CommandChangeInput<CommandMap extends CustomCommandMap, Key extends keyof CommandMap = keyof CommandMap> = {
+export type CommandChangeInput<CommandMap extends CustomCommandMap> = {
     type: CommandChangeInputType,
-} & SingleCommandData<CommandMap, Key>
+} & {
+    [K in keyof CommandMap]: { key: K } & SingleCommandData<CommandMap, K>
+}[keyof CommandMap]
 
-export type CommandHistoryEvents<CommandMap extends CustomCommandMap> =
-    HistoryEvents<
-        Omit<FullUndefinedHistoryEventsArgs, 'beforeChangeInput' | 'changeInput' | 'undoInput' | 'redoInput'> &
-        {
-            beforeChangeInput: { key: keyof CommandMap, type: CommandChangeInputType },
-            changeInput: CommandChangeInput<CommandMap>,
-            undoInput: CommandData<CommandMap>,
-            redoInput: CommandData<CommandMap>,
-        }
-    > &
-    {
-        beforeClean: undefined,
-        clean: undefined,
-        registerCommand: { key: keyof CommandMap }
-        unregisterCommand: { key: keyof CommandMap }
-        batchStart: undefined,
-        batchStop: undefined,
-    }
+export type CommandHistoryEvents<CommandMap extends CustomCommandMap> = {
+    beforeChange: { key: keyof CommandMap, type: CommandChangeInputType }
+    change: CommandChangeInput<CommandMap>
+
+    beforeUndo: undefined
+    undo: CommandData<CommandMap>
+
+    beforeRedo: undefined
+    redo: CommandData<CommandMap>
+
+    beforeClean: undefined
+    clean: undefined
+
+    registerCommand: { key: keyof CommandMap }
+    unregisterCommand: { key: keyof CommandMap }
+
+    batchStart: undefined
+    batchStop: undefined
+}
 
 export type CommandHistory<CommandMap extends CustomCommandMap> =
-    BaseHistory<
-        CommandHistoryEvents<CommandMap>
-    > &
     {
+        eventBus: Emitter<CommandHistoryEvents<CommandMap>>
+
+        canUndo(): boolean
+        undo(): void
+
+        canRedo(): boolean
+        redo(): void
+
         clean(): void
 
         // 命令注册方法
@@ -216,7 +223,7 @@ export const useCommandHistory = <CommandMap extends CustomCommandMap>(): Comman
         const commandData = {command, options, revertOptions}
         push(commandData)
 
-        eventBus.emit("change", {type: applyType, ...commandData})
+        eventBus.emit("change", {type: applyType, key: command.key, ...commandData})
 
         return revertOptions
     }
@@ -232,7 +239,7 @@ export const useCommandHistory = <CommandMap extends CustomCommandMap>(): Comman
         if (command !== undefined) {
             const commandData = {command, options, revertOptions}
             push(commandData)
-            eventBus.emit("change", {type: pushType, ...commandData})
+            eventBus.emit("change", {type: pushType, key: command.key, ...commandData})
         }
     }
 
@@ -249,7 +256,7 @@ export const useCommandHistory = <CommandMap extends CustomCommandMap>(): Comman
             if (newOptions !== undefined) {
                 commandData.options = newOptions
             }
-            eventBus.emit("change", {type: revertType, ...commandData})
+            eventBus.emit("change", {type: revertType, key: command.key, ...commandData})
         }
     };
 
@@ -263,7 +270,7 @@ export const useCommandHistory = <CommandMap extends CustomCommandMap>(): Comman
 
             eventBus.emit("beforeChange", {key: command.key, type: applyType})
             command.applyAction(options)
-            eventBus.emit("change", {type: applyType, ...commandData})
+            eventBus.emit("change", {type: applyType, key: command.key, ...commandData})
         }
     };
 

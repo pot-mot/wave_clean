@@ -32,7 +32,6 @@
     "core-js": "^3.44.0",
     "file-type": "^21.0.0",
     "html-to-image": "^1.11.11",
-    "immer": "^10.1.1",
     "katex": "^0.16.22",
     "lodash-es": "^4.17.21",
     "markdown-it": "^14.1.0",
