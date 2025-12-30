@@ -131,6 +131,7 @@ const handleKeyDown = async (e: KeyboardEvent) => {
     <div
         tabindex="-1"
         @keydown="handleKeyDown"
+        @mouseenter="focus"
         :id="MIND_MAP_CONTAINER_ID"
         style="width: 100%; height: 100%; position: relative;"
     >
