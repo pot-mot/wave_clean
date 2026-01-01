@@ -443,7 +443,6 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         vueFlow.addSelectedNodes(graphNodes)
         vueFlow.addSelectedEdges(graphEdges)
         vueFlow.multiSelectionActive.value = currentMultiSelectionActive
-        focus()
     }
 
 
@@ -605,7 +604,6 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         vueFlow.panOnDrag.value = isTouchDevice.value ? true : [0, 2]
         selectionRectMouseButton = 2
         selectionRectEnable = false
-        focus()
     }
     // 默认操作为框选，通过鼠标右键拖拽
     const setDefaultSelectionRect = (
@@ -615,7 +613,6 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         vueFlow.panOnDrag.value = isTouchDevice.value ? false : [2]
         selectionRectMouseButton = 0
         selectionRectEnable = true
-        focus()
     }
     const toggleDefaultMouseAction = (
         vueFlow: VueFlowStore = getCurrentVueFlow()
@@ -908,7 +905,6 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                     const rectY = clientRect.y
 
                     e.preventDefault()
-                    focus()
 
                     vueFlow.multiSelectionActive.value = true
                     cleanSelection()
@@ -1051,7 +1047,6 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                     const rectY = clientRect.y
 
                     e.preventDefault()
-                    focus()
 
                     vueFlow.multiSelectionActive.value = true
                     cleanSelection()
@@ -1188,7 +1183,6 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
             } else {
                 sendMessage(translate("cannot_undo"), {type: "warning"})
             }
-            focus()
         },
         redo: () => {
             if (canRedo.value) {
@@ -1197,7 +1191,6 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
             } else {
                 sendMessage(translate("cannot_redo"), {type: "warning"})
             }
-            focus()
         },
 
         executeBatch: history.executeBatch,
@@ -1297,7 +1290,6 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
             try {
                 const result = await layer.copy(data)
                 sendMessage("copy", {type: "success"})
-                focus()
                 return result
             } catch (e) {
                 sendMessage(`copy fail: ${e}`, {type: "warning"})
@@ -1312,7 +1304,6 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                 }
                 const result = await layer.paste()
                 sendMessage("paste", {type: "success"})
-                focus()
                 return result
             } catch (e) {
                 sendMessage(`paste fail: ${e}`, {type: "warning"})
