@@ -1,5 +1,5 @@
 import {describe, beforeEach, it, expect, vitest} from 'vitest'
-import {type BatchCommandData, type CommandDefinition, type CommandHistory, useCommandHistory} from '@/history/commandHistory';
+import {type BatchCommandData, type CommandDefinition, type CommandHistory, useCommandHistory} from '@/history/commandHistory.ts';
 
 describe('useCommandHistory', () => {
     type TestCommandMap = {
@@ -21,8 +21,8 @@ describe('useCommandHistory', () => {
                 revertAction: revertMock,
             });
 
-            expect(Object.keys(history.__clone_view__.getCommandMap()).length).toEqual(1);
-            expect(history.__clone_view__.getCommandMap().testCommand?.key).toEqual('testCommand');
+            expect(history.__clone_view__.getCommandMap().size).toEqual(1);
+            expect(history.__clone_view__.getCommandMap().get('testCommand')?.key).toEqual('testCommand');
         });
     });
 
