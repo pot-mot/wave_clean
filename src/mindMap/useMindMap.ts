@@ -7,7 +7,7 @@ import {
     type ViewportTransform,
     type VueFlowStore,
     type XYPosition,
-} from "@vue-flow/core";
+} from '@vue-flow/core';
 import {
     computed,
     nextTick,
@@ -18,80 +18,88 @@ import {
     type ShallowRef,
     shallowRef,
     toRaw,
-} from "vue";
-import {blurActiveElement, judgeTargetIsInteraction} from "@/utils/event/judgeEventTarget.ts";
-import {jsonSortPropStringify} from "@/utils/json/jsonStringify.ts";
+} from 'vue';
+import {blurActiveElement, judgeTargetIsInteraction} from '@/utils/event/judgeEventTarget.ts';
+import {jsonSortPropStringify} from '@/utils/json/jsonStringify.ts';
 import {
     type JustifyOptions,
     type MindMapImportData,
     prepareImportIntoMindMap,
-    validateMindMapImportData
-} from "@/mindMap/import/import.ts";
+    validateMindMapImportData,
+} from '@/mindMap/import/import.ts';
 import {
     type ExportFileType,
     exportMindMapData,
     exportMindMapSelectionData,
     exportMindMapToFile,
-    type MindMapExportData
-} from "@/mindMap/export/export.ts";
-import type {MindMapData} from "@/mindMap/MindMapData.ts";
-import {checkFullConnection, type FullConnection, reverseConnection} from "@/mindMap/edge/connection.ts";
-import {useMindMapHistory} from "@/mindMap/history/MindMapHistory.ts";
-import {unimplementedClipBoard, useClipBoard} from "@/utils/clipBoard/useClipBoard.ts";
-import {useMindMapStore} from "@/store/mindMapStore.ts";
-import type {LazyData} from "@/utils/type/lazyDataParse.ts";
-import {useDeviceStore} from "@/store/deviceStore.ts";
-import {v7 as uuid} from "uuid"
-import {sendMessage} from "@/components/message/messageApi.ts";
-import {getTouchRect} from "@/utils/event/getTouchRect.ts";
-import {createStore} from "@/utils/store/createStore.ts";
-import {withLoading} from "@/components/loading/loadingApi.ts";
+    type MindMapExportData,
+} from '@/mindMap/export/export.ts';
+import type {MindMapData} from '@/mindMap/MindMapData.ts';
+import {
+    checkFullConnection,
+    type FullConnection,
+    reverseConnection,
+} from '@/mindMap/edge/connection.ts';
+import {useMindMapHistory} from '@/mindMap/history/MindMapHistory.ts';
+import {unimplementedClipBoard, useClipBoard} from '@/utils/clipBoard/useClipBoard.ts';
+import {useMindMapStore} from '@/store/mindMapStore.ts';
+import type {LazyData} from '@/utils/type/lazyDataParse.ts';
+import {useDeviceStore} from '@/store/deviceStore.ts';
+import {v7 as uuid} from 'uuid';
+import {sendMessage} from '@/components/message/messageApi.ts';
+import {getTouchRect} from '@/utils/event/getTouchRect.ts';
+import {createStore} from '@/utils/store/createStore.ts';
+import {withLoading} from '@/components/loading/loadingApi.ts';
 import {
     type MindMapLayer,
     type MindMapLayerData,
     type MindMapLayerDiffData,
-    MindMapLayerDiffDataKeys
-} from "@/mindMap/layer/MindMapLayer.ts";
-import {type ContentNodeData, ContentType_DEFAULT, NodeType_CONTENT} from "@/mindMap/node/ContentNode.ts";
-import {type ContentEdgeData, EdgeType_CONTENT} from "@/mindMap/edge/ContentEdge.ts";
-import {translate} from "@/store/i18nStore.ts";
+    MindMapLayerDiffDataKeys,
+} from '@/mindMap/layer/MindMapLayer.ts';
+import {
+    type ContentNodeData,
+    ContentType_DEFAULT,
+    NodeType_CONTENT,
+} from '@/mindMap/node/ContentNode.ts';
+import {type ContentEdgeData, EdgeType_CONTENT} from '@/mindMap/edge/ContentEdge.ts';
+import {translate} from '@/store/i18nStore.ts';
 
 // 鼠标默认行为
-type MouseAction = "panDrag" | "selectionRect"
+type MouseAction = 'panDrag' | 'selectionRect';
 
-export const MIND_MAP_CONTAINER_ID = "MIND_MAP_CONTAINER_ID"
+export const MIND_MAP_CONTAINER_ID = 'MIND_MAP_CONTAINER_ID';
 
 export const createLayerId = () => {
-    return `layer-${uuid()}`
-}
+    return `layer-${uuid()}`;
+};
 
 export const createNodeId = () => {
-    return `node-${uuid()}`
-}
+    return `node-${uuid()}`;
+};
 
 export const createVueFlowId = () => {
-    return `vueflow-${uuid()}`
-}
+    return `vueflow-${uuid()}`;
+};
 
 export const createEdgeId = (connection: Connection) => {
-    return `vueflow__edge-${connection.source}${connection.sourceHandle ?? ''}-${connection.target}${connection.targetHandle ?? ''}`
-}
+    return `vueflow__edge-${connection.source}${connection.sourceHandle ?? ''}-${connection.target}${connection.targetHandle ?? ''}`;
+};
 
 export const getDefaultMindMapData = (): MindMapData => {
-    const id = createLayerId()
+    const id = createLayerId();
     return {
         currentLayerId: id,
         layers: [
             {
                 id,
-                name: "layer-0",
+                name: 'layer-0',
                 visible: true,
                 opacity: 1,
                 data: {
                     nodes: [],
                     edges: [],
-                }
-            }
+                },
+            },
         ],
         transform: {
             x: 0,
@@ -99,11 +107,11 @@ export const getDefaultMindMapData = (): MindMapData => {
             zoom: 1,
         },
         zIndexIncrement: 1,
-    }
-}
+    };
+};
 
 export const createLayer = (id: string, name: string) => {
-    const vueFlowId = createVueFlowId()
+    const vueFlowId = createVueFlowId();
     return shallowReactive({
         id,
         vueFlow: useVueFlow(vueFlowId),
@@ -113,56 +121,56 @@ export const createLayer = (id: string, name: string) => {
         lock: false,
 
         ...unimplementedClipBoard,
-    })
-}
+    });
+};
 
 // 将 MindMapData 中的静态图层数据转换为真实的响应式图层
-const layerDataToLayers = (
-    data: {
-        currentLayerId: string,
-        layers: MindMapLayerData[],
-    }
-): {
-    layers: ShallowReactive<MindMapLayer[]>,
-    currentLayer: ShallowReactive<MindMapLayer>
+const layerDataToLayers = (data: {
+    currentLayerId: string;
+    layers: MindMapLayerData[];
+}): {
+    layers: ShallowReactive<MindMapLayer[]>;
+    currentLayer: ShallowReactive<MindMapLayer>;
 } => {
-    const currentLayerIndex = data.layers.findIndex(layer => layer.id === data.currentLayerId)
+    const currentLayerIndex = data.layers.findIndex((layer) => layer.id === data.currentLayerId);
     if (currentLayerIndex === -1) {
-        throw new Error("current layer does not in layers")
+        throw new Error('current layer does not in layers');
     }
-    const layerIdSet = new Set(data.layers.map(it => it.id))
+    const layerIdSet = new Set(data.layers.map((it) => it.id));
     if (layerIdSet.size !== data.layers.length) {
-        throw new Error("layers id is not unique")
+        throw new Error('layers id is not unique');
     }
-    const layers = shallowReactive(data.layers.map(it => {
-        const {id, name, data, ...other} = it
-        const layer = createLayer(id, name)
-        Object.assign(layer, other)
-        layer.vueFlow.setNodes(data.nodes)
-        layer.vueFlow.setEdges(data.edges)
-        return layer
-    }))
-    const currentLayer = layers[currentLayerIndex]
-    if (!currentLayer) throw new Error("current layer is undefined")
+    const layers = shallowReactive(
+        data.layers.map((it) => {
+            const {id, name, data, ...other} = it;
+            const layer = createLayer(id, name);
+            Object.assign(layer, other);
+            layer.vueFlow.setNodes(data.nodes);
+            layer.vueFlow.setEdges(data.edges);
+            return layer;
+        }),
+    );
+    const currentLayer = layers[currentLayerIndex];
+    if (!currentLayer) throw new Error('current layer is undefined');
 
     return {
         layers,
-        currentLayer
-    }
-}
+        currentLayer,
+    };
+};
 
 // 思维导图全局变量类型，对外暴露 zIndex自增、图层状态与图层切换API
 export type MindMapGlobal = {
-    zIndexIncrement: number,
-    layers: ShallowReactive<MindMapLayer[]>,
-    currentLayer: ShallowRef<ShallowReactive<MindMapLayer>>,
-    toggleCurrentLayer: (layerId: string) => void,
-}
+    zIndexIncrement: number;
+    layers: ShallowReactive<MindMapLayer[]>;
+    currentLayer: ShallowRef<ShallowReactive<MindMapLayer>>;
+    toggleCurrentLayer: (layerId: string) => void;
+};
 
 export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData()) => {
-    const {isTouchDevice} = useDeviceStore()
+    const {isTouchDevice} = useDeviceStore();
 
-    const {currentLayer, layers} = layerDataToLayers(data)
+    const {currentLayer, layers} = layerDataToLayers(data);
 
     const global: MindMapGlobal = {
         zIndexIncrement: data.zIndexIncrement,
@@ -170,234 +178,246 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         currentLayer: shallowRef<MindMapLayer>(currentLayer),
 
         toggleCurrentLayer: async (layerId: string) => {
-            const targetLayer = global.layers.find(layer => layer.id === layerId)
-            if (targetLayer === undefined) throw new Error(`layer [${layerId}] is undefined`)
+            const targetLayer = global.layers.find((layer) => layer.id === layerId);
+            if (targetLayer === undefined) throw new Error(`layer [${layerId}] is undefined`);
 
-            blurActiveElement()
-            cleanSelection()
-            global.currentLayer.value = targetLayer
-            await nextTick()
-            setLayerConfigDefault()
-            focus()
-        }
-    }
+            blurActiveElement();
+            cleanSelection();
+            global.currentLayer.value = targetLayer;
+            await nextTick();
+            setLayerConfigDefault();
+            focus();
+        },
+    };
     const currentLayerIndex = computed<number>(() => {
-        return global.layers.findIndex(layer => layer.id === global.currentLayer.value.id)
-    })
+        return global.layers.findIndex((layer) => layer.id === global.currentLayer.value.id);
+    });
 
-    const screenPosition = ref<XYPosition>({x: 0, y: 0})
+    const screenPosition = ref<XYPosition>({x: 0, y: 0});
 
-    const {history, canUndo, canRedo} = useMindMapHistory(global)
+    const {history, canUndo, canRedo} = useMindMapHistory(global);
 
-    const currentLayerId = computed(() => global.currentLayer.value.id)
+    const currentLayerId = computed(() => global.currentLayer.value.id);
     const getCurrentVueFlow = () => {
-        return global.currentLayer.value.vueFlow
-    }
+        return global.currentLayer.value.vueFlow;
+    };
 
     const getSelection = () => {
-        const vueFlow = getCurrentVueFlow()
+        const vueFlow = getCurrentVueFlow();
         return {
             nodes: vueFlow.getSelectedNodes.value,
             edges: vueFlow.getSelectedEdges.value,
-        }
-    }
+        };
+    };
 
     const cleanSelection = () => {
-        const vueFlow = getCurrentVueFlow()
-        vueFlow.removeSelectedNodes(vueFlow.getSelectedNodes.value)
-        vueFlow.removeSelectedEdges(vueFlow.getSelectedEdges.value)
-    }
+        const vueFlow = getCurrentVueFlow();
+        vueFlow.removeSelectedNodes(vueFlow.getSelectedNodes.value);
+        vueFlow.removeSelectedEdges(vueFlow.getSelectedEdges.value);
+    };
     const focus = () => {
-        const vueFlow = getCurrentVueFlow()
-        vueFlow.vueFlowRef.value?.focus()
-    }
+        const vueFlow = getCurrentVueFlow();
+        vueFlow.vueFlowRef.value?.focus();
+    };
 
-    const currentViewport = shallowRef<ViewportTransform>(global.currentLayer.value.vueFlow.viewport.value)
+    const currentViewport = shallowRef<ViewportTransform>(
+        global.currentLayer.value.vueFlow.viewport.value,
+    );
     const zoom = computed(() => {
-        return currentViewport.value !== undefined ? currentViewport.value.zoom : 1
-    })
+        return currentViewport.value !== undefined ? currentViewport.value.zoom : 1;
+    });
 
     const addLayer = () => {
-        history.executeBatch(Symbol("layer:add"), () => {
-            const id = createLayerId()
+        history.executeBatch(Symbol('layer:add'), () => {
+            const id = createLayerId();
 
-            let increment = global.layers.length
-            let name = `layer-${increment}`
-            const layerNameSet = new Set(global.layers.map(it => it.name))
+            let increment = global.layers.length;
+            let name = `layer-${increment}`;
+            const layerNameSet = new Set(global.layers.map((it) => it.name));
             while (layerNameSet.has(name)) {
-                name = `layer-${++increment}`
+                name = `layer-${++increment}`;
             }
-            const layer = createLayer(id, name)
-            history.executeCommand("layer:add", layer)
-            toggleLayer(layer.id)
-        })
-    }
+            const layer = createLayer(id, name);
+            history.executeCommand('layer:add', layer);
+            toggleLayer(layer.id);
+        });
+    };
 
     const removeLayer = (layerId: string) => {
-        if (global.layers.length <= 1) return
-        history.executeBatch(Symbol("layer:remove"), () => {
-            const layer = global.layers.find(layer => layer.id === layerId)
+        if (global.layers.length <= 1) return;
+        history.executeBatch(Symbol('layer:remove'), () => {
+            const layer = global.layers.find((layer) => layer.id === layerId);
             if (layer === undefined) {
-                console.error(`layer ${layerId} not exist`)
-                return
+                console.error(`layer ${layerId} not exist`);
+                return;
             }
             if (layerId === currentLayerId.value) {
-                const currentIndex = global.layers.findIndex(layer => layer.id === currentLayerId.value)
+                const currentIndex = global.layers.findIndex(
+                    (layer) => layer.id === currentLayerId.value,
+                );
                 if (currentIndex === -1) {
-                    console.error("current layer not in layers")
-                    return
+                    console.error('current layer not in layers');
+                    return;
                 }
                 if (currentIndex === 0) {
                     if (global.layers[1]) {
-                        toggleLayer(global.layers[1].id)
+                        toggleLayer(global.layers[1].id);
                     }
                 } else if (global.layers[currentIndex - 1]) {
-                    const previousLayer = global.layers[currentIndex - 1]
+                    const previousLayer = global.layers[currentIndex - 1];
                     if (previousLayer) {
-                        toggleLayer(previousLayer.id)
+                        toggleLayer(previousLayer.id);
                     }
                 }
             }
-            history.executeCommand("layer:remove", layerId)
-        })
-    }
+            history.executeCommand('layer:remove', layerId);
+        });
+    };
 
     const mergeLayer = (index: number) => {
-        if (index <= 0 || index >= global.layers.length || global.layers.length <= 1) return
+        if (index <= 0 || index >= global.layers.length || global.layers.length <= 1) return;
 
-        const mergedLayerId = global.layers[index]?.id
+        const mergedLayerId = global.layers[index]?.id;
         if (mergedLayerId === undefined) {
-            console.error(`layer ${mergedLayerId} not exist`)
-            return
+            console.error(`layer ${mergedLayerId} not exist`);
+            return;
         }
-        const mergedLayer = global.layers.find(layer => layer.id === mergedLayerId)
+        const mergedLayer = global.layers.find((layer) => layer.id === mergedLayerId);
         if (mergedLayer === undefined) {
-            console.error(`layer ${mergedLayerId} not exist`)
-            return
+            console.error(`layer ${mergedLayerId} not exist`);
+            return;
         }
 
-        const baseLayerId = global.layers[index - 1]?.id
+        const baseLayerId = global.layers[index - 1]?.id;
         if (baseLayerId === undefined) {
-            console.error(`layer ${baseLayerId} not exist`)
-            return
+            console.error(`layer ${baseLayerId} not exist`);
+            return;
         }
-        const baseLayer = global.layers.find(layer => layer.id === baseLayerId)
+        const baseLayer = global.layers.find((layer) => layer.id === baseLayerId);
         if (baseLayer === undefined) {
-            console.error(`layer ${baseLayerId} not exist`)
-            return
+            console.error(`layer ${baseLayerId} not exist`);
+            return;
         }
 
-        history.executeBatch(Symbol("layer:merge"), () => {
+        history.executeBatch(Symbol('layer:merge'), () => {
             if (currentLayerId.value === mergedLayerId) {
-                history.executeCommand("layer:toggle", baseLayerId)
+                history.executeCommand('layer:toggle', baseLayerId);
             }
-            history.executeCommand("layer:merge", {
+            history.executeCommand('layer:merge', {
                 mergedLayerIndex: index,
                 baseLayerIndex: index - 1,
-            })
-        })
-    }
+            });
+        });
+    };
 
     const toggleLayer = (layerId: string) => {
-        if (layerId === global.currentLayer.value.id) return
-        const layer = global.layers.find(layer => layer.id === layerId)
+        if (layerId === global.currentLayer.value.id) return;
+        const layer = global.layers.find((layer) => layer.id === layerId);
         if (layer === undefined) {
-            console.error(`layer ${layerId} not exist`)
-            return
+            console.error(`layer ${layerId} not exist`);
+            return;
         }
-        history.executeCommand("layer:toggle", layerId)
-    }
+        history.executeCommand('layer:toggle', layerId);
+    };
 
     const changeLayerVisible = (layerId: string, visible: boolean) => {
-        const layer = global.layers.find(layer => layer.id === layerId)
+        const layer = global.layers.find((layer) => layer.id === layerId);
         if (layer === undefined) {
-            console.error(`layer ${layerId} not exist`)
-            return
+            console.error(`layer ${layerId} not exist`);
+            return;
         }
-        if (layer.visible === visible) return
-        history.executeCommand("layer:visible:change", {layerId, visible})
-    }
+        if (layer.visible === visible) return;
+        history.executeCommand('layer:visible:change', {layerId, visible});
+    };
 
     const changeLayerLock = (layerId: string, lock: boolean) => {
-        const layer = global.layers.find(layer => layer.id === layerId)
+        const layer = global.layers.find((layer) => layer.id === layerId);
         if (layer === undefined) {
-            console.error(`layer ${layerId} not exist`)
-            return
+            console.error(`layer ${layerId} not exist`);
+            return;
         }
-        if (layer.lock === lock) return
-        history.executeCommand("layer:lock:change", {layerId, lock})
-    }
+        if (layer.lock === lock) return;
+        history.executeCommand('layer:lock:change', {layerId, lock});
+    };
 
     const changeLayerData = (layerId: string, data: Partial<MindMapLayerDiffData>) => {
-        const layer = global.layers.find(layer => layer.id === layerId)
+        const layer = global.layers.find((layer) => layer.id === layerId);
         if (layer === undefined) {
-            console.error(`layer ${layerId} not exist`)
-            return
+            console.error(`layer ${layerId} not exist`);
+            return;
         }
-        let equalFlag = true
+        let equalFlag = true;
         for (const key of MindMapLayerDiffDataKeys) {
             if (layer[key] !== data[key]) {
-                equalFlag = false
-                break
+                equalFlag = false;
+                break;
             }
         }
-        if (equalFlag) return
-        history.executeCommand("layer:data:change", {layerId, newData: data})
-    }
+        if (equalFlag) return;
+        history.executeCommand('layer:data:change', {layerId, newData: data});
+    };
 
     const dragLayer = (oldIndex: number, newIndex: number) => {
         if (
-            oldIndex < 0 || oldIndex > global.layers.length + 1 ||
-            newIndex < 0 || newIndex > global.layers.length + 1 ||
+            oldIndex < 0 ||
+            oldIndex > global.layers.length + 1 ||
+            newIndex < 0 ||
+            newIndex > global.layers.length + 1 ||
             newIndex === oldIndex
-        ) return
-        history.executeCommand("layer:dragged", {oldIndex, newIndex})
-    }
+        )
+            return;
+        history.executeCommand('layer:dragged', {oldIndex, newIndex});
+    };
 
     const swapLayer = (oldIndex: number, newIndex: number) => {
         if (
-            oldIndex < 0 || oldIndex > global.layers.length ||
-            newIndex < 0 || newIndex > global.layers.length ||
+            oldIndex < 0 ||
+            oldIndex > global.layers.length ||
+            newIndex < 0 ||
+            newIndex > global.layers.length ||
             newIndex === oldIndex
-        ) return
-        history.executeCommand("layer:swapped", {oldIndex, newIndex})
-    }
+        )
+            return;
+        history.executeCommand('layer:swapped', {oldIndex, newIndex});
+    };
 
     const addNode = (position: XYPosition, layerId: string = currentLayerId.value) => {
-        if (layers.find(layer => layer.id === layerId)?.lock) {
-            sendMessage(translate("layer_is_locked"))
-            return
+        if (layers.find((layer) => layer.id === layerId)?.lock) {
+            sendMessage(translate('layer_is_locked'));
+            return;
         }
-        return history.executeCommand("node:add", {
+        return history.executeCommand('node:add', {
             layerId,
             node: {
                 id: createNodeId(),
                 position,
                 type: NodeType_CONTENT,
                 data: {
-                    content: "",
+                    content: '',
                     type: ContentType_DEFAULT,
                 },
-            }
-        })
-    }
+            },
+        });
+    };
 
     const checkConnectionExist = (connection: Connection): boolean => {
-        const vueFlow = getCurrentVueFlow()
-        return vueFlow.findEdge(createEdgeId(connection)) !== undefined ||
+        const vueFlow = getCurrentVueFlow();
+        return (
+            vueFlow.findEdge(createEdgeId(connection)) !== undefined ||
             vueFlow.findEdge(createEdgeId(reverseConnection(connection))) !== undefined
-    }
+        );
+    };
 
     const addEdge = (connection: Connection, layerId: string = currentLayerId.value) => {
-        if (layers.find(layer => layer.id === layerId)?.lock) {
-            sendMessage(translate("layer_is_locked"))
-            return
+        if (layers.find((layer) => layer.id === layerId)?.lock) {
+            sendMessage(translate('layer_is_locked'));
+            return;
         }
 
-        if (checkConnectionExist(connection)) return
-        if (!checkFullConnection(connection)) return
+        if (checkConnectionExist(connection)) return;
+        if (!checkFullConnection(connection)) return;
 
-        const id = createEdgeId(connection)
+        const id = createEdgeId(connection);
 
         history.executeCommand('edge:add', {
             layerId,
@@ -406,155 +426,174 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                 id,
                 type: EdgeType_CONTENT,
                 data: {
-                    content: ""
+                    content: '',
                 },
-            }
-        })
-    }
-
+            },
+        });
+    };
 
     const getCenterPosition = () => {
-        const vueFlow = getCurrentVueFlow()
-        return vueFlow.screenToFlowCoordinate({x: window.innerWidth / 2, y: window.innerHeight / 2})
-    }
+        const vueFlow = getCurrentVueFlow();
+        return vueFlow.screenToFlowCoordinate({
+            x: window.innerWidth / 2,
+            y: window.innerHeight / 2,
+        });
+    };
 
     const importData = (
         data: MindMapImportData,
         justifyOptions: JustifyOptions = {
             point: getCenterPosition(),
-            type: "leftTop"
+            type: 'leftTop',
         },
-        vueFlow: VueFlowStore = getCurrentVueFlow()
+        vueFlow: VueFlowStore = getCurrentVueFlow(),
     ) => {
-        if (layers.find(layer => layer.vueFlow.id === vueFlow.id)?.lock) {
-            sendMessage(translate("layer_is_locked"))
-            return
+        if (layers.find((layer) => layer.vueFlow.id === vueFlow.id)?.lock) {
+            sendMessage(translate('layer_is_locked'));
+            return;
         }
 
-        blurActiveElement()
-        const {newNodes, newEdges} = prepareImportIntoMindMap(vueFlow, data, justifyOptions)
-        history.executeCommand("import", {layerId: currentLayerId.value, nodes: newNodes, edges: newEdges})
+        blurActiveElement();
+        const {newNodes, newEdges} = prepareImportIntoMindMap(vueFlow, data, justifyOptions);
+        history.executeCommand('import', {
+            layerId: currentLayerId.value,
+            nodes: newNodes,
+            edges: newEdges,
+        });
 
-        const currentMultiSelectionActive = vueFlow.multiSelectionActive.value
-        vueFlow.multiSelectionActive.value = true
-        cleanSelection()
-        const graphNodes = newNodes.map(it => vueFlow.findNode(it.id)).filter(it => it !== undefined)
-        const graphEdges = newEdges.map(it => vueFlow.findEdge(it.id)).filter(it => it !== undefined)
-        vueFlow.addSelectedNodes(graphNodes)
-        vueFlow.addSelectedEdges(graphEdges)
-        vueFlow.multiSelectionActive.value = currentMultiSelectionActive
-    }
-
+        const currentMultiSelectionActive = vueFlow.multiSelectionActive.value;
+        vueFlow.multiSelectionActive.value = true;
+        cleanSelection();
+        const graphNodes = newNodes
+            .map((it) => vueFlow.findNode(it.id))
+            .filter((it) => it !== undefined);
+        const graphEdges = newEdges
+            .map((it) => vueFlow.findEdge(it.id))
+            .filter((it) => it !== undefined);
+        vueFlow.addSelectedNodes(graphNodes);
+        vueFlow.addSelectedEdges(graphEdges);
+        vueFlow.multiSelectionActive.value = currentMultiSelectionActive;
+    };
 
     const remove = (
-        data: { nodes?: (GraphNode | string)[], edges?: (GraphEdge | string)[] },
+        data: {nodes?: (GraphNode | string)[]; edges?: (GraphEdge | string)[]},
         withMessage: boolean = true,
-        vueFlow: VueFlowStore = getCurrentVueFlow()
+        vueFlow: VueFlowStore = getCurrentVueFlow(),
     ) => {
-        if (layers.find(layer => layer.vueFlow.id === vueFlow.id)?.lock) {
-            sendMessage(translate("layer_is_locked"))
-            return
+        if (layers.find((layer) => layer.vueFlow.id === vueFlow.id)?.lock) {
+            sendMessage(translate('layer_is_locked'));
+            return;
         }
 
-        blurActiveElement()
-        history.executeCommand('remove', {...data, layerId: currentLayerId.value})
-        focus()
-        vueFlow.vueFlowRef.value?.addEventListener('blur', () => {
-            focus()
-        }, {once: true})
+        blurActiveElement();
+        history.executeCommand('remove', {...data, layerId: currentLayerId.value});
+        focus();
+        vueFlow.vueFlowRef.value?.addEventListener(
+            'blur',
+            () => {
+                focus();
+            },
+            {once: true},
+        );
         if (withMessage) {
-            sendMessage(translate("remove_success"), {type: "success"})
+            sendMessage(translate('remove_success'), {type: 'success'});
         }
-    }
+    };
 
     const removeSelection = () => {
-        remove(getSelection())
-    }
+        remove(getSelection());
+    };
 
     /**
      * 点击多选相关配置
      */
     const isSelectionNotEmpty = computed(() => {
-        const vueFlow = getCurrentVueFlow()
-        return (vueFlow.getSelectedNodes.value.length + vueFlow.getSelectedEdges.value.length) > 0
-    })
+        const vueFlow = getCurrentVueFlow();
+        return vueFlow.getSelectedNodes.value.length + vueFlow.getSelectedEdges.value.length > 0;
+    });
     const canMultiSelect = computed(() => {
-        const vueFlow = getCurrentVueFlow()
-        return vueFlow.multiSelectionActive.value
-    })
+        const vueFlow = getCurrentVueFlow();
+        return vueFlow.multiSelectionActive.value;
+    });
     const enableMultiSelect = (vueFlow: VueFlowStore = getCurrentVueFlow()) => {
-        vueFlow.multiSelectionActive.value = true
-    }
+        vueFlow.multiSelectionActive.value = true;
+    };
     const disableMultiSelect = (vueFlow: VueFlowStore = getCurrentVueFlow()) => {
-        vueFlow.multiSelectionActive.value = false
-    }
+        vueFlow.multiSelectionActive.value = false;
+    };
     const toggleMultiSelect = (vueFlow: VueFlowStore = getCurrentVueFlow()) => {
         if (vueFlow.multiSelectionActive.value) {
-            disableMultiSelect(vueFlow)
+            disableMultiSelect(vueFlow);
         } else {
-            enableMultiSelect(vueFlow)
+            enableMultiSelect(vueFlow);
         }
-    }
+    };
 
     const selectAll = (vueFlow: VueFlowStore = getCurrentVueFlow()) => {
-        const isCurrentMultiSelect = vueFlow.multiSelectionActive.value
+        const isCurrentMultiSelect = vueFlow.multiSelectionActive.value;
 
-        if (!isCurrentMultiSelect) enableMultiSelect(vueFlow)
+        if (!isCurrentMultiSelect) enableMultiSelect(vueFlow);
         if (vueFlow.getSelectedNodes.value.length < vueFlow.getNodes.value.length) {
-            vueFlow.addSelectedNodes(vueFlow.getNodes.value)
+            vueFlow.addSelectedNodes(vueFlow.getNodes.value);
         }
         if (vueFlow.getSelectedEdges.value.length < vueFlow.getEdges.value.length) {
-            vueFlow.addSelectedEdges(vueFlow.getEdges.value)
+            vueFlow.addSelectedEdges(vueFlow.getEdges.value);
         }
-        if (!isCurrentMultiSelect) disableMultiSelect(vueFlow)
-    }
+        if (!isCurrentMultiSelect) disableMultiSelect(vueFlow);
+    };
 
     const toggleSelectAll = (vueFlow: VueFlowStore = getCurrentVueFlow()) => {
-        const isCurrentMultiSelect = vueFlow.multiSelectionActive.value
+        const isCurrentMultiSelect = vueFlow.multiSelectionActive.value;
 
-        if (!isCurrentMultiSelect) enableMultiSelect(vueFlow)
-        if (vueFlow.getSelectedNodes.value.length < vueFlow.getNodes.value.length || vueFlow.getSelectedEdges.value.length < vueFlow.getEdges.value.length) {
-            vueFlow.addSelectedNodes(vueFlow.getNodes.value)
-            vueFlow.addSelectedEdges(vueFlow.getEdges.value)
+        if (!isCurrentMultiSelect) enableMultiSelect(vueFlow);
+        if (
+            vueFlow.getSelectedNodes.value.length < vueFlow.getNodes.value.length ||
+            vueFlow.getSelectedEdges.value.length < vueFlow.getEdges.value.length
+        ) {
+            vueFlow.addSelectedNodes(vueFlow.getNodes.value);
+            vueFlow.addSelectedEdges(vueFlow.getEdges.value);
         } else {
-            vueFlow.removeSelectedNodes(vueFlow.getNodes.value)
-            vueFlow.removeSelectedEdges(vueFlow.getEdges.value)
+            vueFlow.removeSelectedNodes(vueFlow.getNodes.value);
+            vueFlow.removeSelectedEdges(vueFlow.getEdges.value);
         }
-        if (!isCurrentMultiSelect) disableMultiSelect(vueFlow)
-    }
+        if (!isCurrentMultiSelect) disableMultiSelect(vueFlow);
+    };
 
     /**
      * 框选相关配置
      */
-    let selectionRectEnable: boolean = false
-    let selectionRectMouseButton: number = 0
+    let selectionRectEnable: boolean = false;
+    let selectionRectMouseButton: number = 0;
     const selectionRect = ref<{
-        x: number,
-        y: number,
-        width: number,
-        height: number
-    } | null>(null)
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+    } | null>(null);
 
     const getByClientRect = (
         rect: {
-            readonly x: number,
-            readonly y: number,
-            readonly width: number,
-            readonly height: number
+            readonly x: number;
+            readonly y: number;
+            readonly width: number;
+            readonly height: number;
         },
-        vueFlow: VueFlowStore = getCurrentVueFlow()
+        vueFlow: VueFlowStore = getCurrentVueFlow(),
     ) => {
-        const innerNodes: GraphNode[] = []
-        const innerEdges: GraphEdge[] = []
+        const innerNodes: GraphNode[] = [];
+        const innerEdges: GraphEdge[] = [];
 
-        const leftTop = vueFlow.screenToFlowCoordinate({x: rect.x, y: rect.y})
-        const rightBottom = vueFlow.screenToFlowCoordinate({x: rect.x + rect.width, y: rect.y + rect.height})
+        const leftTop = vueFlow.screenToFlowCoordinate({x: rect.x, y: rect.y});
+        const rightBottom = vueFlow.screenToFlowCoordinate({
+            x: rect.x + rect.width,
+            y: rect.y + rect.height,
+        });
 
         for (const node of vueFlow.getNodes.value) {
-            const nodeLeft = node.position.x
-            const nodeRight = node.position.x + node.dimensions.width
-            const nodeTop = node.position.y
-            const nodeBottom = node.position.y + node.dimensions.height
+            const nodeLeft = node.position.x;
+            const nodeRight = node.position.x + node.dimensions.width;
+            const nodeTop = node.position.y;
+            const nodeBottom = node.position.y + node.dimensions.height;
 
             if (
                 nodeRight > leftTop.x &&
@@ -581,78 +620,65 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
             }
         }
 
-        return {nodes: innerNodes, edges: innerEdges}
-    }
-
+        return {nodes: innerNodes, edges: innerEdges};
+    };
 
     /**
      * 同步边连接信息
      */
-    const isConnecting = ref(false)
-    const connectSourceNodeId = ref<string>()
+    const isConnecting = ref(false);
+    const connectSourceNodeId = ref<string>();
 
     /**
      * 默认鼠标行为
      */
-    const defaultMouseAction = ref<MouseAction>('panDrag')
+    const defaultMouseAction = ref<MouseAction>('panDrag');
 
     // 默认操作为拖拽
-    const setDefaultPanDrag = (
-        vueFlow: VueFlowStore = getCurrentVueFlow()
-    ) => {
-        defaultMouseAction.value = 'panDrag'
-        vueFlow.panOnDrag.value = isTouchDevice.value ? true : [0, 2]
-        selectionRectMouseButton = 2
-        selectionRectEnable = false
-    }
+    const setDefaultPanDrag = (vueFlow: VueFlowStore = getCurrentVueFlow()) => {
+        defaultMouseAction.value = 'panDrag';
+        vueFlow.panOnDrag.value = isTouchDevice.value ? true : [0, 2];
+        selectionRectMouseButton = 2;
+        selectionRectEnable = false;
+    };
     // 默认操作为框选，通过鼠标右键拖拽
-    const setDefaultSelectionRect = (
-        vueFlow: VueFlowStore = getCurrentVueFlow()
-    ) => {
-        defaultMouseAction.value = 'selectionRect'
-        vueFlow.panOnDrag.value = isTouchDevice.value ? false : [2]
-        selectionRectMouseButton = 0
-        selectionRectEnable = true
-    }
-    const toggleDefaultMouseAction = (
-        vueFlow: VueFlowStore = getCurrentVueFlow()
-    ) => {
+    const setDefaultSelectionRect = (vueFlow: VueFlowStore = getCurrentVueFlow()) => {
+        defaultMouseAction.value = 'selectionRect';
+        vueFlow.panOnDrag.value = isTouchDevice.value ? false : [2];
+        selectionRectMouseButton = 0;
+        selectionRectEnable = true;
+    };
+    const toggleDefaultMouseAction = (vueFlow: VueFlowStore = getCurrentVueFlow()) => {
         if (defaultMouseAction.value === 'panDrag') {
-            setDefaultSelectionRect(vueFlow)
+            setDefaultSelectionRect(vueFlow);
         } else {
-            setDefaultPanDrag(vueFlow)
+            setDefaultPanDrag(vueFlow);
         }
-    }
+    };
 
     const canDrag = computed(() => {
-        const vueFlow = getCurrentVueFlow()
-        return vueFlow.nodesDraggable.value
-    })
-    const disableDrag = (
-        vueFlow: VueFlowStore = getCurrentVueFlow()
-    ) => {
-        vueFlow.nodesDraggable.value = false
-    }
-    const enableDrag = (
-        vueFlow: VueFlowStore = getCurrentVueFlow()
-    ) => {
-        vueFlow.nodesDraggable.value = true
-    }
+        const vueFlow = getCurrentVueFlow();
+        return vueFlow.nodesDraggable.value;
+    });
+    const disableDrag = (vueFlow: VueFlowStore = getCurrentVueFlow()) => {
+        vueFlow.nodesDraggable.value = false;
+    };
+    const enableDrag = (vueFlow: VueFlowStore = getCurrentVueFlow()) => {
+        vueFlow.nodesDraggable.value = true;
+    };
 
-    const setLayerConfigDefault = (
-        vueFlow: VueFlowStore = getCurrentVueFlow()
-    ) => {
-        disableMultiSelect(vueFlow)
-        setDefaultPanDrag(vueFlow)
-        enableDrag(vueFlow)
-    }
+    const setLayerConfigDefault = (vueFlow: VueFlowStore = getCurrentVueFlow()) => {
+        disableMultiSelect(vueFlow);
+        setDefaultPanDrag(vueFlow);
+        enableDrag(vueFlow);
+    };
 
-    setLayerConfigDefault()
+    setLayerConfigDefault();
 
     const initLayer = (layer: MindMapLayer) => {
-        const {id, vueFlow} = layer
+        const {id, vueFlow} = layer;
 
-        setLayerConfigDefault(vueFlow)
+        setLayerConfigDefault(vueFlow);
 
         const {
             vueFlowRef,
@@ -670,268 +696,288 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
             onConnectEnd,
             onEdgeUpdateStart,
             onEdgeUpdate,
-        } = vueFlow
+        } = vueFlow;
 
         onInit(() => {
-            const el = vueFlowRef.value
-            const viewportEl = vueFlowRef.value
-            const paneEl = el?.querySelector('div.vue-flow__pane') as HTMLDivElement | null
+            const el = vueFlowRef.value;
+            const viewportEl = vueFlowRef.value;
+            const paneEl = el?.querySelector('div.vue-flow__pane') as HTMLDivElement | null;
 
             if (el === null || viewportEl === null || paneEl === null) {
-                throw new Error(`Layer [${id}] Ref is undefined in onInit`)
+                throw new Error(`Layer [${id}] Ref is undefined in onInit`);
             }
 
             /**
              * 同步视口
              */
-            vueFlow.setViewport(currentViewport.value).then()
+            vueFlow.setViewport(currentViewport.value).then();
 
             onViewportChange(async () => {
                 if (id === currentLayerId.value) {
-                    currentViewport.value = toRaw(vueFlow.viewport.value)
-                    await nextTick()
+                    currentViewport.value = toRaw(vueFlow.viewport.value);
+                    await nextTick();
                     for (const layer of global.layers) {
-                        if (layer.id === id) continue
-                        await layer.vueFlow.setViewport(currentViewport.value)
+                        if (layer.id === id) continue;
+                        await layer.vueFlow.setViewport(currentViewport.value);
                     }
                 }
-            })
+            });
 
             /**
              * 剪切板
              */
             const clipBoard = useClipBoard<MindMapImportData, MindMapExportData>({
                 exportData: (): MindMapExportData => {
-                    return exportMindMapSelectionData(vueFlow)
+                    return exportMindMapSelectionData(vueFlow);
                 },
                 importData: (data: MindMapImportData) => {
-                    importData(data, {point: screenToFlowCoordinate(screenPosition.value), type: "topNode"})
+                    importData(data, {
+                        point: screenToFlowCoordinate(screenPosition.value),
+                        type: 'topNode',
+                    });
                 },
                 removeData: (data: MindMapExportData) => {
-                    remove({nodes: data.nodes?.map(it => it.id), edges: data.edges?.map(it => it.id)}, false)
+                    remove(
+                        {
+                            nodes: data.nodes?.map((it) => it.id),
+                            edges: data.edges?.map((it) => it.id),
+                        },
+                        false,
+                    );
                 },
                 stringifyData: (data: MindMapExportData): string => {
-                    return jsonSortPropStringify(data)
+                    return jsonSortPropStringify(data);
                 },
-                validateInput: validateMindMapImportData
-            })
+                validateInput: validateMindMapImportData,
+            });
 
-            Object.assign(layer, clipBoard)
+            Object.assign(layer, clipBoard);
 
             /**
              * 节点移动
              */
-            const nodeMoveMap = new Map<string, XYPosition>
+            const nodeMoveMap = new Map<string, XYPosition>();
 
             onNodesChange((changes) => {
-                if (nodeMoveMap.size !== 0) return
+                if (nodeMoveMap.size !== 0) return;
 
-                history.executeBatch(Symbol("node:move"), () => {
+                history.executeBatch(Symbol('node:move'), () => {
                     for (const change of changes) {
                         if (change.type === 'position') {
-                            history.pushCommand('node:move', {
-                                layerId: currentLayerId.value,
-                                id: change.id,
-                                oldPosition: change.from,
-                                newPosition: change.position
-                            }, {
-                                layerId: currentLayerId.value,
-                                id: change.id,
-                                oldPosition: change.from,
-                            })
+                            history.pushCommand(
+                                'node:move',
+                                {
+                                    layerId: currentLayerId.value,
+                                    id: change.id,
+                                    oldPosition: change.from,
+                                    newPosition: change.position,
+                                },
+                                {
+                                    layerId: currentLayerId.value,
+                                    id: change.id,
+                                    oldPosition: change.from,
+                                },
+                            );
                         }
                     }
-                })
-            })
+                });
+            });
 
             onNodeDragStart(({nodes}) => {
-                nodeMoveMap.clear()
+                nodeMoveMap.clear();
                 for (const node of nodes) {
-                    nodeMoveMap.set(node.id, node.position)
+                    nodeMoveMap.set(node.id, node.position);
                 }
-            })
+            });
 
             onNodeDragStop(({nodes}) => {
-                history.executeBatch(Symbol("node:move"), () => {
+                history.executeBatch(Symbol('node:move'), () => {
                     for (const node of nodes) {
-                        const oldPosition = nodeMoveMap.get(node.id)
-                        nodeMoveMap.delete(node.id)
+                        const oldPosition = nodeMoveMap.get(node.id);
+                        nodeMoveMap.delete(node.id);
                         if (oldPosition !== undefined) {
-                            const newPosition = node.position
-                            if (jsonSortPropStringify(oldPosition) !== jsonSortPropStringify(newPosition)) {
+                            const newPosition = node.position;
+                            if (
+                                jsonSortPropStringify(oldPosition) !==
+                                jsonSortPropStringify(newPosition)
+                            ) {
                                 history.executeCommand('node:move', {
                                     layerId: currentLayerId.value,
                                     id: node.id,
                                     newPosition,
-                                    oldPosition
-                                })
+                                    oldPosition,
+                                });
                             }
                         }
                     }
-                })
-                nodeMoveMap.clear()
-            })
+                });
+                nodeMoveMap.clear();
+            });
 
             /**
              * 边连接
              */
             onConnect((connectData) => {
-                addEdge(connectData)
-            })
+                addEdge(connectData);
+            });
 
             onConnectStart((data) => {
-                isConnecting.value = true
-                connectSourceNodeId.value = data.nodeId
-            })
+                isConnecting.value = true;
+                connectSourceNodeId.value = data.nodeId;
+            });
 
             onConnectEnd(() => {
-                isConnecting.value = false
-                connectSourceNodeId.value = undefined
-            })
+                isConnecting.value = false;
+                connectSourceNodeId.value = undefined;
+            });
 
             /**
              * 边重连接
              */
-            const edgeReconnectMap = new Map<string, FullConnection>
+            const edgeReconnectMap = new Map<string, FullConnection>();
             const stopSelectStart = (e: Event) => {
-                e.preventDefault()
-            }
+                e.preventDefault();
+            };
 
             onEdgeUpdateStart(({edge}) => {
-                vueFlowRef.value?.addEventListener('selectstart', stopSelectStart)
+                vueFlowRef.value?.addEventListener('selectstart', stopSelectStart);
                 const connection: Connection = {
                     source: edge.source,
                     sourceHandle: edge.sourceHandle,
                     target: edge.target,
                     targetHandle: edge.targetHandle,
-                }
+                };
                 if (checkFullConnection(connection)) {
-                    edgeReconnectMap.set(edge.id, connection)
+                    edgeReconnectMap.set(edge.id, connection);
                 }
-            })
+            });
 
             onEdgeUpdate(({edge, connection}) => {
-                history.executeBatch(Symbol("edge:reconnect"), () => {
-                    const oldConnection = edgeReconnectMap.get(edge.id)
-                    edgeReconnectMap.delete(edge.id)
+                history.executeBatch(Symbol('edge:reconnect'), () => {
+                    const oldConnection = edgeReconnectMap.get(edge.id);
+                    edgeReconnectMap.delete(edge.id);
                     if (oldConnection !== undefined && checkFullConnection(connection)) {
-                        if (jsonSortPropStringify(oldConnection) !== jsonSortPropStringify(connection) && !checkConnectionExist(connection)) {
+                        if (
+                            jsonSortPropStringify(oldConnection) !==
+                                jsonSortPropStringify(connection) &&
+                            !checkConnectionExist(connection)
+                        ) {
                             history.executeCommand('edge:reconnect', {
                                 layerId: currentLayerId.value,
                                 id: edge.id,
                                 newConnection: connection,
-                                oldConnection
-                            })
+                                oldConnection,
+                            });
                         }
                     }
-                })
-                vueFlowRef.value?.removeEventListener('selectstart', stopSelectStart)
-            })
+                });
+                vueFlowRef.value?.removeEventListener('selectstart', stopSelectStart);
+            });
 
             if (!isTouchDevice.value) {
                 // 设置屏幕位置
                 paneEl.addEventListener('mouseenter', (e) => {
-                    screenPosition.value = {x: e.clientX, y: e.clientY}
-                })
+                    screenPosition.value = {x: e.clientX, y: e.clientY};
+                });
                 paneEl.addEventListener('mousemove', (e) => {
-                    screenPosition.value = {x: e.clientX, y: e.clientY}
-                })
+                    screenPosition.value = {x: e.clientX, y: e.clientY};
+                });
 
                 // 双击添加节点
-                let waitNextMouseDown = false
-                let waitTimeout: number | undefined
+                let waitNextMouseDown = false;
+                let waitTimeout: number | undefined;
                 // 记录上一次 mousedown 以避免误触
-                let lastMouseTime = new Date().getTime()
-                let lastMousePosition: XYPosition | null = null
+                let lastMouseTime = new Date().getTime();
+                let lastMousePosition: XYPosition | null = null;
 
                 paneEl.addEventListener('mousedown', (e) => {
-                    if (e.target !== paneEl) return
+                    if (e.target !== paneEl) return;
                     if (!layer.visible) {
-                        sendMessage(translate("layer_is_invisible"))
-                        return
+                        sendMessage(translate('layer_is_invisible'));
+                        return;
                     }
 
-                    const currentTime = new Date().getTime()
-                    const currentMousePosition = {x: e.clientX, y: e.clientY}
+                    const currentTime = new Date().getTime();
+                    const currentMousePosition = {x: e.clientX, y: e.clientY};
 
                     if (waitNextMouseDown) {
-                        waitNextMouseDown = false
-                        clearTimeout(waitTimeout)
+                        waitNextMouseDown = false;
+                        clearTimeout(waitTimeout);
 
-                        const timeDiff = currentTime - lastMouseTime
+                        const timeDiff = currentTime - lastMouseTime;
                         if (timeDiff > 0 && timeDiff < 300 && lastMousePosition !== null) {
                             if (
                                 Math.abs(currentMousePosition.x - lastMousePosition.x) < 10 &&
                                 Math.abs(currentMousePosition.y - lastMousePosition.y) < 10
                             ) {
-                                addNode(screenToFlowCoordinate(currentMousePosition))
+                                addNode(screenToFlowCoordinate(currentMousePosition));
                             }
                         }
 
-                        lastMousePosition = null
+                        lastMousePosition = null;
                     } else {
-                        waitNextMouseDown = true
+                        waitNextMouseDown = true;
                         waitTimeout = setTimeout(() => {
-                            waitNextMouseDown = false
-                            lastMousePosition = null
-                        }, 300)
+                            waitNextMouseDown = false;
+                            lastMousePosition = null;
+                        }, 300);
 
-                        lastMouseTime = currentTime
-                        lastMousePosition = currentMousePosition
+                        lastMouseTime = currentTime;
+                        lastMousePosition = currentMousePosition;
                     }
-                })
+                });
 
                 // 鼠标移入非交互元素时，允许拖拽，否则禁止画布拖拽
-                let currentPanOnDrag = vueFlow.panOnDrag.value
+                let currentPanOnDrag = vueFlow.panOnDrag.value;
                 paneEl.addEventListener('mouseover', (e) => {
-                    if (selectionRectEnable) return
+                    if (selectionRectEnable) return;
                     if (vueFlow.panOnDrag.value !== false && judgeTargetIsInteraction(e)) {
-                        currentPanOnDrag = vueFlow.panOnDrag.value
-                        vueFlow.panOnDrag.value = false
+                        currentPanOnDrag = vueFlow.panOnDrag.value;
+                        vueFlow.panOnDrag.value = false;
                     } else if (currentPanOnDrag !== false) {
-                        vueFlow.panOnDrag.value = currentPanOnDrag
+                        vueFlow.panOnDrag.value = currentPanOnDrag;
                     }
-                })
+                });
 
                 // 多选框
                 paneEl.addEventListener('mousedown', (e) => {
-                    if (!vueFlowRef.value) return
-                    if (e.target !== paneEl) return
-                    if (!selectionRectEnable) return
-                    if (e.button !== selectionRectMouseButton) return
+                    if (!vueFlowRef.value) return;
+                    if (e.target !== paneEl) return;
+                    if (!selectionRectEnable) return;
+                    if (e.button !== selectionRectMouseButton) return;
 
-                    const clientRect = vueFlowRef.value.getBoundingClientRect()
-                    const rectX = clientRect.x
-                    const rectY = clientRect.y
+                    const clientRect = vueFlowRef.value.getBoundingClientRect();
+                    const rectX = clientRect.x;
+                    const rectY = clientRect.y;
 
-                    e.preventDefault()
+                    e.preventDefault();
 
-                    vueFlow.multiSelectionActive.value = true
-                    cleanSelection()
+                    vueFlow.multiSelectionActive.value = true;
+                    cleanSelection();
 
-                    const startX = e.clientX
-                    const startY = e.clientY
+                    const startX = e.clientX;
+                    const startY = e.clientY;
 
                     const onRectSelect = (e: MouseEvent) => {
-                        e.preventDefault()
-                        const currentX = e.clientX
-                        const currentY = e.clientY
-                        const width = Math.abs(currentX - startX)
-                        const height = Math.abs(currentY - startY)
-                        const x = Math.min(startX, currentX)
-                        const y = Math.min(startY, currentY)
+                        e.preventDefault();
+                        const currentX = e.clientX;
+                        const currentY = e.clientY;
+                        const width = Math.abs(currentX - startX);
+                        const height = Math.abs(currentY - startY);
+                        const x = Math.min(startX, currentX);
+                        const y = Math.min(startY, currentY);
 
                         selectionRect.value = {
                             width,
                             height,
                             x: x - rectX,
                             y: y - rectY,
-                        }
-                    }
+                        };
+                    };
 
                     const onRectSelectEnd = () => {
-                        document.documentElement.removeEventListener('mousemove', onRectSelect)
-                        document.documentElement.removeEventListener('mouseup', onRectSelectEnd)
+                        document.documentElement.removeEventListener('mousemove', onRectSelect);
+                        document.documentElement.removeEventListener('mouseup', onRectSelectEnd);
 
                         if (selectionRect.value) {
                             const {nodes, edges} = getByClientRect({
@@ -939,219 +985,264 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                                 height: selectionRect.value.height,
                                 x: selectionRect.value.x + rectX,
                                 y: selectionRect.value.y + rectY,
-                            })
+                            });
 
-                            cleanSelection()
-                            vueFlow.addSelectedNodes(nodes)
-                            vueFlow.addSelectedEdges(edges)
+                            cleanSelection();
+                            vueFlow.addSelectedNodes(nodes);
+                            vueFlow.addSelectedEdges(edges);
                         }
 
-                        vueFlow.userSelectionActive.value = false
-                        selectionRect.value = null
+                        vueFlow.userSelectionActive.value = false;
+                        selectionRect.value = null;
 
-                        const newSelectedNodes = vueFlow.getSelectedNodes.value
-                        const newSelectedEdges = vueFlow.getSelectedEdges.value
+                        const newSelectedNodes = vueFlow.getSelectedNodes.value;
+                        const newSelectedEdges = vueFlow.getSelectedEdges.value;
                         setTimeout(() => {
-                            cleanSelection()
-                            vueFlow.addSelectedNodes(newSelectedNodes)
-                            vueFlow.addSelectedEdges(newSelectedEdges)
-                            vueFlow.multiSelectionActive.value = false
-                        })
-                    }
+                            cleanSelection();
+                            vueFlow.addSelectedNodes(newSelectedNodes);
+                            vueFlow.addSelectedEdges(newSelectedEdges);
+                            vueFlow.multiSelectionActive.value = false;
+                        });
+                    };
 
-                    document.documentElement.addEventListener('mousemove', onRectSelect)
-                    document.documentElement.addEventListener('mouseup', onRectSelectEnd)
-                })
+                    document.documentElement.addEventListener('mousemove', onRectSelect);
+                    document.documentElement.addEventListener('mouseup', onRectSelectEnd);
+                });
             } else {
                 // 设置屏幕位置
-                paneEl.addEventListener('touchstart', (e) => {
-                    if (e.touches[0]) {
-                        screenPosition.value = {x: e.touches[0].clientX, y: e.touches[0].clientY}
-                    }
-                }, {passive: true})
-                paneEl.addEventListener('touchmove', (e) => {
-                    if (e.changedTouches[0]) {
-                        screenPosition.value = {x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY}
-                    }
-                }, {passive: true})
+                paneEl.addEventListener(
+                    'touchstart',
+                    (e) => {
+                        if (e.touches[0]) {
+                            screenPosition.value = {
+                                x: e.touches[0].clientX,
+                                y: e.touches[0].clientY,
+                            };
+                        }
+                    },
+                    {passive: true},
+                );
+                paneEl.addEventListener(
+                    'touchmove',
+                    (e) => {
+                        if (e.changedTouches[0]) {
+                            screenPosition.value = {
+                                x: e.changedTouches[0].clientX,
+                                y: e.changedTouches[0].clientY,
+                            };
+                        }
+                    },
+                    {passive: true},
+                );
 
                 // 当触碰数量多于，阻止节点拖拽
-                el.addEventListener('touchstart', (e) => {
-                    if (e.touches.length > 1) {
-                        disableDrag()
-                    } else {
-                        enableDrag()
-                    }
-                }, {capture: true, passive: true})
+                el.addEventListener(
+                    'touchstart',
+                    (e) => {
+                        if (e.touches.length > 1) {
+                            disableDrag();
+                        } else {
+                            enableDrag();
+                        }
+                    },
+                    {capture: true, passive: true},
+                );
 
                 // 双击添加节点
-                let waitNextTouchEnd = false
-                let waitTimeout: number | undefined
+                let waitNextTouchEnd = false;
+                let waitTimeout: number | undefined;
                 // 记录上一次 touchstart 以避免误触
-                let lastTouchTime = new Date().getTime()
-                let lastTouchPosition: XYPosition | null = null
+                let lastTouchTime = new Date().getTime();
+                let lastTouchPosition: XYPosition | null = null;
 
-                paneEl.addEventListener('touchstart', (e) => {
-                    if (e.target !== paneEl) return
-                    if (!layer.visible) {
-                        sendMessage(translate("layer_is_invisible"))
-                        return
-                    }
-                    if (!e.touches[0]) return
+                paneEl.addEventListener(
+                    'touchstart',
+                    (e) => {
+                        if (e.target !== paneEl) return;
+                        if (!layer.visible) {
+                            sendMessage(translate('layer_is_invisible'));
+                            return;
+                        }
+                        if (!e.touches[0]) return;
 
-                    const currentTime = new Date().getTime()
-                    const currentTouchPosition = {x: e.touches[0].clientX, y: e.touches[0].clientY}
+                        const currentTime = new Date().getTime();
+                        const currentTouchPosition = {
+                            x: e.touches[0].clientX,
+                            y: e.touches[0].clientY,
+                        };
 
-                    if (waitNextTouchEnd) {
-                        waitNextTouchEnd = false
-                        clearTimeout(waitTimeout)
+                        if (waitNextTouchEnd) {
+                            waitNextTouchEnd = false;
+                            clearTimeout(waitTimeout);
 
-                        const timeDiff = currentTime - lastTouchTime
-                        if (timeDiff > 0 && timeDiff < 300 && lastTouchPosition !== null) {
-                            if (
-                                Math.abs(currentTouchPosition.x - lastTouchPosition.x) < 60 &&
-                                Math.abs(currentTouchPosition.y - lastTouchPosition.y) < 60
-                            ) {
-                                addNode(screenToFlowCoordinate(currentTouchPosition))
+                            const timeDiff = currentTime - lastTouchTime;
+                            if (timeDiff > 0 && timeDiff < 300 && lastTouchPosition !== null) {
+                                if (
+                                    Math.abs(currentTouchPosition.x - lastTouchPosition.x) < 60 &&
+                                    Math.abs(currentTouchPosition.y - lastTouchPosition.y) < 60
+                                ) {
+                                    addNode(screenToFlowCoordinate(currentTouchPosition));
+                                }
+
+                                e.stopPropagation();
                             }
 
-                            e.stopPropagation()
+                            lastTouchPosition = null;
+                        } else {
+                            lastTouchTime = currentTime;
+                            lastTouchPosition = currentTouchPosition;
                         }
-
-                        lastTouchPosition = null
-                    } else {
-                        lastTouchTime = currentTime
-                        lastTouchPosition = currentTouchPosition
-                    }
-                }, {passive: true})
-                paneEl.addEventListener('touchend', (e) => {
-                    if (e.target !== paneEl) return
-                    if (!waitNextTouchEnd) {
-                        waitNextTouchEnd = true
-                        waitTimeout = setTimeout(() => {
-                            waitNextTouchEnd = false
-                            lastTouchPosition = null
-                        }, 150)
-                    }
-                }, {passive: true})
+                    },
+                    {passive: true},
+                );
+                paneEl.addEventListener(
+                    'touchend',
+                    (e) => {
+                        if (e.target !== paneEl) return;
+                        if (!waitNextTouchEnd) {
+                            waitNextTouchEnd = true;
+                            waitTimeout = setTimeout(() => {
+                                waitNextTouchEnd = false;
+                                lastTouchPosition = null;
+                            }, 150);
+                        }
+                    },
+                    {passive: true},
+                );
 
                 // 多选框
-                paneEl.addEventListener('touchstart', (e) => {
-                    if (!vueFlowRef.value) return
-                    if (e.target !== paneEl) return
-                    if (!selectionRectEnable) return
-                    if (!e.touches[0]) return
+                paneEl.addEventListener(
+                    'touchstart',
+                    (e) => {
+                        if (!vueFlowRef.value) return;
+                        if (e.target !== paneEl) return;
+                        if (!selectionRectEnable) return;
+                        if (!e.touches[0]) return;
 
-                    const clientRect = vueFlowRef.value.getBoundingClientRect()
-                    const rectX = clientRect.x
-                    const rectY = clientRect.y
+                        const clientRect = vueFlowRef.value.getBoundingClientRect();
+                        const rectX = clientRect.x;
+                        const rectY = clientRect.y;
 
-                    e.preventDefault()
+                        e.preventDefault();
 
-                    vueFlow.multiSelectionActive.value = true
-                    cleanSelection()
+                        vueFlow.multiSelectionActive.value = true;
+                        cleanSelection();
 
-                    const start = {x: e.touches[0].clientX, y: e.touches[0].clientY}
+                        const start = {x: e.touches[0].clientX, y: e.touches[0].clientY};
 
-                    const onRectSelect = (e: TouchEvent) => {
-                        e.preventDefault()
-                        let {x, y, width, height} = getTouchRect(e, start)
+                        const onRectSelect = (e: TouchEvent) => {
+                            e.preventDefault();
+                            let {x, y, width, height} = getTouchRect(e, start);
 
-                        selectionRect.value = {
-                            width,
-                            height,
-                            x: x - rectX,
-                            y: y - rectY,
-                        }
-                    }
+                            selectionRect.value = {
+                                width,
+                                height,
+                                x: x - rectX,
+                                y: y - rectY,
+                            };
+                        };
 
-                    const onRectSelectEnd = (e: TouchEvent) => {
-                        if (e.touches.length !== 0) return
+                        const onRectSelectEnd = (e: TouchEvent) => {
+                            if (e.touches.length !== 0) return;
 
-                        document.documentElement.removeEventListener('touchmove', onRectSelect)
-                        document.documentElement.removeEventListener('touchend', onRectSelectEnd)
-                        document.documentElement.removeEventListener('touchcancel', onRectSelectEnd)
+                            document.documentElement.removeEventListener('touchmove', onRectSelect);
+                            document.documentElement.removeEventListener(
+                                'touchend',
+                                onRectSelectEnd,
+                            );
+                            document.documentElement.removeEventListener(
+                                'touchcancel',
+                                onRectSelectEnd,
+                            );
 
-                        if (selectionRect.value) {
-                            const {nodes, edges} = getByClientRect({
-                                width: selectionRect.value.width,
-                                height: selectionRect.value.height,
-                                x: selectionRect.value.x + rectX,
-                                y: selectionRect.value.y + rectY,
-                            })
+                            if (selectionRect.value) {
+                                const {nodes, edges} = getByClientRect({
+                                    width: selectionRect.value.width,
+                                    height: selectionRect.value.height,
+                                    x: selectionRect.value.x + rectX,
+                                    y: selectionRect.value.y + rectY,
+                                });
 
-                            cleanSelection()
-                            vueFlow.addSelectedNodes(nodes)
-                            vueFlow.addSelectedEdges(edges)
-                        }
+                                cleanSelection();
+                                vueFlow.addSelectedNodes(nodes);
+                                vueFlow.addSelectedEdges(edges);
+                            }
 
-                        selectionRect.value = null
-                        vueFlow.multiSelectionActive.value = false
+                            selectionRect.value = null;
+                            vueFlow.multiSelectionActive.value = false;
 
-                        if (isSelectionNotEmpty.value) {
-                            setDefaultPanDrag()
-                        }
-                    }
+                            if (isSelectionNotEmpty.value) {
+                                setDefaultPanDrag();
+                            }
+                        };
 
-                    document.documentElement.addEventListener('touchmove', onRectSelect, {passive: false})
-                    document.documentElement.addEventListener('touchend', onRectSelectEnd, {passive: true})
-                    document.documentElement.addEventListener('touchcancel', onRectSelectEnd)
-                }, {passive: false})
+                        document.documentElement.addEventListener('touchmove', onRectSelect, {
+                            passive: false,
+                        });
+                        document.documentElement.addEventListener('touchend', onRectSelectEnd, {
+                            passive: true,
+                        });
+                        document.documentElement.addEventListener('touchcancel', onRectSelectEnd);
+                    },
+                    {passive: false},
+                );
             }
-        })
-    }
+        });
+    };
 
-    const exportFileType = ref<ExportFileType>("PNG")
-    const isExportFile = ref(false)
+    const exportFileType = ref<ExportFileType>('PNG');
+    const isExportFile = ref(false);
 
     const getMindMapData = (): MindMapData => {
         return {
             currentLayerId: currentLayerId.value,
-            layers: global.layers.map(layer => ({
+            layers: global.layers.map((layer) => ({
                 id: layer.id,
                 name: layer.name,
                 opacity: layer.opacity,
                 visible: layer.visible,
                 lock: layer.lock,
-                data: exportMindMapData(layer.vueFlow)
+                data: exportMindMapData(layer.vueFlow),
             })),
             transform: currentViewport.value,
             zIndexIncrement: global.zIndexIncrement,
-        }
-    }
+        };
+    };
 
     const exportFile = async (type: ExportFileType = exportFileType.value) => {
         if (isExportFile.value) {
-            sendMessage("downloading now, please wait")
-            return
+            sendMessage('downloading now, please wait');
+            return;
         }
 
-        isExportFile.value = true
+        isExportFile.value = true;
 
         try {
-            await withLoading("Export MindMap", async () => {
+            await withLoading('Export MindMap', async () => {
                 try {
                     const savePath = await exportMindMapToFile(
                         useMindMapStore().currentMindMap.value?.name,
                         getMindMapData(),
                         global.layers,
-                        type
-                    )
+                        type,
+                    );
 
-                    if (typeof savePath === "string") {
-                        sendMessage(`${translate("export_mindMap_success")}\n${savePath}`, {type: "success"})
+                    if (typeof savePath === 'string') {
+                        sendMessage(`${translate('export_mindMap_success')}\n${savePath}`, {
+                            type: 'success',
+                        });
                     } else if (savePath !== null) {
-                        sendMessage(translate("export_mindMap_fail"), {type: "error"})
+                        sendMessage(translate('export_mindMap_fail'), {type: 'error'});
                     }
                 } catch (e) {
-                    sendMessage(`${translate("export_mindMap_fail")}\n${e}`, {type: "error"})
-                    throw e
+                    sendMessage(`${translate('export_mindMap_fail')}\n${e}`, {type: 'error'});
+                    throw e;
                 }
-            })
+            });
         } finally {
-            isExportFile.value = false
+            isExportFile.value = false;
         }
-    }
+    };
 
     return {
         layers: global.layers,
@@ -1178,18 +1269,18 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         canRedo: readonly(canRedo),
         undo: () => {
             if (canUndo.value) {
-                history.undo()
-                sendMessage(translate("undo_success"), {type: "success"})
+                history.undo();
+                sendMessage(translate('undo_success'), {type: 'success'});
             } else {
-                sendMessage(translate("cannot_undo"), {type: "warning"})
+                sendMessage(translate('cannot_undo'), {type: 'warning'});
             }
         },
         redo: () => {
             if (canRedo.value) {
-                history.redo()
-                sendMessage(translate("redo_success"), {type: "success"})
+                history.redo();
+                sendMessage(translate('redo_success'), {type: 'success'});
             } else {
-                sendMessage(translate("cannot_redo"), {type: "warning"})
+                sendMessage(translate('cannot_redo'), {type: 'warning'});
             }
         },
 
@@ -1201,10 +1292,10 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         remove,
 
         fitView: (layer: MindMapLayer = global.currentLayer.value) => {
-            return layer.vueFlow.fitView({duration: 600, padding: 0.1})
+            return layer.vueFlow.fitView({duration: 600, padding: 0.1});
         },
         fitRect: (rect: Rect, layer: MindMapLayer = global.currentLayer.value) => {
-            return layer.vueFlow.fitBounds(rect, {duration: 800, padding: 0.4})
+            return layer.vueFlow.fitBounds(rect, {duration: 800, padding: 0.4});
         },
 
         graphSelection: {
@@ -1213,15 +1304,17 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
             unselectAll: cleanSelection,
             toggleSelectAll,
             selectedNodes: computed(() => {
-                return getCurrentVueFlow().getSelectedNodes.value
+                return getCurrentVueFlow().getSelectedNodes.value;
             }),
             selectedEdges: computed(() => {
-                return getCurrentVueFlow().getSelectedEdges.value
+                return getCurrentVueFlow().getSelectedEdges.value;
             }),
             selectedCount: computed(() => {
-                const vueFlow = getCurrentVueFlow()
-                return (vueFlow.getSelectedNodes.value.length + vueFlow.getSelectedEdges.value.length)
-            })
+                const vueFlow = getCurrentVueFlow();
+                return (
+                    vueFlow.getSelectedNodes.value.length + vueFlow.getSelectedEdges.value.length
+                );
+            }),
         },
 
         selectionRect: readonly(selectionRect),
@@ -1242,45 +1335,53 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
 
         addNode,
         findNode: (id: string, vueFlow: VueFlowStore = getCurrentVueFlow()) => {
-            return vueFlow.findNode(id)
+            return vueFlow.findNode(id);
         },
         selectNode: (id: string, vueFlow: VueFlowStore = getCurrentVueFlow()) => {
-            const node = vueFlow.findNode(id)
+            const node = vueFlow.findNode(id);
             if (node !== undefined) {
-                node.zIndex = global.zIndexIncrement++
-                vueFlow.addSelectedNodes([node])
+                node.zIndex = global.zIndexIncrement++;
+                vueFlow.addSelectedNodes([node]);
             }
         },
-        updateNodeData: (id: string, data: Partial<ContentNodeData>, layerId: string = currentLayerId.value) => {
-            history.executeCommand('node:data:change', {layerId, id, data})
+        updateNodeData: (
+            id: string,
+            data: Partial<ContentNodeData>,
+            layerId: string = currentLayerId.value,
+        ) => {
+            history.executeCommand('node:data:change', {layerId, id, data});
         },
         recordNodeResize: (
             id: string,
             args: {
-                newSize: { width: number, height: number },
-                oldSize: { width: number, height: number },
-                newPosition: XYPosition,
-                oldPosition: XYPosition,
+                newSize: {width: number; height: number};
+                oldSize: {width: number; height: number};
+                newPosition: XYPosition;
+                oldPosition: XYPosition;
             },
-            layerId: string = currentLayerId.value
+            layerId: string = currentLayerId.value,
         ) => {
-            const options = {layerId, id, ...args}
-            history.pushCommand('node:resize', options, options)
+            const options = {layerId, id, ...args};
+            history.pushCommand('node:resize', options, options);
         },
 
         addEdge,
         findEdge: (id: string, vueFlow: VueFlowStore = getCurrentVueFlow()) => {
-            return vueFlow.findEdge(id)
+            return vueFlow.findEdge(id);
         },
         selectEdge: (id: string, vueFlow: VueFlowStore = getCurrentVueFlow()) => {
-            const edge = vueFlow.findEdge(id)
+            const edge = vueFlow.findEdge(id);
             if (edge !== undefined) {
-                edge.zIndex = global.zIndexIncrement++
-                vueFlow.addSelectedEdges([edge])
+                edge.zIndex = global.zIndexIncrement++;
+                vueFlow.addSelectedEdges([edge]);
             }
         },
-        updateEdgeData: (id: string, data: Partial<ContentEdgeData>, layerId: string = currentLayerId.value) => {
-            history.executeCommand('edge:data:change', {layerId, id, data})
+        updateEdgeData: (
+            id: string,
+            data: Partial<ContentEdgeData>,
+            layerId: string = currentLayerId.value,
+        ) => {
+            history.executeCommand('edge:data:change', {layerId, id, data});
         },
 
         copy: async (
@@ -1288,51 +1389,51 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
             layer: MindMapLayer = global.currentLayer.value,
         ) => {
             try {
-                const result = await layer.copy(data)
-                sendMessage("copy", {type: "success"})
-                return result
+                const result = await layer.copy(data);
+                sendMessage('copy', {type: 'success'});
+                return result;
             } catch (e) {
-                sendMessage(`copy fail: ${e}`, {type: "warning"})
-                throw e
+                sendMessage(`copy fail: ${e}`, {type: 'warning'});
+                throw e;
             }
         },
         paste: async (layer: MindMapLayer = global.currentLayer.value) => {
             try {
                 if (layer.lock) {
-                    sendMessage(translate("layer_is_locked"))
-                    return
+                    sendMessage(translate('layer_is_locked'));
+                    return;
                 }
-                const result = await layer.paste()
-                sendMessage("paste", {type: "success"})
-                return result
+                const result = await layer.paste();
+                sendMessage('paste', {type: 'success'});
+                return result;
             } catch (e) {
-                sendMessage(`paste fail: ${e}`, {type: "warning"})
-                throw e
+                sendMessage(`paste fail: ${e}`, {type: 'warning'});
+                throw e;
             }
         },
         cut: async (layer: MindMapLayer = global.currentLayer.value) => {
             try {
                 if (layer.lock) {
-                    sendMessage(translate("layer_is_locked"))
-                    return
+                    sendMessage(translate('layer_is_locked'));
+                    return;
                 }
-                const result = await layer.cut()
-                sendMessage("cut", {type: "success"})
-                focus()
-                return result
+                const result = await layer.cut();
+                sendMessage('cut', {type: 'success'});
+                focus();
+                return result;
             } catch (e) {
-                sendMessage(`cut fail: ${e}`, {type: "warning"})
-                throw e
+                sendMessage(`cut fail: ${e}`, {type: 'warning'});
+                throw e;
             }
         },
 
         set: async (data: MindMapData) => {
-            const {layers, currentLayer} = layerDataToLayers(data)
-            global.zIndexIncrement = data.zIndexIncrement
-            global.layers.splice(0, global.layers.length, ...layers)
-            currentViewport.value = data.transform
-            toggleLayer(currentLayer.id)
-            history.clean()
+            const {layers, currentLayer} = layerDataToLayers(data);
+            global.zIndexIncrement = data.zIndexIncrement;
+            global.layers.splice(0, global.layers.length, ...layers);
+            currentViewport.value = data.transform;
+            toggleLayer(currentLayer.id);
+            history.clean();
         },
 
         exportFileType,
@@ -1340,7 +1441,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         exportFile,
 
         save: async () => {
-            await useMindMapStore().save()
+            await useMindMapStore().save();
         },
-    }
-})
+    };
+});

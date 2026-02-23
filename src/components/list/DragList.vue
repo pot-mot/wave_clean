@@ -1,303 +1,336 @@
 <script setup lang="ts" generic="T">
-import {computed, onBeforeUnmount, onMounted, ref, useTemplateRef} from "vue";
-import {useTouchEnterLeave} from "@/utils/event/useTouchEnterLeave.ts";
-import {getMatchedElementOrParent} from "@/utils/event/judgeEventTarget.ts";
-import {useDeviceStore} from "@/store/deviceStore.ts";
+import {computed, onBeforeUnmount, onMounted, ref, useTemplateRef} from 'vue';
+import {useTouchEnterLeave} from '@/utils/event/useTouchEnterLeave.ts';
+import {getMatchedElementOrParent} from '@/utils/event/judgeEventTarget.ts';
+import {useDeviceStore} from '@/store/deviceStore.ts';
 
 const props = defineProps<{
-    data: ReadonlyArray<T>,
-    currentItem: T | undefined,
-    toKey: (item: T) => string,
-}>()
-const currentKey = computed(() => props.currentItem ? props.toKey(props.currentItem) : undefined)
+    data: ReadonlyArray<T>;
+    currentItem: T | undefined;
+    toKey: (item: T) => string;
+}>();
+const currentKey = computed(() => (props.currentItem ? props.toKey(props.currentItem) : undefined));
 
 const emits = defineEmits<{
-    (e: 'remove', item: T): void,
-    (e: 'swap', oldIndex: number, newIndex: number): void,
-    (e: 'drag', oldIndex: number, newIndex: number): void,
-}>()
+    (e: 'remove', item: T): void;
+    (e: 'swap', oldIndex: number, newIndex: number): void;
+    (e: 'drag', oldIndex: number, newIndex: number): void;
+}>();
 
 defineSlots<{
-    default(props: {item: T, index: number}): any,
-    dragView(props: {data: {item: T, index: number}}): any,
-}>()
+    default(props: {item: T; index: number}): any;
+    dragView(props: {data: {item: T; index: number}}): any;
+}>();
 
-const {isTouchDevice} = useDeviceStore()
+const {isTouchDevice} = useDeviceStore();
 
-const lastItem = computed<T | undefined>(() => props.data[props.data.length - 1])
+const lastItem = computed<T | undefined>(() => props.data[props.data.length - 1]);
 
-const container = useTemplateRef<HTMLDivElement>("container")
+const container = useTemplateRef<HTMLDivElement>('container');
 
 const handleKeyDown = (e: KeyboardEvent) => {
-    if (props.currentItem === undefined) return
+    if (props.currentItem === undefined) return;
 
-    if (e.key === "Delete") {
-        e.preventDefault()
-        emits("remove", props.currentItem)
-    } else if (e.key === "ArrowUp") {
-        const currentIndex = props.data.findIndex(it => it === props.currentItem)
+    if (e.key === 'Delete') {
+        e.preventDefault();
+        emits('remove', props.currentItem);
+    } else if (e.key === 'ArrowUp') {
+        const currentIndex = props.data.findIndex((it) => it === props.currentItem);
         if (props.data.length > 1 && currentIndex !== -1 && currentIndex !== 0) {
-            e.preventDefault()
-            emits("swap", currentIndex, currentIndex - 1)
+            e.preventDefault();
+            emits('swap', currentIndex, currentIndex - 1);
         }
-    } else if (e.key === "ArrowDown") {
-        const currentIndex = props.data.findIndex(it => it === props.currentItem)
-        if (props.data.length > 1 && currentIndex !== -1 && currentIndex !== props.data.length - 1) {
-            e.preventDefault()
-            emits("swap", currentIndex, currentIndex + 1)
+    } else if (e.key === 'ArrowDown') {
+        const currentIndex = props.data.findIndex((it) => it === props.currentItem);
+        if (
+            props.data.length > 1 &&
+            currentIndex !== -1 &&
+            currentIndex !== props.data.length - 1
+        ) {
+            e.preventDefault();
+            emits('swap', currentIndex, currentIndex + 1);
         }
     }
-}
+};
 
 // 拖拽行为和状态
-const isDragging = ref(false)
-const draggingItem = ref<{ item: T, index: number }>()
-const overTarget = ref<{ item: T, index: number, type: 'item' | 'gap' }>()
+const isDragging = ref(false);
+const draggingItem = ref<{item: T; index: number}>();
+const overTarget = ref<{item: T; index: number; type: 'item' | 'gap'}>();
 
-const scrollWrapper = useTemplateRef<HTMLDivElement>("scrollWrapper")
-const scrollTop = ref(0)
+const scrollWrapper = useTemplateRef<HTMLDivElement>('scrollWrapper');
+const scrollTop = ref(0);
 
 const handleScroll = () => {
-    scrollTop.value = scrollWrapper.value?.scrollTop ?? 0
-}
+    scrollTop.value = scrollWrapper.value?.scrollTop ?? 0;
+};
 
-let dragStartElementXY: { x: number, y: number } | undefined = undefined
-let dragStartClientXY: { x: number, y: number } | undefined = undefined
-const dragMoveClientXY = ref<{ x: number, y: number }>()
+let dragStartElementXY: {x: number; y: number} | undefined = undefined;
+let dragStartClientXY: {x: number; y: number} | undefined = undefined;
+const dragMoveClientXY = ref<{x: number; y: number}>();
 
 const resetDragState = () => {
-    draggingItem.value = undefined
-    overTarget.value = undefined
-    dragStartElementXY = undefined
-    dragStartClientXY = undefined
-    dragMoveClientXY.value = undefined
-}
+    draggingItem.value = undefined;
+    overTarget.value = undefined;
+    dragStartElementXY = undefined;
+    dragStartClientXY = undefined;
+    dragMoveClientXY.value = undefined;
+};
 
 const handleLeaveContainer = () => {
     if (isDragging.value) {
-        overTarget.value = undefined
+        overTarget.value = undefined;
     }
-}
+};
 
-const handleDragStart = (index: number, item: T, clientXY: {
-    x: number,
-    y: number
-}, target: HTMLElement) => {
-    draggingItem.value = {index, item: item}
-    isDragging.value = true
+const handleDragStart = (
+    index: number,
+    item: T,
+    clientXY: {
+        x: number;
+        y: number;
+    },
+    target: HTMLElement,
+) => {
+    draggingItem.value = {index, item: item};
+    isDragging.value = true;
 
     dragStartElementXY = {
         x: target.offsetLeft - (scrollWrapper.value?.scrollLeft ?? 0),
         y: target.offsetTop - (scrollWrapper.value?.scrollTop ?? 0),
-    }
+    };
     dragStartClientXY = {
         x: clientXY.x,
         y: clientXY.y,
-    }
+    };
     dragMoveClientXY.value = {
         x: dragStartElementXY.x,
         y: dragStartElementXY.y,
-    }
-}
+    };
+};
 
-const handleDragMove = (clientXY: { x: number, y: number }) => {
-    if (isDragging.value && scrollWrapper.value && dragStartClientXY !== undefined && dragStartElementXY !== undefined) {
+const handleDragMove = (clientXY: {x: number; y: number}) => {
+    if (
+        isDragging.value &&
+        scrollWrapper.value &&
+        dragStartClientXY !== undefined &&
+        dragStartElementXY !== undefined
+    ) {
         dragMoveClientXY.value = {
             x: dragStartElementXY.x + clientXY.x - dragStartClientXY.x,
             y: dragStartElementXY.y + clientXY.y - dragStartClientXY.y,
-        }
+        };
     }
-}
+};
 
 const handleDragEnd = () => {
     if (isDragging.value) {
-        isDragging.value = false
+        isDragging.value = false;
 
-        if (draggingItem.value && overTarget.value && props.toKey(draggingItem.value.item) !== props.toKey(overTarget.value.item)) {
-            const draggingIndex = draggingItem.value.index
-            const targetIndex = overTarget.value.index
-            const type = overTarget.value.type
+        if (
+            draggingItem.value &&
+            overTarget.value &&
+            props.toKey(draggingItem.value.item) !== props.toKey(overTarget.value.item)
+        ) {
+            const draggingIndex = draggingItem.value.index;
+            const targetIndex = overTarget.value.index;
+            const type = overTarget.value.type;
             if (type === 'item') {
-                emits("swap", draggingIndex, targetIndex)
+                emits('swap', draggingIndex, targetIndex);
             } else if (type === 'gap') {
-                emits("drag", draggingIndex, targetIndex)
+                emits('drag', draggingIndex, targetIndex);
             }
         }
     }
 
-    resetDragState()
-}
+    resetDragState();
+};
 
-const mouseDragStartFlag = new Set<number>()
+const mouseDragStartFlag = new Set<number>();
 const handleDragStartByMouse = (index: number, item: T, event: MouseEvent) => {
-    if (!(event.target instanceof HTMLElement)) return
-    const target = getMatchedElementOrParent(event.target, el => el.classList.contains('drag-list-item'))
-    if (!target || !(target instanceof HTMLElement)) return
+    if (!(event.target instanceof HTMLElement)) return;
+    const target = getMatchedElementOrParent(event.target, (el) =>
+        el.classList.contains('drag-list-item'),
+    );
+    if (!target || !(target instanceof HTMLElement)) return;
 
-    mouseDragStartFlag.add(index)
+    mouseDragStartFlag.add(index);
     const deleteFlag = () => {
-        mouseDragStartFlag.delete(index)
-    }
+        mouseDragStartFlag.delete(index);
+    };
     setTimeout(() => {
         if (!mouseDragStartFlag.has(index)) {
-            document.documentElement.removeEventListener("mousemove", deleteFlag)
-            document.documentElement.removeEventListener("mouseup", deleteFlag)
-            return
+            document.documentElement.removeEventListener('mousemove', deleteFlag);
+            document.documentElement.removeEventListener('mouseup', deleteFlag);
+            return;
         }
-        handleDragStart(index, item, {x: event.clientX, y: event.clientY}, target)
+        handleDragStart(index, item, {x: event.clientX, y: event.clientY}, target);
 
-        document.documentElement.addEventListener("mousemove", handleDraggingByMouse)
-        document.documentElement.addEventListener("mouseup", handleDragEndByMouse)
-    }, 100)
+        document.documentElement.addEventListener('mousemove', handleDraggingByMouse);
+        document.documentElement.addEventListener('mouseup', handleDragEndByMouse);
+    }, 100);
 
-    document.documentElement.addEventListener("mousemove", deleteFlag, {once: true})
-    document.documentElement.addEventListener("mouseup", deleteFlag, {once: true})
-}
+    document.documentElement.addEventListener('mousemove', deleteFlag, {once: true});
+    document.documentElement.addEventListener('mouseup', deleteFlag, {once: true});
+};
 
 const handleDraggingByMouse = (event: MouseEvent) => {
-    handleDragMove({x: event.clientX, y: event.clientY})
-}
+    handleDragMove({x: event.clientX, y: event.clientY});
+};
 
 const handleDragEndByMouse = () => {
-    document.documentElement.removeEventListener("mousemove", handleDraggingByMouse)
-    document.documentElement.removeEventListener("mouseup", handleDragEndByMouse)
+    document.documentElement.removeEventListener('mousemove', handleDraggingByMouse);
+    document.documentElement.removeEventListener('mouseup', handleDragEndByMouse);
 
-    handleDragEnd()
-}
+    handleDragEnd();
+};
 
-
-const {handleTouchMove} = useTouchEnterLeave()
+const {handleTouchMove} = useTouchEnterLeave();
 
 const handleTouchMoveToEmitTouchEnter = (e: TouchEvent) => {
     if (container.value && e.changedTouches[0]) {
-        const clientXY = {x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY}
+        const clientXY = {x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY};
 
-        const handles = container.value.querySelectorAll('.drag-list-scroll-handle')
-        const items = container.value.querySelectorAll('.drag-list-item')
-        const gaps = container.value.querySelectorAll('.drag-gap')
+        const handles = container.value.querySelectorAll('.drag-list-scroll-handle');
+        const items = container.value.querySelectorAll('.drag-list-item');
+        const gaps = container.value.querySelectorAll('.drag-gap');
 
-        handleTouchMove([...handles, ...items, ...gaps], clientXY)
+        handleTouchMove([...handles, ...items, ...gaps], clientXY);
     }
-}
+};
 
 onMounted(() => {
     if (isTouchDevice.value && container.value) {
-        container.value.addEventListener('touchmove', handleTouchMoveToEmitTouchEnter, {passive: true})
+        container.value.addEventListener('touchmove', handleTouchMoveToEmitTouchEnter, {
+            passive: true,
+        });
     }
-})
+});
 onBeforeUnmount(() => {
-    container.value?.removeEventListener('touchmove', handleTouchMoveToEmitTouchEnter)
-})
+    container.value?.removeEventListener('touchmove', handleTouchMoveToEmitTouchEnter);
+});
 
-const touchDragStartFlag = new Set<number>()
+const touchDragStartFlag = new Set<number>();
 const handleDragStartByTouch = (index: number, item: T, event: TouchEvent) => {
-    if (!(event.target instanceof HTMLElement)) return
-    const target = getMatchedElementOrParent(event.target, el => el.classList.contains('drag-list-item'))
-    if (!target || !(target instanceof HTMLElement)) return
+    if (!(event.target instanceof HTMLElement)) return;
+    const target = getMatchedElementOrParent(event.target, (el) =>
+        el.classList.contains('drag-list-item'),
+    );
+    if (!target || !(target instanceof HTMLElement)) return;
 
-    touchDragStartFlag.add(index)
+    touchDragStartFlag.add(index);
     const deleteFlag = () => {
-        touchDragStartFlag.delete(index)
-    }
+        touchDragStartFlag.delete(index);
+    };
     setTimeout(() => {
         if (!touchDragStartFlag.has(index) || !event.touches[0]) {
-            document.documentElement.removeEventListener("touchmove", deleteFlag)
-            document.documentElement.removeEventListener("touchend", deleteFlag)
-            document.documentElement.removeEventListener("touchcancel", deleteFlag)
-            return
+            document.documentElement.removeEventListener('touchmove', deleteFlag);
+            document.documentElement.removeEventListener('touchend', deleteFlag);
+            document.documentElement.removeEventListener('touchcancel', deleteFlag);
+            return;
         }
-        handleDragStart(index, item, {x: event.touches[0].clientX, y: event.touches[0].clientY}, target)
+        handleDragStart(
+            index,
+            item,
+            {x: event.touches[0].clientX, y: event.touches[0].clientY},
+            target,
+        );
 
-        document.documentElement.addEventListener("touchmove", handleDraggingByTouch, {passive: false})
-        document.documentElement.addEventListener("touchend", handleDragEndByMouseByTouch)
-        document.documentElement.addEventListener("touchcancel", handleDragEndByMouseByTouch)
-    }, 100)
+        document.documentElement.addEventListener('touchmove', handleDraggingByTouch, {
+            passive: false,
+        });
+        document.documentElement.addEventListener('touchend', handleDragEndByMouseByTouch);
+        document.documentElement.addEventListener('touchcancel', handleDragEndByMouseByTouch);
+    }, 100);
 
-    document.documentElement.addEventListener("touchmove", deleteFlag, {once: true})
-    document.documentElement.addEventListener("touchend", deleteFlag, {once: true})
-    document.documentElement.addEventListener("touchcancel", deleteFlag, {once: true})
-}
+    document.documentElement.addEventListener('touchmove', deleteFlag, {once: true});
+    document.documentElement.addEventListener('touchend', deleteFlag, {once: true});
+    document.documentElement.addEventListener('touchcancel', deleteFlag, {once: true});
+};
 
 const handleDraggingByTouch = (event: TouchEvent) => {
-    if (!event.changedTouches[0]) return
-    event.preventDefault()
-    handleDragMove({x: event.changedTouches[0].clientX, y: event.changedTouches[0].clientY})
-}
+    if (!event.changedTouches[0]) return;
+    event.preventDefault();
+    handleDragMove({x: event.changedTouches[0].clientX, y: event.changedTouches[0].clientY});
+};
 
 const handleDragEndByMouseByTouch = () => {
-    document.documentElement.removeEventListener("touchmove", handleDraggingByTouch)
-    document.documentElement.removeEventListener("touchend", handleDragEndByMouseByTouch)
-    document.documentElement.removeEventListener("touchcancel", handleDragEndByMouseByTouch)
+    document.documentElement.removeEventListener('touchmove', handleDraggingByTouch);
+    document.documentElement.removeEventListener('touchend', handleDragEndByMouseByTouch);
+    document.documentElement.removeEventListener('touchcancel', handleDragEndByMouseByTouch);
 
-    handleDragEnd()
-}
+    handleDragEnd();
+};
 
 const handleItemDragEnter = (index: number, item: T) => {
-    if (!isDragging.value) return
-    if (overTarget.value === undefined ||
+    if (!isDragging.value) return;
+    if (
+        overTarget.value === undefined ||
         props.toKey(overTarget.value.item) !== props.toKey(item) ||
         overTarget.value.type !== 'item'
     ) {
-        overTarget.value = {index, item: item, type: 'item'}
+        overTarget.value = {index, item: item, type: 'item'};
     }
-}
+};
 
 const handleGapDragEnter = (index: number, item: T) => {
-    if (!isDragging.value) return
-    if (overTarget.value === undefined ||
+    if (!isDragging.value) return;
+    if (
+        overTarget.value === undefined ||
         props.toKey(overTarget.value.item) !== props.toKey(item) ||
         overTarget.value.type !== 'gap'
     ) {
-        overTarget.value = {index, item: item, type: 'gap'}
+        overTarget.value = {index, item: item, type: 'gap'};
     }
-}
+};
 
 // 当拖拽至两端时，触发滚动
 const canDragUp = computed(() => {
-    if (!scrollWrapper.value) return false
-    if (!isDragging.value) return false
-    return scrollTop.value > 0
-})
+    if (!scrollWrapper.value) return false;
+    if (!isDragging.value) return false;
+    return scrollTop.value > 0;
+});
 const canDragDown = computed(() => {
-    if (!scrollWrapper.value) return false
-    if (!isDragging.value) return false
-    return scrollTop.value < (scrollWrapper.value.scrollHeight - scrollWrapper.value.clientHeight)
-})
+    if (!scrollWrapper.value) return false;
+    if (!isDragging.value) return false;
+    return scrollTop.value < scrollWrapper.value.scrollHeight - scrollWrapper.value.clientHeight;
+});
 
-let dragUpTimer: number | undefined = undefined
+let dragUpTimer: number | undefined = undefined;
 const startDragUp = () => {
     dragUpTimer = setInterval(() => {
         if (!canDragUp.value) {
-            clearInterval(dragUpTimer)
-            return
+            clearInterval(dragUpTimer);
+            return;
         }
-        if (!scrollWrapper.value) return
-        scrollWrapper.value?.scrollBy({top: -20})
-    }, 50)
-}
+        if (!scrollWrapper.value) return;
+        scrollWrapper.value?.scrollBy({top: -20});
+    }, 50);
+};
 const stopDragUp = () => {
-    clearInterval(dragUpTimer)
-}
+    clearInterval(dragUpTimer);
+};
 
-let dragDownTimer: number | undefined = undefined
+let dragDownTimer: number | undefined = undefined;
 const startDragDown = () => {
     dragDownTimer = setInterval(() => {
         if (!canDragDown.value) {
-            clearInterval(dragDownTimer)
-            return
+            clearInterval(dragDownTimer);
+            return;
         }
-        if (!scrollWrapper.value) return
-        scrollWrapper.value.scrollBy({top: 20})
-    }, 50)
-}
+        if (!scrollWrapper.value) return;
+        scrollWrapper.value.scrollBy({top: 20});
+    }, 50);
+};
 const stopDragDown = () => {
-    clearInterval(dragDownTimer)
-}
+    clearInterval(dragDownTimer);
+};
 </script>
 
 <template>
     <div
-        tabindex="-1" @keydown="handleKeyDown"
+        tabindex="-1"
+        @keydown="handleKeyDown"
         class="drag-list-container"
         ref="container"
         @mouseleave="handleLeaveContainer"
@@ -309,8 +342,12 @@ const stopDragDown = () => {
             :style="{
                 top: dragMoveClientXY.y + 'px',
                 left: dragMoveClientXY.x + 'px',
-            }">
-            <slot name="dragView" :data="draggingItem"/>
+            }"
+        >
+            <slot
+                name="dragView"
+                :data="draggingItem"
+            />
         </div>
 
         <div
@@ -318,12 +355,18 @@ const stopDragDown = () => {
             ref="scrollWrapper"
             @scroll="handleScroll"
         >
-            <TransitionGroup name="drag-list" tag="div">
-                <template v-for="(item, index) in data" :key="toKey(item)">
+            <TransitionGroup
+                name="drag-list"
+                tag="div"
+            >
+                <template
+                    v-for="(item, index) in data"
+                    :key="toKey(item)"
+                >
                     <div
                         class="drag-gap"
                         :class="{
-                            over: overTarget?.index === index && overTarget?.type === 'gap'
+                            over: overTarget?.index === index && overTarget?.type === 'gap',
                         }"
                         @mouseenter="handleGapDragEnter(index, item)"
                         @touchenter="handleGapDragEnter(index, item)"
@@ -334,16 +377,17 @@ const stopDragDown = () => {
                         :class="{
                             current: currentKey === toKey(item),
                             dragged: draggingItem?.index === index,
-                            over: overTarget?.index === index && overTarget?.type === 'item'
+                            over: overTarget?.index === index && overTarget?.type === 'item',
                         }"
-
                         @mousedown="handleDragStartByMouse(index, item, $event)"
                         @mouseenter="handleItemDragEnter(index, item)"
-
                         @touchstart.passive="handleDragStartByTouch(index, item, $event)"
                         @touchenter="handleItemDragEnter(index, item)"
                     >
-                        <slot :item="item" :index="index"/>
+                        <slot
+                            :item="item"
+                            :index="index"
+                        />
                     </div>
                 </template>
             </TransitionGroup>
@@ -352,7 +396,7 @@ const stopDragDown = () => {
                 v-if="lastItem"
                 class="drag-gap"
                 :class="{
-                    over: overTarget?.index === data.length && overTarget?.type === 'gap'
+                    over: overTarget?.index === data.length && overTarget?.type === 'gap',
                 }"
                 @mouseenter="handleGapDragEnter(data.length, lastItem)"
                 @touchenter="handleGapDragEnter(data.length, lastItem)"
@@ -362,12 +406,10 @@ const stopDragDown = () => {
         <div
             v-if="canDragUp"
             class="drag-list-scroll-handle up"
-            style="position: absolute; top: 0; left: 0; right: 0;"
-
+            style="position: absolute; top: 0; left: 0; right: 0"
             @mouseenter="startDragUp"
             @mouseleave="stopDragUp"
             @mouseup="stopDragUp"
-
             @touchenter="startDragUp"
             @touchleave="stopDragUp"
             @touchstop="stopDragUp"
@@ -377,12 +419,10 @@ const stopDragDown = () => {
         <div
             v-if="canDragDown"
             class="drag-list-scroll-handle down"
-            style="position: absolute; bottom: 0; left: 0; right: 0;"
-
+            style="position: absolute; bottom: 0; left: 0; right: 0"
             @mouseenter="startDragDown"
             @mouseleave="stopDragDown"
             @mouseup="stopDragDown"
-
             @touchenter="startDragDown"
             @touchleave="stopDragDown"
             @touchstop="stopDragDown"
@@ -446,10 +486,11 @@ const stopDragDown = () => {
     background: linear-gradient(to bottom, transparent, var(--background-color-hover));
 }
 
-
 .drag-gap {
     height: 0.3rem;
-    transition: height 0.5s, background-color 0.5s;
+    transition:
+        height 0.5s,
+        background-color 0.5s;
 }
 
 .drag-gap.over {
@@ -459,12 +500,13 @@ const stopDragDown = () => {
     cursor: default;
 }
 
-
 /* drag-list 过渡动画 */
 .drag-list-move,
 .drag-list-enter-active,
 .drag-list-leave-active {
-    transition: opacity 0.5s ease, transform 0.5s ease;
+    transition:
+        opacity 0.5s ease,
+        transform 0.5s ease;
 }
 
 .drag-list-enter-from,

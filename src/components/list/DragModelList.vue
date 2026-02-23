@@ -1,51 +1,57 @@
 <script setup lang="ts" generic="T">
-import {defineEmits, defineProps} from 'vue'
-import DragList from './DragList.vue'
+import {defineEmits, defineProps} from 'vue';
+import DragList from './DragList.vue';
 
 const data = defineModel<T[]>({
-    required: true
-})
+    required: true,
+});
 
 const props = defineProps<{
-    currentItem: T | undefined,
-    toKey: (item: T) => string
-}>()
+    currentItem: T | undefined;
+    toKey: (item: T) => string;
+}>();
 
 const emit = defineEmits<{
-    (e: 'remove', item: T): void
-}>()
+    (e: 'remove', item: T): void;
+}>();
 
 const handleSwap = (oldIndex: number, newIndex: number) => {
     if (
-        oldIndex < 0 || oldIndex > data.value.length ||
-        newIndex < 0 || newIndex > data.value.length ||
+        oldIndex < 0 ||
+        oldIndex > data.value.length ||
+        newIndex < 0 ||
+        newIndex > data.value.length ||
         newIndex === oldIndex ||
         !data.value[oldIndex] ||
         !data.value[newIndex]
-    ) return
-    const tmp = data.value[oldIndex]
-    data.value[oldIndex] = data.value[newIndex]
-    data.value[newIndex] = tmp
-}
+    )
+        return;
+    const tmp = data.value[oldIndex];
+    data.value[oldIndex] = data.value[newIndex];
+    data.value[newIndex] = tmp;
+};
 
 const handleDrag = (oldIndex: number, newIndex: number) => {
     if (
-        oldIndex < 0 || oldIndex > data.value.length + 1 ||
-        newIndex < 0 || newIndex > data.value.length + 1 ||
+        oldIndex < 0 ||
+        oldIndex > data.value.length + 1 ||
+        newIndex < 0 ||
+        newIndex > data.value.length + 1 ||
         newIndex === oldIndex
-    ) return
+    )
+        return;
     if (oldIndex < newIndex) {
-        const removedItems = data.value.splice(oldIndex, 1)
-        data.value.splice(newIndex - 1, 0, ...removedItems)
+        const removedItems = data.value.splice(oldIndex, 1);
+        data.value.splice(newIndex - 1, 0, ...removedItems);
     } else if (oldIndex > newIndex) {
-        const removedItems = data.value.splice(oldIndex, 1)
-        data.value.splice(newIndex, 0, ...removedItems)
+        const removedItems = data.value.splice(oldIndex, 1);
+        data.value.splice(newIndex, 0, ...removedItems);
     }
-}
+};
 
 const handleRemove = (item: T) => {
-    emit('remove', item)
-}
+    emit('remove', item);
+};
 </script>
 
 <template>
@@ -57,11 +63,14 @@ const handleRemove = (item: T) => {
         @swap="handleSwap"
         @drag="handleDrag"
     >
-        <template #default="{ item }">
-            <slot :item="item"/>
+        <template #default="{item}">
+            <slot :item="item" />
         </template>
-        <template #dragView="{ data }">
-            <slot name="dragView" :data="data"/>
+        <template #dragView="{data}">
+            <slot
+                name="dragView"
+                :data="data"
+            />
         </template>
     </DragList>
 </template>

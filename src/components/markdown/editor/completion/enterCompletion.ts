@@ -1,44 +1,47 @@
-import {editor, KeyCode, Position, Range} from "monaco-editor/esm/vs/editor/editor.api.js"
+import {editor, KeyCode, Position, Range} from 'monaco-editor/esm/vs/editor/editor.api.js';
 type IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
-import {getIndent} from "@/components/markdown/editor/indent/getIndent.ts";
+import {getIndent} from '@/components/markdown/editor/indent/getIndent.ts';
 
 type onEnterAppendTextOptions = {
-    match: RegExpMatchArray,
-    line: string,
-    positionColumn: number,
-    indent: string,
-}
+    match: RegExpMatchArray;
+    line: string;
+    positionColumn: number;
+    indent: string;
+};
 
 type onEnterCursorPositonOptions = {
-    match: RegExpMatchArray,
-    line: string,
-    positionColumn: number,
-    indent: string,
-    appendText: string,
-}
+    match: RegExpMatchArray;
+    line: string;
+    positionColumn: number;
+    indent: string;
+    appendText: string;
+};
 
 type onEnterAction = {
     // 匹配当前行的正则
-    beforeText: RegExp
+    beforeText: RegExp;
     // 生成新行内容的函数
-    appendText: (options: onEnterAppendTextOptions) => string
+    appendText: (options: onEnterAppendTextOptions) => string;
     // 光标偏移位置，以初始缩进为准
-    cursorPositionOffset?: (options: onEnterCursorPositonOptions) => { lineOffset: number; columnOffset: number }
-}
+    cursorPositionOffset?: (options: onEnterCursorPositonOptions) => {
+        lineOffset: number;
+        columnOffset: number;
+    };
+};
 
-const taskRegex = /^\[[xX ]] /
+const taskRegex = /^\[[xX ]] /;
 
 const lineEnterActions: onEnterAction[] = [
     // orderedList
     {
         beforeText: /^\s*(\d+)\. (.*)$/,
         appendText: ({match, indent}) => {
-            if (!match[1] || !match[2]) return ''
-            const current = parseInt(match[1], 10)
+            if (!match[1] || !match[2]) return '';
+            const current = parseInt(match[1], 10);
             if (taskRegex.test(match[2])) {
-                return `\n${indent}${current + 1}. [ ] `
+                return `\n${indent}${current + 1}. [ ] `;
             }
-            return `\n${indent}${current + 1}. `
+            return `\n${indent}${current + 1}. `;
         },
     },
 
@@ -46,11 +49,11 @@ const lineEnterActions: onEnterAction[] = [
     {
         beforeText: /^\s*([-+*]) (.*)$/,
         appendText: ({match, indent}) => {
-            if (!match[1] || !match[2]) return ''
+            if (!match[1] || !match[2]) return '';
             if (taskRegex.test(match[2])) {
-                return `\n${indent}${match[1]} [ ] `
+                return `\n${indent}${match[1]} [ ] `;
             }
-            return `\n${indent}${match[1]} `
+            return `\n${indent}${match[1]} `;
         },
     },
 
@@ -58,46 +61,48 @@ const lineEnterActions: onEnterAction[] = [
     {
         beforeText: /^\s*> .*$/,
         appendText: ({indent}) => {
-            return `\n${indent}> `
-        }
-    }
-]
+            return `\n${indent}> `;
+        },
+    },
+];
 
 export const initMarkdownEnterCompletion = (editor: IStandaloneCodeEditor) => {
     editor.onKeyDown((e) => {
         if (e.keyCode === KeyCode.Enter) {
-            const model = editor.getModel()
-            if (!model) return
-            const position = editor.getPosition()
-            if (!position) return
-            const line = model.getLineContent(position.lineNumber)
-            const lineBeforePosition = line.substring(0, position.column - 1)
+            const model = editor.getModel();
+            if (!model) return;
+            const position = editor.getPosition();
+            if (!position) return;
+            const line = model.getLineContent(position.lineNumber);
+            const lineBeforePosition = line.substring(0, position.column - 1);
 
-            const matchedAction = lineEnterActions.find(rule => rule.beforeText.test(lineBeforePosition))
+            const matchedAction = lineEnterActions.find((rule) =>
+                rule.beforeText.test(lineBeforePosition),
+            );
 
             if (matchedAction) {
-                e.preventDefault()
-                const indent = getIndent(line)
-                const match = lineBeforePosition.match(matchedAction.beforeText)
+                e.preventDefault();
+                const indent = getIndent(line);
+                const match = lineBeforePosition.match(matchedAction.beforeText);
                 if (match) {
                     const appendText = matchedAction.appendText({
                         match,
                         line,
                         positionColumn: position.column,
-                        indent
-                    })
+                        indent,
+                    });
                     editor.executeEdits('enterAction', [
                         {
                             range: new Range(
                                 position.lineNumber,
                                 position.column,
                                 position.lineNumber,
-                                position.column
+                                position.column,
                             ),
                             text: appendText,
-                            forceMoveMarkers: true
-                        }
-                    ])
+                            forceMoveMarkers: true,
+                        },
+                    ]);
 
                     if (matchedAction.cursorPositionOffset) {
                         const {lineOffset, columnOffset} = matchedAction.cursorPositionOffset({
@@ -105,12 +110,17 @@ export const initMarkdownEnterCompletion = (editor: IStandaloneCodeEditor) => {
                             line,
                             positionColumn: position.column,
                             indent,
-                            appendText
-                        })
-                        editor.setPosition(new Position(position.lineNumber + lineOffset, position.column + columnOffset))
+                            appendText,
+                        });
+                        editor.setPosition(
+                            new Position(
+                                position.lineNumber + lineOffset,
+                                position.column + columnOffset,
+                            ),
+                        );
                     }
                 }
             }
         }
-    })
-}
+    });
+};

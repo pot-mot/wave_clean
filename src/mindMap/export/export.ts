@@ -1,28 +1,28 @@
-import {type VueFlowStore} from "@vue-flow/core";
-import {getRaw} from "@/utils/json/getRaw.ts";
-import {v7 as uuid} from "uuid";
-import {blurActiveElement} from "@/utils/event/judgeEventTarget.ts";
-import {nextTick} from "vue";
-import {sendMessage} from "@/components/message/messageApi.ts";
-import {exportAsJpg, exportAsPng, exportAsSvg} from "@/utils/image/htmlExportAsImage.ts";
-import {downloadTextFile} from "@/utils/file/fileDownload.ts";
-import {jsonPrettyFormat} from "@/utils/json/jsonStringify.ts";
-import {nextFrame} from "@/utils/animationFrame/nextFrame.ts";
-import {type MindMapLayer} from "@/mindMap/layer/MindMapLayer.ts";
-import {type ContentNode, validateContentNode} from "@/mindMap/node/ContentNode.ts";
-import {type ContentEdge, validateContentEdge} from "@/mindMap/edge/ContentEdge.ts";
-import {validateSizePositionEdgePartial} from "@/mindMap/edge/SizePositionEdge.ts";
-import {type MindMapData} from "@/mindMap/MindMapData.ts";
+import {type VueFlowStore} from '@vue-flow/core';
+import {getRaw} from '@/utils/json/getRaw.ts';
+import {v7 as uuid} from 'uuid';
+import {blurActiveElement} from '@/utils/event/judgeEventTarget.ts';
+import {nextTick} from 'vue';
+import {sendMessage} from '@/components/message/messageApi.ts';
+import {exportAsJpg, exportAsPng, exportAsSvg} from '@/utils/image/htmlExportAsImage.ts';
+import {downloadTextFile} from '@/utils/file/fileDownload.ts';
+import {jsonPrettyFormat} from '@/utils/json/jsonStringify.ts';
+import {nextFrame} from '@/utils/animationFrame/nextFrame.ts';
+import {type MindMapLayer} from '@/mindMap/layer/MindMapLayer.ts';
+import {type ContentNode, validateContentNode} from '@/mindMap/node/ContentNode.ts';
+import {type ContentEdge, validateContentEdge} from '@/mindMap/edge/ContentEdge.ts';
+import {validateSizePositionEdgePartial} from '@/mindMap/edge/SizePositionEdge.ts';
+import {type MindMapData} from '@/mindMap/MindMapData.ts';
 
 export type MindMapExportData = {
-    nodes: ContentNode[],
-    edges: ContentEdge[],
-}
+    nodes: ContentNode[];
+    edges: ContentEdge[];
+};
 
 const toPureContentNode = (node: ContentNode): ContentNode => {
     return {
         id: node.id,
-        type: "CONTENT_NODE",
+        type: 'CONTENT_NODE',
         position: node.position,
         dimensions: node.dimensions,
         data: {
@@ -31,13 +31,13 @@ const toPureContentNode = (node: ContentNode): ContentNode => {
             color: node.data.color,
             withBorder: node.data.withBorder,
         },
-    }
-}
+    };
+};
 
 const toPureContentEdge = (edge: ContentEdge): ContentEdge => {
     return {
         id: edge.id,
-        type: "CONTENT_EDGE",
+        type: 'CONTENT_EDGE',
         source: edge.source,
         sourceHandle: edge.sourceHandle,
         target: edge.target,
@@ -47,42 +47,56 @@ const toPureContentEdge = (edge: ContentEdge): ContentEdge => {
             arrowType: edge.data.arrowType,
             color: edge.data.color,
             withBorder: edge.data.withBorder,
-        }
-    }
-}
+        },
+    };
+};
 
 export const exportMindMapData = (vueFlow: VueFlowStore): MindMapExportData => {
     return {
-        nodes: getRaw(vueFlow.getNodes.value.filter(it => validateContentNode(it)).map(toPureContentNode)),
-        edges: getRaw(vueFlow.getEdges.value.filter(it => validateContentEdge(it)).map(it => toPureContentEdge(it as ContentEdge)))
-    }
-}
+        nodes: getRaw(
+            vueFlow.getNodes.value.filter((it) => validateContentNode(it)).map(toPureContentNode),
+        ),
+        edges: getRaw(
+            vueFlow.getEdges.value
+                .filter((it) => validateContentEdge(it))
+                .map((it) => toPureContentEdge(it as ContentEdge)),
+        ),
+    };
+};
 
 export const exportMindMapSelectionData = (vueFlow: VueFlowStore): MindMapExportData => {
     return {
-        nodes: getRaw(vueFlow.getSelectedNodes.value.filter(it => validateContentNode(it)).map(toPureContentNode)),
-        edges: getRaw(vueFlow.getSelectedEdges.value.filter(it => validateContentEdge(it)).map(it => toPureContentEdge(it as ContentEdge)))
-    }
-}
+        nodes: getRaw(
+            vueFlow.getSelectedNodes.value
+                .filter((it) => validateContentNode(it))
+                .map(toPureContentNode),
+        ),
+        edges: getRaw(
+            vueFlow.getSelectedEdges.value
+                .filter((it) => validateContentEdge(it))
+                .map((it) => toPureContentEdge(it as ContentEdge)),
+        ),
+    };
+};
 
-const ExportImageType_CONSTANTS = ["SVG", "PNG", "JPG"]
+const ExportImageType_CONSTANTS = ['SVG', 'PNG', 'JPG'];
 
-type ExportImageType = typeof ExportImageType_CONSTANTS[number]
+type ExportImageType = (typeof ExportImageType_CONSTANTS)[number];
 
 const exportImageAs = async (el: HTMLElement, defaultSaveName: string, type: ExportImageType) => {
     switch (type) {
-        case "PNG":
-            return await exportAsPng(el, defaultSaveName)
-        case "SVG":
-            return await exportAsSvg(el, defaultSaveName)
-        case "JPG":
-            return await exportAsJpg(el, defaultSaveName)
+        case 'PNG':
+            return await exportAsPng(el, defaultSaveName);
+        case 'SVG':
+            return await exportAsSvg(el, defaultSaveName);
+        case 'JPG':
+            return await exportAsJpg(el, defaultSaveName);
     }
-}
+};
 
 const getCombinedBounds = (vueFlow: VueFlowStore) => {
-    const nodes = vueFlow.getNodes.value
-    const edges = vueFlow.getEdges.value
+    const nodes = vueFlow.getNodes.value;
+    const edges = vueFlow.getEdges.value;
 
     if (nodes.length === 0 && edges.length === 0) return;
 
@@ -105,11 +119,11 @@ const getCombinedBounds = (vueFlow: VueFlowStore) => {
     for (const edge of edges) {
         if (validateSizePositionEdgePartial(edge)) {
             if (edge.data.position !== undefined && edge.data.size !== undefined) {
-                const left = edge.data.position.left
-                const top = edge.data.position.top
+                const left = edge.data.position.left;
+                const top = edge.data.position.top;
 
-                const width = edge.data.size.width
-                const height = edge.data.size.height
+                const width = edge.data.size.width;
+                const height = edge.data.size.height;
 
                 minX = Math.min(minX, left);
                 minY = Math.min(minY, top);
@@ -124,24 +138,24 @@ const getCombinedBounds = (vueFlow: VueFlowStore) => {
         top: minY,
         right: maxX,
         bottom: maxY,
-    }
-}
+    };
+};
 
 const exportMindMapToImage = async (
     defaultFileName: string,
     layers: ReadonlyArray<MindMapLayer>,
     type: ExportImageType,
     options: {
-        padding: number
+        padding: number;
     } = {
-        padding: 32
-    }
+        padding: 32,
+    },
 ) => {
-    const {padding} = options
+    const {padding} = options;
 
-    const id = `export-container-${uuid()}`
+    const id = `export-container-${uuid()}`;
 
-    const removeTransitionStyle = document.createElement('style')
+    const removeTransitionStyle = document.createElement('style');
     removeTransitionStyle.textContent = `
 * {
     transition: none !important;
@@ -182,101 +196,105 @@ const exportMindMapToImage = async (
     width: 0 !important;
     height: 0 !important;
 }
-`
-    document.head.appendChild(removeTransitionStyle)
-    let el: HTMLElement | null = null
+`;
+    document.head.appendChild(removeTransitionStyle);
+    let el: HTMLElement | null = null;
 
     try {
         for (const layer of layers) {
-            layer.vueFlow.removeSelectedNodes(layer.vueFlow.getSelectedNodes.value)
-            layer.vueFlow.removeSelectedEdges(layer.vueFlow.getSelectedEdges.value)
+            layer.vueFlow.removeSelectedNodes(layer.vueFlow.getSelectedNodes.value);
+            layer.vueFlow.removeSelectedEdges(layer.vueFlow.getSelectedEdges.value);
         }
-        blurActiveElement()
+        blurActiveElement();
 
-        await nextTick()
+        await nextTick();
 
-        await nextFrame()
+        await nextFrame();
 
-        el = document.createElement('div')
-        el.id = id
-        el.style.position = 'absolute'
-        el.style.left = "0"
-        el.style.top = "0"
+        el = document.createElement('div');
+        el.id = id;
+        el.style.position = 'absolute';
+        el.style.left = '0';
+        el.style.top = '0';
 
-        let left = Infinity
-        let top = Infinity
-        let right = -Infinity
-        let bottom = -Infinity
+        let left = Infinity;
+        let top = Infinity;
+        let right = -Infinity;
+        let bottom = -Infinity;
 
-        const nodeEdgeEls: HTMLElement[] = []
+        const nodeEdgeEls: HTMLElement[] = [];
 
         for (const layer of layers) {
             if (layer.visible && layer.vueFlow.vueFlowRef.value) {
-                for (const edgeContainer of layer.vueFlow.vueFlowRef.value.querySelectorAll('.vue-flow__edges')) {
-                    const clone = edgeContainer.cloneNode(true) as HTMLElement
-                    nodeEdgeEls.push(clone)
+                for (const edgeContainer of layer.vueFlow.vueFlowRef.value.querySelectorAll(
+                    '.vue-flow__edges',
+                )) {
+                    const clone = edgeContainer.cloneNode(true) as HTMLElement;
+                    nodeEdgeEls.push(clone);
                 }
-                for (const nodeContainer of layer.vueFlow.vueFlowRef.value.querySelectorAll('.vue-flow__nodes')) {
-                    const clone = nodeContainer.cloneNode(true) as HTMLElement
-                    nodeEdgeEls.push(clone)
+                for (const nodeContainer of layer.vueFlow.vueFlowRef.value.querySelectorAll(
+                    '.vue-flow__nodes',
+                )) {
+                    const clone = nodeContainer.cloneNode(true) as HTMLElement;
+                    nodeEdgeEls.push(clone);
                 }
-                const rect = getCombinedBounds(layer.vueFlow)
+                const rect = getCombinedBounds(layer.vueFlow);
                 if (rect) {
-                    left = Math.min(left, rect.left)
-                    top = Math.min(top, rect.top)
-                    right = Math.max(right, rect.right)
-                    bottom = Math.max(bottom, rect.bottom)
+                    left = Math.min(left, rect.left);
+                    top = Math.min(top, rect.top);
+                    right = Math.max(right, rect.right);
+                    bottom = Math.max(bottom, rect.bottom);
                 }
             }
         }
 
         if (left === Infinity || top === Infinity || right === -Infinity || bottom === -Infinity) {
-            sendMessage("cannot export empty", {type: "warning"})
-            return
+            sendMessage('cannot export empty', {type: 'warning'});
+            return;
         }
 
-        const width = Math.max(right - left + padding * 2, 1)
-        const height = Math.max(bottom - top + padding * 2, 1)
+        const width = Math.max(right - left + padding * 2, 1);
+        const height = Math.max(bottom - top + padding * 2, 1);
 
-        el.style.width = `${width}px`
-        el.style.height = `${height}px`
-        el.style.overflow = 'hidden'
+        el.style.width = `${width}px`;
+        el.style.height = `${height}px`;
+        el.style.overflow = 'hidden';
 
         for (const nodeEdgeEl of nodeEdgeEls) {
-            nodeEdgeEl.style.position = 'absolute'
-            nodeEdgeEl.style.left = `${-left + padding}px`
-            nodeEdgeEl.style.top = `${-top + padding}px`
-            nodeEdgeEl.style.overflow = 'visible'
+            nodeEdgeEl.style.position = 'absolute';
+            nodeEdgeEl.style.left = `${-left + padding}px`;
+            nodeEdgeEl.style.top = `${-top + padding}px`;
+            nodeEdgeEl.style.overflow = 'visible';
         }
 
-        el.append(...nodeEdgeEls)
+        el.append(...nodeEdgeEls);
 
-        await nextFrame()
+        await nextFrame();
 
-        document.body.appendChild(el)
+        document.body.appendChild(el);
 
-        await nextFrame()
+        await nextFrame();
 
-        return await exportImageAs(el, defaultFileName, type)
+        return await exportImageAs(el, defaultFileName, type);
     } catch (e) {
-        console.error(e)
-        throw e
+        console.error(e);
+        throw e;
     } finally {
-        el?.remove()
-        document.head.removeChild(removeTransitionStyle)
+        el?.remove();
+        document.head.removeChild(removeTransitionStyle);
     }
-}
+};
 
-export const exportMindMapToJson = async (
-    defaultFileName: string,
-    mindMapData: MindMapData,
-) => {
-    return await downloadTextFile(jsonPrettyFormat(mindMapData), {filename: defaultFileName, fileType: "json"})
-}
+export const exportMindMapToJson = async (defaultFileName: string, mindMapData: MindMapData) => {
+    return await downloadTextFile(jsonPrettyFormat(mindMapData), {
+        filename: defaultFileName,
+        fileType: 'json',
+    });
+};
 
-export const ExportFileType_CONSTANTS = [...ExportImageType_CONSTANTS, "JSON"]
+export const ExportFileType_CONSTANTS = [...ExportImageType_CONSTANTS, 'JSON'];
 
-export type ExportFileType = typeof ExportFileType_CONSTANTS[number]
+export type ExportFileType = (typeof ExportFileType_CONSTANTS)[number];
 
 export const exportMindMapToFile = async (
     currentMindMapName: string | null | undefined,
@@ -284,11 +302,11 @@ export const exportMindMapToFile = async (
     layers: ReadonlyArray<MindMapLayer>,
     type: ExportFileType,
 ) => {
-    const defaultSaveName = currentMindMapName ?? 'untitled'
+    const defaultSaveName = currentMindMapName ?? 'untitled';
 
-    if (type === "JSON") {
-        return await exportMindMapToJson(defaultSaveName, mindMapData)
+    if (type === 'JSON') {
+        return await exportMindMapToJson(defaultSaveName, mindMapData);
     } else {
-        return await exportMindMapToImage(defaultSaveName, layers, type)
+        return await exportMindMapToImage(defaultSaveName, layers, type);
     }
-}
+};

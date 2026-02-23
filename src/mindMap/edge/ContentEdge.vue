@@ -1,22 +1,22 @@
 <script setup lang="ts">
-import {computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch} from "vue";
-import {BaseEdge, type EdgeProps} from "@vue-flow/core";
-import {useMindMap} from "@/mindMap/useMindMap.ts";
-import FitSizeBlockInput from "@/components/input/FitSizeBlockInput.vue";
-import {useEdgeUpdaterTouch} from "@/mindMap/edge/useEdgeUpdaterTouch.ts";
-import AutoResizeForeignObject from "@/mindMap/svg/AutoResizeForeignObject.vue";
-import IconDelete from "@/components/icons/IconDelete.vue";
-import IconFocus from "@/components/icons/IconFocus.vue";
-import {blurActiveElement} from "@/utils/event/judgeEventTarget.ts";
-import IconArrowNone from "@/components/icons/IconArrowNone.vue";
-import IconArrowTwoWay from "@/components/icons/IconArrowTwoWay.vue";
-import {getPaddingBezierPath} from "@/mindMap/edge/paddingBezierPath.ts";
-import IconArrowOneWayLeft from "@/components/icons/IconArrowOneWayLeft.vue";
-import IconArrowOneWayRight from "@/components/icons/IconArrowOneWayRight.vue";
-import {v7 as uuid} from "uuid"
-import {type RawMindMapLayer} from "@/mindMap/layer/MindMapLayer.ts";
-import {type SizePositionEdgePartial} from "@/mindMap/edge/SizePositionEdge.ts";
-import {type ContentEdgeData} from "@/mindMap/edge/ContentEdge.ts";
+import {computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch} from 'vue';
+import {BaseEdge, type EdgeProps} from '@vue-flow/core';
+import {useMindMap} from '@/mindMap/useMindMap.ts';
+import FitSizeBlockInput from '@/components/input/FitSizeBlockInput.vue';
+import {useEdgeUpdaterTouch} from '@/mindMap/edge/useEdgeUpdaterTouch.ts';
+import AutoResizeForeignObject from '@/mindMap/svg/AutoResizeForeignObject.vue';
+import IconDelete from '@/components/icons/IconDelete.vue';
+import IconFocus from '@/components/icons/IconFocus.vue';
+import {blurActiveElement} from '@/utils/event/judgeEventTarget.ts';
+import IconArrowNone from '@/components/icons/IconArrowNone.vue';
+import IconArrowTwoWay from '@/components/icons/IconArrowTwoWay.vue';
+import {getPaddingBezierPath} from '@/mindMap/edge/paddingBezierPath.ts';
+import IconArrowOneWayLeft from '@/components/icons/IconArrowOneWayLeft.vue';
+import IconArrowOneWayRight from '@/components/icons/IconArrowOneWayRight.vue';
+import {v7 as uuid} from 'uuid';
+import {type RawMindMapLayer} from '@/mindMap/layer/MindMapLayer.ts';
+import {type SizePositionEdgePartial} from '@/mindMap/edge/SizePositionEdge.ts';
+import {type ContentEdgeData} from '@/mindMap/edge/ContentEdge.ts';
 
 const {
     updateEdgeData,
@@ -26,171 +26,175 @@ const {
     selectEdge,
     fitRect,
     remove,
-    zoom
-} = useMindMap()
+    zoom,
+} = useMindMap();
 
-const props = defineProps<EdgeProps<ContentEdgeData> & {
-    layer: RawMindMapLayer,
-}>()
+const props = defineProps<
+    EdgeProps<ContentEdgeData> & {
+        layer: RawMindMapLayer;
+    }
+>();
 
-const _edge = computed(() => findEdge(props.id, props.layer.vueFlow))
+const _edge = computed(() => findEdge(props.id, props.layer.vueFlow));
 
 const innerValue = computed<string>({
     get() {
-        return props.data.content
+        return props.data.content;
     },
     set(newVal) {
-        updateEdgeData(props.id, {content: newVal})
-    }
-})
+        updateEdgeData(props.id, {content: newVal});
+    },
+});
 
-const inputWidth = ref(0)
-const inputHeight = ref(0)
+const inputWidth = ref(0);
+const inputHeight = ref(0);
 
-const handleInputResize = (size: { width: number, height: number }) => {
-    inputWidth.value = size.width
-    inputHeight.value = size.height
-}
+const handleInputResize = (size: {width: number; height: number}) => {
+    inputWidth.value = size.width;
+    inputHeight.value = size.height;
+};
 
-const inputShow = ref(false)
-const inputRef = useTemplateRef<InstanceType<typeof FitSizeBlockInput>>("inputRef")
+const inputShow = ref(false);
+const inputRef = useTemplateRef<InstanceType<typeof FitSizeBlockInput>>('inputRef');
 
 const handleEdgeMouseDown = () => {
-    if (graphSelection.selectedCount.value > 1) return
-    if (canMultiSelect.value) return
-    selectEdge(props.id, props.layer.vueFlow)
-}
+    if (graphSelection.selectedCount.value > 1) return;
+    if (canMultiSelect.value) return;
+    selectEdge(props.id, props.layer.vueFlow);
+};
 
 const handleClick = () => {
-    if (canMultiSelect.value) return
-    if (!props.selected) return
-    inputShow.value = true
+    if (canMultiSelect.value) return;
+    if (!props.selected) return;
+    inputShow.value = true;
     nextTick(() => {
-        inputRef.value?.el?.focus()
-    })
-}
+        inputRef.value?.el?.focus();
+    });
+};
 
 const handleBlur = () => {
-    inputShow.value = false
-}
+    inputShow.value = false;
+};
 
 // 工具栏
-const toolBarWidth = ref(0)
-const toolBarHeight = ref(0)
+const toolBarWidth = ref(0);
+const toolBarHeight = ref(0);
 
-const handleToolBarResize = (size: { width: number, height: number }) => {
-    toolBarWidth.value = size.width
-    toolBarHeight.value = size.height
-}
+const handleToolBarResize = (size: {width: number; height: number}) => {
+    toolBarWidth.value = size.width;
+    toolBarHeight.value = size.height;
+};
 
-useEdgeUpdaterTouch(props.id)
+useEdgeUpdaterTouch(props.id);
 
 // 贝塞尔曲线 path
 const bezierPath = computed(() => {
-    return getPaddingBezierPath(props)
-})
+    return getPaddingBezierPath(props);
+});
 
 // 两头的 marker 样式
-const currentArrowId = uuid()
+const currentArrowId = uuid();
 
 const markerStart = computed<string | undefined>(() => {
-    return props.data.arrowType === 'two-way' ? `url(#arrow-${currentArrowId})` : undefined
-})
+    return props.data.arrowType === 'two-way' ? `url(#arrow-${currentArrowId})` : undefined;
+});
 const markerEnd = computed<string | undefined>(() => {
-    return props.data.arrowType === 'two-way' || props.data.arrowType === 'one-way' ? `url(#arrow-${currentArrowId})` : undefined
-})
+    return props.data.arrowType === 'two-way' || props.data.arrowType === 'one-way'
+        ? `url(#arrow-${currentArrowId})`
+        : undefined;
+});
 
 // 贝塞尔曲线中点控制 input 位置
-const bezierRef = useTemplateRef<InstanceType<typeof BaseEdge>>("bezierRef")
-const curveMidpoint = ref<{ x: number; y: number }>({x: 0, y: 0});
+const bezierRef = useTemplateRef<InstanceType<typeof BaseEdge>>('bezierRef');
+const curveMidpoint = ref<{x: number; y: number}>({x: 0, y: 0});
 
 // 监听 svg 路径变化
-let pathObserver: MutationObserver | undefined = undefined
+let pathObserver: MutationObserver | undefined = undefined;
 
 // 计算贝塞尔曲线中点
 const calculateMidPoint = (path: SVGPathElement) => {
-    curveMidpoint.value = path.getPointAtLength(path.getTotalLength() / 2)
-}
+    curveMidpoint.value = path.getPointAtLength(path.getTotalLength() / 2);
+};
 
 // 同步 edge size position
-const boundingClientRect = ref<DOMRect>()
+const boundingClientRect = ref<DOMRect>();
 
 // 计算 edge 外部尺寸
 const calculateBoundingBox = (path: SVGPathElement) => {
-    boundingClientRect.value = path.getBoundingClientRect()
-}
+    boundingClientRect.value = path.getBoundingClientRect();
+};
 
 const syncSizePosition = () => {
-    const edge = _edge.value
+    const edge = _edge.value;
     if (edge !== undefined && boundingClientRect.value !== undefined) {
-        const flowTransform = props.layer.vueFlow.viewport.value
-        const zoom = flowTransform.zoom
+        const flowTransform = props.layer.vueFlow.viewport.value;
+        const zoom = flowTransform.zoom;
 
-        let {width, height, x: left, y: top} = boundingClientRect.value
+        let {width, height, x: left, y: top} = boundingClientRect.value;
 
         // 计算与当前画布的偏移量
-        left -= flowTransform.x
-        top -= flowTransform.y
+        left -= flowTransform.x;
+        top -= flowTransform.y;
 
         // 计算缩放
-        left /= zoom
-        top /= zoom
-        width /= zoom
-        height /= zoom
+        left /= zoom;
+        top /= zoom;
+        width /= zoom;
+        height /= zoom;
 
         if (inputWidth.value > width) {
-            left -= (inputWidth.value - width) / 2
-            width = inputWidth.value
+            left -= (inputWidth.value - width) / 2;
+            width = inputWidth.value;
         }
         if (inputHeight.value > height) {
-            top -= (inputHeight.value - height) / 2
-            height = inputHeight.value
+            top -= (inputHeight.value - height) / 2;
+            height = inputHeight.value;
         }
 
-        const sizePositionData: SizePositionEdgePartial["data"] = {
+        const sizePositionData: SizePositionEdgePartial['data'] = {
             position: {left, top},
-            size: {width: width, height: height}
-        }
+            size: {width: width, height: height},
+        };
 
         // edge size position change never emit history change
-        Object.assign(edge.data, sizePositionData)
+        Object.assign(edge.data, sizePositionData);
     }
-}
+};
 
 onMounted(() => {
-    const path = bezierRef.value?.$el?.nextElementSibling as SVGPathElement | undefined
-    if (path === undefined) return
-    calculateMidPoint(path)
-    calculateBoundingBox(path)
-    syncSizePosition()
+    const path = bezierRef.value?.$el?.nextElementSibling as SVGPathElement | undefined;
+    if (path === undefined) return;
+    calculateMidPoint(path);
+    calculateBoundingBox(path);
+    syncSizePosition();
     pathObserver = new MutationObserver(() => {
-        calculateMidPoint(path)
-        calculateBoundingBox(path)
-    })
+        calculateMidPoint(path);
+        calculateBoundingBox(path);
+    });
     pathObserver.observe(path, {
         attributes: true,
-        attributeFilter: ['d']
-    })
-})
+        attributeFilter: ['d'],
+    });
+});
 
-watch(() => [boundingClientRect.value, inputWidth.value, inputHeight.value], syncSizePosition)
+watch(() => [boundingClientRect.value, inputWidth.value, inputHeight.value], syncSizePosition);
 
 onBeforeUnmount(() => {
-    pathObserver?.disconnect()
-})
+    pathObserver?.disconnect();
+});
 
 // 边框颜色
 const borderColor = computed(() => {
     if (props.selected) {
-        return 'var(--primary-color)'
+        return 'var(--primary-color)';
     } else if (props.data.withBorder === true) {
-        return 'var(--border-color)'
+        return 'var(--border-color)';
     } else if (props.data.withBorder !== undefined) {
-        return 'transparent'
+        return 'transparent';
     } else {
-        return 'var(--border-color)'
+        return 'var(--border-color)';
     }
-})
+});
 
 // 聚焦
 const executeFocus = () => {
@@ -199,29 +203,29 @@ const executeFocus = () => {
         y: curveMidpoint.value.y - inputHeight.value / 2,
         width: inputWidth.value,
         height: inputHeight.value,
-    })
-}
+    });
+};
 
 // 切换箭头类型
 const executeToggleArrowType = () => {
     switch (props.data.arrowType) {
         case 'one-way':
-            updateEdgeData(props.id, {arrowType: 'two-way'})
-            break
+            updateEdgeData(props.id, {arrowType: 'two-way'});
+            break;
         case 'two-way':
-            updateEdgeData(props.id, {arrowType: 'none'})
-            break
+            updateEdgeData(props.id, {arrowType: 'none'});
+            break;
         default:
-            updateEdgeData(props.id, {arrowType: 'one-way'})
-            break
+            updateEdgeData(props.id, {arrowType: 'one-way'});
+            break;
     }
-}
+};
 
 // 删除
 const executeDelete = () => {
-    blurActiveElement()
-    remove({edges: [props.id]})
-}
+    blurActiveElement();
+    remove({edges: [props.id]});
+};
 </script>
 
 <template>
@@ -235,8 +239,12 @@ const executeDelete = () => {
         <defs>
             <marker
                 :id="`arrow-${currentArrowId}`"
-                viewBox="-10 -10 20 20" refX="0" refY="0"
-                markerWidth="12.5" markerHeight="12.5" markerUnits="strokeWidth"
+                viewBox="-10 -10 20 20"
+                refX="0"
+                refY="0"
+                markerWidth="12.5"
+                markerHeight="12.5"
+                markerUnits="strokeWidth"
                 orient="auto-start-reverse"
             >
                 <polyline
@@ -277,25 +285,31 @@ const executeDelete = () => {
         <AutoResizeForeignObject
             v-if="selected && inputShow"
             @resize="handleToolBarResize"
-            style="z-index: var(--edge-toolbar-z-index);"
+            style="z-index: var(--edge-toolbar-z-index)"
             :transform="`translate(${curveMidpoint.x - toolBarWidth / (zoom * 2)} ${curveMidpoint.y - inputHeight / 2 - (toolBarHeight + 10) / zoom}) scale(${1 / zoom})`"
         >
             <div class="toolbar">
                 <button @mousedown.capture.prevent.stop="executeFocus">
-                    <IconFocus/>
+                    <IconFocus />
                 </button>
 
-                <button @mousedown.capture.prevent.stop="executeToggleArrowType" v-if="!layer.lock">
+                <button
+                    @mousedown.capture.prevent.stop="executeToggleArrowType"
+                    v-if="!layer.lock"
+                >
                     <template v-if="data.arrowType === 'one-way'">
-                        <IconArrowOneWayLeft v-if="sourceX < targetX"/>
-                        <IconArrowOneWayRight v-else/>
+                        <IconArrowOneWayLeft v-if="sourceX < targetX" />
+                        <IconArrowOneWayRight v-else />
                     </template>
-                    <IconArrowTwoWay v-else-if="data.arrowType === 'two-way'"/>
-                    <IconArrowNone v-else/>
+                    <IconArrowTwoWay v-else-if="data.arrowType === 'two-way'" />
+                    <IconArrowNone v-else />
                 </button>
 
-                <button @mousedown.capture.prevent.stop="executeDelete" v-if="!layer.lock">
-                    <IconDelete/>
+                <button
+                    @mousedown.capture.prevent.stop="executeDelete"
+                    v-if="!layer.lock"
+                >
+                    <IconDelete />
                 </button>
             </div>
         </AutoResizeForeignObject>
@@ -348,6 +362,9 @@ const executeDelete = () => {
     background-color: var(--background-color);
     border: var(--border);
     border-radius: var(--border-radius);
-    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+    transition:
+        color 0.3s ease,
+        background-color 0.3s ease,
+        border-color 0.3s ease;
 }
 </style>

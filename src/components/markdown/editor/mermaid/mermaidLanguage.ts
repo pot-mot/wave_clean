@@ -1,5 +1,5 @@
 // https://github.com/Yash-Singh1/monaco-mermaid
-import {languages, editor} from "monaco-editor/esm/vs/editor/editor.api.js";
+import {languages, editor} from 'monaco-editor/esm/vs/editor/editor.api.js';
 type IMonarchLanguage = languages.IMonarchLanguage;
 type CompletionItemProvider = languages.CompletionItemProvider;
 
@@ -45,18 +45,7 @@ const keywords: {
     },
     sequenceDiagram: {
         typeKeywords: ['sequenceDiagram'],
-        blockKeywords: [
-            'alt',
-            'par',
-            'and',
-            'loop',
-            'else',
-            'end',
-            'rect',
-            'opt',
-            'alt',
-            'rect',
-        ],
+        blockKeywords: ['alt', 'par', 'and', 'loop', 'else', 'end', 'rect', 'opt', 'alt', 'rect'],
         keywords: [
             'participant',
             'as',
@@ -98,16 +87,7 @@ const keywords: {
     stateDiagram: {
         typeKeywords: ['stateDiagram', 'stateDiagram-v2'],
         blockKeywords: ['state', 'note', 'end'],
-        keywords: [
-            'state',
-            'as',
-            'hide empty description',
-            'direction',
-            'TB',
-            'BT',
-            'RL',
-            'LR',
-        ],
+        keywords: ['state', 'as', 'hide empty description', 'direction', 'TB', 'BT', 'RL', 'LR'],
     },
     erDiagram: {
         typeKeywords: ['erDiagram'],
@@ -171,13 +151,7 @@ const keywords: {
         keywords: ['title', 'showData', 'title', 'accDescription'],
     },
     c4Diagram: {
-        typeKeywords: [
-            'C4Context',
-            'C4Container',
-            'C4Component',
-            'C4Dynamic',
-            'C4Deployment',
-        ],
+        typeKeywords: ['C4Context', 'C4Container', 'C4Component', 'C4Dynamic', 'C4Deployment'],
         blockKeywords: [
             'Boundary',
             'Enterprise_Boundary',
@@ -248,15 +222,15 @@ const mermaidLanguage: IMonarchLanguage = {
                 Object.entries(entry[1]).map((deepEntry) => [
                     entry[0] + deepEntry?.[0]?.[0]?.toUpperCase() + deepEntry[0].slice(1),
                     deepEntry[1],
-                ])
-            )
+                ]),
+            ),
         )
         .reduce(
             (overallKeywords, nextKeyword) => ({
                 ...overallKeywords,
                 ...nextKeyword,
             }),
-            {}
+            {},
         ),
     tokenizer: {
         root: [
@@ -279,16 +253,11 @@ const mermaidLanguage: IMonarchLanguage = {
             configDirectiveHandler,
             [/%%[^${].*$/, 'comment'],
         ],
-        configDirective: [
-            [/%%$/, { token: 'string', next: '@pop', nextEmbedded: '@pop' }],
-        ],
+        configDirective: [[/%%$/, {token: 'string', next: '@pop', nextEmbedded: '@pop'}]],
         gitGraph: [
             configDirectiveHandler,
-            [/option(?=s)/, { token: 'typeKeyword', next: 'optionsGitGraph' }],
-            [
-                /(accTitle|accDescr)(\s*:)(\s*[^\r\n]+$)/,
-                ['keyword', 'delimiter.bracket', 'string'],
-            ],
+            [/option(?=s)/, {token: 'typeKeyword', next: 'optionsGitGraph'}],
+            [/(accTitle|accDescr)(\s*:)(\s*[^\r\n]+$)/, ['keyword', 'delimiter.bracket', 'string']],
             [
                 /(^\s*branch)(.*?)(\s+order)(:\s*)(\d+\s*$)/,
                 ['keyword', 'variable', 'keyword', 'delimiter.bracket', 'number'],
@@ -318,7 +287,7 @@ const mermaidLanguage: IMonarchLanguage = {
                     nextEmbedded: 'json',
                 },
             ],
-            ['end', { token: 'typeKeyword', next: '@pop', nextEmbedded: '@pop' }],
+            ['end', {token: 'typeKeyword', next: '@pop', nextEmbedded: '@pop'}],
         ],
         info: [
             [
@@ -367,10 +336,7 @@ const mermaidLanguage: IMonarchLanguage = {
             [/{+.+?}+/, 'string'],
             [/\(+.+?\)+/, 'string'],
             [/-\.+->?/, 'transition'],
-            [
-                /(-[-.])([^->][^-]+?)(-{3,}|-{2,}>|\.-+>)/,
-                ['transition', 'string', 'transition'],
-            ],
+            [/(-[-.])([^->][^-]+?)(-{3,}|-{2,}>|\.-+>)/, ['transition', 'string', 'transition']],
             [/(==+)([^=]+?)(={3,}|={2,}>)/, ['transition', 'string', 'transition']],
             [/<?(--+|==+)>|===+|---+/, 'transition'],
             [/:::/, 'transition'],
@@ -382,10 +348,7 @@ const mermaidLanguage: IMonarchLanguage = {
             configDirectiveHandler,
             [/(title:?|accDescription)([^\r\n;]*$)/, ['keyword', 'string']],
             [/(autonumber)([^\r\n\S]+off[^\r\n\S]*$)/, ['keyword', 'keyword']],
-            [
-                /(autonumber)([^\r\n\S]+\d+[^\r\n\S]+\d+[^\r\n\S]*$)/,
-                ['keyword', 'number'],
-            ],
+            [/(autonumber)([^\r\n\S]+\d+[^\r\n\S]+\d+[^\r\n\S]*$)/, ['keyword', 'number']],
             [/(autonumber)([^\r\n\S]+\d+[^\r\n\S]*$)/, ['keyword', 'number']],
             [
                 /(link\s+)(.*?)(:)(\s*.*?)(\s*@)(\s*[^\r\n;]+)/,
@@ -401,8 +364,8 @@ const mermaidLanguage: IMonarchLanguage = {
             [
                 /((?:links|properties)\s+)([^\r\n:]*?)(:\s+)/,
                 [
-                    { token: 'keyword' },
-                    { token: 'variable' },
+                    {token: 'keyword'},
+                    {token: 'variable'},
                     {
                         token: 'delimiter.bracket',
                         nextEmbedded: 'javascript',
@@ -426,10 +389,7 @@ const mermaidLanguage: IMonarchLanguage = {
         ],
         sequenceDiagramLinksProps: [
             // [/^:/, { token: 'delimiter.bracket', nextEmbedded: 'json' }],
-            [
-                /$|;/,
-                { nextEmbedded: '@pop', next: '@pop', token: 'delimiter.bracket' },
-            ],
+            [/$|;/, {nextEmbedded: '@pop', next: '@pop', token: 'delimiter.bracket'}],
         ],
         classDiagram: [
             configDirectiveHandler,
@@ -459,10 +419,7 @@ const mermaidLanguage: IMonarchLanguage = {
                 },
             ],
             [/%%[^$]([^%]*(?!%%$)%?)*$/, 'comment'],
-            [
-                /(<<)(.+?)(>>)/,
-                ['delimiter.bracket', 'annotation', 'delimiter.bracket'],
-            ],
+            [/(<<)(.+?)(>>)/, ['delimiter.bracket', 'annotation', 'delimiter.bracket']],
             [/".*?"/, 'string'],
             [/:::/, 'transition'],
             [/:|\+|-|#|~|\*\s*$|\$\s*$|\(|\)|{|}/, 'delimiter.bracket'],
@@ -515,7 +472,7 @@ const mermaidLanguage: IMonarchLanguage = {
         ],
         stateDiagram: [
             configDirectiveHandler,
-            [/note[^:]*$/, { token: 'typeKeyword', next: 'stateDiagramNote' }],
+            [/note[^:]*$/, {token: 'typeKeyword', next: 'stateDiagramNote'}],
             ['hide empty description', 'keyword'],
             [/^\s*state\s(?!.*\{)/, 'keyword'],
             [/(<<)(fork|join|choice)(>>)/, 'annotation'],
@@ -541,7 +498,7 @@ const mermaidLanguage: IMonarchLanguage = {
             [/\[.*?]/, 'string'],
         ],
         stateDiagramNote: [
-            [/^\s*end note$/, { token: 'typeKeyword', next: '@pop' }],
+            [/^\s*end note$/, {token: 'typeKeyword', next: '@pop'}],
             [/.*/, 'string'],
         ],
         erDiagram: [
@@ -575,7 +532,7 @@ const mermaidLanguage: IMonarchLanguage = {
         c4Diagram: [
             configDirectiveHandler,
             [/(title|accDescription)(.*$)/, ['keyword', 'string']],
-            [/\(/, { token: 'delimiter.bracket', next: 'c4DiagramParenthesis' }],
+            [/\(/, {token: 'delimiter.bracket', next: 'c4DiagramParenthesis'}],
             [
                 /[a-zA-Z_-][\w$]*/,
                 {
@@ -590,11 +547,11 @@ const mermaidLanguage: IMonarchLanguage = {
         ],
         c4DiagramParenthesis: [
             [/,/, 'delimiter.bracket'],
-            [/\)/, { next: '@pop', token: 'delimiter.bracket' }],
+            [/\)/, {next: '@pop', token: 'delimiter.bracket'}],
             [/[^,)]/, 'string'],
         ],
     },
-}
+};
 
 export const mermaidCompletionProvider: CompletionItemProvider = {
     provideCompletionItems: (model, position) => {
@@ -610,30 +567,21 @@ export const mermaidCompletionProvider: CompletionItemProvider = {
                 label: 'loop',
                 kind: languages.CompletionItemKind.Snippet,
                 insertText: ['loop ${1:Loop text}', '\t$0', 'end'].join('\n'),
-                insertTextRules:
-                languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
                 documentation: 'Sequence Diagram Loops',
             },
             {
                 label: 'alt',
                 kind: languages.CompletionItemKind.Snippet,
-                insertText: [
-                    'alt ${1:Describing text}',
-                    '\t$0',
-                    'else',
-                    '\t',
-                    'end',
-                ].join('\n'),
-                insertTextRules:
-                languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                insertText: ['alt ${1:Describing text}', '\t$0', 'else', '\t', 'end'].join('\n'),
+                insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
                 documentation: 'Alternative Path',
             },
             {
                 label: 'opt',
                 kind: languages.CompletionItemKind.Snippet,
                 insertText: ['opt ${1:Describing text}', '\t$0', 'end'].join('\n'),
-                insertTextRules:
-                languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
                 documentation: 'Optional Path',
             },
             {
@@ -648,77 +596,66 @@ export const mermaidCompletionProvider: CompletionItemProvider = {
                     '\t',
                     'end',
                 ].join('\n'),
-                insertTextRules:
-                languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
                 documentation: 'Parallel Actions',
             },
             {
                 label: 'rect',
                 kind: languages.CompletionItemKind.Snippet,
                 insertText: ['rect ${1:rgb(0, 255, 0)}', '\t$0', 'end'].join('\n'),
-                insertTextRules:
-                languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
                 documentation: 'Background Color',
             },
             {
                 label: 'subgraph',
                 kind: languages.CompletionItemKind.Snippet,
                 insertText: ['subgraph ${1:title}', '\t$0', 'end'].join('\n'),
-                insertTextRules:
-                languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
                 documentation: 'Subgraph',
             },
             {
                 label: 'class',
                 kind: languages.CompletionItemKind.Snippet,
                 insertText: ['class ${1:className} {', '\t$0', '}'].join('\n'),
-                insertTextRules:
-                languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
                 documentation: 'Class',
             },
             {
                 label: 'state',
                 kind: languages.CompletionItemKind.Snippet,
                 insertText: ['state ${1:stateName} {', '\t$0', '}'].join('\n'),
-                insertTextRules:
-                languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
                 documentation: 'State',
             },
             {
                 label: 'note',
                 kind: languages.CompletionItemKind.Snippet,
-                insertText: ['note ${1:right of State1}', '\t$0', 'end note'].join(
-                    '\n'
-                ),
-                insertTextRules:
-                languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                insertText: ['note ${1:right of State1}', '\t$0', 'end note'].join('\n'),
+                insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
                 documentation: 'State',
             },
             {
                 label: 'section',
                 kind: languages.CompletionItemKind.Snippet,
                 insertText: ['section ${1:Go to work}', '\t$0'].join('\n'),
-                insertTextRules:
-                languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
                 documentation: 'User-journey Section',
             },
             {
                 label: 'element',
                 kind: languages.CompletionItemKind.Snippet,
                 insertText: ['element ${1:test_entity} {', '\t$0', '}'].join('\n'),
-                insertTextRules:
-                languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
                 documentation: 'Requirement Diagram Element',
             },
             {
                 label: 'options',
                 kind: languages.CompletionItemKind.Snippet,
                 insertText: ['options', '{', '    $0', '}', 'end'].join('\n'),
-                insertTextRules:
-                languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
                 documentation: 'Git Graph Options',
             },
-            ...keywords.c4Diagram?.blockKeywords.map((containerType) => ({
+            ...(keywords.c4Diagram?.blockKeywords.map((containerType) => ({
                 label: containerType,
                 kind: languages.CompletionItemKind.Snippet,
                 insertText: [
@@ -726,10 +663,9 @@ export const mermaidCompletionProvider: CompletionItemProvider = {
                     '    $0',
                     '}',
                 ].join('\n'),
-                insertTextRules:
-                languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
                 documentation: 'C4 Diagram ' + containerType + ' Boundary',
-            })) ?? [],
+            })) ?? []),
             ...requirementDiagrams.map((requirementDiagramType) => ({
                 label: requirementDiagramType,
                 kind: languages.CompletionItemKind.Snippet,
@@ -741,8 +677,7 @@ export const mermaidCompletionProvider: CompletionItemProvider = {
                     '\tverifyMethod: test',
                     '}',
                 ].join('\n'),
-                insertTextRules:
-                languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
                 documentation: requirementDiagramType
                     .split(/(?=[A-Z])/)
                     .map((part) => part[0]?.toUpperCase() + part.slice(1))
@@ -754,9 +689,9 @@ export const mermaidCompletionProvider: CompletionItemProvider = {
                         .map((diagramKeywords) =>
                             Object.entries(diagramKeywords)
                                 .filter((keywordType) => keywordType[0] !== 'annotations')
-                                .map((entry) => entry[1])
+                                .map((entry) => entry[1]),
                         )
-                        .flat(2)
+                        .flat(2),
                 ),
             ].map((keyword) => ({
                 label: keyword,
@@ -771,10 +706,10 @@ export const mermaidCompletionProvider: CompletionItemProvider = {
             })),
         };
     },
-}
+};
 
 export const registerMermaidLanguage = () => {
-    languages.register({ id: 'mermaid' });
+    languages.register({id: 'mermaid'});
 
     // Register a tokens provider for the mermaid language
     languages.setMonarchTokensProvider('mermaid', mermaidLanguage);
@@ -784,9 +719,9 @@ export const registerMermaidLanguage = () => {
         inherit: true,
         colors: {},
         rules: [
-            { token: 'typeKeyword', foreground: '9650c8', fontStyle: 'bold' },
-            { token: 'transition', foreground: '008800', fontStyle: 'bold' },
-            { token: 'identifier', foreground: '9cdcfe' },
+            {token: 'typeKeyword', foreground: '9650c8', fontStyle: 'bold'},
+            {token: 'transition', foreground: '008800', fontStyle: 'bold'},
+            {token: 'identifier', foreground: '9cdcfe'},
         ],
     });
 
@@ -795,18 +730,18 @@ export const registerMermaidLanguage = () => {
         inherit: true,
         colors: {},
         rules: [
-            { token: 'typeKeyword', foreground: '9650c8', fontStyle: 'bold' },
-            { token: 'keyword', foreground: '649696' },
-            { token: 'custom-error', foreground: 'ff0000', fontStyle: 'bold' },
-            { token: 'string', foreground: 'AA8500' },
-            { token: 'transition', foreground: '008800', fontStyle: 'bold' },
-            { token: 'delimiter.bracket', foreground: '000000', fontStyle: 'bold' },
-            { token: 'annotation', foreground: '4b4b96' },
-            { token: 'number', foreground: '4b4b96' },
-            { token: 'comment', foreground: '888c89' },
-            { token: 'variable', foreground: 'A22889' },
-            { token: 'type', foreground: '2BDEA8' },
-            { token: 'identifier', foreground: '9cdcfe' },
+            {token: 'typeKeyword', foreground: '9650c8', fontStyle: 'bold'},
+            {token: 'keyword', foreground: '649696'},
+            {token: 'custom-error', foreground: 'ff0000', fontStyle: 'bold'},
+            {token: 'string', foreground: 'AA8500'},
+            {token: 'transition', foreground: '008800', fontStyle: 'bold'},
+            {token: 'delimiter.bracket', foreground: '000000', fontStyle: 'bold'},
+            {token: 'annotation', foreground: '4b4b96'},
+            {token: 'number', foreground: '4b4b96'},
+            {token: 'comment', foreground: '888c89'},
+            {token: 'variable', foreground: 'A22889'},
+            {token: 'type', foreground: '2BDEA8'},
+            {token: 'identifier', foreground: '9cdcfe'},
         ],
     });
 

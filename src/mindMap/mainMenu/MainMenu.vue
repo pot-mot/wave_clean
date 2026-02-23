@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import FileMenu from "@/mindMap/mainMenu/file/FileMenu.vue";
-import QuickInputMenu from "@/mindMap/mainMenu/quickInput/QuickInputMenu.vue";
-import {ref} from "vue";
-import {useDeviceStore} from "@/store/deviceStore.ts";
-import {translate} from "@/store/i18nStore.ts";
-import ConfigMenu from "@/mindMap/mainMenu/config/ConfigMenu.vue";
+import FileMenu from '@/mindMap/mainMenu/file/FileMenu.vue';
+import QuickInputMenu from '@/mindMap/mainMenu/quickInput/QuickInputMenu.vue';
+import {ref} from 'vue';
+import {useDeviceStore} from '@/store/deviceStore.ts';
+import {translate} from '@/store/i18nStore.ts';
+import ConfigMenu from '@/mindMap/mainMenu/config/ConfigMenu.vue';
 
-const {isTouchDevice} = useDeviceStore()
+const {isTouchDevice} = useDeviceStore();
 
-type SubMenuType = 'file' | 'quick-input'
+type SubMenuType = 'file' | 'quick-input';
 
-const subMenuType = ref<SubMenuType>('file')
+const subMenuType = ref<SubMenuType>('file');
 </script>
 
 <template>
@@ -18,24 +18,30 @@ const subMenuType = ref<SubMenuType>('file')
         <div class="sub-menu-container">
             <template v-if="isTouchDevice">
                 <div class="sub-menu-select">
-                    <button @click="subMenuType = 'file'" :class="{enable: subMenuType === 'file'}">
+                    <button
+                        @click="subMenuType = 'file'"
+                        :class="{enable: subMenuType === 'file'}"
+                    >
                         {{ translate('mindMap') }}
                     </button>
-                    <button @click="subMenuType = 'quick-input'" :class="{enable: subMenuType === 'quick-input'}">
+                    <button
+                        @click="subMenuType = 'quick-input'"
+                        :class="{enable: subMenuType === 'quick-input'}"
+                    >
                         {{ translate('quickInput') }}
                     </button>
                 </div>
 
                 <div class="sub-menu-wrapper">
-                    <FileMenu v-if="subMenuType === 'file'"/>
-                    <QuickInputMenu v-else-if="subMenuType === 'quick-input'"/>
+                    <FileMenu v-if="subMenuType === 'file'" />
+                    <QuickInputMenu v-else-if="subMenuType === 'quick-input'" />
                 </div>
             </template>
 
-            <FileMenu v-else/>
+            <FileMenu v-else />
         </div>
 
-        <ConfigMenu/>
+        <ConfigMenu />
     </div>
 </template>
 

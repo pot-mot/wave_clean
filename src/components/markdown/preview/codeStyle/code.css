@@ -18,7 +18,7 @@
 }
 
 .token.namespace {
-    opacity: .7;
+    opacity: 0.7;
 }
 
 .token.property,
@@ -51,7 +51,7 @@
 .token.string,
 .token.attr-value,
 .token.atrule {
-    color: #6AAB73;
+    color: #6aab73;
 }
 
 .token.attr-name {
@@ -63,7 +63,7 @@
 
 .token.function,
 .token.class-name {
-    color: #56A8F5;
+    color: #56a8f5;
 }
 
 .token.regex,

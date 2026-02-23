@@ -1,43 +1,43 @@
 <script setup lang="ts">
-import IconDelete from "@/components/icons/IconDelete.vue";
-import {useMindMapStore} from "@/store/mindMapStore.ts";
-import {ref} from "vue";
-import {sendMessage} from "@/components/message/messageApi.ts";
-import IconAdd from "@/components/icons/IconAdd.vue";
-import DragModelList from "@/components/list/DragModelList.vue";
-import {v7 as uuid} from "uuid"
-import {translate} from "@/store/i18nStore.ts";
-import type {QuickInputItem} from "@/mindMap/quickInput/QuickInput.ts";
+import IconDelete from '@/components/icons/IconDelete.vue';
+import {useMindMapStore} from '@/store/mindMapStore.ts';
+import {ref} from 'vue';
+import {sendMessage} from '@/components/message/messageApi.ts';
+import IconAdd from '@/components/icons/IconAdd.vue';
+import DragModelList from '@/components/list/DragModelList.vue';
+import {v7 as uuid} from 'uuid';
+import {translate} from '@/store/i18nStore.ts';
+import type {QuickInputItem} from '@/mindMap/quickInput/QuickInput.ts';
 
-const {meta} = useMindMapStore()
+const {meta} = useMindMapStore();
 
-const currentItem = ref<QuickInputItem | undefined>(undefined)
+const currentItem = ref<QuickInputItem | undefined>(undefined);
 
 const handleToggleCurrent = (item: QuickInputItem) => {
-    currentItem.value = item
-}
+    currentItem.value = item;
+};
 
 const getDefaultQuickInput = () => {
     return {
         id: uuid(),
-        label: "",
-        value: "",
-    }
-}
-const input = ref<QuickInputItem>(getDefaultQuickInput())
+        label: '',
+        value: '',
+    };
+};
+const input = ref<QuickInputItem>(getDefaultQuickInput());
 
 const handleAdd = () => {
     if (input.value.label.length === 0 || input.value.value.length === 0) {
-        sendMessage("Please set label and value", {type: "warning"})
-        return
+        sendMessage('Please set label and value', {type: 'warning'});
+        return;
     }
-    meta.value.quickInputs.push(input.value)
-    input.value = getDefaultQuickInput()
-}
+    meta.value.quickInputs.push(input.value);
+    input.value = getDefaultQuickInput();
+};
 
 const handleDelete = (item: QuickInputItem) => {
-    meta.value.quickInputs = meta.value.quickInputs.filter(it => it.id !== item.id)
-}
+    meta.value.quickInputs = meta.value.quickInputs.filter((it) => it.id !== item.id);
+};
 </script>
 
 <template>
@@ -48,15 +48,15 @@ const handleDelete = (item: QuickInputItem) => {
                 :placeholder="translate('quickInput_label')"
                 v-model="input.label"
                 @click.stop
-            >
+            />
             <input
                 class="value-input"
                 :placeholder="translate('quickInput_value')"
                 v-model="input.value"
                 @click.stop
-            >
+            />
             <button @click="handleAdd">
-                <IconAdd/>
+                <IconAdd />
             </button>
         </div>
 
@@ -64,33 +64,36 @@ const handleDelete = (item: QuickInputItem) => {
             class="quick-input-list"
             v-model="meta.quickInputs"
             :current-item="currentItem"
-            :to-key="quickInput => quickInput.id"
-            @remove="quickInput => handleDelete(quickInput)"
+            :to-key="(quickInput) => quickInput.id"
+            @remove="(quickInput) => handleDelete(quickInput)"
         >
             <template #default="{item: quickInput}">
-                <div class="quick-input-item" @click="handleToggleCurrent(quickInput)">
+                <div
+                    class="quick-input-item"
+                    @click="handleToggleCurrent(quickInput)"
+                >
                     <input
                         class="label-input"
                         v-model="quickInput.label"
                         @click.stop
-                    >
+                    />
                     <input
                         class="value-input"
                         v-model="quickInput.value"
                         @click.stop
-                    >
+                    />
 
                     <button
                         class="quick-input-item-delete-button"
                         @click.stop="handleDelete(quickInput)"
                     >
-                        <IconDelete/>
+                        <IconDelete />
                     </button>
                 </div>
             </template>
 
             <template #dragView="{data: {item: quickInput}}">
-                <div class="quick-input-item-drag-view ">
+                <div class="quick-input-item-drag-view">
                     <span>{{ quickInput.label }}</span>
                     <span>{{ quickInput.value }}</span>
                 </div>

@@ -1,15 +1,18 @@
 <script setup lang="ts">
-import {useMindMap} from "@/mindMap/useMindMap.ts";
-import IconDownload from "@/components/icons/IconDownload.vue";
-import {ExportFileType_CONSTANTS} from "@/mindMap/export/export.ts";
+import {useMindMap} from '@/mindMap/useMindMap.ts';
+import IconDownload from '@/components/icons/IconDownload.vue';
+import {ExportFileType_CONSTANTS} from '@/mindMap/export/export.ts';
 
-const {exportFileType, exportFile} = useMindMap()
+const {exportFileType, exportFile} = useMindMap();
 </script>
 
 <template>
     <div class="download-select-wrapper">
-        <button class="download-button" @click="exportFile()">
-            <IconDownload class="icon"/>
+        <button
+            class="download-button"
+            @click="exportFile()"
+        >
+            <IconDownload class="icon" />
         </button>
 
         <select v-model="exportFileType">

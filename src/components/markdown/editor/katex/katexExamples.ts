@@ -50,7 +50,7 @@ export const katexAccents = [
     `\\^{a}`,
     `\\u{a}`,
     `\\r{a}`,
-]
+];
 
 // Delimiters 分隔符
 export const katexDelimiters = [
@@ -115,7 +115,7 @@ export const katexDelimiters = [
     `\\Big`,
     `\\bigg`,
     `\\Bigg`,
-]
+];
 
 // Environments 环境
 export const katexEnvironments = [
@@ -177,8 +177,8 @@ c & d
     `\\begin{rcases}
 a &\\text{if } b \\\\
 c &\\text{if } d
-\\end{rcases}⇒…`
-]
+\\end{rcases}⇒…`,
+];
 
 // HTML
 // FIXME 目前 katex 和 HTML 还不兼容
@@ -189,8 +189,8 @@ export const katexHTML = [
     `\\htmlId{bar}{x}`,
     `\\htmlClass{foo}{x}`,
     `\\htmlStyle{color: red;}{x}`,
-    `\\htmlData{foo=a, bar=b}{x}`
-]
+    `\\htmlData{foo=a, bar=b}{x}`,
+];
 
 // Greek Letters 希腊字母
 export const katexGreekLetters = [
@@ -262,7 +262,7 @@ export const katexGreekLetters = [
     `\\varsigma`,
     `\\varphi`,
     `\\digamma`,
-]
+];
 
 // Other Letters 其他字母
 export const katexOtherLetters = [
@@ -307,8 +307,8 @@ export const katexOtherLetters = [
     `\\eth`,
     `\\hslash`,
     `\\reals`,
-    `\\text{\\oe}`
-]
+    `\\text{\\oe}`,
+];
 
 // Symbols and Punctuation 符号和标点符号
 export const katexPunctuation = [
@@ -424,7 +424,7 @@ export const katexPunctuation = [
     `\\spades`,
     `\\text{\\textcircled a}`,
     `\\maltese`,
-]
+];
 
 // Annotation 注释
 export const katexAnnotation = [
@@ -436,7 +436,7 @@ export const katexAnnotation = [
     `\\not =`,
     `\\sout{abc}`,
     `\\boxed{\\pi=\\frac c d}`,
-]
+];
 
 // Vertical Layout 垂直布局
 export const katexVerticalLayout = [
@@ -448,8 +448,8 @@ export const katexVerticalLayout = [
     `a\\raisebox{0.25em}{b}c`,
     `_u^o`,
     `\\underset{!}{=}`,
-    `\\sum\\limits_{0<i<m\\atop0<j<n}`
-]
+    `\\sum\\limits_{0<i<m\\atop0<j<n}`,
+];
 
 // Overlap and Spacing 重叠和间距
 export const katexOverlapSpacing = [
@@ -457,7 +457,7 @@ export const katexOverlapSpacing = [
     `\\left(x^{\\smash{2}}\\right)`,
     `\\mathrlap{\\,/}{=}`,
     `\\sqrt{\\smash[b]{y}}`,
-]
+];
 
 // Spacing 间距
 export const katexSpacing = [
@@ -488,7 +488,7 @@ export const katexSpacing = [
     `\\nobreakspace`,
     `\\negthickspace`,
     `\\space`,
-]
+];
 
 // Logic and Set Theory 逻辑与集合论
 export const katexLogic = [
@@ -521,7 +521,7 @@ export const katexLogic = [
     `\\notni`,
     `\\neg`,
     `\\lnot`,
-]
+];
 
 // Macros 宏
 export const katexMacros = [
@@ -531,7 +531,7 @@ export const katexMacros = [
     `\\newcommand\\macroname[numargs]{definition}`,
     `\\renewcommand\\macroname[numargs]{definition}`,
     `\\providecommand\\macroname[numargs]{definition}`,
-]
+];
 
 // Big Operators 大运算符
 export const katexBigOperators = [
@@ -555,7 +555,7 @@ export const katexBigOperators = [
     `\\oiint`,
     `\\oiiint`,
     `\\bigsqcup`,
-]
+];
 
 // Binary Operators 二元运算符
 export const katexBinaryOperators = [
@@ -628,7 +628,7 @@ export const katexBinaryOperators = [
     `\\pm`,
     `\\plusmn`,
     `\\wr`,
-]
+];
 
 // Fractions and Binomials 分数和二项式
 export const katexFractionsBinomials = [
@@ -646,7 +646,7 @@ export const katexFractionsBinomials = [
     `{n \\choose k}`,
     `\\tbinom{n}{k}`,
     `{n\\brack k}`,
-]
+];
 
 // Math Operators 数学运算符
 export const katexMathOperators = [
@@ -700,7 +700,7 @@ export const katexMathOperators = [
     `\\lim\\limits_{N\\to+\\infty}`,
     `\\sqrt{x}`,
     `\\sqrt[3]{x}`,
-]
+];
 
 // Relations 关系符
 export const katexRelations = [
@@ -831,7 +831,7 @@ export const katexRelations = [
     `\\doteqdot`,
     `\\lessapprox`,
     `\\sqsubseteq`,
-]
+];
 
 // Negated Relations 否定关系
 export const katexNegatedRelations = [
@@ -894,7 +894,7 @@ export const katexNegatedRelations = [
     `\\ngeqq`,
     `\\nsim`,
     `\\precnapprox`,
-]
+];
 
 // Arrows 箭头
 export const katexArrows = [
@@ -989,7 +989,7 @@ export const katexArrows = [
     `\\nwarrow`,
     `\\leftharpoondown`,
     `\\Rarr`,
-]
+];
 
 // Extensible Arrows 扩展箭头
 export const katexExtensibleArrows = [
@@ -1012,7 +1012,7 @@ export const katexExtensibleArrows = [
     `\\xtofrom{abc}`,
     `\\xmapsto{abc}`,
     `\\xlongequal{abc}`,
-]
+];
 
 export const katexExamples = [
     katexAccents,
@@ -1035,5 +1035,5 @@ export const katexExamples = [
     katexRelations,
     katexNegatedRelations,
     katexArrows,
-    katexExtensibleArrows
-]
+    katexExtensibleArrows,
+];

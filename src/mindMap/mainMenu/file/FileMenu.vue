@@ -1,88 +1,94 @@
 <script setup lang="ts">
-import IconDelete from "@/components/icons/IconDelete.vue";
-import {useMindMapStore} from "@/store/mindMapStore.ts";
-import {computed, ref} from "vue";
-import {sendMessage} from "@/components/message/messageApi.ts";
-import IconAdd from "@/components/icons/IconAdd.vue";
-import DragModelList from "@/components/list/DragModelList.vue";
-import {formatDatetimeToLocal} from "@/utils/datetime/datetimeFormat.ts";
-import CollapseDetail from "@/components/collapse/CollapseDetail.vue";
-import {sendConfirm} from "@/components/confirm/confirmApi.ts";
-import {translate} from "@/store/i18nStore.ts";
-import IconDownload from "@/components/icons/IconDownload.vue";
-import {exportMindMapToJson} from "@/mindMap/export/export.ts";
-import {withLoading} from "@/components/loading/loadingApi.ts";
-import IconLoad from "@/components/icons/IconLoad.vue";
-import {readJson, removeJsonSuffix} from "@/utils/file/jsonRead.ts";
-import {validateMindMapData} from "@/mindMap/MindMapData.ts";
+import IconDelete from '@/components/icons/IconDelete.vue';
+import {useMindMapStore} from '@/store/mindMapStore.ts';
+import {computed, ref} from 'vue';
+import {sendMessage} from '@/components/message/messageApi.ts';
+import IconAdd from '@/components/icons/IconAdd.vue';
+import DragModelList from '@/components/list/DragModelList.vue';
+import {formatDatetimeToLocal} from '@/utils/datetime/datetimeFormat.ts';
+import CollapseDetail from '@/components/collapse/CollapseDetail.vue';
+import {sendConfirm} from '@/components/confirm/confirmApi.ts';
+import {translate} from '@/store/i18nStore.ts';
+import IconDownload from '@/components/icons/IconDownload.vue';
+import {exportMindMapToJson} from '@/mindMap/export/export.ts';
+import {withLoading} from '@/components/loading/loadingApi.ts';
+import IconLoad from '@/components/icons/IconLoad.vue';
+import {readJson, removeJsonSuffix} from '@/utils/file/jsonRead.ts';
+import {validateMindMapData} from '@/mindMap/MindMapData.ts';
 
-const mindMapStore = useMindMapStore()
+const mindMapStore = useMindMapStore();
 
 const currentFile = computed(() => {
-    return mindMapStore.meta.value.mindMaps.find(it => it.key === mindMapStore.meta.value.currentKey)
-})
+    return mindMapStore.meta.value.mindMaps.find(
+        (it) => it.key === mindMapStore.meta.value.currentKey,
+    );
+});
 
-const newName = ref("")
+const newName = ref('');
 
 const handleAdd = () => {
     if (newName.value.length === 0) {
-        sendMessage("Please set a name", {type: "warning"})
-        return
+        sendMessage('Please set a name', {type: 'warning'});
+        return;
     }
-    mindMapStore.add(0, newName.value)
-    newName.value = ""
-}
+    mindMapStore.add(0, newName.value);
+    newName.value = '';
+};
 
 const handleLoad = async () => {
     try {
-        const mindMapData = await readJson(validateMindMapData)
+        const mindMapData = await readJson(validateMindMapData);
         if (mindMapData !== undefined) {
-            await mindMapStore.load(0, removeJsonSuffix(mindMapData.name), mindMapData.data)
+            await mindMapStore.load(0, removeJsonSuffix(mindMapData.name), mindMapData.data);
         }
     } catch (e) {
-        sendMessage(`${translate("load_mindMap_fail")}`, {type: "error"})
-        throw e
+        sendMessage(`${translate('load_mindMap_fail')}`, {type: 'error'});
+        throw e;
     }
-}
+};
 
 const handleOpen = (key: string) => {
-    mindMapStore.toggle(key)
-}
+    mindMapStore.toggle(key);
+};
 
 const handleRename = (key: string, e: Event) => {
     if (e.target instanceof HTMLInputElement) {
-        mindMapStore.rename(key, e.target.value)
-        e.target.blur()
+        mindMapStore.rename(key, e.target.value);
+        e.target.blur();
     }
-}
+};
 
-const handleDownload = async (mindMap: {name: string, key: string}) => {
-    await withLoading("Download MindMap", async () => {
+const handleDownload = async (mindMap: {name: string; key: string}) => {
+    await withLoading('Download MindMap', async () => {
         try {
-            const mindMapData = await mindMapStore.get(mindMap.key)
-            const savePath = await exportMindMapToJson(mindMap.name, mindMapData)
-            if (typeof savePath === "string") {
-                sendMessage(`${translate("export_mindMap_success")}\n${savePath}`, {type: "success"})
+            const mindMapData = await mindMapStore.get(mindMap.key);
+            const savePath = await exportMindMapToJson(mindMap.name, mindMapData);
+            if (typeof savePath === 'string') {
+                sendMessage(`${translate('export_mindMap_success')}\n${savePath}`, {
+                    type: 'success',
+                });
             } else if (savePath !== null) {
-                sendMessage(translate("export_mindMap_fail"), {type: "error"})
+                sendMessage(translate('export_mindMap_fail'), {type: 'error'});
             }
         } catch (e) {
-            sendMessage(`${translate("export_mindMap_fail")}\n${e}`, {type: "error"})
-            throw e
+            sendMessage(`${translate('export_mindMap_fail')}\n${e}`, {type: 'error'});
+            throw e;
         }
-    })
-}
+    });
+};
 
-const handleDelete = async (mindMap: {name: string, key: string}) => {
+const handleDelete = async (mindMap: {name: string; key: string}) => {
     await sendConfirm({
-        title: translate({key: "delete_confirm_title", args: [translate('mindMap')]}),
-        content: translate({key: "delete_confirm_content", args: [`${translate('mindMap')}[${mindMap.name}]`]}),
+        title: translate({key: 'delete_confirm_title', args: [translate('mindMap')]}),
+        content: translate({
+            key: 'delete_confirm_content',
+            args: [`${translate('mindMap')}[${mindMap.name}]`],
+        }),
         onConfirm: () => {
-            mindMapStore.remove(mindMap.key)
-        }
-    })
-}
-
+            mindMapStore.remove(mindMap.key);
+        },
+    });
+};
 </script>
 
 <template>
@@ -93,18 +99,18 @@ const handleDelete = async (mindMap: {name: string, key: string}) => {
                 v-model="newName"
                 :placeholder="translate('mindMap_title_placeholder')"
                 @keydown.enter="handleAdd"
-            >
+            />
             <button
                 class="new-file-button"
                 @click="handleAdd"
             >
-                <IconAdd/>
+                <IconAdd />
             </button>
             <button
                 class="load-file-button"
                 @click="handleLoad"
             >
-                <IconLoad/>
+                <IconLoad />
             </button>
         </div>
 
@@ -112,8 +118,8 @@ const handleDelete = async (mindMap: {name: string, key: string}) => {
             class="file-list"
             v-model="mindMapStore.meta.value.mindMaps"
             :current-item="currentFile"
-            :to-key="mindMap => mindMap.key"
-            @remove="mindMap => mindMapStore.remove(mindMap.key)"
+            :to-key="(mindMap) => mindMap.key"
+            @remove="(mindMap) => mindMapStore.remove(mindMap.key)"
         >
             <template #default="{item: mindMap}">
                 <CollapseDetail>
@@ -128,11 +134,13 @@ const handleDelete = async (mindMap: {name: string, key: string}) => {
                                     :value="mindMap.name"
                                     @change="(e) => handleRename(mindMap.key, e)"
                                     @click.stop
-                                >
-                                <div
-                                    class="last-edit-time"
-                                >
-                                    {{ formatDatetimeToLocal(mindMap.lastEditTime ?? mindMap.createdTime) }}
+                                />
+                                <div class="last-edit-time">
+                                    {{
+                                        formatDatetimeToLocal(
+                                            mindMap.lastEditTime ?? mindMap.createdTime,
+                                        )
+                                    }}
                                 </div>
                             </div>
                         </div>
@@ -140,35 +148,26 @@ const handleDelete = async (mindMap: {name: string, key: string}) => {
 
                     <template #body>
                         <div class="file-item-operations">
-                            <button
-                                @click.stop="handleDownload(mindMap)"
-                            >
-                                <IconDownload/>
+                            <button @click.stop="handleDownload(mindMap)">
+                                <IconDownload />
                             </button>
 
-                            <button
-                                @click.stop="handleDelete(mindMap)"
-                            >
-                                <IconDelete/>
+                            <button @click.stop="handleDelete(mindMap)">
+                                <IconDelete />
                             </button>
                         </div>
                     </template>
                 </CollapseDetail>
-
             </template>
 
             <template #dragView="{data: {item: mindMap}}">
-                <div
-                    class="file-item-drag-view"
-                >
+                <div class="file-item-drag-view">
                     <div>
                         <input
                             class="file-name"
                             :value="mindMap.name"
-                        >
-                        <div
-                            class="last-edit-time"
-                        >
+                        />
+                        <div class="last-edit-time">
                             {{ formatDatetimeToLocal(mindMap.lastEditTime ?? mindMap.createdTime) }}
                         </div>
                     </div>

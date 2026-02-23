@@ -1,26 +1,29 @@
-import {languages, Range} from "monaco-editor/esm/vs/editor/editor.api.js";
+import {languages, Range} from 'monaco-editor/esm/vs/editor/editor.api.js';
 type CompletionItemProvider = languages.CompletionItemProvider;
 type CompletionItem = languages.CompletionItem;
 import CompletionItemKind = languages.CompletionItemKind;
-import {getCurrentFoldingRange, getFoldingRanges} from "@/components/markdown/editor/folding/ModelWithFoldingRanges.ts";
-import {allLanguages} from "@/components/markdown/preview/plugins/MarkdownItPrismCode.ts";
+import {
+    getCurrentFoldingRange,
+    getFoldingRanges,
+} from '@/components/markdown/editor/folding/ModelWithFoldingRanges.ts';
+import {allLanguages} from '@/components/markdown/preview/plugins/MarkdownItPrismCode.ts';
 
-const codeblockStart = /^\s*(```|~~~)/
+const codeblockStart = /^\s*(```|~~~)/;
 
 export const markdownCodeLanguageCompletionProvider: CompletionItemProvider = {
     provideCompletionItems: (model, position) => {
-        const line = model.getLineContent(position.lineNumber)
-        const wordAtPosition = model.getWordUntilPosition(position)
+        const line = model.getLineContent(position.lineNumber);
+        const wordAtPosition = model.getWordUntilPosition(position);
 
-        const suggestions: CompletionItem[] = []
+        const suggestions: CompletionItem[] = [];
         const range = new Range(
             position.lineNumber,
             wordAtPosition.startColumn,
             position.lineNumber,
             wordAtPosition.endColumn,
-        )
+        );
 
-        const foldingRange = getCurrentFoldingRange(position.lineNumber, getFoldingRanges(model))
+        const foldingRange = getCurrentFoldingRange(position.lineNumber, getFoldingRanges(model));
 
         if (foldingRange) {
             if (foldingRange.start === position.lineNumber) {
@@ -31,14 +34,14 @@ export const markdownCodeLanguageCompletionProvider: CompletionItemProvider = {
                             kind: CompletionItemKind.Keyword,
                             insertText: language,
                             range,
-                        })
+                        });
                     }
                 }
             }
         }
 
         return {
-            suggestions
-        }
-    }
-}
+            suggestions,
+        };
+    },
+};

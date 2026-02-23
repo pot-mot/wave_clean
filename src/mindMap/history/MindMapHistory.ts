@@ -1,257 +1,296 @@
-import {type CommandDefinition, useCommandHistory} from "@/history/commandHistory.ts";
-import {type GraphEdge, type GraphNode, useVueFlow, type VueFlowStore, type XYPosition} from "@vue-flow/core";
-import {type FullConnection} from "@/mindMap/edge/connection.ts";
+import {type CommandDefinition, useCommandHistory} from '@/history/commandHistory.ts';
 import {
-    createEdgeId,
-    createVueFlowId,
-    type MindMapGlobal
-} from "@/mindMap/useMindMap.ts";
-import {ref, shallowReactive} from "vue";
-import {exportMindMapData, type MindMapExportData} from "@/mindMap/export/export.ts";
-import {prepareImportIntoMindMap} from "@/mindMap/import/import.ts";
-import {getRaw} from "@/utils/json/getRaw.ts";
-import {getKeys} from "@/utils/type/typeGuard.ts";
+    type GraphEdge,
+    type GraphNode,
+    useVueFlow,
+    type VueFlowStore,
+    type XYPosition,
+} from '@vue-flow/core';
+import {type FullConnection} from '@/mindMap/edge/connection.ts';
+import {createEdgeId, createVueFlowId, type MindMapGlobal} from '@/mindMap/useMindMap.ts';
+import {ref, shallowReactive} from 'vue';
+import {exportMindMapData, type MindMapExportData} from '@/mindMap/export/export.ts';
+import {prepareImportIntoMindMap} from '@/mindMap/import/import.ts';
+import {getRaw} from '@/utils/json/getRaw.ts';
+import {getKeys} from '@/utils/type/typeGuard.ts';
 import {
     type MindMapLayer,
     type MindMapLayerDiffData,
-    type RawMindMapLayer
-} from "@/mindMap/layer/MindMapLayer.ts";
-import {type ContentNode, type ContentNodeData, validateContentNode} from "@/mindMap/node/ContentNode.ts";
-import {type ContentEdge, type ContentEdgeData, validateContentEdge} from "@/mindMap/edge/ContentEdge.ts";
-import {unimplementedClipBoard} from "@/utils/clipBoard/useClipBoard.ts";
+    type RawMindMapLayer,
+} from '@/mindMap/layer/MindMapLayer.ts';
+import {
+    type ContentNode,
+    type ContentNodeData,
+    validateContentNode,
+} from '@/mindMap/node/ContentNode.ts';
+import {
+    type ContentEdge,
+    type ContentEdgeData,
+    validateContentEdge,
+} from '@/mindMap/edge/ContentEdge.ts';
+import {unimplementedClipBoard} from '@/utils/clipBoard/useClipBoard.ts';
 
 export type MindMapHistoryCommands = {
-    "layer:add": CommandDefinition<
-        MindMapLayer,
-        string
-    >,
-    "layer:remove": CommandDefinition<
+    'layer:add': CommandDefinition<MindMapLayer, string>;
+    'layer:remove': CommandDefinition<
         string,
-        Omit<RawMindMapLayer, "vueFlow"> & { data: MindMapExportData, index: number }
-    >,
-    "layer:visible:change": CommandDefinition<{
-        layerId: string,
-        visible: boolean
-    }>,
-    "layer:lock:change": CommandDefinition<{
-        layerId: string,
-        lock: boolean,
-    }>,
-    "layer:data:change": CommandDefinition<{
-        layerId: string,
-        newData: Partial<MindMapLayerDiffData>,
-    }, {
-        layerId: string,
-        oldData: Partial<MindMapLayerDiffData>,
-    }>,
-    "layer:merge": CommandDefinition<{
-        baseLayerIndex: number,
-        mergedLayerIndex: number,
-    }, {
-        baseLayerIndex: number,
-        baseLayerOldData: MindMapExportData,
-        mergedNodes: ContentNode[],
-        mergedEdges: ContentEdge[],
-
-        mergedLayerIndex: number,
-        mergedLayerInfo: Omit<RawMindMapLayer, 'vueFlow' | 'copy' | 'paste' | 'cut'>,
-        mergedLayerOldData: MindMapExportData,
-    }>,
-    "layer:toggle": CommandDefinition<string>,
-    "layer:dragged": CommandDefinition<{
-        oldIndex: number,
-        newIndex: number,
-    }>,
-    "layer:swapped": CommandDefinition<{
-        oldIndex: number,
-        newIndex: number,
-    }>,
-
-    "node:add": CommandDefinition<{
-        layerId: string,
-        node: ContentNode,
-    }, {
-        layerId: string,
-        nodeId: string,
-    }>,
-    "node:move": CommandDefinition<{
-        layerId: string,
-        id: string,
-        newPosition: XYPosition,
-        oldPosition: XYPosition,
-    }, {
-        layerId: string,
-        id: string,
-        oldPosition: XYPosition,
-    }>,
-    "node:data:change": CommandDefinition<{
-        layerId: string,
-        id: string,
-        data: Partial<ContentNodeData>,
-    }>,
-    "node:resize": CommandDefinition<{
-        layerId: string,
-        id: string,
-        newSize: { width: number, height: number },
-        oldSize: { width: number, height: number },
-        newPosition: XYPosition,
-        oldPosition: XYPosition,
-    }>,
-
-    "edge:add": CommandDefinition<{
-        layerId: string,
-        edge: ContentEdge,
-    }, {
-        layerId: string,
-        edgeId: string,
-    }>,
-    "edge:reconnect": CommandDefinition<{
-        layerId: string,
-        id: string,
-        oldConnection: FullConnection,
-        newConnection: FullConnection,
-    }, {
-        layerId: string,
-        id: string,
-        oldConnection: FullConnection,
+        Omit<RawMindMapLayer, 'vueFlow'> & {data: MindMapExportData; index: number}
+    >;
+    'layer:visible:change': CommandDefinition<{
+        layerId: string;
+        visible: boolean;
     }>;
-    "edge:data:change": CommandDefinition<{
-        layerId: string,
-        id: string,
-        data: Partial<ContentEdgeData>
-    }>,
+    'layer:lock:change': CommandDefinition<{
+        layerId: string;
+        lock: boolean;
+    }>;
+    'layer:data:change': CommandDefinition<
+        {
+            layerId: string;
+            newData: Partial<MindMapLayerDiffData>;
+        },
+        {
+            layerId: string;
+            oldData: Partial<MindMapLayerDiffData>;
+        }
+    >;
+    'layer:merge': CommandDefinition<
+        {
+            baseLayerIndex: number;
+            mergedLayerIndex: number;
+        },
+        {
+            baseLayerIndex: number;
+            baseLayerOldData: MindMapExportData;
+            mergedNodes: ContentNode[];
+            mergedEdges: ContentEdge[];
 
-    "import": CommandDefinition<{
-        layerId: string,
-        nodes: ContentNode[],
-        edges: ContentEdge[]
-    }, {
-        layerId: string,
-        nodeIds: string[],
-        edgeIds: string[]
-    }>,
-    "remove": CommandDefinition<{
-        layerId: string,
-        nodes?: (GraphNode | string)[],
-        edges?: (GraphEdge | string)[]
-    }, {
-        layerId: string,
-        nodes: GraphNode[],
-        edges: GraphEdge[]
-    }>,
-}
+            mergedLayerIndex: number;
+            mergedLayerInfo: Omit<RawMindMapLayer, 'vueFlow' | 'copy' | 'paste' | 'cut'>;
+            mergedLayerOldData: MindMapExportData;
+        }
+    >;
+    'layer:toggle': CommandDefinition<string>;
+    'layer:dragged': CommandDefinition<{
+        oldIndex: number;
+        newIndex: number;
+    }>;
+    'layer:swapped': CommandDefinition<{
+        oldIndex: number;
+        newIndex: number;
+    }>;
+
+    'node:add': CommandDefinition<
+        {
+            layerId: string;
+            node: ContentNode;
+        },
+        {
+            layerId: string;
+            nodeId: string;
+        }
+    >;
+    'node:move': CommandDefinition<
+        {
+            layerId: string;
+            id: string;
+            newPosition: XYPosition;
+            oldPosition: XYPosition;
+        },
+        {
+            layerId: string;
+            id: string;
+            oldPosition: XYPosition;
+        }
+    >;
+    'node:data:change': CommandDefinition<{
+        layerId: string;
+        id: string;
+        data: Partial<ContentNodeData>;
+    }>;
+    'node:resize': CommandDefinition<{
+        layerId: string;
+        id: string;
+        newSize: {width: number; height: number};
+        oldSize: {width: number; height: number};
+        newPosition: XYPosition;
+        oldPosition: XYPosition;
+    }>;
+
+    'edge:add': CommandDefinition<
+        {
+            layerId: string;
+            edge: ContentEdge;
+        },
+        {
+            layerId: string;
+            edgeId: string;
+        }
+    >;
+    'edge:reconnect': CommandDefinition<
+        {
+            layerId: string;
+            id: string;
+            oldConnection: FullConnection;
+            newConnection: FullConnection;
+        },
+        {
+            layerId: string;
+            id: string;
+            oldConnection: FullConnection;
+        }
+    >;
+    'edge:data:change': CommandDefinition<{
+        layerId: string;
+        id: string;
+        data: Partial<ContentEdgeData>;
+    }>;
+
+    import: CommandDefinition<
+        {
+            layerId: string;
+            nodes: ContentNode[];
+            edges: ContentEdge[];
+        },
+        {
+            layerId: string;
+            nodeIds: string[];
+            edgeIds: string[];
+        }
+    >;
+    remove: CommandDefinition<
+        {
+            layerId: string;
+            nodes?: (GraphNode | string)[];
+            edges?: (GraphEdge | string)[];
+        },
+        {
+            layerId: string;
+            nodes: GraphNode[];
+            edges: GraphEdge[];
+        }
+    >;
+};
 
 export const useMindMapHistory = (global: MindMapGlobal) => {
     const getLayer = (layerId: string): MindMapLayer => {
-        const layer = global.layers.find(layer => layer.id === layerId)
-        if (layer === undefined) throw new Error(`layer [${layerId}] is undefined`)
-        return layer
-    }
+        const layer = global.layers.find((layer) => layer.id === layerId);
+        if (layer === undefined) throw new Error(`layer [${layerId}] is undefined`);
+        return layer;
+    };
 
     const getLayerIndex = (layerId: string): number => {
-        const layerIndex = global.layers.findIndex(layer => layer.id === layerId)
-        if (layerIndex === -1) throw new Error(`layer [${layerId}] is undefined`)
-        return layerIndex
-    }
+        const layerIndex = global.layers.findIndex((layer) => layer.id === layerId);
+        if (layerIndex === -1) throw new Error(`layer [${layerId}] is undefined`);
+        return layerIndex;
+    };
 
     const getVueFlow = (layerId: string): VueFlowStore => {
-        return getLayer(layerId).vueFlow
-    }
+        return getLayer(layerId).vueFlow;
+    };
 
-    const history = useCommandHistory<MindMapHistoryCommands>()
+    const history = useCommandHistory<MindMapHistoryCommands>();
 
-    const canUndo = ref(history.canUndo())
-    const canRedo = ref(history.canRedo())
-    history.eventBus.on("clean", () => {
-        canUndo.value = history.canUndo()
-        canRedo.value = history.canRedo()
-    })
-    history.eventBus.on("change", () => {
-        canUndo.value = history.canUndo()
-        canRedo.value = history.canRedo()
-    })
-    history.eventBus.on("batchStop", () => {
-        canUndo.value = history.canUndo()
-        canRedo.value = history.canRedo()
-    })
+    const canUndo = ref(history.canUndo());
+    const canRedo = ref(history.canRedo());
+    history.eventBus.on('clean', () => {
+        canUndo.value = history.canUndo();
+        canRedo.value = history.canRedo();
+    });
+    history.eventBus.on('change', () => {
+        canUndo.value = history.canUndo();
+        canRedo.value = history.canRedo();
+    });
+    history.eventBus.on('batchStop', () => {
+        canUndo.value = history.canUndo();
+        canRedo.value = history.canRedo();
+    });
 
-    history.registerCommand("layer:add", {
+    history.registerCommand('layer:add', {
         applyAction: (layer) => {
-            const currentLayerIndex = getLayerIndex(global.currentLayer.value.id)
-            global.layers.splice(currentLayerIndex + 1, 0, layer)
-            return layer.id
+            const currentLayerIndex = getLayerIndex(global.currentLayer.value.id);
+            global.layers.splice(currentLayerIndex + 1, 0, layer);
+            return layer.id;
         },
         revertAction: (layerId) => {
-            const layerIndex = getLayerIndex(layerId)
-            const layer = global.layers.splice(layerIndex, 1)[0]
-            if (layer === undefined) throw new Error(`layer [${layerId}] is undefined`)
-            const data = exportMindMapData(layer.vueFlow)
-            layer.vueFlow.$destroy()
+            const layerIndex = getLayerIndex(layerId);
+            const layer = global.layers.splice(layerIndex, 1)[0];
+            if (layer === undefined) throw new Error(`layer [${layerId}] is undefined`);
+            const data = exportMindMapData(layer.vueFlow);
+            layer.vueFlow.$destroy();
 
-            const vueFlow = useVueFlow(createVueFlowId())
-            const {newNodes, newEdges} = prepareImportIntoMindMap(vueFlow, data)
-            vueFlow.addNodes(newNodes)
-            vueFlow.addEdges(newEdges)
+            const vueFlow = useVueFlow(createVueFlowId());
+            const {newNodes, newEdges} = prepareImportIntoMindMap(vueFlow, data);
+            vueFlow.addNodes(newNodes);
+            vueFlow.addEdges(newEdges);
 
             return shallowReactive({
                 ...layer,
                 vueFlow,
-            })
-        }
-    })
+            });
+        },
+    });
 
-    history.registerCommand("layer:remove", {
+    history.registerCommand('layer:remove', {
         applyAction: (layerId) => {
-            const index = getLayerIndex(layerId)
-            const layer = global.layers.splice(index, 1)[0]
-            if (layer === undefined) throw new Error(`layer [${layerId}] is undefined`)
-            const {vueFlow, ...layerPart} = layer
-            const data = exportMindMapData(vueFlow)
-            vueFlow.$destroy()
-            return {...layerPart, data, index}
+            const index = getLayerIndex(layerId);
+            const layer = global.layers.splice(index, 1)[0];
+            if (layer === undefined) throw new Error(`layer [${layerId}] is undefined`);
+            const {vueFlow, ...layerPart} = layer;
+            const data = exportMindMapData(vueFlow);
+            vueFlow.$destroy();
+            return {...layerPart, data, index};
         },
         revertAction: ({data, index, ...layerPart}) => {
-            const vueFlow = useVueFlow(createVueFlowId())
+            const vueFlow = useVueFlow(createVueFlowId());
             const layer: MindMapLayer = shallowReactive({
                 ...layerPart,
                 vueFlow,
-            })
-            const {newNodes, newEdges} = prepareImportIntoMindMap(vueFlow, data)
-            vueFlow.addNodes(newNodes)
-            vueFlow.addEdges(newEdges)
-            global.layers.splice(index, 0, layer)
-        }
-    })
+            });
+            const {newNodes, newEdges} = prepareImportIntoMindMap(vueFlow, data);
+            vueFlow.addNodes(newNodes);
+            vueFlow.addEdges(newEdges);
+            global.layers.splice(index, 0, layer);
+        },
+    });
 
-    history.registerCommand("layer:merge", {
-        applyAction: ({baseLayerIndex, mergedLayerIndex}): {
-            baseLayerIndex: number,
-            baseLayerOldData: MindMapExportData,
-            mergedNodes: ContentNode[],
-            mergedEdges: ContentEdge[],
+    history.registerCommand('layer:merge', {
+        applyAction: ({
+            baseLayerIndex,
+            mergedLayerIndex,
+        }): {
+            baseLayerIndex: number;
+            baseLayerOldData: MindMapExportData;
+            mergedNodes: ContentNode[];
+            mergedEdges: ContentEdge[];
 
-            mergedLayerIndex: number,
-            mergedLayerInfo: Omit<RawMindMapLayer, 'vueFlow' | 'copy' | 'paste' | 'cut'>,
-            mergedLayerOldData: MindMapExportData,
+            mergedLayerIndex: number;
+            mergedLayerInfo: Omit<RawMindMapLayer, 'vueFlow' | 'copy' | 'paste' | 'cut'>;
+            mergedLayerOldData: MindMapExportData;
         } => {
-            const baseLayer = global.layers[baseLayerIndex]
-            if (baseLayer === undefined) throw new Error(`layers doesn't have index [${baseLayerIndex}]`)
-            const mergedLayer = global.layers[mergedLayerIndex]
-            if (mergedLayer === undefined) throw new Error(`layers doesn't have index [${mergedLayerIndex}]`)
+            const baseLayer = global.layers[baseLayerIndex];
+            if (baseLayer === undefined)
+                throw new Error(`layers doesn't have index [${baseLayerIndex}]`);
+            const mergedLayer = global.layers[mergedLayerIndex];
+            if (mergedLayer === undefined)
+                throw new Error(`layers doesn't have index [${mergedLayerIndex}]`);
 
             if (baseLayer.id === mergedLayer.id || baseLayer === mergedLayer) {
-                throw new Error("baseLayer and mergedLayer cannot be the same")
+                throw new Error('baseLayer and mergedLayer cannot be the same');
             }
-            global.layers.splice(mergedLayerIndex, 1)
+            global.layers.splice(mergedLayerIndex, 1);
 
             // 导入新图层数据
-            const baseLayerOldData = exportMindMapData(baseLayer.vueFlow)
-            const mergedLayerOldData = exportMindMapData(mergedLayer.vueFlow)
-            const {newNodes, newEdges} = prepareImportIntoMindMap(baseLayer.vueFlow, mergedLayerOldData)
-            baseLayer.vueFlow.addNodes(newNodes)
-            baseLayer.vueFlow.addEdges(newEdges)
+            const baseLayerOldData = exportMindMapData(baseLayer.vueFlow);
+            const mergedLayerOldData = exportMindMapData(mergedLayer.vueFlow);
+            const {newNodes, newEdges} = prepareImportIntoMindMap(
+                baseLayer.vueFlow,
+                mergedLayerOldData,
+            );
+            baseLayer.vueFlow.addNodes(newNodes);
+            baseLayer.vueFlow.addEdges(newEdges);
 
-            mergedLayer.vueFlow.$destroy()
+            mergedLayer.vueFlow.$destroy();
 
             return {
                 baseLayerIndex,
@@ -267,378 +306,376 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
                     lock: mergedLayer.lock,
                 },
                 mergedLayerOldData,
-            }
+            };
         },
-        revertAction: (
-            {
-                baseLayerIndex,
-                mergedNodes,
-                mergedEdges,
+        revertAction: ({
+            baseLayerIndex,
+            mergedNodes,
+            mergedEdges,
 
-                mergedLayerIndex,
-                mergedLayerInfo,
-                mergedLayerOldData,
-            }
-        ) => {
-            const baseLayer = global.layers[baseLayerIndex]
-            if (baseLayer === undefined) throw new Error(`layers doesn't have index [${baseLayerIndex}]`)
+            mergedLayerIndex,
+            mergedLayerInfo,
+            mergedLayerOldData,
+        }) => {
+            const baseLayer = global.layers[baseLayerIndex];
+            if (baseLayer === undefined)
+                throw new Error(`layers doesn't have index [${baseLayerIndex}]`);
 
-            baseLayer.vueFlow.removeNodes(mergedNodes.map(it => it.id))
-            baseLayer.vueFlow.removeEdges(mergedEdges.map(it => it.id))
+            baseLayer.vueFlow.removeNodes(mergedNodes.map((it) => it.id));
+            baseLayer.vueFlow.removeEdges(mergedEdges.map((it) => it.id));
 
-            const vueFlow = useVueFlow(createVueFlowId())
+            const vueFlow = useVueFlow(createVueFlowId());
             const layer: MindMapLayer = shallowReactive({
                 ...unimplementedClipBoard,
                 ...mergedLayerInfo,
                 vueFlow,
-            })
-            const {newNodes, newEdges} = prepareImportIntoMindMap(vueFlow, mergedLayerOldData)
-            vueFlow.addNodes(newNodes)
-            vueFlow.addEdges(newEdges)
-            global.layers.splice(mergedLayerIndex, 0, layer)
+            });
+            const {newNodes, newEdges} = prepareImportIntoMindMap(vueFlow, mergedLayerOldData);
+            vueFlow.addNodes(newNodes);
+            vueFlow.addEdges(newEdges);
+            global.layers.splice(mergedLayerIndex, 0, layer);
             vueFlow.viewport.value = {
                 x: baseLayer.vueFlow.viewport.value.x,
                 y: baseLayer.vueFlow.viewport.value.y,
                 zoom: baseLayer.vueFlow.viewport.value.zoom,
-            }
-        }
-    })
+            };
+        },
+    });
 
-    history.registerCommand("layer:visible:change", {
+    history.registerCommand('layer:visible:change', {
         applyAction: ({layerId, visible}) => {
-            const layer = getLayer(layerId)
-            const currentVisible = layer.visible ?? true
-            layer.visible = visible
-            return {layerId, visible: currentVisible}
+            const layer = getLayer(layerId);
+            const currentVisible = layer.visible ?? true;
+            layer.visible = visible;
+            return {layerId, visible: currentVisible};
         },
         revertAction: ({layerId, visible}) => {
-            const layer = getLayer(layerId)
-            layer.visible = visible
-        }
-    })
+            const layer = getLayer(layerId);
+            layer.visible = visible;
+        },
+    });
 
-    history.registerCommand("layer:lock:change", {
+    history.registerCommand('layer:lock:change', {
         applyAction: ({layerId, lock}) => {
-            const layer = getLayer(layerId)
-            const currentLock = layer.lock ?? false
-            layer.lock = lock
-            return {layerId, lock: currentLock}
+            const layer = getLayer(layerId);
+            const currentLock = layer.lock ?? false;
+            layer.lock = lock;
+            return {layerId, lock: currentLock};
         },
         revertAction: ({layerId, lock}) => {
-            const layer = getLayer(layerId)
-            layer.lock = lock
-        }
-    })
+            const layer = getLayer(layerId);
+            layer.lock = lock;
+        },
+    });
 
-    history.registerCommand("layer:data:change", {
+    history.registerCommand('layer:data:change', {
         applyAction: ({layerId, newData}) => {
-            const layer = getLayer(layerId)
-            const oldData: Partial<MindMapLayerDiffData> = {}
+            const layer = getLayer(layerId);
+            const oldData: Partial<MindMapLayerDiffData> = {};
             for (const key of getKeys(newData)) {
-                const oldValue = layer[key]
-                oldData[key] = oldValue as any
+                const oldValue = layer[key];
+                oldData[key] = oldValue as any;
             }
-            Object.assign(layer, newData)
-            return {layerId, oldData}
+            Object.assign(layer, newData);
+            return {layerId, oldData};
         },
         revertAction: ({layerId, oldData}) => {
-            const layer = getLayer(layerId)
-            Object.assign(layer, oldData)
-        }
-    })
+            const layer = getLayer(layerId);
+            Object.assign(layer, oldData);
+        },
+    });
 
-    history.registerCommand("layer:dragged", {
+    history.registerCommand('layer:dragged', {
         applyAction: ({oldIndex, newIndex}) => {
             if (oldIndex < newIndex) {
-                const removedItems = global.layers.splice(oldIndex, 1)
-                global.layers.splice(newIndex - 1, 0, ...removedItems)
+                const removedItems = global.layers.splice(oldIndex, 1);
+                global.layers.splice(newIndex - 1, 0, ...removedItems);
             } else if (oldIndex > newIndex) {
-                const removedItems = global.layers.splice(oldIndex, 1)
-                global.layers.splice(newIndex, 0, ...removedItems)
+                const removedItems = global.layers.splice(oldIndex, 1);
+                global.layers.splice(newIndex, 0, ...removedItems);
             }
-            return {oldIndex, newIndex}
+            return {oldIndex, newIndex};
         },
         revertAction: ({oldIndex, newIndex}) => {
             if (oldIndex < newIndex) {
-                const removedItems = global.layers.splice(newIndex - 1, 1)
-                global.layers.splice(oldIndex, 0, ...removedItems)
+                const removedItems = global.layers.splice(newIndex - 1, 1);
+                global.layers.splice(oldIndex, 0, ...removedItems);
             } else if (oldIndex > newIndex) {
-                const removedItems = global.layers.splice(newIndex, 1)
-                global.layers.splice(oldIndex, 0, ...removedItems)
+                const removedItems = global.layers.splice(newIndex, 1);
+                global.layers.splice(oldIndex, 0, ...removedItems);
             }
-        }
-    })
+        },
+    });
 
-
-    history.registerCommand("layer:swapped", {
+    history.registerCommand('layer:swapped', {
         applyAction: ({oldIndex, newIndex}) => {
-            if (!global.layers[oldIndex] || !global.layers[newIndex]) return {oldIndex, newIndex}
-            const tmp = global.layers[oldIndex]
-            global.layers[oldIndex] = global.layers[newIndex]
-            global.layers[newIndex] = tmp
-            return {oldIndex, newIndex}
+            if (!global.layers[oldIndex] || !global.layers[newIndex]) return {oldIndex, newIndex};
+            const tmp = global.layers[oldIndex];
+            global.layers[oldIndex] = global.layers[newIndex];
+            global.layers[newIndex] = tmp;
+            return {oldIndex, newIndex};
         },
         revertAction: ({oldIndex, newIndex}) => {
-            if (!global.layers[oldIndex] || !global.layers[newIndex]) return
-            const tmp = global.layers[oldIndex]
-            global.layers[oldIndex] = global.layers[newIndex]
-            global.layers[newIndex] = tmp
-        }
-    })
+            if (!global.layers[oldIndex] || !global.layers[newIndex]) return;
+            const tmp = global.layers[oldIndex];
+            global.layers[oldIndex] = global.layers[newIndex];
+            global.layers[newIndex] = tmp;
+        },
+    });
 
-    history.registerCommand("layer:toggle", {
+    history.registerCommand('layer:toggle', {
         applyAction: (layerId) => {
-            const currentId = global.currentLayer.value.id
-            global.toggleCurrentLayer(layerId)
-            return currentId
+            const currentId = global.currentLayer.value.id;
+            global.toggleCurrentLayer(layerId);
+            return currentId;
         },
         revertAction: (layerId) => {
-            global.toggleCurrentLayer(layerId)
+            global.toggleCurrentLayer(layerId);
         },
-    })
+    });
 
-    history.registerCommand("node:add", {
+    history.registerCommand('node:add', {
         applyAction: ({layerId, node}) => {
-            const vueFlow = getVueFlow(layerId)
-            vueFlow.addNodes({...node, zIndex: global.zIndexIncrement++})
-            return {layerId, nodeId: node.id}
+            const vueFlow = getVueFlow(layerId);
+            vueFlow.addNodes({...node, zIndex: global.zIndexIncrement++});
+            return {layerId, nodeId: node.id};
         },
         revertAction: ({layerId, nodeId}) => {
-            const vueFlow = getVueFlow(layerId)
-            const node = vueFlow.findNode(nodeId)
+            const vueFlow = getVueFlow(layerId);
+            const node = vueFlow.findNode(nodeId);
             if (node !== undefined) {
-                vueFlow.removeSelectedNodes([node])
-                vueFlow.removeNodes(nodeId)
-                return {layerId, node: node as ContentNode}
+                vueFlow.removeSelectedNodes([node]);
+                vueFlow.removeNodes(nodeId);
+                return {layerId, node: node as ContentNode};
             }
-        }
-    })
+        },
+    });
 
-    history.registerCommand("node:move", {
+    history.registerCommand('node:move', {
         applyAction: ({layerId, id, newPosition, oldPosition}) => {
-            const vueFlow = getVueFlow(layerId)
+            const vueFlow = getVueFlow(layerId);
             vueFlow.updateNode(id, {
-                position: newPosition
-            })
+                position: newPosition,
+            });
             return {
                 layerId,
                 id,
-                oldPosition
-            }
+                oldPosition,
+            };
         },
         revertAction: ({layerId, id, oldPosition}) => {
-            const vueFlow = getVueFlow(layerId)
+            const vueFlow = getVueFlow(layerId);
             vueFlow.updateNode(id, {
-                position: oldPosition
-            })
-        }
-    })
+                position: oldPosition,
+            });
+        },
+    });
 
     const getGraphNode = (id: string, vueFlow: VueFlowStore): GraphNode => {
-        const node = vueFlow.findNode(id)
-        if (node === undefined) throw new Error(`node [${id}] is undefined`)
-        return node
-    }
+        const node = vueFlow.findNode(id);
+        if (node === undefined) throw new Error(`node [${id}] is undefined`);
+        return node;
+    };
 
     const getContentNode = (id: string, vueFlow: VueFlowStore): ContentNode => {
-        const node = getGraphNode(id, vueFlow)
-        if (!validateContentNode(node)) throw new Error(`node [${id}] is not a content node`)
-        return node
-    }
+        const node = getGraphNode(id, vueFlow);
+        if (!validateContentNode(node)) throw new Error(`node [${id}] is not a content node`);
+        return node;
+    };
 
-    history.registerCommand("node:data:change", {
+    history.registerCommand('node:data:change', {
         applyAction: ({layerId, id, data}) => {
-            const vueFlow = getVueFlow(layerId)
-            const node = getContentNode(id, vueFlow)
+            const vueFlow = getVueFlow(layerId);
+            const node = getContentNode(id, vueFlow);
 
-            const previousData = getRaw(node.data)
-            vueFlow.updateNodeData(id, Object.assign({}, previousData, data), {replace: true})
-            return {layerId, id, data: previousData}
+            const previousData = getRaw(node.data);
+            vueFlow.updateNodeData(id, Object.assign({}, previousData, data), {replace: true});
+            return {layerId, id, data: previousData};
         },
         revertAction: ({layerId, id, data}) => {
-            const vueFlow = getVueFlow(layerId)
-            const node = getContentNode(id, vueFlow)
+            const vueFlow = getVueFlow(layerId);
+            const node = getContentNode(id, vueFlow);
 
-            const currentData = getRaw(node.data)
-            vueFlow.updateNodeData(id, data, {replace: true})
-            return {layerId, id, data: currentData}
-        }
-    })
+            const currentData = getRaw(node.data);
+            vueFlow.updateNodeData(id, data, {replace: true});
+            return {layerId, id, data: currentData};
+        },
+    });
 
-    history.registerCommand("node:resize", {
+    history.registerCommand('node:resize', {
         applyAction: (options) => {
-            const {layerId, id, newSize, newPosition} = options
+            const {layerId, id, newSize, newPosition} = options;
 
-            const vueFlow = getVueFlow(layerId)
-            const node = getGraphNode(id, vueFlow)
+            const vueFlow = getVueFlow(layerId);
+            const node = getGraphNode(id, vueFlow);
 
-            node.width = newSize.width
-            node.height = newSize.height
-            node.dimensions.width = newSize.width
-            node.dimensions.height = newSize.height
-            node.position.x = newPosition.x
-            node.position.y = newPosition.y
+            node.width = newSize.width;
+            node.height = newSize.height;
+            node.dimensions.width = newSize.width;
+            node.dimensions.height = newSize.height;
+            node.position.x = newPosition.x;
+            node.position.y = newPosition.y;
 
-            return options
+            return options;
         },
         revertAction: ({layerId, id, oldSize, oldPosition}) => {
-            const vueFlow = getVueFlow(layerId)
-            const node = getGraphNode(id, vueFlow)
+            const vueFlow = getVueFlow(layerId);
+            const node = getGraphNode(id, vueFlow);
 
-            node.width = oldSize.width
-            node.height = oldSize.height
-            node.dimensions.width = oldSize.width
-            node.dimensions.height = oldSize.height
-            node.position.x = oldPosition.x
-            node.position.y = oldPosition.y
-        }
-    })
+            node.width = oldSize.width;
+            node.height = oldSize.height;
+            node.dimensions.width = oldSize.width;
+            node.dimensions.height = oldSize.height;
+            node.position.x = oldPosition.x;
+            node.position.y = oldPosition.y;
+        },
+    });
 
-    history.registerCommand("edge:add", {
+    history.registerCommand('edge:add', {
         applyAction: ({layerId, edge}) => {
-            const vueFlow = getVueFlow(layerId)
-            vueFlow.addEdges({...edge, zIndex: global.zIndexIncrement++})
-            return {layerId, edgeId: edge.id}
+            const vueFlow = getVueFlow(layerId);
+            vueFlow.addEdges({...edge, zIndex: global.zIndexIncrement++});
+            return {layerId, edgeId: edge.id};
         },
         revertAction: ({layerId, edgeId}) => {
-            const vueFlow = getVueFlow(layerId)
-            const edge = vueFlow.findEdge(edgeId)
+            const vueFlow = getVueFlow(layerId);
+            const edge = vueFlow.findEdge(edgeId);
             if (edge !== undefined) {
-                vueFlow.removeSelectedEdges([edge])
-                vueFlow.removeEdges(edgeId)
-                return {layerId, edge: edge as ContentEdge}
+                vueFlow.removeSelectedEdges([edge]);
+                vueFlow.removeEdges(edgeId);
+                return {layerId, edge: edge as ContentEdge};
             }
-        }
-    })
+        },
+    });
 
     const getGraphEdge = (id: string, vueFlow: VueFlowStore): GraphEdge => {
-        const edge = vueFlow.findEdge(id)
-        if (edge === undefined) throw new Error(`edge [${id}] is undefined`)
-        return edge
-    }
+        const edge = vueFlow.findEdge(id);
+        if (edge === undefined) throw new Error(`edge [${id}] is undefined`);
+        return edge;
+    };
 
     const getContentEdge = (id: string, vueFlow: VueFlowStore): ContentEdge => {
-        const edge = getGraphEdge(id, vueFlow)
-        if (!validateContentEdge(edge)) throw new Error(`edge [${id}] is not a content edge`)
-        return edge
-    }
+        const edge = getGraphEdge(id, vueFlow);
+        if (!validateContentEdge(edge)) throw new Error(`edge [${id}] is not a content edge`);
+        return edge;
+    };
 
-    history.registerCommand("edge:reconnect", {
+    history.registerCommand('edge:reconnect', {
         applyAction: ({layerId, id, oldConnection, newConnection}) => {
-            const vueFlow = getVueFlow(layerId)
-            const edge = getGraphEdge(id, vueFlow)
+            const vueFlow = getVueFlow(layerId);
+            const edge = getGraphEdge(id, vueFlow);
 
-            vueFlow.updateEdge(edge, newConnection, true)
-            return {layerId, id: createEdgeId(newConnection), oldConnection}
+            vueFlow.updateEdge(edge, newConnection, true);
+            return {layerId, id: createEdgeId(newConnection), oldConnection};
         },
         revertAction: ({layerId, id, oldConnection}) => {
-            const vueFlow = getVueFlow(layerId)
-            const edge = getGraphEdge(id, vueFlow)
+            const vueFlow = getVueFlow(layerId);
+            const edge = getGraphEdge(id, vueFlow);
 
-            vueFlow.updateEdge(edge, oldConnection, true)
-        }
-    })
+            vueFlow.updateEdge(edge, oldConnection, true);
+        },
+    });
 
-    history.registerCommand("edge:data:change", {
+    history.registerCommand('edge:data:change', {
         applyAction: ({layerId, id, data}) => {
-            const vueFlow = getVueFlow(layerId)
-            const edge = getContentEdge(id, vueFlow)
+            const vueFlow = getVueFlow(layerId);
+            const edge = getContentEdge(id, vueFlow);
 
-            const previousData = getRaw(edge.data)
-            vueFlow.updateEdgeData(id, Object.assign({}, previousData, data), {replace: true})
-            return {layerId, id, data: previousData}
+            const previousData = getRaw(edge.data);
+            vueFlow.updateEdgeData(id, Object.assign({}, previousData, data), {replace: true});
+            return {layerId, id, data: previousData};
         },
         revertAction: ({layerId, id, data}) => {
-            const vueFlow = getVueFlow(layerId)
-            const edge = getContentEdge(id, vueFlow)
+            const vueFlow = getVueFlow(layerId);
+            const edge = getContentEdge(id, vueFlow);
 
-            const currentData = getRaw(edge.data)
-            vueFlow.updateEdgeData(id, data, {replace: true})
-            return {layerId, id, data: currentData}
-        }
-    })
+            const currentData = getRaw(edge.data);
+            vueFlow.updateEdgeData(id, data, {replace: true});
+            return {layerId, id, data: currentData};
+        },
+    });
 
-    history.registerCommand("import", {
+    history.registerCommand('import', {
         applyAction: ({layerId, nodes, edges}) => {
-            const vueFlow = getVueFlow(layerId)
-            vueFlow.addNodes(nodes)
-            vueFlow.addEdges(edges)
-            return {layerId, nodeIds: nodes.map(it => it.id), edgeIds: edges.map(it => it.id)}
+            const vueFlow = getVueFlow(layerId);
+            vueFlow.addNodes(nodes);
+            vueFlow.addEdges(edges);
+            return {layerId, nodeIds: nodes.map((it) => it.id), edgeIds: edges.map((it) => it.id)};
         },
         revertAction: ({layerId, nodeIds, edgeIds}) => {
-            const vueFlow = getVueFlow(layerId)
+            const vueFlow = getVueFlow(layerId);
 
-            const removedNodes: GraphNode[] = []
-            const removedEdges: GraphEdge[] = []
+            const removedNodes: GraphNode[] = [];
+            const removedEdges: GraphEdge[] = [];
 
             for (const edgeId of edgeIds) {
-                const foundEdge = vueFlow.findEdge(edgeId)
+                const foundEdge = vueFlow.findEdge(edgeId);
                 if (foundEdge) {
-                    removedEdges.push(foundEdge)
+                    removedEdges.push(foundEdge);
                 }
             }
             for (const nodeId of nodeIds) {
-                const foundNode = vueFlow.findNode(nodeId)
+                const foundNode = vueFlow.findNode(nodeId);
                 if (foundNode) {
-                    removedNodes.push(foundNode)
+                    removedNodes.push(foundNode);
                 }
             }
-            removedEdges.push(...vueFlow.getConnectedEdges(removedNodes))
+            removedEdges.push(...vueFlow.getConnectedEdges(removedNodes));
 
-            vueFlow.removeSelectedNodes(vueFlow.getSelectedNodes.value)
-            vueFlow.removeSelectedEdges(vueFlow.getSelectedEdges.value)
+            vueFlow.removeSelectedNodes(vueFlow.getSelectedNodes.value);
+            vueFlow.removeSelectedEdges(vueFlow.getSelectedEdges.value);
 
-            vueFlow.removeEdges(removedEdges)
-            vueFlow.removeNodes(removedNodes)
-        }
-    })
+            vueFlow.removeEdges(removedEdges);
+            vueFlow.removeNodes(removedNodes);
+        },
+    });
 
-    history.registerCommand("remove", {
+    history.registerCommand('remove', {
         applyAction: ({layerId, nodes, edges}) => {
-            const vueFlow = getVueFlow(layerId)
+            const vueFlow = getVueFlow(layerId);
 
-            const removedNodes: GraphNode[] = []
-            const removedEdges: GraphEdge[] = []
+            const removedNodes: GraphNode[] = [];
+            const removedEdges: GraphEdge[] = [];
 
             edges?.forEach((edge) => {
-                const edgeId = typeof edge === "string" ? edge : edge.id
-                const foundEdge = vueFlow.findEdge(edgeId)
+                const edgeId = typeof edge === 'string' ? edge : edge.id;
+                const foundEdge = vueFlow.findEdge(edgeId);
                 if (foundEdge) {
-                    removedEdges.push(foundEdge)
+                    removedEdges.push(foundEdge);
                 }
-            })
+            });
             nodes?.forEach((node) => {
-                const nodeId = typeof node === "string" ? node : node.id
-                const foundNode = vueFlow.findNode(nodeId)
+                const nodeId = typeof node === 'string' ? node : node.id;
+                const foundNode = vueFlow.findNode(nodeId);
                 if (foundNode) {
-                    removedNodes.push(foundNode)
+                    removedNodes.push(foundNode);
                 }
-            })
-            removedEdges.push(...vueFlow.getConnectedEdges(removedNodes))
+            });
+            removedEdges.push(...vueFlow.getConnectedEdges(removedNodes));
 
-            vueFlow.removeSelectedNodes(vueFlow.getSelectedNodes.value)
-            vueFlow.removeSelectedEdges(vueFlow.getSelectedEdges.value)
+            vueFlow.removeSelectedNodes(vueFlow.getSelectedNodes.value);
+            vueFlow.removeSelectedEdges(vueFlow.getSelectedEdges.value);
 
-            vueFlow.removeEdges(removedEdges)
-            vueFlow.removeNodes(removedNodes)
+            vueFlow.removeEdges(removedEdges);
+            vueFlow.removeNodes(removedNodes);
 
             return {
                 layerId,
                 nodes: removedNodes,
-                edges: removedEdges
-            }
+                edges: removedEdges,
+            };
         },
         revertAction: ({layerId, nodes, edges}) => {
-            const vueFlow = getVueFlow(layerId)
-            vueFlow.addNodes(nodes)
-            vueFlow.addEdges(edges)
-            return {layerId, nodes, edges}
+            const vueFlow = getVueFlow(layerId);
+            vueFlow.addNodes(nodes);
+            vueFlow.addEdges(edges);
+            return {layerId, nodes, edges};
         },
-    })
+    });
 
     return {
         history,
         canUndo,
         canRedo,
-    }
-}
+    };
+};

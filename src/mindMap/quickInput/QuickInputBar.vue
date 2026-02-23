@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import {useMindMapStore} from "@/store/mindMapStore.ts";
-import {useFocusTargetStore} from "@/store/focusTargetStore.ts";
-import {outsideInput} from "@/utils/event/outsideInput.ts";
-import CollapseItem from "@/components/collapse/CollapseItem.vue";
-import type {QuickInputItem} from "@/mindMap/quickInput/QuickInput.ts";
+import {useMindMapStore} from '@/store/mindMapStore.ts';
+import {useFocusTargetStore} from '@/store/focusTargetStore.ts';
+import {outsideInput} from '@/utils/event/outsideInput.ts';
+import CollapseItem from '@/components/collapse/CollapseItem.vue';
+import type {QuickInputItem} from '@/mindMap/quickInput/QuickInput.ts';
 
-const {meta} = useMindMapStore()
+const {meta} = useMindMapStore();
 
-const focusTargetStore = useFocusTargetStore()
+const focusTargetStore = useFocusTargetStore();
 
 const handleQuickInput = (quickInput: QuickInputItem) => {
-    outsideInput(focusTargetStore.focusTarget.value, quickInput.value)
-}
+    outsideInput(focusTargetStore.focusTarget.value, quickInput.value);
+};
 </script>
 
 <template>

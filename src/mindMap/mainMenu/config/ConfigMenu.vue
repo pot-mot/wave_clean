@@ -1,45 +1,48 @@
 <script setup lang="ts">
-import {useThemeStore} from "@/store/themeStore.ts";
-import IconDark from "@/components/icons/IconDark.vue";
-import IconLight from "@/components/icons/IconLight.vue";
-import {computed} from "vue";
-import ColorInput from "@/components/color/ColorInput.vue";
-import {type LanguageType, translate, useI18nStore} from "@/store/i18nStore.ts";
+import {useThemeStore} from '@/store/themeStore.ts';
+import IconDark from '@/components/icons/IconDark.vue';
+import IconLight from '@/components/icons/IconLight.vue';
+import {computed} from 'vue';
+import ColorInput from '@/components/color/ColorInput.vue';
+import {type LanguageType, translate, useI18nStore} from '@/store/i18nStore.ts';
 
-const themeStore = useThemeStore()
+const themeStore = useThemeStore();
 
-const {language, setLanguage} = useI18nStore()
+const {language, setLanguage} = useI18nStore();
 
 const primaryColor = computed({
     get(): string {
-        return themeStore.primaryColor.value
+        return themeStore.primaryColor.value;
     },
     set(color: string) {
-        themeStore.setPrimaryColor(color)
-    }
-})
+        themeStore.setPrimaryColor(color);
+    },
+});
 </script>
 
 <template>
     <div class="config-menu">
         <span class="config-item">
-            {{ translate("primary_color") }}
-            <ColorInput v-model="primaryColor"/>
+            {{ translate('primary_color') }}
+            <ColorInput v-model="primaryColor" />
         </span>
 
         <span class="config-item">
-            {{ translate("language") }}
-            <select :value="language" @change="(e) => setLanguage((e.target as HTMLSelectElement).value as LanguageType)">
+            {{ translate('language') }}
+            <select
+                :value="language"
+                @change="(e) => setLanguage((e.target as HTMLSelectElement).value as LanguageType)"
+            >
                 <option value="zh-cn">{{ translate('language_zh_cn') }}</option>
                 <option value="en">{{ translate('language_en') }}</option>
             </select>
         </span>
 
         <span class="config-item">
-            {{ translate("theme") }}
+            {{ translate('theme') }}
             <button @click="themeStore.toggleTheme()">
-                <IconLight v-if="themeStore.theme.value === 'light'"/>
-                <IconDark v-else-if="themeStore.theme.value === 'dark'"/>
+                <IconLight v-if="themeStore.theme.value === 'light'" />
+                <IconDark v-else-if="themeStore.theme.value === 'dark'" />
             </button>
         </span>
     </div>

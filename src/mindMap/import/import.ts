@@ -1,45 +1,48 @@
-import {type VueFlowStore, type XYPosition} from "@vue-flow/core";
+import {type VueFlowStore, type XYPosition} from '@vue-flow/core';
+import {createEdgeId, createNodeId} from '@/mindMap/useMindMap.ts';
+import {toRaw} from 'vue';
+import {type FullConnection, reverseConnection} from '@/mindMap/edge/connection.ts';
 import {
-    createEdgeId,
-    createNodeId
-} from "@/mindMap/useMindMap.ts";
-import {toRaw} from "vue";
-import {type FullConnection, reverseConnection} from "@/mindMap/edge/connection.ts";
-import {type ContentNode, ContentNode_JsonSchema, ContentNodeHandles} from "@/mindMap/node/ContentNode.ts";
-import {type ContentEdge, ContentEdge_JsonSchema} from "@/mindMap/edge/ContentEdge.ts";
-import type {JSONSchemaType} from "ajv/lib/types/json-schema.ts";
-import {createSchemaValidator} from "@/utils/type/typeGuard.ts";
+    type ContentNode,
+    ContentNode_JsonSchema,
+    ContentNodeHandles,
+} from '@/mindMap/node/ContentNode.ts';
+import {type ContentEdge, ContentEdge_JsonSchema} from '@/mindMap/edge/ContentEdge.ts';
+import type {JSONSchemaType} from 'ajv/lib/types/json-schema.ts';
+import {createSchemaValidator} from '@/utils/type/typeGuard.ts';
 
 export type MindMapImportData = {
-    nodes?: (ContentNode | undefined | null)[],
-    edges?: (ContentEdge | undefined | null)[],
-}
+    nodes?: (ContentNode | undefined | null)[];
+    edges?: (ContentEdge | undefined | null)[];
+};
 
 const MindMapImportData_JsonSchema: JSONSchemaType<MindMapImportData> = {
-    type: "object",
+    type: 'object',
     properties: {
-        nodes: {type: "array", items: ContentNode_JsonSchema, nullable: true},
-        edges: {type: "array", items: ContentEdge_JsonSchema, nullable: true},
-    }
-}
+        nodes: {type: 'array', items: ContentNode_JsonSchema, nullable: true},
+        edges: {type: 'array', items: ContentEdge_JsonSchema, nullable: true},
+    },
+};
 
-export const validateMindMapImportData = createSchemaValidator<MindMapImportData>(MindMapImportData_JsonSchema)
+export const validateMindMapImportData = createSchemaValidator<MindMapImportData>(
+    MindMapImportData_JsonSchema,
+);
 
 export type UnconnectedEdgeReason = {
-    connectionExist: boolean,
-    sourceNotExist: boolean,
-    targetNotExist: boolean,
-    sourceHandleNotExist: boolean,
-    targetHandleNotExist: boolean
-}
+    connectionExist: boolean;
+    sourceNotExist: boolean;
+    targetNotExist: boolean;
+    sourceHandleNotExist: boolean;
+    targetHandleNotExist: boolean;
+};
 
 export type MindMapImportDataCleanResult = {
-    nodeIdChangeMap: Map<string, string>
-    edgeIdChangeMap: Map<string, string>
-    newNodes: ContentNode[],
-    newEdges: ContentEdge[],
-    unconnectedEdges: Map<ContentEdge, UnconnectedEdgeReason>
-}
+    nodeIdChangeMap: Map<string, string>;
+    edgeIdChangeMap: Map<string, string>;
+    newNodes: ContentNode[];
+    newEdges: ContentEdge[];
+    unconnectedEdges: Map<ContentEdge, UnconnectedEdgeReason>;
+};
 
 /**
  * 将对导入数据进行清理，保证：
@@ -58,30 +61,30 @@ export const clearImportData = (
     existedEdgeIds: ReadonlySet<string>,
     nodeHandleIdsMap: ReadonlyMap<string, ReadonlySet<string>>,
 ): MindMapImportDataCleanResult => {
-    const nodeIdChangeMap = new Map<string, string>()
-    const edgeIdChangeMap = new Map<string, string>()
-    const newNodes: ContentNode[] = []
-    const newEdges: ContentEdge[] = []
-    const unconnectedEdges = new Map<ContentEdge, UnconnectedEdgeReason>()
+    const nodeIdChangeMap = new Map<string, string>();
+    const edgeIdChangeMap = new Map<string, string>();
+    const newNodes: ContentNode[] = [];
+    const newEdges: ContentEdge[] = [];
+    const unconnectedEdges = new Map<ContentEdge, UnconnectedEdgeReason>();
 
-    const usedNodeIds = new Set(existedNodeIds)
-    const nodes = data.nodes?.filter((node): node is ContentNode => !!node) ?? []
+    const usedNodeIds = new Set(existedNodeIds);
+    const nodes = data.nodes?.filter((node): node is ContentNode => !!node) ?? [];
 
     // 处理节点ID冲突
     for (const node of nodes) {
-        const {id, ...other} = node
-        let newId = id
+        const {id, ...other} = node;
+        let newId = id;
 
         while (usedNodeIds.has(newId)) {
-            newId = createNodeId()
+            newId = createNodeId();
         }
 
         if (id !== newId) {
-            nodeIdChangeMap.set(id, newId)
+            nodeIdChangeMap.set(id, newId);
         }
 
-        usedNodeIds.add(newId)
-        newNodes.push({...other, id: newId})
+        usedNodeIds.add(newId);
+        newNodes.push({...other, id: newId});
     }
 
     // 构建临时handle映射（包含现有节点和新节点）
@@ -91,36 +94,42 @@ export const clearImportData = (
     }
 
     for (const node of newNodes) {
-        tempHandleMap.set(node.id, new Set(ContentNodeHandles))
+        tempHandleMap.set(node.id, new Set(ContentNodeHandles));
     }
 
     // 处理边ID冲突
     const usedEdgeIds = new Set(existedEdgeIds);
-    const edges = data.edges?.filter((edge): edge is ContentEdge => !!edge) ?? []
+    const edges = data.edges?.filter((edge): edge is ContentEdge => !!edge) ?? [];
 
     for (const edge of edges) {
-        const {id, source, target, ...other} = edge
+        const {id, source, target, ...other} = edge;
 
-        let newSource = source
-        let newTarget = target
+        let newSource = source;
+        let newTarget = target;
 
-        const matchedNewSourceId = nodeIdChangeMap.get(source)
+        const matchedNewSourceId = nodeIdChangeMap.get(source);
         if (matchedNewSourceId !== undefined) {
-            newSource = matchedNewSourceId
+            newSource = matchedNewSourceId;
         }
 
-        const matchedNewTargetId = nodeIdChangeMap.get(target)
+        const matchedNewTargetId = nodeIdChangeMap.get(target);
         if (matchedNewTargetId !== undefined) {
-            newTarget = matchedNewTargetId
+            newTarget = matchedNewTargetId;
         }
 
         // 检查source/target是否存在
-        const sourceExists = tempHandleMap.has(newSource)
-        const targetExists = tempHandleMap.has(newTarget)
+        const sourceExists = tempHandleMap.has(newSource);
+        const targetExists = tempHandleMap.has(newTarget);
 
         // 检查handle是否存在
-        const sourceHandleExists = edge.sourceHandle !== null && edge.sourceHandle !== undefined && tempHandleMap.get(newSource)?.has(edge.sourceHandle)
-        const targetHandleExists = edge.targetHandle !== null && edge.targetHandle !== undefined && tempHandleMap.get(newTarget)?.has(edge.targetHandle)
+        const sourceHandleExists =
+            edge.sourceHandle !== null &&
+            edge.sourceHandle !== undefined &&
+            tempHandleMap.get(newSource)?.has(edge.sourceHandle);
+        const targetHandleExists =
+            edge.targetHandle !== null &&
+            edge.targetHandle !== undefined &&
+            tempHandleMap.get(newTarget)?.has(edge.targetHandle);
 
         // 如果有任一不存在，则不作为 newEdges
         if (!sourceExists || !targetExists || !sourceHandleExists || !targetHandleExists) {
@@ -130,28 +139,31 @@ export const clearImportData = (
                 targetNotExist: !targetExists,
                 sourceHandleNotExist: !sourceHandleExists,
                 targetHandleNotExist: !targetHandleExists,
-            })
+            });
         } else {
             const newConnection: FullConnection = {
                 source: newSource,
                 target: newTarget,
                 sourceHandle: edge.sourceHandle,
-                targetHandle: edge.targetHandle
-            }
-            const newId = createEdgeId(newConnection)
-            if (usedEdgeIds.has(newId) || usedEdgeIds.has(createEdgeId(reverseConnection(newConnection)))) {
+                targetHandle: edge.targetHandle,
+            };
+            const newId = createEdgeId(newConnection);
+            if (
+                usedEdgeIds.has(newId) ||
+                usedEdgeIds.has(createEdgeId(reverseConnection(newConnection)))
+            ) {
                 unconnectedEdges.set(edge, {
                     connectionExist: true,
                     sourceNotExist: !sourceExists,
                     targetNotExist: !targetExists,
                     sourceHandleNotExist: !sourceHandleExists,
                     targetHandleNotExist: !targetHandleExists,
-                })
+                });
             } else {
-                usedEdgeIds.add(newId)
-                edgeIdChangeMap.set(edge.id, newId)
+                usedEdgeIds.add(newId);
+                edgeIdChangeMap.set(edge.id, newId);
 
-                newEdges.push({...other, id: newId, source: newSource, target: newTarget})
+                newEdges.push({...other, id: newId, source: newSource, target: newTarget});
             }
         }
     }
@@ -163,61 +175,58 @@ export const clearImportData = (
         newEdges,
         unconnectedEdges,
     };
-}
+};
 
 export type JustifyOptions = {
-    point: XYPosition,
-    type: "leftTop" | "topNode" | "leftNode"
-}
+    point: XYPosition;
+    type: 'leftTop' | 'topNode' | 'leftNode';
+};
 
 /**
  * 将节点和边对齐到 leftTop
  */
-const justifyNodes = (
-    nodes: ContentNode[],
-    options: JustifyOptions,
-) => {
-    if (nodes.length === 0) return
+const justifyNodes = (nodes: ContentNode[], options: JustifyOptions) => {
+    if (nodes.length === 0) return;
 
-    let baseX: number
-    let baseY: number
+    let baseX: number;
+    let baseY: number;
 
     switch (options.type) {
         case 'leftTop': {
             // 计算全局最小坐标
-            baseX = Math.min(...nodes.map(n => n.position.x))
-            baseY = Math.min(...nodes.map(n => n.position.y))
-            break
+            baseX = Math.min(...nodes.map((n) => n.position.x));
+            baseY = Math.min(...nodes.map((n) => n.position.y));
+            break;
         }
         case 'topNode': {
             // 查找Y值最小的节点
             const topNode = nodes.reduce((prev, curr) =>
-                prev.position.y < curr.position.y ? prev : curr
-            )
-            baseX = topNode.position.x
-            baseY = topNode.position.y
-            break
+                prev.position.y < curr.position.y ? prev : curr,
+            );
+            baseX = topNode.position.x;
+            baseY = topNode.position.y;
+            break;
         }
         case 'leftNode': {
             // 查找X值最小的节点
             const leftNode = nodes.reduce((prev, curr) =>
-                prev.position.x < curr.position.x ? prev : curr
-            )
-            baseX = leftNode.position.x
-            baseY = leftNode.position.y
-            break
+                prev.position.x < curr.position.x ? prev : curr,
+            );
+            baseX = leftNode.position.x;
+            baseY = leftNode.position.y;
+            break;
         }
     }
 
     // 统一应用偏移量
-    const offsetX = options.point.x - baseX
-    const offsetY = options.point.y - baseY
+    const offsetX = options.point.x - baseX;
+    const offsetY = options.point.y - baseY;
 
     for (const node of nodes) {
         node.position.x += offsetX;
         node.position.y += offsetY;
     }
-}
+};
 
 /**
  * 向 vueFlow 导入 data
@@ -228,28 +237,25 @@ export const prepareImportIntoMindMap = (
     data: MindMapImportData,
     justifyOptions?: JustifyOptions | undefined,
 ): MindMapImportDataCleanResult => {
-    const nodes = toRaw(vueFlow.getNodes.value)
-    const edges = toRaw(vueFlow.getEdges.value)
+    const nodes = toRaw(vueFlow.getNodes.value);
+    const edges = toRaw(vueFlow.getEdges.value);
 
-    const existedNodeIds = new Set<string>(nodes.map(it => it.id))
-    const existedEdgeIds = new Set<string>(edges.map(it => it.id))
-    const nodeHandleIdsMap = new Map<string, Set<string>>()
+    const existedNodeIds = new Set<string>(nodes.map((it) => it.id));
+    const existedEdgeIds = new Set<string>(edges.map((it) => it.id));
+    const nodeHandleIdsMap = new Map<string, Set<string>>();
     for (const node of nodes) {
-        const handles = [...node.handleBounds.source ?? [], ...node.handleBounds.target ?? []]
-        const handleIdSet = new Set<string>(handles.map(it => it.id).filter(it => it !== null && it !== undefined))
-        nodeHandleIdsMap.set(node.id, handleIdSet)
+        const handles = [...(node.handleBounds.source ?? []), ...(node.handleBounds.target ?? [])];
+        const handleIdSet = new Set<string>(
+            handles.map((it) => it.id).filter((it) => it !== null && it !== undefined),
+        );
+        nodeHandleIdsMap.set(node.id, handleIdSet);
     }
 
-    const clearResult = clearImportData(
-        data,
-        existedNodeIds,
-        existedEdgeIds,
-        nodeHandleIdsMap
-    )
+    const clearResult = clearImportData(data, existedNodeIds, existedEdgeIds, nodeHandleIdsMap);
 
     if (justifyOptions !== undefined) {
-        justifyNodes(clearResult.newNodes, justifyOptions)
+        justifyNodes(clearResult.newNodes, justifyOptions);
     }
 
-    return clearResult
-}
+    return clearResult;
+};

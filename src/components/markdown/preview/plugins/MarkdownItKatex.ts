@@ -1,16 +1,16 @@
 import MarkdownIt from 'markdown-it';
 // @ts-ignore
-import StateInline from "markdown-it/lib/rules_inline/state_inline";
+import StateInline from 'markdown-it/lib/rules_inline/state_inline';
 // @ts-ignore
-import StateBlock from "markdown-it/lib/rules_block/state_block";
+import StateBlock from 'markdown-it/lib/rules_block/state_block';
 import katex, {type KatexOptions} from 'katex';
-import "katex/dist/katex.min.css"
-import {renderPrismCodeBlock} from "@/components/markdown/preview/plugins/MarkdownItPrismCode.ts";
+import 'katex/dist/katex.min.css';
+import {renderPrismCodeBlock} from '@/components/markdown/preview/plugins/MarkdownItPrismCode.ts';
 
 const mathInline = (state: StateInline, silent: boolean): boolean => {
     let start, match, token, pos;
 
-    if (state.src[state.pos] != "$") {
+    if (state.src[state.pos] != '$') {
         return false;
     }
 
@@ -18,15 +18,15 @@ const mathInline = (state: StateInline, silent: boolean): boolean => {
     // 这个循环要假设第一个反引号不能是 state.src 中的开头字符，这是已知的，因为我们已经找到了一个开启的定界符。
     start = state.pos + 1;
     match = start;
-    while ((match = state.src.indexOf("$", match)) != -1) {
+    while ((match = state.src.indexOf('$', match)) != -1) {
         // 找到了潜在的 $，查找转义字符，pos 将指向第一个非转义字符
         pos = match - 1;
-        while (state.src[pos] == "\\") {
+        while (state.src[pos] == '\\') {
             pos -= 1;
         }
 
         // 转义字符数是偶数，找到了可能的结束定界符
-        if (((match - pos) % 2) == 1) {
+        if ((match - pos) % 2 == 1) {
             break;
         }
         match += 1;
@@ -35,7 +35,7 @@ const mathInline = (state: StateInline, silent: boolean): boolean => {
     // 没找到结束定界符。消耗 $ 并继续。
     if (match == -1) {
         if (!silent) {
-            state.pending += "$";
+            state.pending += '$';
         }
         state.pos = start;
         return true;
@@ -44,7 +44,7 @@ const mathInline = (state: StateInline, silent: boolean): boolean => {
     // 检查是否为空内容，例如：$$. 不解析。
     if (match - start == 0) {
         if (!silent) {
-            state.pending += "$$";
+            state.pending += '$$';
         }
         state.pos = start + 1;
         return true;
@@ -52,18 +52,23 @@ const mathInline = (state: StateInline, silent: boolean): boolean => {
 
     if (!silent) {
         token = state.push('math_inline', 'math', 0);
-        token.markup = "$";
+        token.markup = '$';
         token.content = state.src.slice(start, match);
     }
 
     state.pos = match + 1;
     return true;
-}
+};
 
 const mathBlock = (state: StateBlock, start: number, end: number, silent: boolean): boolean => {
-    let firstLine, lastLine, next, lastPos, found = false, token,
+    let firstLine,
+        lastLine,
+        next,
+        lastPos,
+        found = false,
+        token,
         pos = state.bMarks[start] + state.tShift[start],
-        max = state.eMarks[start]
+        max = state.eMarks[start];
 
     if (pos + 2 > max) {
         return false;
@@ -84,8 +89,7 @@ const mathBlock = (state: StateBlock, start: number, end: number, silent: boolea
         found = true;
     }
 
-    for (next = start; !found;) {
-
+    for (next = start; !found; ) {
         next++;
 
         if (next >= end) {
@@ -105,38 +109,38 @@ const mathBlock = (state: StateBlock, start: number, end: number, silent: boolea
             lastLine = state.src.slice(pos, lastPos);
             found = true;
         }
-
     }
 
     state.line = next + 1;
 
     token = state.push('math_block', 'math', 0);
     token.block = true;
-    token.content = (firstLine && firstLine.trim() ? firstLine + '\n' : '')
-        + state.getLines(start + 1, next, state.tShift[start], true)
-        + (lastLine && lastLine.trim() ? lastLine : '');
+    token.content =
+        (firstLine && firstLine.trim() ? firstLine + '\n' : '') +
+        state.getLines(start + 1, next, state.tShift[start], true) +
+        (lastLine && lastLine.trim() ? lastLine : '');
     token.map = [start, state.line];
     token.markup = '$$';
     return true;
-}
+};
 
-const cache = new Map<string, string>
+const cache = new Map<string, string>();
 
 export const cleanKatexCache = () => {
-    cache.clear()
-}
+    cache.clear();
+};
 
 const getRenderKatex = (text: string, options?: KatexOptions): string => {
-    let result = cache.get(text)
+    let result = cache.get(text);
     if (result === undefined) {
-        result = katex.renderToString(text, options)
-        cache.set(text, result)
+        result = katex.renderToString(text, options);
+        cache.set(text, result);
     }
-    return result
-}
+    return result;
+};
 
 export const renderKatexInline = (content: string, options?: KatexOptions): string => {
-    const opts = Object.assign({}, options)
+    const opts = Object.assign({}, options);
     opts.displayMode = false;
     try {
         const result = getRenderKatex(content, opts);
@@ -147,12 +151,12 @@ export const renderKatexInline = (content: string, options?: KatexOptions): stri
     ${renderPrismCodeBlock(content, 'latex')}
     <div class="error-detail">${e}</div>
 </div>
-`.trim()
+`.trim();
     }
-}
+};
 
 export const renderKatexBlock = (content: string, options?: KatexOptions): string => {
-    const opts = Object.assign({}, options)
+    const opts = Object.assign({}, options);
     opts.displayMode = true;
     try {
         const result = getRenderKatex(content, opts);
@@ -162,29 +166,29 @@ export const renderKatexBlock = (content: string, options?: KatexOptions): strin
     <summary>Source Code</summary>
     ${renderPrismCodeBlock(content, 'latex')}
 </details>
-`.trim()
+`.trim();
     } catch (e) {
         return `
 <div class="katex error">
     ${renderPrismCodeBlock(content, 'latex')}
     <div class="error-detail">${e}</div>
 </div>
-`.trim()
+`.trim();
     }
-}
+};
 
 export const MarkdownItKatex = (md: MarkdownIt, options: KatexOptions = {}) => {
     //@ts-ignore
     md.renderer.rules['math_inline'] = (tokens: Token[], idx: number) => {
-        return renderKatexInline(tokens[idx].content, options)
-    }
+        return renderKatexInline(tokens[idx].content, options);
+    };
     //@ts-ignore
     md.renderer.rules['math_block'] = (tokens: Token[], idx: number) => {
-        return renderKatexBlock(tokens[idx].content, options)
-    }
+        return renderKatexBlock(tokens[idx].content, options);
+    };
 
     md.inline.ruler.after('escape', 'math_inline', mathInline);
     md.block.ruler.after('blockquote', 'math_block', mathBlock, {
-        alt: ['paragraph', 'reference', 'blockquote', 'list']
-    })
-}
+        alt: ['paragraph', 'reference', 'blockquote', 'list'],
+    });
+};

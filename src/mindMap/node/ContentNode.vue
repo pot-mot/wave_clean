@@ -1,25 +1,22 @@
 <script setup lang="ts">
-import {Handle, type NodeProps} from "@vue-flow/core";
-import {
-    MIND_MAP_CONTAINER_ID,
-    useMindMap
-} from "@/mindMap/useMindMap.ts";
-import {computed, nextTick, onMounted, ref, useTemplateRef, watch} from "vue";
-import FitSizeBlockInput from "@/components/input/FitSizeBlockInput.vue";
-import {NodeToolbar} from "@vue-flow/node-toolbar";
-import IconDelete from "@/components/icons/IconDelete.vue";
-import IconCopy from "@/components/icons/IconCopy.vue";
-import IconFocus from "@/components/icons/IconFocus.vue";
-import {blurActiveElement, getMatchedElementOrParent} from "@/utils/event/judgeEventTarget.ts";
-import {useMindMapStore} from "@/store/mindMapStore.ts";
-import MarkdownPreview from "@/components/markdown/preview/MarkdownPreview.vue";
-import ResizeWrapper from "@/components/resizer/ResizeWrapper.vue";
-import {type ResizeEventArgs} from "@/components/resizer/ResizeWrapperType.ts";
-import IconEdit from "@/components/icons/IconEdit.vue";
-import IconCheck from "@/components/icons/IconCheck.vue";
-import IconMarkdown from "@/components/icons/IconMarkdown.vue";
-import IconMarkdownOff from "@/components/icons/IconMarkdownOff.vue";
-import {type RawMindMapLayer} from "@/mindMap/layer/MindMapLayer.ts";
+import {Handle, type NodeProps} from '@vue-flow/core';
+import {MIND_MAP_CONTAINER_ID, useMindMap} from '@/mindMap/useMindMap.ts';
+import {computed, nextTick, onMounted, ref, useTemplateRef, watch} from 'vue';
+import FitSizeBlockInput from '@/components/input/FitSizeBlockInput.vue';
+import {NodeToolbar} from '@vue-flow/node-toolbar';
+import IconDelete from '@/components/icons/IconDelete.vue';
+import IconCopy from '@/components/icons/IconCopy.vue';
+import IconFocus from '@/components/icons/IconFocus.vue';
+import {blurActiveElement, getMatchedElementOrParent} from '@/utils/event/judgeEventTarget.ts';
+import {useMindMapStore} from '@/store/mindMapStore.ts';
+import MarkdownPreview from '@/components/markdown/preview/MarkdownPreview.vue';
+import ResizeWrapper from '@/components/resizer/ResizeWrapper.vue';
+import {type ResizeEventArgs} from '@/components/resizer/ResizeWrapperType.ts';
+import IconEdit from '@/components/icons/IconEdit.vue';
+import IconCheck from '@/components/icons/IconCheck.vue';
+import IconMarkdown from '@/components/icons/IconMarkdown.vue';
+import IconMarkdownOff from '@/components/icons/IconMarkdownOff.vue';
+import {type RawMindMapLayer} from '@/mindMap/layer/MindMapLayer.ts';
 import {
     type ContentNode,
     ContentNode_Markdown_initHeight,
@@ -29,12 +26,12 @@ import {
     type ContentNodeData,
     ContentNodeHandles,
     type ContentType,
-    ContentType_DEFAULT
-} from "@/mindMap/node/ContentNode.ts";
-import MarkdownCompositeEditor from "@/components/markdown/compositeEditor/MarkdownCompositeEditor.vue";
-import IconFullScreen from "@/components/icons/IconFullScreen.vue";
+    ContentType_DEFAULT,
+} from '@/mindMap/node/ContentNode.ts';
+import MarkdownCompositeEditor from '@/components/markdown/compositeEditor/MarkdownCompositeEditor.vue';
+import IconFullScreen from '@/components/icons/IconFullScreen.vue';
 
-const {meta} = useMindMapStore()
+const {meta} = useMindMapStore();
 
 const {
     currentLayer,
@@ -51,193 +48,236 @@ const {
     remove,
     zoom,
     executeAsyncBatch,
-} = useMindMap()
+} = useMindMap();
 
-const props = defineProps<NodeProps<ContentNodeData> & {
-    layer: RawMindMapLayer,
-}>()
+const props = defineProps<
+    NodeProps<ContentNodeData> & {
+        layer: RawMindMapLayer;
+    }
+>();
 
-const _node = computed(() => findNode(props.id, props.layer.vueFlow))
+const _node = computed(() => findNode(props.id, props.layer.vueFlow));
 
-const dataTypeOrDefault = computed<ContentType>(() => props.data.type ?? ContentType_DEFAULT)
+const dataTypeOrDefault = computed<ContentType>(() => props.data.type ?? ContentType_DEFAULT);
 
 // 是否已聚焦
-const isFocus = ref(false)
+const isFocus = ref(false);
 
-watch(() => props.selected, (value, oldValue) => {
-    if (!value && oldValue) {
-        isFocus.value = false
-        isMarkdownEdit.value = false
-    }
-})
+watch(
+    () => props.selected,
+    (value, oldValue) => {
+        if (!value && oldValue) {
+            isFocus.value = false;
+            isMarkdownEdit.value = false;
+        }
+    },
+);
 
 // text input 模式
-const inputRef = useTemplateRef<InstanceType<typeof FitSizeBlockInput>>("inputRef")
+const inputRef = useTemplateRef<InstanceType<typeof FitSizeBlockInput>>('inputRef');
 
 const inputValue = computed<string>({
     get() {
-        return props.data.content
+        return props.data.content;
     },
     set(newVal: string) {
         if (newVal !== props.data.content) {
-            updateNodeData(props.id, {content: newVal})
+            updateNodeData(props.id, {content: newVal});
         }
-    }
-})
+    },
+});
 
 type NodeSize = {
-    width: number,
-    height: number
-}
+    width: number;
+    height: number;
+};
 
-const inputSize = ref<NodeSize>()
+const inputSize = ref<NodeSize>();
 
 const inputWrapperStyle = computed(() => {
     return {
-        width: (inputSize.value?.width ?? 0) + "px",
-        height: (inputSize.value?.height ?? 0) + "px",
-    }
-})
+        width: (inputSize.value?.width ?? 0) + 'px',
+        height: (inputSize.value?.height ?? 0) + 'px',
+    };
+});
 
 const handleInputResize = (size: NodeSize) => {
-    const node = _node.value
+    const node = _node.value;
     if (node) {
         if (inputSize.value !== undefined) {
             // 保持 node 居中
-            node.position.x = node.position.x - (size.width - inputSize.value.width) / 2
+            node.position.x = node.position.x - (size.width - inputSize.value.width) / 2;
         }
-        node.width = size.width
-        node.height = size.height
-        node.dimensions.width = size.width
-        node.dimensions.height = size.height
+        node.width = size.width;
+        node.height = size.height;
+        node.dimensions.width = size.width;
+        node.dimensions.height = size.height;
     }
-    inputSize.value = size
-}
+    inputSize.value = size;
+};
 
 const handleInputBlur = () => {
-    isFocus.value = false
-}
+    isFocus.value = false;
+};
 
 // markdown 模式
-const markdownEditorRef = useTemplateRef<InstanceType<typeof MarkdownCompositeEditor>>("markdownEditorRef")
-const markdownPreviewRef = useTemplateRef<InstanceType<typeof MarkdownPreview>>("markdownPreviewRef")
+const markdownEditorRef =
+    useTemplateRef<InstanceType<typeof MarkdownCompositeEditor>>('markdownEditorRef');
+const markdownPreviewRef =
+    useTemplateRef<InstanceType<typeof MarkdownPreview>>('markdownPreviewRef');
 
-const markdownEditorValue = ref<string>(props.data.content)
+const markdownEditorValue = ref<string>(props.data.content);
 
-const isMarkdownEdit = ref(false)
+const isMarkdownEdit = ref(false);
 
-watch(() => props.layer.lock, (locked) => {
-    if (locked) {
-        isMarkdownEdit.value = false
-    }
-}, {immediate: true})
+watch(
+    () => props.layer.lock,
+    (locked) => {
+        if (locked) {
+            isMarkdownEdit.value = false;
+        }
+    },
+    {immediate: true},
+);
 
-const isMarkdownEditorFullScreen = computed<boolean>(() => markdownEditorRef.value?.isFullScreen ?? false)
-const isMarkdownEditorPreviewOverflow = computed<boolean>(() => markdownEditorRef.value?.markdownPreviewRef?.isOverflow ?? false)
-const isMarkdownPreviewOverflow = computed<boolean>(() => markdownPreviewRef.value?.isOverflow ?? false)
+const isMarkdownEditorFullScreen = computed<boolean>(
+    () => markdownEditorRef.value?.isFullScreen ?? false,
+);
+const isMarkdownEditorPreviewOverflow = computed<boolean>(
+    () => markdownEditorRef.value?.markdownPreviewRef?.isOverflow ?? false,
+);
+const isMarkdownPreviewOverflow = computed<boolean>(
+    () => markdownPreviewRef.value?.isOverflow ?? false,
+);
 
 const markdownEditorTheme = computed(() => {
-    return meta.value.currentTheme === "dark" ? "vs-dark" : "vs"
-})
+    return meta.value.currentTheme === 'dark' ? 'vs-dark' : 'vs';
+});
 
-watch(() => props.data.content, (value) => {
-    if (value !== markdownEditorValue.value) {
-        markdownEditorValue.value = value
-    }
-}, {immediate: true})
+watch(
+    () => props.data.content,
+    (value) => {
+        if (value !== markdownEditorValue.value) {
+            markdownEditorValue.value = value;
+        }
+    },
+    {immediate: true},
+);
 
 const handleMarkdownEditorBlur = () => {
     if (markdownEditorValue.value !== props.data.content) {
-        updateNodeData(props.id, {content: markdownEditorValue.value})
+        updateNodeData(props.id, {content: markdownEditorValue.value});
     }
-}
+};
 
-watch(() => isMarkdownEdit.value, (isEdit) => {
-    // 当退出编辑模式时，如果内容有修改，则更新数据
-    if (!isEdit && markdownEditorValue.value !== props.data.content) {
-        updateNodeData(props.id, {content: markdownEditorValue.value})
-    }
-})
+watch(
+    () => isMarkdownEdit.value,
+    (isEdit) => {
+        // 当退出编辑模式时，如果内容有修改，则更新数据
+        if (!isEdit && markdownEditorValue.value !== props.data.content) {
+            updateNodeData(props.id, {content: markdownEditorValue.value});
+        }
+    },
+);
 
 // 切换编辑模式
 const executeToggleMarkdownEdit = async () => {
-    isMarkdownEdit.value = !isMarkdownEdit.value
+    isMarkdownEdit.value = !isMarkdownEdit.value;
     if (isMarkdownEdit.value) {
-        await nextTick()
-        markdownEditorRef.value?.editorRef?.focus()
+        await nextTick();
+        markdownEditorRef.value?.editorRef?.focus();
     }
-}
+};
 
 // 切换编辑全屏
 const executeToggleMarkdownFullScreen = () => {
-    markdownEditorRef.value?.toggleFullScreen()
-}
+    markdownEditorRef.value?.toggleFullScreen();
+};
 
 // 阻止编辑时切换选中
 const stopCtrlClickWhenMarkdownEdit = (e: MouseEvent) => {
     if (isMarkdownEdit.value && e.ctrlKey) {
-        e.stopPropagation()
+        e.stopPropagation();
     }
-}
+};
 
 // markdown 编辑器尺寸
-const MarkdownEditorResizeRef = useTemplateRef<InstanceType<typeof ResizeWrapper>>("MarkdownEditorResizeRef")
+const MarkdownEditorResizeRef =
+    useTemplateRef<InstanceType<typeof ResizeWrapper>>('MarkdownEditorResizeRef');
 
-const isResizing = computed(() => MarkdownEditorResizeRef.value?.isResizing ?? false)
+const isResizing = computed(() => MarkdownEditorResizeRef.value?.isResizing ?? false);
 
 const markdownContentSize = ref<NodeSize>({
     width: ContentNode_Markdown_initWidth,
     height: ContentNode_Markdown_initHeight,
-})
+});
 
 onMounted(async () => {
-    const node = _node.value
-    if (!node) return
-    await nextTick()
+    const node = _node.value;
+    if (!node) return;
+    await nextTick();
     if (node.dimensions.height !== 0 && node.dimensions.width !== 0) {
         markdownContentSize.value = {
             width: node.dimensions.width,
             height: node.dimensions.height,
-        }
+        };
     }
-})
+});
 
-watch(() => _node.value?.dimensions.width, (width) => {
-    if (dataTypeOrDefault.value === 'markdown' && width !== undefined && markdownContentSize.value.width !== width) {
-        markdownContentSize.value.width = width
-    }
-})
-watch(() => _node.value?.dimensions.height, (height) => {
-    if (dataTypeOrDefault.value === 'markdown' && height !== undefined && markdownContentSize.value.height !== height) {
-        markdownContentSize.value.height = height
-    }
-})
-watch(() => markdownContentSize.value, (size) => {
-    const node = _node.value
-    if (!node) return
-    node.height = size.height
-    node.width = size.width
-    node.dimensions.height = size.height
-    node.dimensions.width = size.width
-}, {deep: true})
+watch(
+    () => _node.value?.dimensions.width,
+    (width) => {
+        if (
+            dataTypeOrDefault.value === 'markdown' &&
+            width !== undefined &&
+            markdownContentSize.value.width !== width
+        ) {
+            markdownContentSize.value.width = width;
+        }
+    },
+);
+watch(
+    () => _node.value?.dimensions.height,
+    (height) => {
+        if (
+            dataTypeOrDefault.value === 'markdown' &&
+            height !== undefined &&
+            markdownContentSize.value.height !== height
+        ) {
+            markdownContentSize.value.height = height;
+        }
+    },
+);
+watch(
+    () => markdownContentSize.value,
+    (size) => {
+        const node = _node.value;
+        if (!node) return;
+        node.height = size.height;
+        node.width = size.width;
+        node.dimensions.height = size.height;
+        node.dimensions.width = size.width;
+    },
+    {deep: true},
+);
 
 const handleMarkdownEditorResize = ({currentPositionDiff}: ResizeEventArgs) => {
-    const node = _node.value
-    if (!node) return
-    node.position.x += currentPositionDiff.x
-    node.position.y += currentPositionDiff.y
-}
+    const node = _node.value;
+    if (!node) return;
+    node.position.x += currentPositionDiff.x;
+    node.position.y += currentPositionDiff.y;
+};
 
 type MarkdownEditorResizeStartSizePosition = {
-    size: { width: number, height: number },
-    position: { x: number, y: number },
-}
+    size: {width: number; height: number};
+    position: {x: number; y: number};
+};
 
-let markdownResizeStartSizePosition: MarkdownEditorResizeStartSizePosition | undefined
+let markdownResizeStartSizePosition: MarkdownEditorResizeStartSizePosition | undefined;
 
 const handleMarkdownEditorResizeStart = () => {
-    const node = _node.value
-    if (!node) return
+    const node = _node.value;
+    if (!node) return;
     markdownResizeStartSizePosition = {
         size: {
             width: markdownContentSize.value.width,
@@ -246,14 +286,14 @@ const handleMarkdownEditorResizeStart = () => {
         position: {
             x: node.position.x,
             y: node.position.y,
-        }
-    }
-}
+        },
+    };
+};
 
 const handleMarkdownEditorResizeStop = () => {
-    if (!markdownResizeStartSizePosition) return
-    const node = _node.value
-    if (!node) return
+    if (!markdownResizeStartSizePosition) return;
+    const node = _node.value;
+    if (!node) return;
 
     recordNodeResize(props.id, {
         oldSize: markdownResizeStartSizePosition.size,
@@ -266,151 +306,173 @@ const handleMarkdownEditorResizeStop = () => {
             x: node.position.x,
             y: node.position.y,
         },
-    })
-}
+    });
+};
 
 // 阻止 splitter drag
-watch(() => markdownEditorRef.value?.containerRef, async (container) => {
-    if (container) {
-        await nextTick()
-        const splitters = container.querySelectorAll('.splitpanes__splitter')
-        for (const splitter of splitters) {
-            splitter.classList.add('noDrag')
+watch(
+    () => markdownEditorRef.value?.containerRef,
+    async (container) => {
+        if (container) {
+            await nextTick();
+            const splitters = container.querySelectorAll('.splitpanes__splitter');
+            for (const splitter of splitters) {
+                splitter.classList.add('noDrag');
+            }
         }
-    }
-}, {immediate: true})
+    },
+    {immediate: true},
+);
 
 // 节点行为
 const handleNodeSelect = () => {
-    if (graphSelection.selectedCount.value > 1) return
-    if (canMultiSelect.value) return
-    selectNode(props.id, props.layer.vueFlow)
-}
+    if (graphSelection.selectedCount.value > 1) return;
+    if (canMultiSelect.value) return;
+    selectNode(props.id, props.layer.vueFlow);
+};
 
 const handleNodeFocus = () => {
-    if (canMultiSelect.value) return
-    if (!props.selected) return
-    isFocus.value = true
+    if (canMultiSelect.value) return;
+    if (!props.selected) return;
+    isFocus.value = true;
     if (dataTypeOrDefault.value === 'text') {
-        inputRef.value?.el?.focus()
+        inputRef.value?.el?.focus();
     } else if (dataTypeOrDefault.value === 'markdown') {
         if (markdownEditorValue.value.trim().length === 0 && !isMarkdownEdit.value) {
-            executeToggleMarkdownEdit()
+            executeToggleMarkdownEdit();
         }
     }
-}
+};
 
 // 连接点行为
 const onHandleMouseDown = (e: MouseEvent) => {
     if (e.target instanceof HTMLElement) {
-        const target = e.target as HTMLElement
-        target.classList.add("mousedown")
-        document.documentElement.addEventListener("mouseup", () => {
-            target.classList.remove("mousedown")
-        }, {once: true})
+        const target = e.target as HTMLElement;
+        target.classList.add('mousedown');
+        document.documentElement.addEventListener(
+            'mouseup',
+            () => {
+                target.classList.remove('mousedown');
+            },
+            {once: true},
+        );
     }
-}
+};
 
 // 连接点显示
 const isHandleVisible = computed<boolean>(() => {
-    return (isFocus.value || isConnecting.value) && !props.layer.lock && props.layer.id === currentLayer.value.id
-})
+    return (
+        (isFocus.value || isConnecting.value) &&
+        !props.layer.lock &&
+        props.layer.id === currentLayer.value.id
+    );
+});
 
 // 通过按钮的复制和点击粘贴
-let cleanClickPasteTimeout: number | undefined = undefined
+let cleanClickPasteTimeout: number | undefined = undefined;
 
 const clickPaste = (e: MouseEvent) => {
     if (e.target instanceof HTMLElement) {
-        if (getMatchedElementOrParent(e.target, (el) => el.classList.contains("vue-flow__nodes") || el.classList.contains("vue-flow__edges")) !== null) {
-            return
-        } else if (getMatchedElementOrParent(e.target, (el) => el.classList.contains("vue-flow__pane")) !== null) {
-            paste()
-            document.documentElement.removeEventListener('click', clickPaste)
-            clearTimeout(cleanClickPasteTimeout)
+        if (
+            getMatchedElementOrParent(
+                e.target,
+                (el) =>
+                    el.classList.contains('vue-flow__nodes') ||
+                    el.classList.contains('vue-flow__edges'),
+            ) !== null
+        ) {
+            return;
+        } else if (
+            getMatchedElementOrParent(e.target, (el) => el.classList.contains('vue-flow__pane')) !==
+            null
+        ) {
+            paste();
+            document.documentElement.removeEventListener('click', clickPaste);
+            clearTimeout(cleanClickPasteTimeout);
         }
     }
-}
+};
 
 const executeButtonCopy = () => {
-    const node = _node.value
-    if (node === undefined) return
+    const node = _node.value;
+    if (node === undefined) return;
 
-    blurActiveElement()
-    copy({nodes: [node] as any as ContentNode[], edges: []}, props.layer)
+    blurActiveElement();
+    copy({nodes: [node] as any as ContentNode[], edges: []}, props.layer);
 
     // 在复制后的下一次点击中执行粘贴
     // 一段时间后移除粘贴动作
     cleanClickPasteTimeout = setTimeout(() => {
-        document.documentElement.removeEventListener('click', clickPaste)
-        clearTimeout(cleanClickPasteTimeout)
-    }, 10000)
-    document.documentElement.addEventListener('click', clickPaste)
-}
+        document.documentElement.removeEventListener('click', clickPaste);
+        clearTimeout(cleanClickPasteTimeout);
+    }, 10000);
+    document.documentElement.addEventListener('click', clickPaste);
+};
 
 // 边框颜色
 const borderColor = computed(() => {
     if (props.selected) {
-        return 'var(--primary-color)'
+        return 'var(--primary-color)';
     } else if (props.data.withBorder === true) {
-        return 'var(--border-color)'
+        return 'var(--border-color)';
     } else if (props.data.withBorder !== undefined) {
-        return 'transparent'
+        return 'transparent';
     } else {
-        return 'var(--border-color)'
+        return 'var(--border-color)';
     }
-})
+});
 
 // 聚焦
 const executeFocus = () => {
-    const node = _node.value
+    const node = _node.value;
     if (node !== undefined) {
         fitRect({
             x: node.position.x,
             y: node.position.y,
             width: node.dimensions.width,
             height: node.dimensions.height,
-        })
+        });
     }
-}
+};
 
 // 切换内容类型
 const executeToggleType = async () => {
-    const node = _node.value
-    if (!node) return
+    const node = _node.value;
+    if (!node) return;
 
-    blurActiveElement()
+    blurActiveElement();
 
-    await executeAsyncBatch(Symbol("ContentNode toggle type"), async () => {
-        const oldWidth = node.dimensions.width
-        const oldHeight = node.dimensions.height
-        const oldX = node.position.x
-        const oldY = node.position.y
+    await executeAsyncBatch(Symbol('ContentNode toggle type'), async () => {
+        const oldWidth = node.dimensions.width;
+        const oldHeight = node.dimensions.height;
+        const oldX = node.position.x;
+        const oldY = node.position.y;
 
         switch (dataTypeOrDefault.value) {
             case 'markdown':
-                updateNodeData(props.id, {type: 'text', content: markdownEditorValue.value})
+                updateNodeData(props.id, {type: 'text', content: markdownEditorValue.value});
 
                 // 等待 text 使得 input 出现
-                await nextTick()
+                await nextTick();
                 // 等待 input 尺寸计算
-                await nextTick()
+                await nextTick();
 
                 if (inputSize.value !== undefined) {
-                    node.position.x += (oldWidth - inputSize.value.width) / 2
+                    node.position.x += (oldWidth - inputSize.value.width) / 2;
                 }
-                break
+                break;
             case 'text':
-                updateNodeData(props.id, {type: 'markdown'})
+                updateNodeData(props.id, {type: 'markdown'});
                 if (inputSize.value !== undefined) {
                     markdownContentSize.value = {
                         width: inputSize.value.width,
                         height: inputSize.value.height,
-                    }
+                    };
                 }
-                await nextTick()
-                isFocus.value = true
-                node.position.x += (oldWidth - markdownContentSize.value.width) / 2
-                break
+                await nextTick();
+                isFocus.value = true;
+                node.position.x += (oldWidth - markdownContentSize.value.width) / 2;
+                break;
         }
 
         // 记录节点尺寸变化以便重做时恢复至当前尺寸
@@ -431,29 +493,32 @@ const executeToggleType = async () => {
                 x: node.position.x,
                 y: node.position.y,
             },
-        })
-    })
-}
+        });
+    });
+};
 
 // 删除
 const executeDelete = () => {
-    if (dataTypeOrDefault.value === 'markdown' && markdownEditorValue.value !== props.data.content) {
-        updateNodeData(props.id, {content: markdownEditorValue.value})
+    if (
+        dataTypeOrDefault.value === 'markdown' &&
+        markdownEditorValue.value !== props.data.content
+    ) {
+        updateNodeData(props.id, {content: markdownEditorValue.value});
     }
-    blurActiveElement()
-    remove({nodes: [props.id]})
-}
+    blurActiveElement();
+    remove({nodes: [props.id]});
+};
 </script>
 
 <template>
     <div
         class="content-node"
-        style="overflow: visible;"
+        style="overflow: visible"
         :class="{noDrag: layer.lock}"
     >
         <div
             class="fit-parent"
-            style="overflow: visible;"
+            style="overflow: visible"
             @mousedown.capture="handleNodeSelect"
             @touchstart.capture.passive="handleNodeSelect"
         >
@@ -476,7 +541,7 @@ const executeDelete = () => {
             <div
                 v-else-if="dataTypeOrDefault === 'markdown'"
                 class="fit-parent"
-                style="overflow: visible;"
+                style="overflow: visible"
                 @click.capture="handleNodeFocus"
             >
                 <ResizeWrapper
@@ -511,7 +576,12 @@ const executeDelete = () => {
                         v-else
                         ref="markdownPreviewRef"
                         class="fit-parent"
-                        :class="{untouchable: !isFocus, noDrag: isFocus, noWheel: isFocus && isMarkdownPreviewOverflow, 'hide-scroll': !isFocus}"
+                        :class="{
+                            untouchable: !isFocus,
+                            noDrag: isFocus,
+                            noWheel: isFocus && isMarkdownPreviewOverflow,
+                            'hide-scroll': !isFocus,
+                        }"
                         :style="{borderColor}"
                         :value="data.content"
                     />
@@ -527,39 +597,49 @@ const executeDelete = () => {
             />
         </div>
 
-        <NodeToolbar :node-id="id" :is-visible="selected && isFocus" class="toolbar">
+        <NodeToolbar
+            :node-id="id"
+            :is-visible="selected && isFocus"
+            class="toolbar"
+        >
             <button @mousedown.capture.prevent.stop="executeButtonCopy">
-                <IconCopy/>
+                <IconCopy />
             </button>
 
             <button @mousedown.capture.prevent.stop="executeFocus">
-                <IconFocus/>
+                <IconFocus />
             </button>
 
-            <button @mousedown.capture.prevent.stop="executeToggleType" v-if="!layer.lock">
-                <IconMarkdown v-if="dataTypeOrDefault === 'text'"/>
-                <IconMarkdownOff v-else-if="dataTypeOrDefault === 'markdown'"/>
+            <button
+                @mousedown.capture.prevent.stop="executeToggleType"
+                v-if="!layer.lock"
+            >
+                <IconMarkdown v-if="dataTypeOrDefault === 'text'" />
+                <IconMarkdownOff v-else-if="dataTypeOrDefault === 'markdown'" />
             </button>
 
-            <button @mousedown.capture.prevent.stop="executeDelete" v-if="!layer.lock">
-                <IconDelete/>
+            <button
+                @mousedown.capture.prevent.stop="executeDelete"
+                v-if="!layer.lock"
+            >
+                <IconDelete />
             </button>
 
-            <br>
+            <br />
 
             <button
                 v-if="dataTypeOrDefault === 'markdown' && !layer.lock"
                 @mousedown.capture.prevent.stop="executeToggleMarkdownEdit"
             >
-                <IconCheck v-if="isMarkdownEdit"/>
-                <IconEdit v-else/>
+                <IconCheck v-if="isMarkdownEdit" />
+                <IconEdit v-else />
             </button>
 
             <button
                 v-if="dataTypeOrDefault === 'markdown' && isMarkdownEdit"
                 @mousedown.capture.prevent.stop="executeToggleMarkdownFullScreen"
             >
-                <IconFullScreen/>
+                <IconFullScreen />
             </button>
         </NodeToolbar>
     </div>

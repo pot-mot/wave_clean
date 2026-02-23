@@ -1,21 +1,21 @@
 <script setup lang="ts">
-import {useMindMap} from "@/mindMap/useMindMap.ts";
-import LayerView from "@/mindMap/layer/LayerView.vue";
-import IconDelete from "@/components/icons/IconDelete.vue";
-import IconVisible from "@/components/icons/IconVisible.vue";
-import IconAdd from "@/components/icons/IconAdd.vue";
-import IconInvisible from "@/components/icons/IconInvisible.vue";
-import DragList from "@/components/list/DragList.vue";
-import {computed} from "vue";
-import CollapseDetail from "@/components/collapse/CollapseDetail.vue";
-import {type MindMapLayer} from "@/mindMap/layer/MindMapLayer.ts";
-import IconLock from "@/components/icons/IconLock.vue";
-import IconLockOpen from "@/components/icons/IconLockOpen.vue";
-import IconLayerMerge from "@/components/icons/IconLayerMerge.vue";
-import IconOnion from "@/components/icons/IconOnion.vue";
-import {useMindMapStore} from "@/store/mindMapStore.ts";
-import {sendConfirm} from "@/components/confirm/confirmApi.ts";
-import {translate} from "@/store/i18nStore.ts";
+import {useMindMap} from '@/mindMap/useMindMap.ts';
+import LayerView from '@/mindMap/layer/LayerView.vue';
+import IconDelete from '@/components/icons/IconDelete.vue';
+import IconVisible from '@/components/icons/IconVisible.vue';
+import IconAdd from '@/components/icons/IconAdd.vue';
+import IconInvisible from '@/components/icons/IconInvisible.vue';
+import DragList from '@/components/list/DragList.vue';
+import {computed} from 'vue';
+import CollapseDetail from '@/components/collapse/CollapseDetail.vue';
+import {type MindMapLayer} from '@/mindMap/layer/MindMapLayer.ts';
+import IconLock from '@/components/icons/IconLock.vue';
+import IconLockOpen from '@/components/icons/IconLockOpen.vue';
+import IconLayerMerge from '@/components/icons/IconLayerMerge.vue';
+import IconOnion from '@/components/icons/IconOnion.vue';
+import {useMindMapStore} from '@/store/mindMapStore.ts';
+import {sendConfirm} from '@/components/confirm/confirmApi.ts';
+import {translate} from '@/store/i18nStore.ts';
 
 const {
     layers,
@@ -29,103 +29,114 @@ const {
     changeLayerData,
     swapLayer,
     dragLayer,
-} = useMindMap()
+} = useMindMap();
 
-const {meta} = useMindMapStore()
+const {meta} = useMindMapStore();
 
 const toggleLayerVisible = (layer: MindMapLayer) => {
-    changeLayerVisible(layer.id, !layer.visible)
-}
+    changeLayerVisible(layer.id, !layer.visible);
+};
 
 const toggleLayerLock = (layer: MindMapLayer) => {
-    changeLayerLock(layer.id, !layer.lock)
-}
+    changeLayerLock(layer.id, !layer.lock);
+};
 
 const reversedLayers = computed(() => {
-    return layers.slice().reverse()
-})
+    return layers.slice().reverse();
+});
 
 const handleLayerNameChange = (layer: MindMapLayer, e: Event) => {
     if (e.target instanceof HTMLInputElement) {
-        changeLayerData(layer.id, {name: e.target.value})
-        e.target.blur()
+        changeLayerData(layer.id, {name: e.target.value});
+        e.target.blur();
     }
-}
-
+};
 
 const reverseIndex = (index: number): number => {
-    return layers.length - 1 - index
-}
+    return layers.length - 1 - index;
+};
 const reverseDragTargetIndex = (index: number) => {
     if (index === layers.length) {
-        return 0
+        return 0;
     }
-    return layers.length - index
-}
-
+    return layers.length - index;
+};
 
 const handleDrag = (a: number, b: number) => {
-    dragLayer(reverseIndex(a), reverseDragTargetIndex(b))
-}
+    dragLayer(reverseIndex(a), reverseDragTargetIndex(b));
+};
 
 const handleSwap = (a: number, b: number) => {
-    swapLayer(reverseIndex(a), reverseIndex(b))
-}
+    swapLayer(reverseIndex(a), reverseIndex(b));
+};
 
-const handleDelete = async (layer: {name: string, id: string}) => {
-    if (layers.length <= 1) return
+const handleDelete = async (layer: {name: string; id: string}) => {
+    if (layers.length <= 1) return;
     await sendConfirm({
-        title: translate({key: "delete_confirm_title", args: [translate('layer')]}),
-        content: translate({key: "delete_confirm_content", args: [`${translate('layer')}[${layer.name}]`]}),
+        title: translate({key: 'delete_confirm_title', args: [translate('layer')]}),
+        content: translate({
+            key: 'delete_confirm_content',
+            args: [`${translate('layer')}[${layer.name}]`],
+        }),
         onConfirm: () => {
-            removeLayer(layer.id)
-        }
-    })
-}
+            removeLayer(layer.id);
+        },
+    });
+};
 
 const toggleOnion = () => {
-    meta.value.onionEnabled = !meta.value.onionEnabled
-}
+    meta.value.onionEnabled = !meta.value.onionEnabled;
+};
 </script>
 
 <template>
     <div class="layer-menu">
         <div class="layer-menu-header">
-            <button @click="addLayer" class="layer-add-button">
-                <IconAdd/>
+            <button
+                @click="addLayer"
+                class="layer-add-button"
+            >
+                <IconAdd />
             </button>
-            <button @click="toggleOnion" class="onion-toggle-button" :class="{enabled: meta.onionEnabled}">
-                <IconOnion/>
+            <button
+                @click="toggleOnion"
+                class="onion-toggle-button"
+                :class="{enabled: meta.onionEnabled}"
+            >
+                <IconOnion />
             </button>
         </div>
 
         <DragList
             :data="reversedLayers"
             :current-item="currentLayer"
-            :to-key="layer => layer.id"
+            :to-key="(layer) => layer.id"
             @drag="handleDrag"
             @swap="handleSwap"
-            @remove="it => removeLayer(it.id)"
+            @remove="(it) => removeLayer(it.id)"
         >
             <template #default="{item: layer, index}">
                 <CollapseDetail>
                     <template #head>
-                        <div class="layer-menu-item" @click="toggleLayer(layer.id)">
+                        <div
+                            class="layer-menu-item"
+                            @click="toggleLayer(layer.id)"
+                        >
                             <button
                                 @click.stop="toggleLayerVisible(layer)"
                                 class="layer-menu-item-visible"
                             >
-                                <IconVisible v-if="layer.visible"/>
-                                <IconInvisible v-else/>
+                                <IconVisible v-if="layer.visible" />
+                                <IconInvisible v-else />
                             </button>
                             <div class="layer-menu-item-view">
-                                <LayerView :layer="layer"/>
+                                <LayerView :layer="layer" />
                             </div>
                             <input
                                 :value="layer.name"
                                 class="layer-menu-item-name"
                                 @change="(e) => handleLayerNameChange(layer, e)"
-                            >
+                            />
                         </div>
                     </template>
 
@@ -133,21 +144,21 @@ const toggleOnion = () => {
                         <div class="layer-menu-item-operations">
                             <button
                                 class="layer-menu-item-merge"
-                                v-if="layers.length > 1 && (layers.length - 1 - index) !== 0"
+                                v-if="layers.length > 1 && layers.length - 1 - index !== 0"
                                 @click.stop="mergeLayer(layers.length - 1 - index)"
                             >
-                                <IconLayerMerge/>
+                                <IconLayerMerge />
                             </button>
 
                             <button
                                 class="layer-menu-item-lock"
                                 @click.stop="toggleLayerLock(layer)"
                             >
-                                <template  v-if="layer.lock">
-                                    <IconLock/>
+                                <template v-if="layer.lock">
+                                    <IconLock />
                                 </template>
                                 <template v-else>
-                                    <IconLockOpen/>
+                                    <IconLockOpen />
                                 </template>
                             </button>
 
@@ -156,7 +167,7 @@ const toggleOnion = () => {
                                 :class="{disabled: layers.length <= 1}"
                                 @click.stop="handleDelete(layer)"
                             >
-                                <IconDelete/>
+                                <IconDelete />
                             </button>
                         </div>
                     </template>
@@ -166,7 +177,7 @@ const toggleOnion = () => {
             <template #dragView="{data: {item: layer}}">
                 <div class="layer-menu-item-drag-view">
                     <div class="layer-menu-item-view">
-                        <LayerView :layer="layer"/>
+                        <LayerView :layer="layer" />
                     </div>
                     <input
                         class="layer-menu-item-name"
@@ -256,7 +267,7 @@ const toggleOnion = () => {
 .current .layer-menu-item-name {
     pointer-events: all;
     cursor: default;
-    color: var(--background-color)
+    color: var(--background-color);
 }
 
 .layer-menu-item-name:focus {
@@ -267,7 +278,6 @@ const toggleOnion = () => {
     outline: none;
     cursor: text;
 }
-
 
 .layer-menu-item-operations {
     display: flex;

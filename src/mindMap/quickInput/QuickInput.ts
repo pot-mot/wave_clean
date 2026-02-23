@@ -1,15 +1,15 @@
 export type QuickInputItem = {
-    id: string,
-    label: string,
-    value: string,
-}
+    id: string;
+    label: string;
+    value: string;
+};
 
 export const getDefaultQuickInputs = () => {
-    let index = -1
+    let index = -1;
     return [
         {id: `${index--}`, label: 'TAB', value: '    '},
         {id: `${index--}`, label: '`', value: '`'},
-        {id: `${index--}`, label: '\'', value: '\''},
+        {id: `${index--}`, label: "'", value: "'"},
         {id: `${index--}`, label: '"', value: '"'},
         {id: `${index--}`, label: '-', value: '-'},
         {id: `${index--}`, label: '_', value: '_'},
@@ -28,5 +28,5 @@ export const getDefaultQuickInputs = () => {
         {id: `${index--}`, label: '/', value: '/'},
         {id: `${index--}`, label: '|', value: '|'},
         {id: `${index--}`, label: '\\', value: '\\'},
-    ]
-}
+    ];
+};

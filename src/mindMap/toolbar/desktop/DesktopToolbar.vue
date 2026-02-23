@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import {useMindMap} from "@/mindMap/useMindMap.ts";
-import LayerMenu from "@/mindMap/layer/LayerMenu.vue";
-import {ref} from "vue";
-import MainMenu from "@/mindMap/mainMenu/MainMenu.vue";
-import IconSave from "@/components/icons/IconSave.vue";
-import IconUndo from "@/components/icons/IconUndo.vue";
-import IconRedo from "@/components/icons/IconRedo.vue";
-import IconFit from "@/components/icons/IconFit.vue";
-import IconMenu from "@/components/icons/IconMenu.vue";
-import IconLayer from "@/components/icons/IconLayer.vue";
-import IconDrag from "@/components/icons/IconDrag.vue";
-import IconSelectRect from "@/components/icons/IconSelectRect.vue";
-import DownloadSelect from "@/mindMap/export/ExportSelect.vue";
+import {useMindMap} from '@/mindMap/useMindMap.ts';
+import LayerMenu from '@/mindMap/layer/LayerMenu.vue';
+import {ref} from 'vue';
+import MainMenu from '@/mindMap/mainMenu/MainMenu.vue';
+import IconSave from '@/components/icons/IconSave.vue';
+import IconUndo from '@/components/icons/IconUndo.vue';
+import IconRedo from '@/components/icons/IconRedo.vue';
+import IconFit from '@/components/icons/IconFit.vue';
+import IconMenu from '@/components/icons/IconMenu.vue';
+import IconLayer from '@/components/icons/IconLayer.vue';
+import IconDrag from '@/components/icons/IconDrag.vue';
+import IconSelectRect from '@/components/icons/IconSelectRect.vue';
+import DownloadSelect from '@/mindMap/export/ExportSelect.vue';
 
 const {
     save,
@@ -23,42 +23,59 @@ const {
     fitView,
     defaultMouseAction,
     toggleDefaultMouseAction,
-} = useMindMap()
+} = useMindMap();
 
-const metaMenuOpen = ref(false)
+const metaMenuOpen = ref(false);
 
-const layersMenuOpen = ref(false)
+const layersMenuOpen = ref(false);
 </script>
 
 <template>
     <div class="toolbar top-left">
-        <button @click="metaMenuOpen = !metaMenuOpen" :class="{enable: metaMenuOpen}">
-            <IconMenu/>
+        <button
+            @click="metaMenuOpen = !metaMenuOpen"
+            :class="{enable: metaMenuOpen}"
+        >
+            <IconMenu />
         </button>
         <button @click="save()">
-            <IconSave/>
+            <IconSave />
         </button>
 
-        <DownloadSelect style="margin-left: 0.5rem; margin-right: 0.5rem;"/>
+        <DownloadSelect style="margin-left: 0.5rem; margin-right: 0.5rem" />
 
-        <button :disabled="!canUndo" @click="undo()" :class="{disabled: !canUndo}">
-            <IconUndo/>
+        <button
+            :disabled="!canUndo"
+            @click="undo()"
+            :class="{disabled: !canUndo}"
+        >
+            <IconUndo />
         </button>
-        <button :disabled="!canRedo" @click="redo()" :class="{disabled: !canRedo}">
-            <IconRedo/>
+        <button
+            :disabled="!canRedo"
+            @click="redo()"
+            :class="{disabled: !canRedo}"
+        >
+            <IconRedo />
         </button>
         <button @click="fitView()">
-            <IconFit/>
+            <IconFit />
         </button>
-        <button @click="toggleDefaultMouseAction()" :class="{enable: defaultMouseAction === 'selectionRect'}">
-            <IconDrag v-if="defaultMouseAction === 'panDrag'"/>
-            <IconSelectRect v-else-if="defaultMouseAction === 'selectionRect'"/>
+        <button
+            @click="toggleDefaultMouseAction()"
+            :class="{enable: defaultMouseAction === 'selectionRect'}"
+        >
+            <IconDrag v-if="defaultMouseAction === 'panDrag'" />
+            <IconSelectRect v-else-if="defaultMouseAction === 'selectionRect'" />
         </button>
     </div>
 
     <div class="toolbar top-right">
-        <button @click="layersMenuOpen = !layersMenuOpen" :class="{enable: layersMenuOpen}">
-            <IconLayer/>
+        <button
+            @click="layersMenuOpen = !layersMenuOpen"
+            :class="{enable: layersMenuOpen}"
+        >
+            <IconLayer />
         </button>
     </div>
 
@@ -69,7 +86,7 @@ const layersMenuOpen = ref(false)
         @keydown.esc="metaMenuOpen = false"
     >
         <div class="container">
-            <MainMenu/>
+            <MainMenu />
         </div>
     </div>
 
@@ -80,7 +97,7 @@ const layersMenuOpen = ref(false)
         @keydown.esc="layersMenuOpen = false"
     >
         <div class="container">
-            <LayerMenu/>
+            <LayerMenu />
         </div>
     </div>
 </template>
@@ -183,7 +200,7 @@ const layersMenuOpen = ref(false)
     transform: translateX(0);
 }
 
-.toolbar.layer-menu > .container{
+.toolbar.layer-menu > .container {
     border-top: var(--border);
     border-bottom: var(--border);
     border-left: var(--border);
@@ -196,4 +213,3 @@ const layersMenuOpen = ref(false)
     transform: translateX(0);
 }
 </style>
-

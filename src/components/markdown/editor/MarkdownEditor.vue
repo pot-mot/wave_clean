@@ -1,189 +1,198 @@
 <script setup lang="ts">
-import {computed, onBeforeUnmount, onMounted, useTemplateRef, watch} from "vue";
-import type {MarkdownEditorElement} from "@/components/markdown/editor/MarkdownEditorElement.ts";
-import type {MarkdownEditorEmits, MarkdownEditorProps} from "@/components/markdown/editor/MarkdownEditorType.ts";
+import {computed, onBeforeUnmount, onMounted, useTemplateRef, watch} from 'vue';
+import type {MarkdownEditorElement} from '@/components/markdown/editor/MarkdownEditorElement.ts';
+import type {
+    MarkdownEditorEmits,
+    MarkdownEditorProps,
+} from '@/components/markdown/editor/MarkdownEditorType.ts';
 
-import {editor} from "monaco-editor/esm/vs/editor/editor.api.js";
+import {editor} from 'monaco-editor/esm/vs/editor/editor.api.js';
 // 导入小图标
-import "monaco-editor/esm/vs/base/browser/ui/codicons/codiconStyles.js";
+import 'monaco-editor/esm/vs/base/browser/ui/codicons/codiconStyles.js';
 // 导入主题
-import "monaco-editor/esm/vs/editor/common/editorTheme.js"
+import 'monaco-editor/esm/vs/editor/common/editorTheme.js';
 // 导入右键菜单
-import "monaco-editor/esm/vs/editor/contrib/contextmenu/browser/contextmenu.js"
+import 'monaco-editor/esm/vs/editor/contrib/contextmenu/browser/contextmenu.js';
 // 导入搜索
-import "monaco-editor/esm/vs/editor/contrib/find/browser/findController.js";
+import 'monaco-editor/esm/vs/editor/contrib/find/browser/findController.js';
 // 导入代码折叠
-import "monaco-editor/esm/vs/editor/contrib/folding/browser/folding.js"
+import 'monaco-editor/esm/vs/editor/contrib/folding/browser/folding.js';
 // 导入注释
-import "monaco-editor/esm/vs/editor/contrib/comment/browser/comment.js";
+import 'monaco-editor/esm/vs/editor/contrib/comment/browser/comment.js';
 // 导入多光标
-import "monaco-editor/esm/vs/editor/contrib/multicursor/browser/multicursor.js";
+import 'monaco-editor/esm/vs/editor/contrib/multicursor/browser/multicursor.js';
 // 代码提示控件
-import "monaco-editor/esm/vs/editor/contrib/suggest/browser/suggestController.js";
+import 'monaco-editor/esm/vs/editor/contrib/suggest/browser/suggestController.js';
 // token解析
-import "monaco-editor/esm/vs/editor/contrib/tokenization/browser/tokenization.js";
-import {initMarkdownEnterCompletion} from "@/components/markdown/editor/completion/enterCompletion.ts";
-import {DefaultToolName, editorTouchSelectionHelp} from "monaco-touch-selection";
-import "monaco-touch-selection/dist/style.css"
-import "@/components/markdown/editor/touchSelection/touch-selection-style-overwrite.css"
+import 'monaco-editor/esm/vs/editor/contrib/tokenization/browser/tokenization.js';
+import {initMarkdownEnterCompletion} from '@/components/markdown/editor/completion/enterCompletion.ts';
+import {DefaultToolName, editorTouchSelectionHelp} from 'monaco-touch-selection';
+import 'monaco-touch-selection/dist/style.css';
+import '@/components/markdown/editor/touchSelection/touch-selection-style-overwrite.css';
 type IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
-import {getTouchClipboard} from "@/components/markdown/editor/touchSelection/touchClipboard.ts";
-import {checkElementParent, judgeTarget} from "@/utils/event/judgeEventTarget.ts";
+import {getTouchClipboard} from '@/components/markdown/editor/touchSelection/touchClipboard.ts';
+import {checkElementParent, judgeTarget} from '@/utils/event/judgeEventTarget.ts';
 
 const modelValue = defineModel<string>({
-    required: true
-})
+    required: true,
+});
 
-const props = defineProps<MarkdownEditorProps>()
+const props = defineProps<MarkdownEditorProps>();
 
-const emits = defineEmits<MarkdownEditorEmits>()
+const emits = defineEmits<MarkdownEditorEmits>();
 
-const elementRef = useTemplateRef<MarkdownEditorElement>('elementRef')
+const elementRef = useTemplateRef<MarkdownEditorElement>('elementRef');
 const editorRef = computed<IStandaloneCodeEditor | null | undefined>({
     get() {
-        return elementRef.value?.editor
+        return elementRef.value?.editor;
     },
     set(newEditor: IStandaloneCodeEditor | null | undefined) {
         if (elementRef.value) {
-            elementRef.value.editor = newEditor
+            elementRef.value.editor = newEditor;
         }
-    }
-})
+    },
+});
 
 onMounted(async () => {
-    const element = elementRef.value
+    const element = elementRef.value;
     if (!element) {
-        throw new Error("MarkdownEditor init fail, element not existed")
+        throw new Error('MarkdownEditor init fail, element not existed');
     }
 
-    const isTouch = typeof window !== 'undefined' && 'ontouchstart' in window
+    const isTouch = typeof window !== 'undefined' && 'ontouchstart' in window;
 
     const editorInstance = editor.create(element, {
-        language: "markdown",
+        language: 'markdown',
         value: modelValue.value,
         theme: props.theme,
         selectOnLineNumbers: false, // 显示行号 默认true
         minimap: {
             enabled: false,
         },
-        lineNumbers: "off",
+        lineNumbers: 'off',
         readOnly: false, // 只读
         fontSize: 16, // 字体大小
         lineHeight: 24,
         padding: {top: 12, bottom: 12},
         tabSize: 4,
         folding: true,
-        wordWrap: "on",
-        wordBreak: "keepAll",
-        wrappingIndent: "none",
+        wordWrap: 'on',
+        wordBreak: 'keepAll',
+        wrappingIndent: 'none',
         scrollBeyondLastLine: true, // 代码后面的空白
         overviewRulerBorder: false, // 不要滚动条的边框
         dragAndDrop: false,
         automaticLayout: true,
         dropIntoEditor: {enabled: true},
-        wordBasedSuggestions: "off",
+        wordBasedSuggestions: 'off',
         contextmenu: !isTouch,
 
         autoClosingBrackets: 'languageDefined', // 是否自动添加结束括号(包括中括号) "always" | "languageDefined" | "beforeWhitespace" | "never"
         autoClosingDelete: 'never', // 是否自动删除结束括号(包括中括号) "always" | "never" | "auto"
         autoClosingQuotes: 'languageDefined', // 是否自动添加结束的单引号 双引号 "always" | "languageDefined" | "beforeWhitespace" | "never"
-        autoSurround: "languageDefined",
-    })
+        autoSurround: 'languageDefined',
+    });
 
     if (isTouch) {
-        const {
-            copy,
-            cut,
-            paste,
-        } = getTouchClipboard(editorInstance, element)
+        const {copy, cut, paste} = getTouchClipboard(editorInstance, element);
         editorTouchSelectionHelp(editorInstance, {
             tools: ({defaultTools, closeMenu}) => {
-                const copyTool = defaultTools.get(DefaultToolName.Copy)
+                const copyTool = defaultTools.get(DefaultToolName.Copy);
                 if (copyTool) {
                     copyTool.action = async () => {
-                        const result = await copy()
-                        if (result) closeMenu()
-                    }
+                        const result = await copy();
+                        if (result) closeMenu();
+                    };
                 }
-                const cutTool = defaultTools.get(DefaultToolName.Cut)
+                const cutTool = defaultTools.get(DefaultToolName.Cut);
                 if (cutTool) {
                     cutTool.action = async () => {
-                        const result = await cut()
-                        if (result) closeMenu()
-                    }
+                        const result = await cut();
+                        if (result) closeMenu();
+                    };
                 }
-                const pasteTool = defaultTools.get(DefaultToolName.Paste)
+                const pasteTool = defaultTools.get(DefaultToolName.Paste);
                 if (pasteTool) {
                     pasteTool.action = async () => {
-                        const result = await paste()
-                        if (result) closeMenu()
-                    }
+                        const result = await paste();
+                        if (result) closeMenu();
+                    };
                 }
-                return defaultTools.values()
-            }
-        })
+                return defaultTools.values();
+            },
+        });
     }
 
-    initMarkdownEnterCompletion(editorInstance)
+    initMarkdownEnterCompletion(editorInstance);
 
     editorInstance.onDidChangeModelContent(() => {
         // // debug tokenizer
         // const model = editorInstance.getModel()!
         // console.log(editor.tokenize(model.getValueInRange(model.getFullModelRange()), model.getLanguageId()))
-        modelValue.value = editorInstance.getValue()
-    })
+        modelValue.value = editorInstance.getValue();
+    });
 
     editorInstance.onDidFocusEditorWidget(() => {
-        emits("focus", editorInstance)
-    })
+        emits('focus', editorInstance);
+    });
     editorInstance.onDidBlurEditorWidget(() => {
-        emits("blur", editorInstance)
-    })
+        emits('blur', editorInstance);
+    });
     editorInstance.onDidChangeModel(() => {
-        emits("change", editorInstance, editorInstance.getValue())
-    })
+        emits('change', editorInstance, editorInstance.getValue());
+    });
 
-    editorRef.value = editorInstance
-})
+    editorRef.value = editorInstance;
+});
 
 onBeforeUnmount(() => {
     if (editorRef.value) {
-        editorRef.value.dispose()
-        editorRef.value = null
+        editorRef.value.dispose();
+        editorRef.value = null;
     }
-})
+});
 
-watch(() => modelValue.value, (value) => {
-    if (editorRef.value?.getValue() !== value) {
-        editorRef.value?.setValue(value)
-    }
-})
+watch(
+    () => modelValue.value,
+    (value) => {
+        if (editorRef.value?.getValue() !== value) {
+            editorRef.value?.setValue(value);
+        }
+    },
+);
 
-watch(() => props.theme, (theme) => {
-    editorRef.value?.updateOptions({
-        theme
-    })
-})
+watch(
+    () => props.theme,
+    (theme) => {
+        editorRef.value?.updateOptions({
+            theme,
+        });
+    },
+);
 
 defineExpose({
     elementRef,
     editorRef,
-})
+});
 
 const protectFoldingTouch = (e: TouchEvent) => {
-    if (judgeTarget(e, (el) =>
-        el.classList.contains("codicon-folding-expanded") ||
-        el.classList.contains("codicon-folding-collapsed")
-    )) {
-        e.preventDefault()
-        e.stopPropagation()
+    if (
+        judgeTarget(
+            e,
+            (el) =>
+                el.classList.contains('codicon-folding-expanded') ||
+                el.classList.contains('codicon-folding-collapsed'),
+        )
+    ) {
+        e.preventDefault();
+        e.stopPropagation();
         e.stopImmediatePropagation();
 
-        const touches = e.touches.length > 0 ? e.touches : e.changedTouches
-        if (!touches[0]) return
+        const touches = e.touches.length > 0 ? e.touches : e.changedTouches;
+        if (!touches[0]) return;
 
-        const touch = touches[0]
-        const simulatedMouseEvent = new MouseEvent("mousedown", {
+        const touch = touches[0];
+        const simulatedMouseEvent = new MouseEvent('mousedown', {
             bubbles: true,
             cancelable: true,
             clientX: touch.clientX,
@@ -192,9 +201,9 @@ const protectFoldingTouch = (e: TouchEvent) => {
             screenY: touch.screenY,
         });
 
-        (e.target as HTMLElement).dispatchEvent(simulatedMouseEvent)
+        (e.target as HTMLElement).dispatchEvent(simulatedMouseEvent);
     }
-}
+};
 </script>
 
 <template>

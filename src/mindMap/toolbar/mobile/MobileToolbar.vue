@@ -1,31 +1,31 @@
 <script setup lang="ts">
-import {MIND_MAP_CONTAINER_ID, useMindMap} from "@/mindMap/useMindMap.ts";
-import {computed, onBeforeUnmount, onMounted, ref, watch} from "vue";
-import LayerMenu from "@/mindMap/layer/LayerMenu.vue";
-import MainMenu from "@/mindMap/mainMenu/MainMenu.vue";
-import IconSave from "@/components/icons/IconSave.vue";
-import IconCopy from "@/components/icons/IconCopy.vue";
-import IconCut from "@/components/icons/IconCut.vue";
-import IconPaste from "@/components/icons/IconPaste.vue";
-import IconFit from "@/components/icons/IconFit.vue";
-import IconUndo from "@/components/icons/IconUndo.vue";
-import IconRedo from "@/components/icons/IconRedo.vue";
-import IconMenu from "@/components/icons/IconMenu.vue";
-import IconSelectRect from "@/components/icons/IconSelectRect.vue";
-import IconLayer from "@/components/icons/IconLayer.vue";
-import IconDelete from "@/components/icons/IconDelete.vue";
-import IconMultiSelect from "@/components/icons/IconMultiSelect.vue";
-import IconSelectAll from "@/components/icons/IconSelectAll.vue";
-import DownloadSelect from "@/mindMap/export/ExportSelect.vue";
+import {MIND_MAP_CONTAINER_ID, useMindMap} from '@/mindMap/useMindMap.ts';
+import {computed, onBeforeUnmount, onMounted, ref, watch} from 'vue';
+import LayerMenu from '@/mindMap/layer/LayerMenu.vue';
+import MainMenu from '@/mindMap/mainMenu/MainMenu.vue';
+import IconSave from '@/components/icons/IconSave.vue';
+import IconCopy from '@/components/icons/IconCopy.vue';
+import IconCut from '@/components/icons/IconCut.vue';
+import IconPaste from '@/components/icons/IconPaste.vue';
+import IconFit from '@/components/icons/IconFit.vue';
+import IconUndo from '@/components/icons/IconUndo.vue';
+import IconRedo from '@/components/icons/IconRedo.vue';
+import IconMenu from '@/components/icons/IconMenu.vue';
+import IconSelectRect from '@/components/icons/IconSelectRect.vue';
+import IconLayer from '@/components/icons/IconLayer.vue';
+import IconDelete from '@/components/icons/IconDelete.vue';
+import IconMultiSelect from '@/components/icons/IconMultiSelect.vue';
+import IconSelectAll from '@/components/icons/IconSelectAll.vue';
+import DownloadSelect from '@/mindMap/export/ExportSelect.vue';
 import {
     checkElementParent,
     checkIsInputOrTextarea,
-    getMatchedElementOrParent
-} from "@/utils/event/judgeEventTarget.ts";
-import {useFocusTargetStore} from "@/store/focusTargetStore.ts";
-import QuickInputBar from "@/mindMap/quickInput/QuickInputBar.vue";
-import {checkIsMarkdownEditorElement} from "@/components/markdown/editor/MarkdownEditorElement.ts";
-import IconDotsVertical from "@/components/icons/IconDotsVertical.vue";
+    getMatchedElementOrParent,
+} from '@/utils/event/judgeEventTarget.ts';
+import {useFocusTargetStore} from '@/store/focusTargetStore.ts';
+import QuickInputBar from '@/mindMap/quickInput/QuickInputBar.vue';
+import {checkIsMarkdownEditorElement} from '@/components/markdown/editor/MarkdownEditorElement.ts';
+import IconDotsVertical from '@/components/icons/IconDotsVertical.vue';
 
 const {
     save,
@@ -47,152 +47,170 @@ const {
     copy,
     cut,
     paste,
-} = useMindMap()
+} = useMindMap();
 
-const metaMenuOpen = ref(false)
+const metaMenuOpen = ref(false);
 
-const layersMenuOpen = ref(false)
+const layersMenuOpen = ref(false);
 
-const clipboardMenuOpen = ref(false)
+const clipboardMenuOpen = ref(false);
 
 const toggleClipboardMenuShow = () => {
-    clipboardMenuOpen.value = !clipboardMenuOpen.value
-}
+    clipboardMenuOpen.value = !clipboardMenuOpen.value;
+};
 
 /**
  * 监听返回键行为，拦截返回键并关闭当前菜单
  */
 const handleBackState = (): boolean => {
     if (metaMenuOpen.value) {
-        metaMenuOpen.value = false
-        return false
+        metaMenuOpen.value = false;
+        return false;
     } else if (layersMenuOpen.value) {
-        layersMenuOpen.value = false
-        return false
+        layersMenuOpen.value = false;
+        return false;
     }
-    return true
-}
+    return true;
+};
 
 onMounted(() => {
     // @ts-ignore
-    window.touchBackCallback = handleBackState
-})
+    window.touchBackCallback = handleBackState;
+});
 
 onBeforeUnmount(() => {
     // @ts-ignore
-    window.touchBackCallback = null
-})
+    window.touchBackCallback = null;
+});
 
 /**
  * 检查聚焦元素
  */
-const focusTargetStore = useFocusTargetStore()
+const focusTargetStore = useFocusTargetStore();
 
 const isMindMapNodeOrEdgeFocused = computed(() => {
     if (!currentLayer.value.vueFlow.vueFlowRef.value) {
-        return false
+        return false;
     }
-    const currentLayerElement = currentLayer.value.vueFlow.vueFlowRef.value
+    const currentLayerElement = currentLayer.value.vueFlow.vueFlowRef.value;
 
-    const focusTarget = focusTargetStore.focusTarget.value
+    const focusTarget = focusTargetStore.focusTarget.value;
     if (!(focusTarget instanceof Element)) {
-        return false
+        return false;
     }
 
-    const nodeOrEdgeParent = getMatchedElementOrParent(focusTarget, (el) =>
-        el.classList.contains("content-edge") || el.classList.contains("content-edge")
-    )
+    const nodeOrEdgeParent = getMatchedElementOrParent(
+        focusTarget,
+        (el) => el.classList.contains('content-edge') || el.classList.contains('content-edge'),
+    );
 
-    return nodeOrEdgeParent !== null && checkElementParent(nodeOrEdgeParent, currentLayerElement)
-})
+    return nodeOrEdgeParent !== null && checkElementParent(nodeOrEdgeParent, currentLayerElement);
+});
 
 const isMindMapInputFocused = computed<boolean>(() => {
     if (!currentLayer.value.vueFlow.vueFlowRef.value) {
-        return false
+        return false;
     }
-    const currentLayerElement = currentLayer.value.vueFlow.vueFlowRef.value
+    const currentLayerElement = currentLayer.value.vueFlow.vueFlowRef.value;
 
-    const focusTarget = focusTargetStore.focusTarget.value
+    const focusTarget = focusTargetStore.focusTarget.value;
     if (!(focusTarget instanceof Element)) {
-        return false
+        return false;
     }
 
     if (currentLayer.value.lock) {
-        return false
+        return false;
     }
 
     // 判断是否是基础输入类型
-    const isInputType = checkIsInputOrTextarea(focusTarget)
+    const isInputType = checkIsInputOrTextarea(focusTarget);
     // 判断是否是Markdown编辑器
-    const isMarkdownEditor = checkIsMarkdownEditorElement(focusTarget)
+    const isMarkdownEditor = checkIsMarkdownEditorElement(focusTarget);
 
     if (isInputType || isMarkdownEditor) {
         // 是否在思维导图容器内
-        const inLayer = checkElementParent(focusTarget, currentLayerElement)
+        const inLayer = checkElementParent(focusTarget, currentLayerElement);
 
         if (inLayer) {
-            return true
+            return true;
         }
     }
 
     if (isInputType) {
         // 是否有Markdown编辑器父级
-        const markdownParent = getMatchedElementOrParent(focusTarget, (el) => checkIsMarkdownEditorElement(el))
+        const markdownParent = getMatchedElementOrParent(focusTarget, (el) =>
+            checkIsMarkdownEditorElement(el),
+        );
         if (markdownParent === null) {
-            return false
+            return false;
         }
 
         // Markdown编辑器父级是否在思维导图容器内
-        const parentInLayer = checkElementParent(markdownParent, currentLayerElement)
+        const parentInLayer = checkElementParent(markdownParent, currentLayerElement);
         if (parentInLayer) {
-            return true
+            return true;
         }
 
         // Markdown编辑器父级是否在思维导图容器内
-        const parentInMindMapContainer = getMatchedElementOrParent(focusTarget, el => el.id === MIND_MAP_CONTAINER_ID) !== null
+        const parentInMindMapContainer =
+            getMatchedElementOrParent(focusTarget, (el) => el.id === MIND_MAP_CONTAINER_ID) !==
+            null;
         if (parentInMindMapContainer) {
-            return true
+            return true;
         }
     }
 
-    return false
-})
+    return false;
+});
 
 watch(
     () => {
-        return isMindMapNodeOrEdgeFocused.value ||
+        return (
+            isMindMapNodeOrEdgeFocused.value ||
             isMindMapInputFocused.value ||
             metaMenuOpen.value ||
             layersMenuOpen.value
+        );
     },
     (otherOpenValue) => {
         if (otherOpenValue) {
-            clipboardMenuOpen.value = false
+            clipboardMenuOpen.value = false;
         }
-    }
-)
+    },
+);
 </script>
 
 <template>
-    <div class="toolbar top" :class="{open: !metaMenuOpen}">
+    <div
+        class="toolbar top"
+        :class="{open: !metaMenuOpen}"
+    >
         <div class="container">
-            <button @click="metaMenuOpen = !metaMenuOpen" :class="{enable: metaMenuOpen}" style="padding-left: 1rem;">
-                <IconMenu/>
+            <button
+                @click="metaMenuOpen = !metaMenuOpen"
+                :class="{enable: metaMenuOpen}"
+                style="padding-left: 1rem"
+            >
+                <IconMenu />
             </button>
             <button @click="save()">
-                <IconSave/>
+                <IconSave />
             </button>
 
-            <DownloadSelect style="margin-left: 0.5rem;"/>
+            <DownloadSelect style="margin-left: 0.5rem" />
         </div>
 
         <div class="container">
             <button @click="fitView()">
-                <IconFit/>
+                <IconFit />
             </button>
 
-            <button @click="toggleClipboardMenuShow" :class="{enable: clipboardMenuOpen}" style="padding-right: 1rem;">
-                <IconDotsVertical/>
+            <button
+                @click="toggleClipboardMenuShow"
+                :class="{enable: clipboardMenuOpen}"
+                style="padding-right: 1rem"
+            >
+                <IconDotsVertical />
             </button>
         </div>
     </div>
@@ -200,22 +218,25 @@ watch(
     <div
         class="toolbar right-top"
         :class="{
-            open: clipboardMenuOpen
+            open: clipboardMenuOpen,
         }"
     >
         <div class="container">
             <button @click="copy()">
-                <IconCopy/>
+                <IconCopy />
             </button>
             <button @click="cut()">
-                <IconCut/>
+                <IconCut />
             </button>
             <button @click="paste()">
-                <IconPaste/>
+                <IconPaste />
             </button>
 
-            <button @click="removeSelection()" v-if="graphSelection.selectedCount.value > 1">
-                <IconDelete color="var(--danger-color)"/>
+            <button
+                @click="removeSelection()"
+                v-if="graphSelection.selectedCount.value > 1"
+            >
+                <IconDelete color="var(--danger-color)" />
             </button>
         </div>
     </div>
@@ -223,35 +244,54 @@ watch(
     <div
         class="toolbar bottom"
         :class="{
-            open: !isMindMapInputFocused && !metaMenuOpen
+            open: !isMindMapInputFocused && !metaMenuOpen,
         }"
     >
         <div class="container">
-            <button @click="graphSelection.toggleSelectAll()" style="padding-left: 1rem;">
-                <IconSelectAll/>
+            <button
+                @click="graphSelection.toggleSelectAll()"
+                style="padding-left: 1rem"
+            >
+                <IconSelectAll />
             </button>
 
-            <button @click="toggleMultiSelect()"
-                    :class="{enable: canMultiSelect && defaultMouseAction !== 'selectionRect'}">
-                <IconMultiSelect/>
+            <button
+                @click="toggleMultiSelect()"
+                :class="{enable: canMultiSelect && defaultMouseAction !== 'selectionRect'}"
+            >
+                <IconMultiSelect />
             </button>
 
-            <button @click="toggleDefaultMouseAction()" :class="{enable: defaultMouseAction === 'selectionRect'}">
-                <IconSelectRect/>
+            <button
+                @click="toggleDefaultMouseAction()"
+                :class="{enable: defaultMouseAction === 'selectionRect'}"
+            >
+                <IconSelectRect />
             </button>
         </div>
 
         <div class="container">
-            <button :disabled="!canUndo" @click="undo()" :class="{disabled: !canUndo}">
-                <IconUndo/>
+            <button
+                :disabled="!canUndo"
+                @click="undo()"
+                :class="{disabled: !canUndo}"
+            >
+                <IconUndo />
             </button>
-            <button :disabled="!canRedo" @click="redo()" :class="{disabled: !canRedo}">
-                <IconRedo/>
+            <button
+                :disabled="!canRedo"
+                @click="redo()"
+                :class="{disabled: !canRedo}"
+            >
+                <IconRedo />
             </button>
 
-            <button @click="layersMenuOpen = !layersMenuOpen" :class="{enable: layersMenuOpen}"
-                    style="padding-right: 1rem; margin-left: 0.5rem;">
-                <IconLayer/>
+            <button
+                @click="layersMenuOpen = !layersMenuOpen"
+                :class="{enable: layersMenuOpen}"
+                style="padding-right: 1rem; margin-left: 0.5rem"
+            >
+                <IconLayer />
             </button>
         </div>
     </div>
@@ -259,10 +299,10 @@ watch(
     <div
         class="toolbar quick-input"
         :class="{
-            open: isMindMapInputFocused && !metaMenuOpen
+            open: isMindMapInputFocused && !metaMenuOpen,
         }"
     >
-        <QuickInputBar/>
+        <QuickInputBar />
     </div>
 
     <div
@@ -271,7 +311,7 @@ watch(
         @click.self="metaMenuOpen = false"
     >
         <div class="container">
-            <MainMenu/>
+            <MainMenu />
         </div>
     </div>
 
@@ -281,7 +321,7 @@ watch(
         @click.self="layersMenuOpen = false"
     >
         <div class="container">
-            <LayerMenu/>
+            <LayerMenu />
         </div>
     </div>
 </template>
