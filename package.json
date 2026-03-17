@@ -25,6 +25,7 @@
         ]
     },
     "dependencies": {
+        "@potmot/command-history": "^0.0.0",
         "@tauri-apps/api": "^2.10.1",
         "@tauri-apps/plugin-clipboard-manager": "~2.3.2",
         "@tauri-apps/plugin-dialog": "~2.6.0",
@@ -36,7 +37,7 @@
         "ajv": "^8.18.0",
         "clipboard-polyfill": "^4.1.1",
         "core-js": "^3.48.0",
-        "file-type": "^21.3.0",
+        "file-type": "^21.3.3",
         "html-to-image": "^1.11.13",
         "katex": "^0.16.33",
         "lodash-es": "^4.17.23",
@@ -70,6 +71,7 @@
         "@types/tinycolor2": "^1.4.6",
         "@vitejs/plugin-vue": "^6.0.4",
         "@vitejs/plugin-vue-jsx": "^5.1.4",
+        "@vue/test-utils": "^2.4.6",
         "@vue/tsconfig": "^0.8.1",
         "husky": "^9.1.7",
         "jsdom": "^27.4.0",

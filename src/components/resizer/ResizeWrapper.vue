@@ -8,6 +8,7 @@ import {
     type ResizeOrigin,
     type ResizeStartEventArgs,
     type ResizeStopEventArgs,
+    type ResizeWrapperProps,
 } from '@/components/resizer/ResizeWrapperType.ts';
 
 const size = defineModel<{
@@ -17,25 +18,12 @@ const size = defineModel<{
     required: true,
 });
 
-const props = withDefaults(
-    defineProps<{
-        zoom?: number;
-        disabled?: boolean;
-        handleSize?: string;
-        borderWidth?: string;
-
-        minWidth?: number;
-        maxWidth?: number;
-        minHeight?: number;
-        maxHeight?: number;
-    }>(),
-    {
-        zoom: 1,
-        disabled: false,
-        handleSize: '8px',
-        borderWidth: '2px',
-    },
-);
+const props = withDefaults(defineProps<ResizeWrapperProps>(), {
+    zoom: 1,
+    disabled: false,
+    handleSize: '8px',
+    borderWidth: '2px',
+});
 
 watch(
     () => size.value.width,
@@ -44,7 +32,7 @@ watch(
             size.value.width = Math.max(newValue, props.minWidth);
         }
         if (props.maxWidth !== undefined) {
-            size.value.width = Math.min(newValue, props.maxWidth);
+            size.value.width = Math.min(size.value.width, props.maxWidth);
         }
     },
     {immediate: true},
@@ -57,7 +45,7 @@ watch(
             size.value.height = Math.max(newValue, props.minHeight);
         }
         if (props.maxHeight !== undefined) {
-            size.value.height = Math.min(newValue, props.maxHeight);
+            size.value.height = Math.min(size.value.height, props.maxHeight);
         }
     },
     {immediate: true},

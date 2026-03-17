@@ -32,3 +32,14 @@ export type ResizeStopEventArgs = {
     currentSize: {width: number; height: number};
     totalSizeDiff: {x: number; y: number};
 };
+
+export type ResizeWrapperProps = {
+    zoom?: number;
+    disabled?: boolean;
+    handleSize?: string;
+    borderWidth?: string;
+    minWidth?: number;
+    maxWidth?: number;
+    minHeight?: number;
+    maxHeight?: number;
+};

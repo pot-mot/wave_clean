@@ -1,4 +1,4 @@
-import {type CommandDefinition, useCommandHistory} from '@/history/commandHistory.ts';
+import {type CommandDefinition, useCommandHistory} from '@potmot/command-history';
 import {
     type GraphEdge,
     type GraphNode,
