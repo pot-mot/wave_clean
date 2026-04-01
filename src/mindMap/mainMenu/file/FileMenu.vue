@@ -48,13 +48,16 @@ const handleLoad = async () => {
 };
 
 const handleOpen = async (key: string) => {
-    await sendConfirm({
-        title: translate('toggle_file_save_confirm'),
-        content: `${translate(`save`)}${translate('mindMap')}[${mindMapStore.currentMindMap.value?.name}]`,
-        onConfirm: async () => {
-            await mindMapStore.save();
-        },
-    });
+    const shouldSave = await mindMapStore.shouldSave();
+    if (shouldSave) {
+        await sendConfirm({
+            title: translate('toggle_file_save_confirm'),
+            content: `${translate(`save`)}${translate('mindMap')}[${mindMapStore.currentMindMap.value?.name}]`,
+            onConfirm: async () => {
+                await mindMapStore.save();
+            },
+        });
+    }
     await mindMapStore.toggle(key);
 };
 

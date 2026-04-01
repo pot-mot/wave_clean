@@ -340,6 +340,22 @@ export const useMindMapStore = createStore(() => {
 
     const mindMapStore = useMindMap();
 
+    const shouldSave = async (
+        key: string | undefined = meta.value.currentKey,
+    ): Promise<boolean> => {
+        return await withLoading('Should Save MindMap?', async () => {
+            if (key === undefined) return true;
+
+            const isExisted = await jsonFileOperations.isExisted(key);
+            if (!isExisted) {
+                return true;
+            }
+
+            const data = await jsonFileOperations.get(key);
+            return data !== JSON.stringify(mindMapStore.getMindMapData());
+        });
+    };
+
     const save = async (key: string | undefined = meta.value.currentKey) => {
         if (key === undefined) {
             sendMessage('Please create a new MindMap', {type: 'warning'});
@@ -421,6 +437,7 @@ export const useMindMapStore = createStore(() => {
         rename,
         remove,
         get,
+        shouldSave,
         save,
         toggle,
         load,
