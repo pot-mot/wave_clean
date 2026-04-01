@@ -44,6 +44,8 @@ export type MainLocale = {
     remove_mindMap_success: string;
     remove_mindMap_fail: string;
 
+    toggle_file_save_confirm: string;
+
     remove_success: string;
 
     path_select_cancel: string;
