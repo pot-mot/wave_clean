@@ -7,6 +7,7 @@ import MindMapBackground from '@/mindMap/background/MindMapBackground.vue';
 import {judgeTargetIsInteraction} from '@/utils/event/judgeEventTarget.ts';
 import {useDeviceStore} from '@/store/deviceStore.ts';
 import MindMapSelectionRect from '@/mindMap/selectionRect/MindMapSelectionRect.vue';
+import HelperLines from '@/mindMap/helperLines/HelperLines.vue';
 
 const {isTouchDevice} = useDeviceStore();
 
@@ -143,6 +144,8 @@ const handleKeyDown = async (e: KeyboardEvent) => {
             :layer="layer"
             :index="index"
         />
+
+        <HelperLines />
 
         <MindMapSelectionRect :rect="selectionRect" />
 
