@@ -484,6 +484,11 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
             sendMessage(translate('layer_is_locked'));
             return;
         }
+        if (
+            (data.nodes === undefined && data.edges === undefined) ||
+            (data.nodes?.length === 0 && data.edges?.length === 0)
+        )
+            return;
 
         blurActiveElement();
         history.executeCommand('remove', {...data, layerId: currentLayerId.value});
@@ -1430,7 +1435,10 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         set: async (data: MindMapData) => {
             const {layers, currentLayer} = layerDataToLayers(data);
             global.zIndexIncrement = data.zIndexIncrement;
-            global.layers.splice(0, global.layers.length, ...layers);
+            const removedLayers = global.layers.splice(0, global.layers.length, ...layers);
+            for (const layer of removedLayers) {
+                layer.vueFlow.$destroy();
+            }
             currentViewport.value = data.transform;
             toggleLayer(currentLayer.id);
             history.clean();
