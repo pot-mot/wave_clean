@@ -8,6 +8,7 @@ import {useMarkdownImageImport} from '@/components/markdown/editor/image/markdow
 import {registerCustomCommands} from '@/components/markdown/editor/command/customCommand.ts';
 import {initMindMapStore} from '@/store/mindMapStore.ts';
 import {onBeforeMount} from 'vue';
+import {initCloseSave} from '@/mindMap/closeConfirm/closeConfirm.ts';
 
 initDeviceStore();
 initThemeStore();
@@ -19,6 +20,7 @@ useMarkdownImageImport();
 
 onBeforeMount(async () => {
     await initMindMapStore();
+    await initCloseSave();
 });
 </script>
 

@@ -46,7 +46,8 @@ export const localeEn: MainLocale = {
     remove_mindMap_fail: 'Remove MindMap Fail',
     remove_mindMap_success: 'Remove MindMap Success',
 
-    toggle_file_save_confirm: 'Save Confirm',
+    save_confirm: 'Save Confirm',
+    save_confirm_content: (target: string) => `Are you sure to save ${target}?`,
 
     remove_success: '删除成功',
 

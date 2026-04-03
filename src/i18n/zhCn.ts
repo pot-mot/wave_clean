@@ -46,7 +46,8 @@ export const localeZhCn: MainLocale = {
     remove_mindMap_success: '删除成功',
     remove_mindMap_fail: '删除失败',
 
-    toggle_file_save_confirm: '保存确认',
+    save_confirm: '保存确认',
+    save_confirm_content: (target: string) => `确定要保存 ${target} 吗？`,
 
     remove_success: '移除成功',
 
