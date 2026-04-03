@@ -26,6 +26,8 @@ import {useFocusTargetStore} from '@/store/focusTargetStore.ts';
 import QuickInputBar from '@/mindMap/quickInput/QuickInputBar.vue';
 import {checkIsMarkdownEditorElement} from '@/components/markdown/editor/MarkdownEditorElement.ts';
 import IconDotsVertical from '@/components/icons/IconDotsVertical.vue';
+import {useMindMapStore} from '@/store/mindMapStore.ts';
+import {confirmSave} from '@/mindMap/closeSave/closeSave.ts';
 
 const {
     save,
@@ -62,13 +64,19 @@ const toggleClipboardMenuShow = () => {
 /**
  * 监听返回键行为，拦截返回键并关闭当前菜单
  */
-const handleBackState = (): boolean => {
+const handleBackState = async (): Promise<boolean> => {
     if (metaMenuOpen.value) {
         metaMenuOpen.value = false;
         return false;
     } else if (layersMenuOpen.value) {
         layersMenuOpen.value = false;
         return false;
+    }
+
+    const mindMapStore = useMindMapStore();
+    const shouldSave = await mindMapStore.shouldSave();
+    if (shouldSave) {
+        return await confirmSave();
     }
     return true;
 };

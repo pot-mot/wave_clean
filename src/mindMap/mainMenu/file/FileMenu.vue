@@ -15,6 +15,7 @@ import {withLoading} from '@/components/loading/loadingApi.ts';
 import IconLoad from '@/components/icons/IconLoad.vue';
 import {readJson, removeJsonSuffix} from '@/utils/file/jsonRead.ts';
 import {validateMindMapData} from '@/mindMap/MindMapData.ts';
+import {confirmSave} from '@/mindMap/closeSave/closeSave.ts';
 
 const mindMapStore = useMindMapStore();
 
@@ -50,16 +51,7 @@ const handleLoad = async () => {
 const handleOpen = async (key: string) => {
     const shouldSave = await mindMapStore.shouldSave();
     if (shouldSave) {
-        await sendConfirm({
-            title: translate('save_confirm'),
-            content: translate({
-                key: 'save_confirm_content',
-                args: [`[${mindMapStore.currentMindMap.value?.name}]`],
-            }),
-            onConfirm: async () => {
-                await mindMapStore.save();
-            },
-        });
+        await confirmSave();
     }
     await mindMapStore.toggle(key);
 };
