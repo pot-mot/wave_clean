@@ -1,14 +1,14 @@
 {
     "name": "wave_clean",
     "private": true,
-    "version": "0.2.1",
+    "version": "0.2.2",
     "type": "module",
     "scripts": {
         "dev": "vite",
         "dev-browser": "vite --mode browser",
         "test": "vitest run",
         "prepare": "husky",
-        "lint:pritter": "prettier --write src/",
+        "lint:prettier": "prettier --write src/",
         "type-check": "vue-tsc --build --force",
         "build": "vue-tsc --noEmit && vite build --mode tauri",
         "build-for-browser": "vue-tsc --noEmit && vite build --mode browser",
