@@ -54,6 +54,8 @@ const viewportRect = computed(() => {
     };
 });
 
+let beforeAddId: string | undefined;
+
 const produceNodeChange = (changes: NodeChange[]) => {
     horizontal.value = undefined;
     vertical.value = undefined;
@@ -61,7 +63,18 @@ const produceNodeChange = (changes: NodeChange[]) => {
     if (changes.length > 1) return;
     const change = changes[0];
     if (!change) return;
-    if (!('id' in change)) return;
+
+    if (change.type === 'add') {
+        beforeAddId = change.item.id;
+        return;
+    }
+    if (!('id' in change) || !('type' in change)) return;
+    // ignore add next change
+    if (beforeAddId === change.id) {
+        beforeAddId = undefined;
+        return;
+    }
+
     if (!('position' in change) && !('dimensions' in change)) return;
 
     const nodeA = vueFlow.value.nodes.value.find((node) => node.id === change.id);

@@ -106,6 +106,24 @@ export const getHelperLines = (
             verticalDistance = distanceRightLeft;
         }
 
+        //    |‾‾‾‾‾‾‾‾‾‾‾|
+        //    |     A     |
+        //    |___________|
+        //          |
+        //          |
+        //    |‾‾‾‾‾‾‾‾‾‾‾|
+        //    |     B     |
+        //    |___________|
+        const centerX_A = nodeA.left + nodeA.width / 2;
+        const centerX_B = nodeB.left + nodeB.width / 2;
+        const distanceCenterX = Math.abs(centerX_A - centerX_B);
+
+        if (distanceCenterX < verticalDistance) {
+            result.snapPosition.x = nodeB.left + (nodeB.width - nodeA.width) / 2;
+            result.vertical = {target: nodeB, value: centerX_B};
+            verticalDistance = distanceCenterX;
+        }
+
         //  |‾‾‾‾‾‾‾‾‾‾‾|‾‾‾‾‾|‾‾‾‾‾‾‾‾‾‾‾|
         //  |     A     |     |     B     |
         //  |___________|     |___________|
@@ -154,6 +172,19 @@ export const getHelperLines = (
             result.snapPosition.y = nodeB.bottom;
             result.horizontal = {target: nodeB, value: nodeB.bottom};
             horizontalDistance = distanceTopBottom;
+        }
+
+        //  |‾‾‾‾‾‾‾‾‾‾‾|     |‾‾‾‾‾‾‾‾‾‾‾|
+        //  |     A     |-----|     B     |
+        //  |___________|     |___________|
+        const centerY_A = nodeA.top + nodeA.height / 2;
+        const centerY_B = nodeB.top + nodeB.height / 2;
+        const distanceCenterY = Math.abs(centerY_A - centerY_B);
+
+        if (distanceCenterY < horizontalDistance) {
+            result.snapPosition.y = nodeB.top + (nodeB.height - nodeA.height) / 2;
+            result.horizontal = {target: nodeB, value: centerY_B};
+            horizontalDistance = distanceCenterY;
         }
     }
 
