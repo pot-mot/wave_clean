@@ -16,13 +16,11 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2.3.1", features = [] }
 
 [dependencies]
-tauri = { version = "2.10.0", features = ["image-png"] }
-tauri-plugin-opener = "2"
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-tauri-plugin-fs = "2"
-tauri-plugin-clipboard-manager = "2"
-tauri-plugin-dialog = "2"
-tauri-plugin-os = "2"
-tokio = "1.50.0"
+tauri = { version = "2.10.3", features = ["image-png"] }
+tauri-plugin-opener = "2.5.3"
+tauri-plugin-fs = "2.5.0"
+tauri-plugin-clipboard-manager = "2.3.2"
+tauri-plugin-dialog = "2.7.0"
+tauri-plugin-os = "2.3.2"
+tokio = "1.51.0"
 

@@ -33,7 +33,7 @@ export const initCloseSave = () =>
             debugger;
             const appWindow = getCurrentWindow();
 
-            await listen('before-save', async () => {
+            await listen('before-exit', async () => {
                 const shouldSave = await useMindMapStore().shouldSave();
 
                 if (shouldSave) {
