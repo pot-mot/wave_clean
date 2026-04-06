@@ -66,7 +66,7 @@ const viewportRect = computed(() => {
     };
 });
 
-let beforeAddId: string | undefined;
+const beforeAddIdSet = new Set<string>();
 
 const produceNodeChange = (changes: NodeChange[]) => {
     hSnapLine.value = undefined;
@@ -74,22 +74,27 @@ const produceNodeChange = (changes: NodeChange[]) => {
     hSpacingLines.value = [];
     vSpacingLines.value = [];
 
+    const addIds = changes.filter((change) => change.type === 'add').map((it) => it.item.id);
+    if (addIds.length > 0) {
+        for (const addId of addIds) {
+            beforeAddIdSet.add(addId);
+        }
+        setTimeout(() => {
+            for (const addId of addIds) {
+                beforeAddIdSet.delete(addId);
+            }
+        }, 200);
+    }
+
     if (changes.length > 1) return;
     const change = changes[0];
     if (!change) return;
 
-    if (change.type === 'add') {
-        beforeAddId = change.item.id;
-        return;
-    }
-    if (!('id' in change) || !('type' in change)) return;
-    // ignore add next change
-    if (beforeAddId === change.id) {
-        beforeAddId = undefined;
-        return;
-    }
+    if (!('id' in change)) return;
+    // ignore add change
+    if (beforeAddIdSet.has(change.id)) return;
 
-    if (!('position' in change) && !('dimensions' in change)) return;
+    if (change.type !== 'position' && change.type !== 'dimensions') return;
 
     const nodeA = vueFlow.value.nodes.value.find((node) => node.id === change.id);
     if (!nodeA) return;
@@ -181,33 +186,33 @@ const produceNodeChange = (changes: NodeChange[]) => {
         };
     }
 
-    const hSpacingGroup = getHorizontalSpacingAlign(nodeABounds, nodeBounds);
-    const vSpacingGroup = getVerticalSpacingAlign(nodeABounds, nodeBounds);
-
     // 应用间距对齐的 snap position
     if ('position' in change) {
+        const hSpacingGroup = getHorizontalSpacingAlign(nodeABounds, nodeBounds);
+        const vSpacingGroup = getVerticalSpacingAlign(nodeABounds, nodeBounds);
+
         if (hSpacingGroup?.snapX !== undefined) {
             change.position.x = hSpacingGroup.snapX;
         }
         if (vSpacingGroup?.snapY !== undefined) {
             change.position.y = vSpacingGroup.snapY;
         }
-    }
 
-    // 设置间距辅助线
-    if (hSpacingGroup?.lines) {
-        hSpacingLines.value = hSpacingGroup.lines.map((line) => ({
-            startX: xGraphToCanvas(line.startX),
-            endX: xGraphToCanvas(line.endX),
-            y: yGraphToCanvas(line.y),
-        }));
-    }
-    if (vSpacingGroup?.lines) {
-        vSpacingLines.value = vSpacingGroup.lines.map((line) => ({
-            x: xGraphToCanvas(line.x),
-            startY: yGraphToCanvas(line.startY),
-            endY: yGraphToCanvas(line.endY),
-        }));
+        // 设置间距辅助线
+        if (hSpacingGroup?.lines) {
+            hSpacingLines.value = hSpacingGroup.lines.map((line) => ({
+                startX: xGraphToCanvas(line.startX),
+                endX: xGraphToCanvas(line.endX),
+                y: yGraphToCanvas(line.y),
+            }));
+        }
+        if (vSpacingGroup?.lines) {
+            vSpacingLines.value = vSpacingGroup.lines.map((line) => ({
+                x: xGraphToCanvas(line.x),
+                startY: yGraphToCanvas(line.startY),
+                endY: yGraphToCanvas(line.endY),
+            }));
+        }
     }
 
     vueFlow.value.nodes.value = vueFlow.value.applyNodeChanges([change]);
@@ -225,7 +230,28 @@ watch(
     },
 );
 
-const updateCanvasHelperLines = () => {
+const cleanHelperLines = () => {
+    hSnapLine.value = undefined;
+    vSnapLine.value = undefined;
+    hSpacingLines.value = [];
+    vSpacingLines.value = [];
+
+    const canvas = canvasRef.value;
+    const ctx = canvas?.getContext('2d');
+
+    if (!ctx || !canvas) {
+        return;
+    }
+
+    const dpi = window.devicePixelRatio;
+    canvas.width = width.value * dpi;
+    canvas.height = height.value * dpi;
+
+    ctx.scale(dpi, dpi);
+    ctx.clearRect(0, 0, width.value, height.value);
+};
+
+const drawHelperLines = () => {
     const canvas = canvasRef.value;
     const ctx = canvas?.getContext('2d');
 
@@ -298,18 +324,14 @@ const updateCanvasHelperLines = () => {
 };
 
 watch(
-    () => [
-        width.value,
-        height.value,
-        x.value,
-        y.value,
-        zoom.value,
-        hSnapLine.value,
-        vSnapLine.value,
-        hSpacingLines.value,
-        vSpacingLines.value,
-    ],
-    () => updateCanvasHelperLines(),
+    () => [width.value, height.value, x.value, y.value, zoom.value],
+    () => cleanHelperLines(),
+    {immediate: true},
+);
+
+watch(
+    () => [hSnapLine.value, vSnapLine.value, hSpacingLines.value, vSpacingLines.value],
+    () => drawHelperLines(),
     {immediate: true},
 );
 </script>
