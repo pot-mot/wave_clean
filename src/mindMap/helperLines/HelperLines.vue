@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {computed, ref, useTemplateRef, watch} from 'vue';
 import {useMindMap} from '@/mindMap/useMindMap.ts';
-import type {NodeChange, VueFlowStore} from '@vue-flow/core';
+import type {NodeChange, NodePositionChange, VueFlowStore} from '@vue-flow/core';
 import {getSnapLines} from '@/mindMap/helperLines/snapLines.ts';
 import {useThemeStore} from '@/store/themeStore.ts';
 import type {NodeBounds} from '@/mindMap/helperLines/type/NodeBounds.ts';
@@ -66,61 +66,19 @@ const viewportRect = computed(() => {
     };
 });
 
-const beforeAddIdSet = new Set<string>();
-
-const produceNodeChange = (changes: NodeChange[]) => {
-    hSnapLine.value = undefined;
-    vSnapLine.value = undefined;
-    hSpacingLines.value = [];
-    vSpacingLines.value = [];
-
-    const addIds = changes.filter((change) => change.type === 'add').map((it) => it.item.id);
-    if (addIds.length > 0) {
-        for (const addId of addIds) {
-            beforeAddIdSet.add(addId);
-        }
-        setTimeout(() => {
-            for (const addId of addIds) {
-                beforeAddIdSet.delete(addId);
-            }
-        }, 200);
-    }
-
-    if (changes.length > 1) return;
-    const change = changes[0];
-    if (!change) return;
-
-    if (!('id' in change)) return;
-    // ignore add change
-    if (beforeAddIdSet.has(change.id)) return;
-
-    if (change.type !== 'position' && change.type !== 'dimensions') return;
-
+const handleNodeSinglePositionChange = (change: NodePositionChange) => {
     const nodeA = vueFlow.value.nodes.value.find((node) => node.id === change.id);
     if (!nodeA) return;
 
     const nodeABounds: NodeBounds = {
         id: mindMap.currentLayer.value.id + nodeA.id,
-        left: nodeA.position.x,
-        right: nodeA.position.x + nodeA.dimensions.width,
-        top: nodeA.position.y,
-        bottom: nodeA.position.y + nodeA.dimensions.height,
+        left: change.position.x,
+        right: change.position.x + nodeA.dimensions.width,
+        top: change.position.y,
+        bottom: change.position.y + nodeA.dimensions.height,
         width: nodeA.dimensions.width,
         height: nodeA.dimensions.height,
     };
-
-    if ('position' in change && change.position !== undefined) {
-        nodeABounds.left = change.position.x;
-        nodeABounds.right = change.position.x + nodeABounds.width;
-        nodeABounds.top = change.position.y;
-        nodeABounds.bottom = change.position.y + nodeABounds.height;
-    }
-    if ('dimensions' in change && change.dimensions !== undefined) {
-        nodeABounds.right = nodeABounds.left + change.dimensions.width;
-        nodeABounds.bottom = nodeABounds.top + change.dimensions.height;
-        nodeABounds.width = change.dimensions.width;
-        nodeABounds.height = change.dimensions.height;
-    }
 
     const {
         left: viewportLeft,
@@ -155,13 +113,11 @@ const produceNodeChange = (changes: NodeChange[]) => {
 
     const snapLines = getSnapLines(nodeABounds, nodeBounds);
 
-    if ('position' in change) {
-        if (snapLines.snapPosition.x !== undefined) {
-            change.position.x = snapLines.snapPosition.x;
-        }
-        if (snapLines.snapPosition.y !== undefined) {
-            change.position.y = snapLines.snapPosition.y;
-        }
+    if (snapLines.snapPosition.x !== undefined) {
+        change.position.x = snapLines.snapPosition.x;
+    }
+    if (snapLines.snapPosition.y !== undefined) {
+        change.position.y = snapLines.snapPosition.y;
     }
 
     // if helper lines are returned, we set them so that they can be displayed
@@ -187,35 +143,48 @@ const produceNodeChange = (changes: NodeChange[]) => {
     }
 
     // 应用间距对齐的 snap position
-    if ('position' in change) {
-        const hSpacingGroup = getHorizontalSpacingAlign(nodeABounds, nodeBounds);
-        const vSpacingGroup = getVerticalSpacingAlign(nodeABounds, nodeBounds);
+    const hSpacingGroup = getHorizontalSpacingAlign(nodeABounds, nodeBounds);
+    const vSpacingGroup = getVerticalSpacingAlign(nodeABounds, nodeBounds);
 
-        if (hSpacingGroup?.snapX !== undefined) {
-            change.position.x = hSpacingGroup.snapX;
-        }
-        if (vSpacingGroup?.snapY !== undefined) {
-            change.position.y = vSpacingGroup.snapY;
-        }
+    if (hSpacingGroup?.snapX !== undefined) {
+        change.position.x = hSpacingGroup.snapX;
+    }
+    if (vSpacingGroup?.snapY !== undefined) {
+        change.position.y = vSpacingGroup.snapY;
+    }
 
-        // 设置间距辅助线
-        if (hSpacingGroup?.lines) {
-            hSpacingLines.value = hSpacingGroup.lines.map((line) => ({
-                startX: xGraphToCanvas(line.startX),
-                endX: xGraphToCanvas(line.endX),
-                y: yGraphToCanvas(line.y),
-            }));
-        }
-        if (vSpacingGroup?.lines) {
-            vSpacingLines.value = vSpacingGroup.lines.map((line) => ({
-                x: xGraphToCanvas(line.x),
-                startY: yGraphToCanvas(line.startY),
-                endY: yGraphToCanvas(line.endY),
-            }));
-        }
+    // 设置间距辅助线
+    if (hSpacingGroup?.lines) {
+        hSpacingLines.value = hSpacingGroup.lines.map((line) => ({
+            startX: xGraphToCanvas(line.startX),
+            endX: xGraphToCanvas(line.endX),
+            y: yGraphToCanvas(line.y),
+        }));
+    }
+    if (vSpacingGroup?.lines) {
+        vSpacingLines.value = vSpacingGroup.lines.map((line) => ({
+            x: xGraphToCanvas(line.x),
+            startY: yGraphToCanvas(line.startY),
+            endY: yGraphToCanvas(line.endY),
+        }));
     }
 
     vueFlow.value.nodes.value = vueFlow.value.applyNodeChanges([change]);
+};
+
+const produceNodeChange = (changes: NodeChange[]) => {
+    hSnapLine.value = undefined;
+    vSnapLine.value = undefined;
+    hSpacingLines.value = [];
+    vSpacingLines.value = [];
+
+    if (changes.length > 1) return;
+    const change = changes[0];
+    if (!change) return;
+
+    if (change.type === 'position') {
+        handleNodeSinglePositionChange(change);
+    }
 };
 
 let oldVueFlow: VueFlowStore | null = null;
