@@ -2,16 +2,33 @@
 import {computed, ref, useTemplateRef, watch} from 'vue';
 import {useMindMap} from '@/mindMap/useMindMap.ts';
 import type {NodeChange, VueFlowStore} from '@vue-flow/core';
-import {getHelperLines, type NodeBounds} from '@/mindMap/helperLines/getHelperLines.ts';
+import {getSnapLines} from '@/mindMap/helperLines/snapLines.ts';
 import {useThemeStore} from '@/store/themeStore.ts';
+import type {NodeBounds} from '@/mindMap/helperLines/type/NodeBounds.ts';
+import type {
+    HorizontalHelperLine,
+    VerticalHelperLine,
+} from '@/mindMap/helperLines/type/HelpLine.ts';
+import {
+    getHorizontalSpacingAlign,
+    getVerticalSpacingAlign,
+} from '@/mindMap/helperLines/spacingAlign.ts';
 
 const props = withDefaults(
     defineProps<{
-        extensionOffset?: number | undefined;
+        spinLineWidth?: number | undefined;
+        spinLineExtension?: number | undefined;
+        spacingAlignLineWidth?: number | undefined;
+        spacingAlignExtension?: number | undefined;
+        spacingAlignOffset?: number | undefined;
         dashed?: number | undefined;
     }>(),
     {
-        extensionOffset: 16,
+        spinLineWidth: 1,
+        spinLineExtension: 16,
+        spacingAlignLineWidth: 2,
+        spacingAlignExtension: 8,
+        spacingAlignOffset: 4,
         dashed: 2,
     },
 );
@@ -23,16 +40,11 @@ const themeStore = useThemeStore();
 
 const canvasRef = useTemplateRef<HTMLCanvasElement>('canvasRef');
 
-const horizontal = ref<{
-    startX: number;
-    endX: number;
-    y: number;
-}>();
-const vertical = ref<{
-    x: number;
-    startY: number;
-    endY: number;
-}>();
+const hSnapLine = ref<HorizontalHelperLine>();
+const vSnapLine = ref<VerticalHelperLine>();
+
+const hSpacingLines = ref<HorizontalHelperLine[]>([]);
+const vSpacingLines = ref<VerticalHelperLine[]>([]);
 
 const width = computed(() => vueFlow.value.dimensions.value.width);
 const height = computed(() => vueFlow.value.dimensions.value.height);
@@ -57,8 +69,10 @@ const viewportRect = computed(() => {
 let beforeAddId: string | undefined;
 
 const produceNodeChange = (changes: NodeChange[]) => {
-    horizontal.value = undefined;
-    vertical.value = undefined;
+    hSnapLine.value = undefined;
+    vSnapLine.value = undefined;
+    hSpacingLines.value = [];
+    vSpacingLines.value = [];
 
     if (changes.length > 1) return;
     const change = changes[0];
@@ -133,34 +147,67 @@ const produceNodeChange = (changes: NodeChange[]) => {
                 node.top < viewportBottom
             );
         });
-    const helperLines = getHelperLines(nodeABounds, nodeBounds);
+
+    const snapLines = getSnapLines(nodeABounds, nodeBounds);
 
     if ('position' in change) {
-        if (helperLines.snapPosition.x !== undefined) {
-            change.position.x = helperLines.snapPosition.x;
+        if (snapLines.snapPosition.x !== undefined) {
+            change.position.x = snapLines.snapPosition.x;
         }
-        if (helperLines.snapPosition.y !== undefined) {
-            change.position.y = helperLines.snapPosition.y;
+        if (snapLines.snapPosition.y !== undefined) {
+            change.position.y = snapLines.snapPosition.y;
         }
     }
 
     // if helper lines are returned, we set them so that they can be displayed
-    if (helperLines.horizontal !== undefined) {
-        const {value, target} = helperLines.horizontal;
-        horizontal.value = {
-            startX: xGraphToCanvas(Math.min(nodeABounds.left, target.left)) - props.extensionOffset,
-            endX: xGraphToCanvas(Math.max(nodeABounds.right, target.right)) + props.extensionOffset,
+    if (snapLines.horizontal !== undefined) {
+        const {value, targets} = snapLines.horizontal;
+        const minX = Math.min(nodeABounds.left, ...targets.map((it) => it.left));
+        const maxX = Math.max(nodeABounds.right, ...targets.map((it) => it.right));
+        hSnapLine.value = {
+            startX: xGraphToCanvas(minX) - props.spinLineExtension,
+            endX: xGraphToCanvas(maxX) + props.spinLineExtension,
             y: yGraphToCanvas(value),
         };
     }
-    if (helperLines.vertical !== undefined) {
-        const {value, target} = helperLines.vertical;
-        vertical.value = {
+    if (snapLines.vertical !== undefined) {
+        const {value, targets} = snapLines.vertical;
+        const minY = Math.min(nodeABounds.top, ...targets.map((it) => it.top));
+        const maxY = Math.max(nodeABounds.bottom, ...targets.map((it) => it.bottom));
+        vSnapLine.value = {
             x: xGraphToCanvas(value),
-            startY: yGraphToCanvas(Math.min(nodeABounds.top, target.top)) - props.extensionOffset,
-            endY:
-                yGraphToCanvas(Math.max(nodeABounds.bottom, target.bottom)) + props.extensionOffset,
+            startY: yGraphToCanvas(minY) - props.spinLineExtension,
+            endY: yGraphToCanvas(maxY) + props.spinLineExtension,
         };
+    }
+
+    const hSpacingGroup = getHorizontalSpacingAlign(nodeABounds, nodeBounds);
+    const vSpacingGroup = getVerticalSpacingAlign(nodeABounds, nodeBounds);
+
+    // 应用间距对齐的 snap position
+    if ('position' in change) {
+        if (hSpacingGroup?.snapX !== undefined) {
+            change.position.x = hSpacingGroup.snapX;
+        }
+        if (vSpacingGroup?.snapY !== undefined) {
+            change.position.y = vSpacingGroup.snapY;
+        }
+    }
+
+    // 设置间距辅助线
+    if (hSpacingGroup?.lines) {
+        hSpacingLines.value = hSpacingGroup.lines.map((line) => ({
+            startX: xGraphToCanvas(line.startX),
+            endX: xGraphToCanvas(line.endX),
+            y: yGraphToCanvas(line.y),
+        }));
+    }
+    if (vSpacingGroup?.lines) {
+        vSpacingLines.value = vSpacingGroup.lines.map((line) => ({
+            x: xGraphToCanvas(line.x),
+            startY: yGraphToCanvas(line.startY),
+            endY: yGraphToCanvas(line.endY),
+        }));
     }
 
     vueFlow.value.nodes.value = vueFlow.value.applyNodeChanges([change]);
@@ -192,23 +239,62 @@ const updateCanvasHelperLines = () => {
 
     ctx.scale(dpi, dpi);
     ctx.clearRect(0, 0, width.value, height.value);
+
+    // 绘制吸附辅助线
+    ctx.beginPath();
     ctx.strokeStyle = themeStore.primaryColor.value;
-
-    if (vertical.value !== undefined) {
-        ctx.moveTo(vertical.value.x, vertical.value.startY);
-        ctx.lineTo(vertical.value.x, vertical.value.endY);
-        ctx.setLineDash([props.dashed, props.dashed]);
-        ctx.stroke();
-        ctx.setLineDash([]);
+    ctx.lineWidth = props.spinLineWidth;
+    ctx.setLineDash([props.dashed, props.dashed]);
+    if (vSnapLine.value !== undefined) {
+        ctx.moveTo(vSnapLine.value.x, vSnapLine.value.startY);
+        ctx.lineTo(vSnapLine.value.x, vSnapLine.value.endY);
     }
-
-    if (horizontal.value !== undefined) {
-        ctx.moveTo(horizontal.value.startX, horizontal.value.y);
-        ctx.lineTo(horizontal.value.endX, horizontal.value.y);
-        ctx.setLineDash([props.dashed, props.dashed]);
-        ctx.stroke();
-        ctx.setLineDash([]);
+    if (hSnapLine.value !== undefined) {
+        ctx.moveTo(hSnapLine.value.startX, hSnapLine.value.y);
+        ctx.lineTo(hSnapLine.value.endX, hSnapLine.value.y);
     }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // 绘制间距辅助线
+    ctx.beginPath();
+    ctx.strokeStyle = 'orange';
+    ctx.lineWidth = props.spacingAlignLineWidth;
+    for (const line of hSpacingLines.value) {
+        const startY = line.y + props.spacingAlignOffset;
+        const centerY = startY + props.spacingAlignExtension;
+        const endY = centerY + props.spacingAlignExtension;
+
+        const startX = line.startX + props.spacingAlignLineWidth;
+        const endX = line.endX - props.spacingAlignLineWidth;
+
+        ctx.moveTo(startX, centerY);
+        ctx.lineTo(endX, centerY);
+
+        ctx.moveTo(startX, startY);
+        ctx.lineTo(startX, endY);
+
+        ctx.moveTo(endX, startY);
+        ctx.lineTo(endX, endY);
+    }
+    for (const line of vSpacingLines.value) {
+        const startX = line.x + props.spacingAlignOffset;
+        const centerX = startX + props.spacingAlignExtension;
+        const endX = centerX + props.spacingAlignExtension;
+
+        const startY = line.startY + props.spacingAlignLineWidth;
+        const endY = line.endY - props.spacingAlignLineWidth;
+
+        ctx.moveTo(centerX, startY);
+        ctx.lineTo(centerX, endY);
+
+        ctx.moveTo(startX, startY);
+        ctx.lineTo(endX, startY);
+
+        ctx.moveTo(startX, endY);
+        ctx.lineTo(endX, endY);
+    }
+    ctx.stroke();
 };
 
 watch(
@@ -218,8 +304,10 @@ watch(
         x.value,
         y.value,
         zoom.value,
-        horizontal.value,
-        vertical.value,
+        hSnapLine.value,
+        vSnapLine.value,
+        hSpacingLines.value,
+        vSpacingLines.value,
     ],
     () => updateCanvasHelperLines(),
     {immediate: true},

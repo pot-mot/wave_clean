@@ -64,6 +64,7 @@ initLayer(props.layer);
         :select-nodes-on-drag="false"
         :selection-key-code="false"
         :delete-key-code="() => false"
+        :disable-keyboard-a11y="true"
         no-drag-class-name="noDrag"
         no-wheel-class-name="noWheel"
     >
