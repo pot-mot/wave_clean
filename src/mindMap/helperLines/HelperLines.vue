@@ -95,7 +95,7 @@ const produceNodeChange = (changes: NodeChange[]) => {
     if (!nodeA) return;
 
     const nodeABounds: NodeBounds = {
-        id: nodeA.id,
+        id: mindMap.currentLayer.value.id + nodeA.id,
         left: nodeA.position.x,
         right: nodeA.position.x + nodeA.dimensions.width,
         top: nodeA.position.y,
@@ -127,7 +127,7 @@ const produceNodeChange = (changes: NodeChange[]) => {
     const nodeBounds = mindMap.layers
         .flatMap((layer): NodeBounds[] => {
             return layer.vueFlow.nodes.value.map((node) => ({
-                id: node.id,
+                id: layer.id + node.id,
                 left: node.position.x,
                 right: node.position.x + node.dimensions.width,
                 top: node.position.y,
@@ -137,7 +137,7 @@ const produceNodeChange = (changes: NodeChange[]) => {
             }));
         })
         .filter((node) => {
-            if (node.id === nodeA.id) return false;
+            if (node.id === nodeABounds.id) return false;
 
             // 检查节点是否在可见区域内（有重叠）
             return (
