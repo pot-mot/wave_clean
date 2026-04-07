@@ -114,11 +114,11 @@ const handleNodeSinglePositionChange = (change: NodePositionChange) => {
     // 吸附线
     const snapLines = getSnapLines(nodeABounds, nodeBounds);
 
-    if (snapLines.snapPosition.x !== undefined) {
-        change.position.x = snapLines.snapPosition.x;
+    if (snapLines.snapX !== undefined) {
+        change.position.x = snapLines.snapX;
     }
-    if (snapLines.snapPosition.y !== undefined) {
-        change.position.y = snapLines.snapPosition.y;
+    if (snapLines.snapY !== undefined) {
+        change.position.y = snapLines.snapY;
     }
 
     if (snapLines.horizontalMap.has('top-top') && snapLines.horizontalMap.has('bottom-bottom')) {
