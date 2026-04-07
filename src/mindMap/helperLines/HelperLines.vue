@@ -26,9 +26,9 @@ const props = withDefaults(
     {
         spinLineWidth: 1,
         spinLineExtension: 16,
-        spacingAlignLineWidth: 2,
+        spacingAlignLineWidth: 1,
         spacingAlignExtension: 8,
-        spacingAlignOffset: 4,
+        spacingAlignOffset: 2,
         dashed: 2,
     },
 );
@@ -111,18 +111,13 @@ const handleNodeSinglePositionChange = (change: NodePositionChange) => {
             );
         });
 
-    let snapX: boolean = false;
-    let snapY: boolean = false;
-
     // 吸附线
     const snapLines = getSnapLines(nodeABounds, nodeBounds);
 
     if (snapLines.snapPosition.x !== undefined) {
-        snapX = true;
         change.position.x = snapLines.snapPosition.x;
     }
     if (snapLines.snapPosition.y !== undefined) {
-        snapY = true;
         change.position.y = snapLines.snapPosition.y;
     }
 
@@ -164,33 +159,30 @@ const handleNodeSinglePositionChange = (change: NodePositionChange) => {
         };
     });
 
-    if (!snapX) {
-        // 水平对齐线
-        const hSpacingGroup = getHorizontalSpacingAlign(nodeABounds, nodeBounds);
-        if (hSpacingGroup) {
-            hSpacingLines.value = hSpacingGroup.lines.map((line) => ({
-                startX: xGraphToCanvas(line.startX),
-                endX: xGraphToCanvas(line.endX),
-                y: yGraphToCanvas(line.y),
-            }));
-            if (hSpacingGroup.snapX !== undefined) {
-                change.position.x = hSpacingGroup.snapX;
-            }
+    const hSpacingGroup = getHorizontalSpacingAlign(nodeABounds, nodeBounds);
+    if (hSpacingGroup) {
+        hSpacingLines.value = hSpacingGroup.lines.map((line) => ({
+            startX: xGraphToCanvas(line.startX),
+            endX: xGraphToCanvas(line.endX),
+            y: yGraphToCanvas(line.y),
+        }));
+        if (hSpacingGroup.snapX !== change.position.x) {
+            change.position.x = hSpacingGroup.snapX;
+            vSnapLines.value = [];
         }
     }
 
-    if (!snapY) {
-        // 垂直对齐线
-        const vSpacingGroup = getVerticalSpacingAlign(nodeABounds, nodeBounds);
-        if (vSpacingGroup) {
-            vSpacingLines.value = vSpacingGroup.lines.map((line) => ({
-                x: xGraphToCanvas(line.x),
-                startY: yGraphToCanvas(line.startY),
-                endY: yGraphToCanvas(line.endY),
-            }));
-            if (vSpacingGroup.snapY !== undefined) {
-                change.position.y = vSpacingGroup.snapY;
-            }
+    // 垂直间距对齐线
+    const vSpacingGroup = getVerticalSpacingAlign(nodeABounds, nodeBounds);
+    if (vSpacingGroup) {
+        vSpacingLines.value = vSpacingGroup.lines.map((line) => ({
+            x: xGraphToCanvas(line.x),
+            startY: yGraphToCanvas(line.startY),
+            endY: yGraphToCanvas(line.endY),
+        }));
+        if (vSpacingGroup.snapY !== change.position.y) {
+            change.position.y = vSpacingGroup.snapY;
+            hSnapLines.value = [];
         }
     }
 
