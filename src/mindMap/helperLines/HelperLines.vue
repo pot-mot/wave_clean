@@ -111,12 +111,18 @@ const handleNodeSinglePositionChange = (change: NodePositionChange) => {
             );
         });
 
+    let snapX: boolean = false;
+    let snapY: boolean = false;
+
+    // 吸附线
     const snapLines = getSnapLines(nodeABounds, nodeBounds);
 
     if (snapLines.snapPosition.x !== undefined) {
+        snapX = true;
         change.position.x = snapLines.snapPosition.x;
     }
     if (snapLines.snapPosition.y !== undefined) {
+        snapY = true;
         change.position.y = snapLines.snapPosition.y;
     }
 
@@ -158,31 +164,34 @@ const handleNodeSinglePositionChange = (change: NodePositionChange) => {
         };
     });
 
-    // 应用间距对齐的 snap position
-    const hSpacingGroup = getHorizontalSpacingAlign(nodeABounds, nodeBounds);
-    const vSpacingGroup = getVerticalSpacingAlign(nodeABounds, nodeBounds);
+    if (!snapX) {
+        // 水平对齐线
+        const hSpacingGroup = getHorizontalSpacingAlign(nodeABounds, nodeBounds);
+        if (hSpacingGroup) {
+            hSpacingLines.value = hSpacingGroup.lines.map((line) => ({
+                startX: xGraphToCanvas(line.startX),
+                endX: xGraphToCanvas(line.endX),
+                y: yGraphToCanvas(line.y),
+            }));
+            if (hSpacingGroup.snapX !== undefined) {
+                change.position.x = hSpacingGroup.snapX;
+            }
+        }
+    }
 
-    if (hSpacingGroup?.snapX !== undefined) {
-        change.position.x = hSpacingGroup.snapX;
-    }
-    if (vSpacingGroup?.snapY !== undefined) {
-        change.position.y = vSpacingGroup.snapY;
-    }
-
-    // 设置间距辅助线
-    if (hSpacingGroup?.lines) {
-        hSpacingLines.value = hSpacingGroup.lines.map((line) => ({
-            startX: xGraphToCanvas(line.startX),
-            endX: xGraphToCanvas(line.endX),
-            y: yGraphToCanvas(line.y),
-        }));
-    }
-    if (vSpacingGroup?.lines) {
-        vSpacingLines.value = vSpacingGroup.lines.map((line) => ({
-            x: xGraphToCanvas(line.x),
-            startY: yGraphToCanvas(line.startY),
-            endY: yGraphToCanvas(line.endY),
-        }));
+    if (!snapY) {
+        // 垂直对齐线
+        const vSpacingGroup = getVerticalSpacingAlign(nodeABounds, nodeBounds);
+        if (vSpacingGroup) {
+            vSpacingLines.value = vSpacingGroup.lines.map((line) => ({
+                x: xGraphToCanvas(line.x),
+                startY: yGraphToCanvas(line.startY),
+                endY: yGraphToCanvas(line.endY),
+            }));
+            if (vSpacingGroup.snapY !== undefined) {
+                change.position.y = vSpacingGroup.snapY;
+            }
+        }
     }
 
     vueFlow.value.nodes.value = vueFlow.value.applyNodeChanges([change]);
