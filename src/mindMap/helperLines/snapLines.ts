@@ -4,20 +4,20 @@ type HorizontalType = 'centerY' | 'top-top' | 'bottom-bottom' | 'top-bottom' | '
 type VerticalType = 'centerX' | 'left-left' | 'right-right' | 'left-right' | 'right-left';
 
 type SnapLineResult = {
-    horizontal:
-        | {
-              type: HorizontalType;
-              value: number;
-              targets: [NodeBounds, ...NodeBounds[]];
-          }
-        | undefined;
-    vertical:
-        | {
-              type: VerticalType;
-              value: number;
-              targets: [NodeBounds, ...NodeBounds[]];
-          }
-        | undefined;
+    horizontalMap: Map<
+        HorizontalType,
+        {
+            value: number;
+            targets: [NodeBounds, ...NodeBounds[]];
+        }
+    >;
+    verticalMap: Map<
+        VerticalType,
+        {
+            value: number;
+            targets: [NodeBounds, ...NodeBounds[]];
+        }
+    >;
     snapPosition: {
         x: number | undefined;
         y: number | undefined;
@@ -30,8 +30,8 @@ export const getSnapLines = (
     distance = 5,
 ): SnapLineResult => {
     const result: SnapLineResult = {
-        horizontal: undefined,
-        vertical: undefined,
+        horizontalMap: new Map(),
+        verticalMap: new Map(),
         snapPosition: {x: undefined, y: undefined},
     };
 
@@ -55,14 +55,15 @@ export const getSnapLines = (
 
         if (distanceCenterX < verticalDistance) {
             result.snapPosition.x = nodeB.left + (nodeB.width - nodeA.width) / 2;
-            result.vertical = {type: 'centerX', targets: [nodeB], value: centerX_B};
+            result.verticalMap.set('centerX', {targets: [nodeB], value: centerX_B});
             verticalDistance = distanceCenterX;
-        } else if (
-            distanceCenterX === verticalDistance &&
-            result.vertical &&
-            result.vertical.type === 'centerX'
-        ) {
-            result.vertical.targets.push(nodeB);
+        } else if (distanceCenterX === verticalDistance) {
+            const vertical = result.verticalMap.get('centerX');
+            if (!vertical) {
+                result.verticalMap.set('centerX', {targets: [nodeB], value: centerX_B});
+            } else {
+                vertical.targets.push(nodeB);
+            }
         }
 
         //  |‾‾‾‾‾‾‾‾‾‾‾|
@@ -77,14 +78,15 @@ export const getSnapLines = (
 
         if (distanceLeftLeft < verticalDistance) {
             result.snapPosition.x = nodeB.left;
-            result.vertical = {type: 'left-left', targets: [nodeB], value: nodeB.left};
+            result.verticalMap.set('left-left', {targets: [nodeB], value: nodeB.left});
             verticalDistance = distanceLeftLeft;
-        } else if (
-            distanceLeftLeft === verticalDistance &&
-            result.vertical &&
-            result.vertical.type === 'left-left'
-        ) {
-            result.vertical.targets.push(nodeB);
+        } else if (distanceLeftLeft === verticalDistance) {
+            const vertical = result.verticalMap.get('left-left');
+            if (!vertical) {
+                result.verticalMap.set('left-left', {targets: [nodeB], value: nodeB.left});
+            } else {
+                vertical.targets.push(nodeB);
+            }
         }
 
         //  |‾‾‾‾‾‾‾‾‾‾‾|
@@ -99,14 +101,15 @@ export const getSnapLines = (
 
         if (distanceRightRight < verticalDistance) {
             result.snapPosition.x = nodeB.right - nodeA.width;
-            result.vertical = {type: 'right-right', targets: [nodeB], value: nodeB.right};
+            result.verticalMap.set('right-right', {targets: [nodeB], value: nodeB.right});
             verticalDistance = distanceRightRight;
-        } else if (
-            distanceRightRight === verticalDistance &&
-            result.vertical &&
-            result.vertical.type === 'right-right'
-        ) {
-            result.vertical.targets.push(nodeB);
+        } else if (distanceRightRight === verticalDistance) {
+            const vertical = result.verticalMap.get('right-right');
+            if (!vertical) {
+                result.verticalMap.set('right-right', {targets: [nodeB], value: nodeB.right});
+            } else {
+                vertical.targets.push(nodeB);
+            }
         }
 
         //              |‾‾‾‾‾‾‾‾‾‾‾|
@@ -121,14 +124,15 @@ export const getSnapLines = (
 
         if (distanceLeftRight < verticalDistance) {
             result.snapPosition.x = nodeB.right;
-            result.vertical = {type: 'left-right', targets: [nodeB], value: nodeB.right};
+            result.verticalMap.set('left-right', {targets: [nodeB], value: nodeB.right});
             verticalDistance = distanceLeftRight;
-        } else if (
-            distanceLeftRight === verticalDistance &&
-            result.vertical &&
-            result.vertical.type === 'left-right'
-        ) {
-            result.vertical.targets.push(nodeB);
+        } else if (distanceLeftRight === verticalDistance) {
+            const vertical = result.verticalMap.get('left-right');
+            if (!vertical) {
+                result.verticalMap.set('left-right', {targets: [nodeB], value: nodeB.right});
+            } else {
+                vertical.targets.push(nodeB);
+            }
         }
 
         //  |‾‾‾‾‾‾‾‾‾‾‾|
@@ -143,14 +147,15 @@ export const getSnapLines = (
 
         if (distanceRightLeft < verticalDistance) {
             result.snapPosition.x = nodeB.left - nodeA.width;
-            result.vertical = {type: 'right-left', targets: [nodeB], value: nodeB.left};
+            result.verticalMap.set('right-left', {targets: [nodeB], value: nodeB.left});
             verticalDistance = distanceRightLeft;
-        } else if (
-            distanceRightLeft === verticalDistance &&
-            result.vertical &&
-            result.vertical.type === 'right-left'
-        ) {
-            result.vertical.targets.push(nodeB);
+        } else if (distanceRightLeft === verticalDistance) {
+            const vertical = result.verticalMap.get('right-left');
+            if (!vertical) {
+                result.verticalMap.set('right-left', {targets: [nodeB], value: nodeB.left});
+            } else {
+                vertical.targets.push(nodeB);
+            }
         }
 
         //  |‾‾‾‾‾‾‾‾‾‾‾|     |‾‾‾‾‾‾‾‾‾‾‾|
@@ -161,14 +166,15 @@ export const getSnapLines = (
 
         if (distanceCenterY < horizontalDistance) {
             result.snapPosition.y = nodeB.top + (nodeB.height - nodeA.height) / 2;
-            result.horizontal = {type: 'centerY', targets: [nodeB], value: centerY_B};
+            result.horizontalMap.set('centerY', {targets: [nodeB], value: centerY_B});
             horizontalDistance = distanceCenterY;
-        } else if (
-            distanceCenterY === horizontalDistance &&
-            result.horizontal &&
-            result.horizontal.type === 'centerY'
-        ) {
-            result.horizontal.targets.push(nodeB);
+        } else if (distanceCenterY === horizontalDistance) {
+            const horizontal = result.horizontalMap.get('centerY');
+            if (!horizontal) {
+                result.horizontalMap.set('centerY', {targets: [nodeB], value: centerY_B});
+            } else {
+                horizontal.targets.push(nodeB);
+            }
         }
 
         //  |‾‾‾‾‾‾‾‾‾‾‾|‾‾‾‾‾|‾‾‾‾‾‾‾‾‾‾‾|
@@ -178,14 +184,15 @@ export const getSnapLines = (
 
         if (distanceTopTop < horizontalDistance) {
             result.snapPosition.y = nodeB.top;
-            result.horizontal = {type: 'top-top', targets: [nodeB], value: nodeB.top};
+            result.horizontalMap.set('top-top', {targets: [nodeB], value: nodeB.top});
             horizontalDistance = distanceTopTop;
-        } else if (
-            distanceTopTop === horizontalDistance &&
-            result.horizontal &&
-            result.horizontal.type === 'top-top'
-        ) {
-            result.horizontal.targets.push(nodeB);
+        } else if (distanceTopTop === horizontalDistance) {
+            const horizontal = result.horizontalMap.get('top-top');
+            if (!horizontal) {
+                result.horizontalMap.set('top-top', {targets: [nodeB], value: nodeB.top});
+            } else {
+                horizontal.targets.push(nodeB);
+            }
         }
 
         //  |‾‾‾‾‾‾‾‾‾‾‾|
@@ -198,14 +205,15 @@ export const getSnapLines = (
 
         if (distanceBottomTop < horizontalDistance) {
             result.snapPosition.y = nodeB.top - nodeA.height;
-            result.horizontal = {type: 'bottom-top', targets: [nodeB], value: nodeB.top};
+            result.horizontalMap.set('bottom-top', {targets: [nodeB], value: nodeB.top});
             horizontalDistance = distanceBottomTop;
-        } else if (
-            distanceBottomTop === horizontalDistance &&
-            result.horizontal &&
-            result.horizontal.type === 'bottom-top'
-        ) {
-            result.horizontal.targets.push(nodeB);
+        } else if (distanceBottomTop === horizontalDistance) {
+            const horizontal = result.horizontalMap.get('bottom-top');
+            if (!horizontal) {
+                result.horizontalMap.set('bottom-top', {targets: [nodeB], value: nodeB.top});
+            } else {
+                horizontal.targets.push(nodeB);
+            }
         }
 
         //  |‾‾‾‾‾‾‾‾‾‾‾|     |‾‾‾‾‾‾‾‾‾‾‾|
@@ -215,14 +223,15 @@ export const getSnapLines = (
 
         if (distanceBottomBottom < horizontalDistance) {
             result.snapPosition.y = nodeB.bottom - nodeA.height;
-            result.horizontal = {type: 'bottom-bottom', targets: [nodeB], value: nodeB.bottom};
+            result.horizontalMap.set('bottom-bottom', {targets: [nodeB], value: nodeB.bottom});
             horizontalDistance = distanceBottomBottom;
-        } else if (
-            distanceBottomBottom === horizontalDistance &&
-            result.horizontal &&
-            result.horizontal.type === 'bottom-bottom'
-        ) {
-            result.horizontal.targets.push(nodeB);
+        } else if (distanceBottomBottom === horizontalDistance) {
+            const horizontal = result.horizontalMap.get('bottom-bottom');
+            if (!horizontal) {
+                result.horizontalMap.set('bottom-bottom', {targets: [nodeB], value: nodeB.bottom});
+            } else {
+                horizontal.targets.push(nodeB);
+            }
         }
 
         //                    |‾‾‾‾‾‾‾‾‾‾‾|
@@ -235,14 +244,15 @@ export const getSnapLines = (
 
         if (distanceTopBottom < horizontalDistance) {
             result.snapPosition.y = nodeB.bottom;
-            result.horizontal = {type: 'top-bottom', targets: [nodeB], value: nodeB.bottom};
+            result.horizontalMap.set('top-bottom', {targets: [nodeB], value: nodeB.bottom});
             horizontalDistance = distanceTopBottom;
-        } else if (
-            distanceTopBottom === horizontalDistance &&
-            result.horizontal &&
-            result.horizontal.type === 'top-bottom'
-        ) {
-            result.horizontal.targets.push(nodeB);
+        } else if (distanceTopBottom === horizontalDistance) {
+            const horizontal = result.horizontalMap.get('top-bottom');
+            if (!horizontal) {
+                result.horizontalMap.set('top-bottom', {targets: [nodeB], value: nodeB.bottom});
+            } else {
+                horizontal.targets.push(nodeB);
+            }
         }
     }
 

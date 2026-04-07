@@ -40,8 +40,8 @@ const themeStore = useThemeStore();
 
 const canvasRef = useTemplateRef<HTMLCanvasElement>('canvasRef');
 
-const hSnapLine = ref<HorizontalHelperLine>();
-const vSnapLine = ref<VerticalHelperLine>();
+const hSnapLines = ref<HorizontalHelperLine[]>([]);
+const vSnapLines = ref<VerticalHelperLine[]>([]);
 
 const hSpacingLines = ref<HorizontalHelperLine[]>([]);
 const vSpacingLines = ref<VerticalHelperLine[]>([]);
@@ -120,27 +120,43 @@ const handleNodeSinglePositionChange = (change: NodePositionChange) => {
         change.position.y = snapLines.snapPosition.y;
     }
 
-    // if helper lines are returned, we set them so that they can be displayed
-    if (snapLines.horizontal !== undefined) {
-        const {value, targets} = snapLines.horizontal;
+    if (snapLines.horizontalMap.has('top-top') && snapLines.horizontalMap.has('bottom-bottom')) {
+        snapLines.horizontalMap.delete('centerY');
+        snapLines.horizontalMap.delete('top-bottom');
+        snapLines.horizontalMap.delete('bottom-top');
+    } else if (snapLines.horizontalMap.has('centerY')) {
+        snapLines.horizontalMap.delete('top-bottom');
+        snapLines.horizontalMap.delete('bottom-top');
+    }
+    const horizontalValues = [...snapLines.horizontalMap.values()];
+    hSnapLines.value = horizontalValues.map(({value, targets}) => {
         const minX = Math.min(nodeABounds.left, ...targets.map((it) => it.left));
         const maxX = Math.max(nodeABounds.right, ...targets.map((it) => it.right));
-        hSnapLine.value = {
+        return {
             startX: xGraphToCanvas(minX) - props.spinLineExtension,
             endX: xGraphToCanvas(maxX) + props.spinLineExtension,
             y: yGraphToCanvas(value),
         };
+    });
+
+    if (snapLines.verticalMap.has('left-left') && snapLines.verticalMap.has('right-right')) {
+        snapLines.verticalMap.delete('centerX');
+        snapLines.verticalMap.delete('left-right');
+        snapLines.verticalMap.delete('right-left');
+    } else if (snapLines.verticalMap.has('centerX')) {
+        snapLines.verticalMap.delete('left-right');
+        snapLines.verticalMap.delete('right-left');
     }
-    if (snapLines.vertical !== undefined) {
-        const {value, targets} = snapLines.vertical;
+    const verticalValues = [...snapLines.verticalMap.values()];
+    vSnapLines.value = verticalValues.map(({value, targets}) => {
         const minY = Math.min(nodeABounds.top, ...targets.map((it) => it.top));
         const maxY = Math.max(nodeABounds.bottom, ...targets.map((it) => it.bottom));
-        vSnapLine.value = {
+        return {
             x: xGraphToCanvas(value),
             startY: yGraphToCanvas(minY) - props.spinLineExtension,
             endY: yGraphToCanvas(maxY) + props.spinLineExtension,
         };
-    }
+    });
 
     // 应用间距对齐的 snap position
     const hSpacingGroup = getHorizontalSpacingAlign(nodeABounds, nodeBounds);
@@ -173,8 +189,8 @@ const handleNodeSinglePositionChange = (change: NodePositionChange) => {
 };
 
 const produceNodeChange = (changes: NodeChange[]) => {
-    hSnapLine.value = undefined;
-    vSnapLine.value = undefined;
+    hSnapLines.value = [];
+    vSnapLines.value = [];
     hSpacingLines.value = [];
     vSpacingLines.value = [];
 
@@ -182,7 +198,7 @@ const produceNodeChange = (changes: NodeChange[]) => {
     const change = changes[0];
     if (!change) return;
 
-    if (change.type === 'position') {
+    if (change.type === 'position' && 'position' in change && change.position !== undefined) {
         handleNodeSinglePositionChange(change);
     }
 };
@@ -200,8 +216,8 @@ watch(
 );
 
 const cleanHelperLines = () => {
-    hSnapLine.value = undefined;
-    vSnapLine.value = undefined;
+    hSnapLines.value = [];
+    vSnapLines.value = [];
     hSpacingLines.value = [];
     vSpacingLines.value = [];
 
@@ -240,13 +256,13 @@ const drawHelperLines = () => {
     ctx.strokeStyle = themeStore.primaryColor.value;
     ctx.lineWidth = props.spinLineWidth;
     ctx.setLineDash([props.dashed, props.dashed]);
-    if (vSnapLine.value !== undefined) {
-        ctx.moveTo(vSnapLine.value.x, vSnapLine.value.startY);
-        ctx.lineTo(vSnapLine.value.x, vSnapLine.value.endY);
+    for (const line of vSnapLines.value) {
+        ctx.moveTo(line.x, line.startY);
+        ctx.lineTo(line.x, line.endY);
     }
-    if (hSnapLine.value !== undefined) {
-        ctx.moveTo(hSnapLine.value.startX, hSnapLine.value.y);
-        ctx.lineTo(hSnapLine.value.endX, hSnapLine.value.y);
+    for (const line of hSnapLines.value) {
+        ctx.moveTo(line.startX, line.y);
+        ctx.lineTo(line.endX, line.y);
     }
     ctx.stroke();
     ctx.setLineDash([]);
@@ -299,7 +315,7 @@ watch(
 );
 
 watch(
-    () => [hSnapLine.value, vSnapLine.value, hSpacingLines.value, vSpacingLines.value],
+    () => [hSnapLines.value, vSnapLines.value, hSpacingLines.value, vSpacingLines.value],
     () => drawHelperLines(),
     {immediate: true},
 );
