@@ -65,8 +65,6 @@ initLayer(props.layer);
         :selection-key-code="false"
         :delete-key-code="() => false"
         :disable-keyboard-a11y="true"
-        :snap-grid="[1, 1]"
-        snap-to-grid
         no-drag-class-name="noDrag"
         no-wheel-class-name="noWheel"
     >
