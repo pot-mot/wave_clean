@@ -33,6 +33,7 @@
         "@tauri-apps/plugin-opener": "^2.5.3",
         "@tauri-apps/plugin-os": "~2.3.2",
         "@vue-flow/core": "^1.48.2",
+        "@vue-flow/node-resizer": "^1.5.1",
         "@vue-flow/node-toolbar": "^1.1.1",
         "ajv": "^8.18.0",
         "clipboard-polyfill": "^4.1.1",

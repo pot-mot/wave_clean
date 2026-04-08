@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import {Handle, type NodeProps} from '@vue-flow/core';
+import {NodeResizer, type OnResize} from '@vue-flow/node-resizer';
+import '@vue-flow/node-resizer/dist/style.css';
 import {MIND_MAP_CONTAINER_ID, useMindMap} from '@/mindMap/useMindMap.ts';
-import {computed, nextTick, onMounted, ref, useTemplateRef, watch} from 'vue';
+import {computed, nextTick, ref, useTemplateRef, watch} from 'vue';
 import FitSizeBlockInput from '@/components/input/FitSizeBlockInput.vue';
 import {NodeToolbar} from '@vue-flow/node-toolbar';
 import IconDelete from '@/components/icons/IconDelete.vue';
@@ -10,8 +12,6 @@ import IconFocus from '@/components/icons/IconFocus.vue';
 import {blurActiveElement, getMatchedElementOrParent} from '@/utils/event/judgeEventTarget.ts';
 import {useMindMapStore} from '@/store/mindMapStore.ts';
 import MarkdownPreview from '@/components/markdown/preview/MarkdownPreview.vue';
-import ResizeWrapper from '@/components/resizer/ResizeWrapper.vue';
-import {type ResizeEventArgs} from '@/components/resizer/ResizeWrapperType.ts';
 import IconEdit from '@/components/icons/IconEdit.vue';
 import IconCheck from '@/components/icons/IconCheck.vue';
 import IconMarkdown from '@/components/icons/IconMarkdown.vue';
@@ -19,8 +19,6 @@ import IconMarkdownOff from '@/components/icons/IconMarkdownOff.vue';
 import {type RawMindMapLayer} from '@/mindMap/layer/MindMapLayer.ts';
 import {
     type ContentNode,
-    ContentNode_Markdown_initHeight,
-    ContentNode_Markdown_initWidth,
     ContentNode_Markdown_minHeight,
     ContentNode_Markdown_minWidth,
     type ContentNodeData,
@@ -30,6 +28,10 @@ import {
 } from '@/mindMap/node/ContentNode.ts';
 import MarkdownCompositeEditor from '@/components/markdown/compositeEditor/MarkdownCompositeEditor.vue';
 import IconFullScreen from '@/components/icons/IconFullScreen.vue';
+import {
+    emitResizeWithHelperLine,
+    type NodeResizeOrigin,
+} from '@/mindMap/helperLines/resize/emitResizeWithHelperLine.ts';
 
 const {meta} = useMindMapStore();
 
@@ -202,105 +204,46 @@ const stopCtrlClickWhenMarkdownEdit = (e: MouseEvent) => {
 };
 
 // markdown 编辑器尺寸
-const MarkdownEditorResizeRef =
-    useTemplateRef<InstanceType<typeof ResizeWrapper>>('MarkdownEditorResizeRef');
+const isResizing = ref(false);
+let markdownResizeOrigin: NodeResizeOrigin | undefined;
 
-const isResizing = computed(() => MarkdownEditorResizeRef.value?.isResizing ?? false);
-
-const markdownContentSize = ref<NodeSize>({
-    width: ContentNode_Markdown_initWidth,
-    height: ContentNode_Markdown_initHeight,
-});
-
-onMounted(async () => {
+const handleMarkdownEditorResize = (args: OnResize) => {
+    if (!markdownResizeOrigin) return;
     const node = _node.value;
     if (!node) return;
-    await nextTick();
-    if (node.dimensions.height !== 0 && node.dimensions.width !== 0) {
-        markdownContentSize.value = {
-            width: node.dimensions.width,
-            height: node.dimensions.height,
-        };
-    }
-});
-
-watch(
-    () => _node.value?.dimensions.width,
-    (width) => {
-        if (
-            dataTypeOrDefault.value === 'markdown' &&
-            width !== undefined &&
-            markdownContentSize.value.width !== width
-        ) {
-            markdownContentSize.value.width = width;
-        }
-    },
-);
-watch(
-    () => _node.value?.dimensions.height,
-    (height) => {
-        if (
-            dataTypeOrDefault.value === 'markdown' &&
-            height !== undefined &&
-            markdownContentSize.value.height !== height
-        ) {
-            markdownContentSize.value.height = height;
-        }
-    },
-);
-watch(
-    () => markdownContentSize.value,
-    (size) => {
-        const node = _node.value;
-        if (!node) return;
-        node.height = size.height;
-        node.width = size.width;
-        node.dimensions.height = size.height;
-        node.dimensions.width = size.width;
-    },
-    {deep: true},
-);
-
-const handleMarkdownEditorResize = ({currentPositionDiff}: ResizeEventArgs) => {
-    const node = _node.value;
-    if (!node) return;
-    node.position.x += currentPositionDiff.x;
-    node.position.y += currentPositionDiff.y;
+    emitResizeWithHelperLine(node, markdownResizeOrigin, args);
 };
-
-type MarkdownEditorResizeStartSizePosition = {
-    size: {width: number; height: number};
-    position: {x: number; y: number};
-};
-
-let markdownResizeStartSizePosition: MarkdownEditorResizeStartSizePosition | undefined;
 
 const handleMarkdownEditorResizeStart = () => {
     const node = _node.value;
     if (!node) return;
-    markdownResizeStartSizePosition = {
-        size: {
-            width: markdownContentSize.value.width,
-            height: markdownContentSize.value.height,
-        },
-        position: {
-            x: node.position.x,
-            y: node.position.y,
-        },
+    isResizing.value = true;
+    markdownResizeOrigin = {
+        width: node.dimensions.width,
+        height: node.dimensions.height,
+        x: node.position.x,
+        y: node.position.y,
     };
 };
 
-const handleMarkdownEditorResizeStop = () => {
-    if (!markdownResizeStartSizePosition) return;
+const handleMarkdownEditorResizeEnd = () => {
+    isResizing.value = false;
+    if (!markdownResizeOrigin) return;
     const node = _node.value;
     if (!node) return;
 
     recordNodeResize(props.id, {
-        oldSize: markdownResizeStartSizePosition.size,
-        oldPosition: markdownResizeStartSizePosition.position,
+        oldSize: {
+            width: markdownResizeOrigin.width,
+            height: markdownResizeOrigin.height,
+        },
+        oldPosition: {
+            x: markdownResizeOrigin.x,
+            y: markdownResizeOrigin.y,
+        },
         newSize: {
-            width: markdownContentSize.value.width,
-            height: markdownContentSize.value.height,
+            width: node.dimensions.width,
+            height: node.dimensions.height,
         },
         newPosition: {
             x: node.position.x,
@@ -449,7 +392,7 @@ const executeToggleType = async () => {
         const oldY = node.position.y;
 
         switch (dataTypeOrDefault.value) {
-            case 'markdown':
+            case 'markdown': {
                 updateNodeData(props.id, {type: 'text', content: markdownEditorValue.value});
 
                 // 等待 text 使得 input 出现
@@ -461,18 +404,14 @@ const executeToggleType = async () => {
                     node.position.x += (oldWidth - inputSize.value.width) / 2;
                 }
                 break;
-            case 'text':
+            }
+
+            case 'text': {
                 updateNodeData(props.id, {type: 'markdown'});
-                if (inputSize.value !== undefined) {
-                    markdownContentSize.value = {
-                        width: inputSize.value.width,
-                        height: inputSize.value.height,
-                    };
-                }
                 await nextTick();
                 isFocus.value = true;
-                node.position.x += (oldWidth - markdownContentSize.value.width) / 2;
                 break;
+            }
         }
 
         // 记录节点尺寸变化以便重做时恢复至当前尺寸
@@ -514,6 +453,7 @@ const executeDelete = () => {
     <div
         class="content-node"
         style="overflow: visible"
+        :style="{width: dimensions.width + 'px', height: dimensions.height + 'px'}"
         :class="{noDrag: layer.lock}"
     >
         <div
@@ -544,58 +484,57 @@ const executeDelete = () => {
                 style="overflow: visible"
                 @click.capture="handleNodeFocus"
             >
-                <ResizeWrapper
-                    ref="MarkdownEditorResizeRef"
-                    v-model="markdownContentSize"
-                    :zoom="zoom"
-                    :min-width="ContentNode_Markdown_minWidth"
-                    :min-height="ContentNode_Markdown_minHeight"
-                    :disabled="!isFocus || layer.lock"
-                    :class="{noWheel: isResizing}"
-                    @resize="handleMarkdownEditorResize"
-                    @resize-start="handleMarkdownEditorResizeStart"
-                    @resize-stop="handleMarkdownEditorResizeStop"
-                >
-                    <MarkdownCompositeEditor
-                        v-if="isMarkdownEdit"
-                        ref="markdownEditorRef"
-                        class="fit-parent"
-                        editor-class="noDrag noWheel"
-                        :preview-class="{noDrag: true, noWheel: isMarkdownEditorPreviewOverflow}"
-                        toolbar-class="noDrag"
-                        v-model="markdownEditorValue"
-                        :theme="markdownEditorTheme"
-                        :zoom="isMarkdownEditorFullScreen ? 1 : zoom"
-                        :full-screen-teleport-target="`#${MIND_MAP_CONTAINER_ID}`"
-                        full-screen-z-index="var(--editor-full-screen-z-index)"
-                        :show-toolbar="markdownEditorRef?.isFullScreen ?? false"
-                        @blur="handleMarkdownEditorBlur"
-                        @click.capture="stopCtrlClickWhenMarkdownEdit"
-                    />
-                    <MarkdownPreview
-                        v-else
-                        ref="markdownPreviewRef"
-                        class="fit-parent"
-                        :class="{
-                            untouchable: !isFocus,
-                            noDrag: isFocus,
-                            noWheel: isFocus && isMarkdownPreviewOverflow,
-                            'hide-scroll': !isFocus,
-                        }"
-                        :style="{borderColor}"
-                        :value="data.content"
-                    />
-                </ResizeWrapper>
+                <MarkdownCompositeEditor
+                    v-if="isMarkdownEdit"
+                    ref="markdownEditorRef"
+                    class="fit-parent"
+                    editor-class="noDrag noWheel"
+                    :preview-class="{noDrag: true, noWheel: isMarkdownEditorPreviewOverflow}"
+                    toolbar-class="noDrag"
+                    v-model="markdownEditorValue"
+                    :theme="markdownEditorTheme"
+                    :zoom="isMarkdownEditorFullScreen ? 1 : zoom"
+                    :full-screen-teleport-target="`#${MIND_MAP_CONTAINER_ID}`"
+                    full-screen-z-index="var(--editor-full-screen-z-index)"
+                    :show-toolbar="markdownEditorRef?.isFullScreen ?? false"
+                    @blur="handleMarkdownEditorBlur"
+                    @click.capture="stopCtrlClickWhenMarkdownEdit"
+                />
+                <MarkdownPreview
+                    v-else
+                    ref="markdownPreviewRef"
+                    class="fit-parent"
+                    :class="{
+                        untouchable: !isFocus,
+                        noDrag: isFocus,
+                        noWheel: isFocus && isMarkdownPreviewOverflow,
+                        'hide-scroll': !isFocus,
+                    }"
+                    :style="{borderColor}"
+                    :value="data.content"
+                />
             </div>
-
-            <Handle
-                v-for="handle in ContentNodeHandles"
-                :id="handle"
-                :position="handle"
-                @mousedown="onHandleMouseDown"
-                :class="{visible: isHandleVisible}"
-            />
         </div>
+
+        <NodeResizer
+            :node-id="id"
+            :is-visible="data.type === 'markdown' && isFocus && !layer.lock"
+            :class="{noWheel: isResizing}"
+            :min-width="ContentNode_Markdown_minWidth"
+            :min-height="ContentNode_Markdown_minHeight"
+            @resize="handleMarkdownEditorResize"
+            @resize-start="handleMarkdownEditorResizeStart"
+            @resize-end="handleMarkdownEditorResizeEnd"
+        />
+
+        <Handle
+            v-for="handle in ContentNodeHandles"
+            :key="handle"
+            :id="handle"
+            :position="handle"
+            @mousedown="onHandleMouseDown"
+            :class="{visible: isHandleVisible}"
+        />
 
         <NodeToolbar
             :node-id="id"
@@ -647,13 +586,12 @@ const executeDelete = () => {
 
 <style scoped>
 .content-node {
-    width: 100%;
-    height: 100%;
+    position: relative;
 }
 
 .content-node .fit-parent {
-    width: 100%;
     height: 100%;
+    width: 100%;
 }
 
 .untouchable {
@@ -695,6 +633,16 @@ const executeDelete = () => {
 
 :deep(.vue-flow__handle.connecting).visible::before {
     background: var(--primary-color);
+}
+
+:deep(.vue-flow__resize-control.handle) {
+    background: var(--primary-color);
+    border: none;
+    border-radius: 0;
+}
+
+:deep(.vue-flow__resize-control.line) {
+    border-color: var(--primary-color);
 }
 
 .toolbar > button {
