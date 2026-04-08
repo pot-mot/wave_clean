@@ -184,12 +184,20 @@ const matchGaps = <T extends Range = Range>(
                     gap: prevMatched.gap,
                     diff: prevMatched.diff,
                 };
-            } else {
-                return prevMatched.diff < nextMatched.diff ? prevMatched : nextMatched;
             }
-        } else {
-            return prevMatched.gap < nextMatched.gap ? prevMatched : nextMatched;
         }
+        const firstPrevGap = prevMatched.gaps[0];
+        const firstNextGap = nextMatched.gaps[0];
+        if (firstPrevGap && firstNextGap) {
+            if (Math.abs(firstPrevGap.value - firstNextGap.value) <= tolerance) {
+                return {
+                    gaps: [firstPrevGap, firstNextGap],
+                    gap: (firstPrevGap.value + firstNextGap.value) / 2,
+                    diff: (firstNextGap.value - firstPrevGap.value) / 2,
+                };
+            }
+        }
+        return prevMatched.gap < nextMatched.gap ? prevMatched : nextMatched;
     }
 };
 

@@ -31,7 +31,7 @@ type NodeRange = {
 export const getHorizontalSpacingAlign = (
     nodeA: NodeBounds,
     _nodes: NodeBounds[],
-    tolerance: number = 5,
+    tolerance: number,
 ): HorizontalSpacingAlign | undefined => {
     const nodes = getHorizontalIntersectNodes(nodeA, _nodes);
     if (nodes.length < 2) return undefined;
@@ -45,9 +45,35 @@ export const getHorizontalSpacingAlign = (
     const matchResult = rangeMatchGap(nodeRanges, nodeAIndex, tolerance);
     if (matchResult === undefined || matchResult.gaps.length < 2) return undefined;
 
+    const snapX = nodeA.left + matchResult.diff;
     // 生成辅助线
     const lines: HorizontalHelperLine[] = [];
     for (const gap of matchResult.gaps) {
+        if (gap.prev.node.id === nodeA.id) {
+            lines.push({
+                startX: snapX + nodeA.width,
+                endX: gap.next.node.left,
+                y:
+                    (gap.prev.node.top +
+                        gap.prev.node.bottom +
+                        gap.next.node.top +
+                        gap.next.node.bottom) /
+                    4,
+            });
+            continue;
+        } else if (gap.next.node.id === nodeA.id) {
+            lines.push({
+                startX: gap.prev.node.right,
+                endX: snapX,
+                y:
+                    (gap.prev.node.top +
+                        gap.prev.node.bottom +
+                        gap.next.node.top +
+                        gap.next.node.bottom) /
+                    4,
+            });
+            continue;
+        }
         lines.push({
             startX: gap.prev.node.right,
             endX: gap.next.node.left,
@@ -62,7 +88,7 @@ export const getHorizontalSpacingAlign = (
 
     return {
         lines,
-        snapX: nodeA.left + matchResult.diff,
+        snapX,
     };
 };
 
@@ -70,7 +96,7 @@ export const getHorizontalSpacingAlign = (
 export const getVerticalSpacingAlign = (
     nodeA: NodeBounds,
     _nodes: NodeBounds[],
-    tolerance: number = 5,
+    tolerance: number,
 ): VerticalSpacingAlign | undefined => {
     const nodes = getVerticalIntersectNodes(nodeA, _nodes);
     if (nodes.length < 2) return undefined;
@@ -84,9 +110,35 @@ export const getVerticalSpacingAlign = (
     const matchResult = rangeMatchGap(nodeRanges, nodeAIndex, tolerance);
     if (matchResult === undefined || matchResult.gaps.length < 2) return undefined;
 
+    const snapY = nodeA.top + matchResult.diff;
     // 生成辅助线
     const lines: VerticalHelperLine[] = [];
     for (const gap of matchResult.gaps) {
+        if (gap.prev.node.id === nodeA.id) {
+            lines.push({
+                startY: snapY + nodeA.height,
+                endY: gap.next.node.top,
+                x:
+                    (gap.prev.node.left +
+                        gap.prev.node.right +
+                        gap.next.node.left +
+                        gap.next.node.right) /
+                    4,
+            });
+            continue;
+        } else if (gap.next.node.id === nodeA.id) {
+            lines.push({
+                startY: gap.prev.node.bottom,
+                endY: snapY,
+                x:
+                    (gap.prev.node.left +
+                        gap.prev.node.right +
+                        gap.next.node.left +
+                        gap.next.node.right) /
+                    4,
+            });
+            continue;
+        }
         lines.push({
             startY: gap.prev.node.bottom,
             endY: gap.next.node.top,
@@ -101,6 +153,6 @@ export const getVerticalSpacingAlign = (
 
     return {
         lines,
-        snapY: nodeA.top + matchResult.diff,
+        snapY,
     };
 };

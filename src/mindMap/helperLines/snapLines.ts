@@ -25,7 +25,7 @@ type SnapLineResult = {
 export const getSnapLines = (
     nodeA: NodeBounds,
     nodes: NodeBounds[],
-    distance = 5,
+    distance: number,
 ): SnapLineResult => {
     const result: SnapLineResult = {
         horizontalMap: new Map(),

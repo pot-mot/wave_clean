@@ -198,7 +198,7 @@ describe('rangeMatchGap', () => {
             expect(result.gaps.length).toBe(4);
         });
 
-        it('在前向和后向都匹配且gap相同时选择较小的 diff', () => {
+        it('在前向和后向都有匹配时选择中心匹配', () => {
             const ranges: TestRange[] = [
                 {start: 0, end: 10, id: 'a'},
                 // 10
@@ -214,28 +214,76 @@ describe('rangeMatchGap', () => {
             const result = rangeMatchGap(ranges, 2, 5);
             assert(result);
             expect(result.gaps.length).toBe(2);
-            expect(result.gap).toBe(10);
-            expect(result.diff).toBe(0);
+            expect(result.gap).toBe(11);
+            expect(result.diff).toBe(1);
         });
 
-        it('在前向和后向都有匹配时选择较小的 gap', () => {
+        it('三项中心对齐', () => {
             const ranges: TestRange[] = [
-                {start: 0, end: 10, id: 'a'},
-                // 10
-                {start: 20, end: 30, id: 'b'},
-                // 10
-                {start: 40, end: 50, id: 'c'},
+                {start: 0, end: 12, id: 'b'},
+                // 8
+                {start: 20, end: 30, id: 'c'},
                 // 12
-                {start: 62, end: 72, id: 'd'},
+                {start: 42, end: 50, id: 'd'},
+            ];
+
+            const result = rangeMatchGap(ranges, 1, 5);
+            assert(result);
+            expect(result.gaps.length).toBe(2);
+            assert(result.gaps[0]);
+            expect(result.gaps[0].prev.id).toBe('b');
+            expect(result.gaps[0].next.id).toBe('c');
+            assert(result.gaps[1]);
+            expect(result.gaps[1].prev.id).toBe('c');
+            expect(result.gaps[1].next.id).toBe('d');
+            expect(result.gap).toBe(10);
+            expect(result.diff).toBe(2);
+        });
+
+        it('gap相同的多项中心对齐', () => {
+            const ranges: TestRange[] = [
+                {start: 0, end: 0, id: 'a'},
+                // 10
+                {start: 10, end: 12, id: 'b'},
+                // 8
+                {start: 20, end: 30, id: 'c'},
                 // 12
-                {start: 84, end: 94, id: 'e'},
+                {start: 42, end: 50, id: 'd'},
+                // 10
+                {start: 60, end: 10, id: 'e'},
+            ];
+
+            const result = rangeMatchGap(ranges, 2, 5);
+            assert(result);
+            expect(result.gaps.length).toBe(4);
+            expect(result.gap).toBe(10);
+            expect(result.diff).toBe(2);
+        });
+
+        it('gap不同的多项中心对齐', () => {
+            const ranges: TestRange[] = [
+                {start: 0, end: 2, id: 'a'},
+                // 8
+                {start: 10, end: 12, id: 'b'},
+                // 8
+                {start: 20, end: 30, id: 'c'},
+                // 12
+                {start: 42, end: 50, id: 'd'},
+                // 12
+                {start: 62, end: 10, id: 'e'},
             ];
 
             const result = rangeMatchGap(ranges, 2, 5);
             assert(result);
             expect(result.gaps.length).toBe(2);
+            assert(result.gaps[0]);
+            expect(result.gaps[0].prev.id).toBe('b');
+            expect(result.gaps[0].next.id).toBe('c');
+            assert(result.gaps[1]);
+            expect(result.gaps[1].prev.id).toBe('c');
+            expect(result.gaps[1].next.id).toBe('d');
             expect(result.gap).toBe(10);
-            expect(result.diff).toBe(0);
+            expect(result.diff).toBe(2);
         });
     });
 

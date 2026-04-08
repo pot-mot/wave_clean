@@ -16,20 +16,26 @@ import {
 
 const props = withDefaults(
     defineProps<{
+        spinDistance?: number | undefined;
         spinLineWidth?: number | undefined;
         spinLineExtension?: number | undefined;
+        spinLineDashed?: number | undefined;
+
+        spacingAlignTolerance?: number | undefined;
         spacingAlignLineWidth?: number | undefined;
         spacingAlignExtension?: number | undefined;
         spacingAlignOffset?: number | undefined;
-        dashed?: number | undefined;
     }>(),
     {
+        spinDistance: 5,
         spinLineWidth: 1,
         spinLineExtension: 16,
+        spinLineDashed: 2,
+
+        spacingAlignTolerance: 5,
         spacingAlignLineWidth: 1,
         spacingAlignExtension: 8,
         spacingAlignOffset: 2,
-        dashed: 2,
     },
 );
 
@@ -112,7 +118,7 @@ const handleNodeSinglePositionChange = (change: NodePositionChange) => {
         });
 
     // 吸附线
-    const snapLines = getSnapLines(nodeABounds, nodeBounds);
+    const snapLines = getSnapLines(nodeABounds, nodeBounds, props.spinDistance);
 
     if (snapLines.snapX !== undefined) {
         change.position.x = snapLines.snapX;
@@ -126,6 +132,8 @@ const handleNodeSinglePositionChange = (change: NodePositionChange) => {
         snapLines.horizontalMap.delete('top-bottom');
         snapLines.horizontalMap.delete('bottom-top');
     } else if (snapLines.horizontalMap.has('centerY')) {
+        snapLines.horizontalMap.delete('top-top');
+        snapLines.horizontalMap.delete('bottom-bottom');
         snapLines.horizontalMap.delete('top-bottom');
         snapLines.horizontalMap.delete('bottom-top');
     }
@@ -145,6 +153,8 @@ const handleNodeSinglePositionChange = (change: NodePositionChange) => {
         snapLines.verticalMap.delete('left-right');
         snapLines.verticalMap.delete('right-left');
     } else if (snapLines.verticalMap.has('centerX')) {
+        snapLines.verticalMap.delete('left-left');
+        snapLines.verticalMap.delete('right-right');
         snapLines.verticalMap.delete('left-right');
         snapLines.verticalMap.delete('right-left');
     }
@@ -159,7 +169,12 @@ const handleNodeSinglePositionChange = (change: NodePositionChange) => {
         };
     });
 
-    const hSpacingGroup = getHorizontalSpacingAlign(nodeABounds, nodeBounds);
+    // 水平间距对齐线
+    const hSpacingGroup = getHorizontalSpacingAlign(
+        nodeABounds,
+        nodeBounds,
+        props.spacingAlignTolerance,
+    );
     if (hSpacingGroup) {
         hSpacingLines.value = hSpacingGroup.lines.map((line) => ({
             startX: xGraphToCanvas(line.startX),
@@ -173,7 +188,11 @@ const handleNodeSinglePositionChange = (change: NodePositionChange) => {
     }
 
     // 垂直间距对齐线
-    const vSpacingGroup = getVerticalSpacingAlign(nodeABounds, nodeBounds);
+    const vSpacingGroup = getVerticalSpacingAlign(
+        nodeABounds,
+        nodeBounds,
+        props.spacingAlignTolerance,
+    );
     if (vSpacingGroup) {
         vSpacingLines.value = vSpacingGroup.lines.map((line) => ({
             x: xGraphToCanvas(line.x),
@@ -256,7 +275,7 @@ const drawHelperLines = () => {
     ctx.beginPath();
     ctx.strokeStyle = themeStore.primaryColor.value;
     ctx.lineWidth = props.spinLineWidth;
-    ctx.setLineDash([props.dashed, props.dashed]);
+    ctx.setLineDash([props.spinLineDashed, props.spinLineDashed]);
     for (const line of vSnapLines.value) {
         ctx.moveTo(line.x, line.startY);
         ctx.lineTo(line.x, line.endY);
