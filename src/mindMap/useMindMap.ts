@@ -476,7 +476,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
     };
 
     const remove = (
-        data: { nodes?: (GraphNode | string)[]; edges?: (GraphEdge | string)[] },
+        data: {nodes?: (GraphNode | string)[]; edges?: (GraphEdge | string)[]},
         withMessage: boolean = true,
         vueFlow: VueFlowStore = getCurrentVueFlow(),
     ) => {
@@ -693,7 +693,6 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
 
             onViewportChange,
 
-            onNodesChange,
             onNodeDragStart,
             onNodeDragStop,
             onConnect,
@@ -762,32 +761,6 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
              * 节点移动
              */
             const nodeMoveMap = new Map<string, XYPosition>();
-
-            onNodesChange((changes) => {
-                if (nodeMoveMap.size !== 0) return;
-
-                const positionChanges = changes.filter((change) => change.type === 'position');
-                if (positionChanges.length > 0) {
-                    history.executeBatch(Symbol('node:move'), () => {
-                        for (const change of positionChanges) {
-                            history.pushCommand(
-                                'node:move',
-                                {
-                                    layerId: currentLayerId.value,
-                                    id: change.id,
-                                    oldPosition: change.from,
-                                    newPosition: change.position,
-                                },
-                                {
-                                    layerId: currentLayerId.value,
-                                    id: change.id,
-                                    oldPosition: change.from,
-                                },
-                            );
-                        }
-                    });
-                }
-            });
 
             onNodeDragStart(({nodes}) => {
                 nodeMoveMap.clear();
@@ -865,7 +838,7 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                     if (oldConnection !== undefined && checkFullConnection(connection)) {
                         if (
                             jsonSortPropStringify(oldConnection) !==
-                            jsonSortPropStringify(connection) &&
+                                jsonSortPropStringify(connection) &&
                             !checkConnectionExist(connection)
                         ) {
                             history.executeCommand('edge:reconnect', {
@@ -1360,8 +1333,8 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         recordNodeResize: (
             id: string,
             args: {
-                newSize: { width: number; height: number };
-                oldSize: { width: number; height: number };
+                newSize: {width: number; height: number};
+                oldSize: {width: number; height: number};
                 newPosition: XYPosition;
                 oldPosition: XYPosition;
             },
