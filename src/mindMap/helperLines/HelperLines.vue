@@ -1,8 +1,20 @@
 <script setup lang="ts">
-import {computed, ref, useTemplateRef, watch} from 'vue';
+import {computed, nextTick, onBeforeUnmount, onMounted, useTemplateRef, watch} from 'vue';
 import {useMindMap} from '@/mindMap/useMindMap.ts';
-import type {NodeChange, NodePositionChange, VueFlowStore} from '@vue-flow/core';
-import {getSnapLines} from '@/mindMap/helperLines/snapLines.ts';
+import type {
+    Dimensions,
+    GraphNode,
+    NodeChange,
+    NodeDimensionChange,
+    NodePositionChange,
+    VueFlowStore,
+} from '@vue-flow/core';
+import {
+    getSnapLines,
+    type HorizontalType,
+    type SnapLine,
+    type VerticalType,
+} from '@/mindMap/helperLines/snapLines.ts';
 import {useThemeStore} from '@/store/themeStore.ts';
 import type {NodeBounds} from '@/mindMap/helperLines/type/NodeBounds.ts';
 import type {
@@ -13,6 +25,13 @@ import {
     getHorizontalSpacingAlign,
     getVerticalSpacingAlign,
 } from '@/mindMap/helperLines/spacingAlign.ts';
+import {
+    type NodeResizeOrigin,
+    offResizeWithHelperLine,
+    onResizeWithHelperLine,
+} from '@/mindMap/helperLines/resize/emitResizeWithHelperLine.ts';
+import type {OnResize} from '@vue-flow/node-resizer';
+import {throttle} from 'lodash-es';
 
 const props = withDefaults(
     defineProps<{
@@ -29,7 +48,7 @@ const props = withDefaults(
     {
         spinDistance: 5,
         spinLineWidth: 1,
-        spinLineExtension: 16,
+        spinLineExtension: 24,
         spinLineDashed: 2,
 
         spacingAlignTolerance: 5,
@@ -46,11 +65,11 @@ const themeStore = useThemeStore();
 
 const canvasRef = useTemplateRef<HTMLCanvasElement>('canvasRef');
 
-const hSnapLines = ref<HorizontalHelperLine[]>([]);
-const vSnapLines = ref<VerticalHelperLine[]>([]);
+let hSnapLines: HorizontalHelperLine[] | undefined;
+let vSnapLines: VerticalHelperLine[] | undefined;
 
-const hSpacingLines = ref<HorizontalHelperLine[]>([]);
-const vSpacingLines = ref<VerticalHelperLine[]>([]);
+let hSpacingLines: HorizontalHelperLine[] | undefined;
+let vSpacingLines: VerticalHelperLine[] | undefined;
 
 const width = computed(() => vueFlow.value.dimensions.value.width);
 const height = computed(() => vueFlow.value.dimensions.value.height);
@@ -72,7 +91,80 @@ const viewportRect = computed(() => {
     };
 });
 
-const handleNodeSinglePositionChange = (change: NodePositionChange) => {
+const getInViewportNodeBounds = () => {
+    const {
+        left: viewportLeft,
+        right: viewportRight,
+        top: viewportTop,
+        bottom: viewportBottom,
+    } = viewportRect.value;
+
+    return mindMap.layers
+        .flatMap((layer): NodeBounds[] => {
+            return layer.vueFlow.nodes.value.map((node) => ({
+                id: layer.id + node.id,
+                left: node.position.x,
+                right: node.position.x + node.dimensions.width,
+                top: node.position.y,
+                bottom: node.position.y + node.dimensions.height,
+                width: node.dimensions.width,
+                height: node.dimensions.height,
+            }));
+        })
+        .filter((bounds) => {
+            // 检查是否在可见区域内（有重叠）
+            return (
+                bounds.right > viewportLeft &&
+                bounds.left < viewportRight &&
+                bounds.bottom > viewportTop &&
+                bounds.top < viewportBottom
+            );
+        });
+};
+
+const setHSnapLines = (snapLineMap: Map<HorizontalType, SnapLine>, nodeABounds: NodeBounds) => {
+    const lines: SnapLine[] = [];
+    if (snapLineMap.has('top-top') && snapLineMap.has('bottom-bottom')) {
+        lines.push(snapLineMap.get('top-top')!, snapLineMap.get('bottom-bottom')!);
+    } else if (snapLineMap.has('centerY')) {
+        lines.push(snapLineMap.get('centerY')!);
+    } else {
+        lines.push(...snapLineMap.values());
+    }
+    hSnapLines = lines.map(({value, targets}) => {
+        const minX = Math.min(nodeABounds.left, ...targets.map((it) => it.left));
+        const maxX = Math.max(nodeABounds.right, ...targets.map((it) => it.right));
+        return {
+            startX: xGraphToCanvas(minX) - props.spinLineExtension,
+            endX: xGraphToCanvas(maxX) + props.spinLineExtension,
+            y: yGraphToCanvas(value),
+        };
+    });
+};
+
+const setVSnapLines = (snapLineMap: Map<VerticalType, SnapLine>, nodeABounds: NodeBounds) => {
+    const lines: SnapLine[] = [];
+    if (snapLineMap.has('left-left') && snapLineMap.has('right-right')) {
+        lines.push(snapLineMap.get('left-left')!, snapLineMap.get('right-right')!);
+    } else if (snapLineMap.has('centerX')) {
+        lines.push(snapLineMap.get('centerX')!);
+    } else {
+        lines.push(...snapLineMap.values());
+    }
+    vSnapLines = lines.map(({value, targets}) => {
+        const minY = Math.min(nodeABounds.top, ...targets.map((it) => it.top));
+        const maxY = Math.max(nodeABounds.bottom, ...targets.map((it) => it.bottom));
+        return {
+            x: xGraphToCanvas(value),
+            startY: yGraphToCanvas(minY) - props.spinLineExtension,
+            endY: yGraphToCanvas(maxY) + props.spinLineExtension,
+        };
+    });
+};
+
+const handleNodePositionChange = (change: NodePositionChange) => {
+    if (!('position' in change) || !change.position) return;
+
     const nodeA = vueFlow.value.nodes.value.find((node) => node.id === change.id);
     if (!nodeA) return;
 
@@ -85,37 +177,7 @@ const handleNodeSinglePositionChange = (change: NodePositionChange) => {
         width: nodeA.dimensions.width,
         height: nodeA.dimensions.height,
     };
-
-    const {
-        left: viewportLeft,
-        right: viewportRight,
-        top: viewportTop,
-        bottom: viewportBottom,
-    } = viewportRect.value;
-
-    const nodeBounds = mindMap.layers
-        .flatMap((layer): NodeBounds[] => {
-            return layer.vueFlow.nodes.value.map((node) => ({
-                id: layer.id + node.id,
-                left: node.position.x,
-                right: node.position.x + node.dimensions.width,
-                top: node.position.y,
-                bottom: node.position.y + node.dimensions.height,
-                width: node.dimensions.width,
-                height: node.dimensions.height,
-            }));
-        })
-        .filter((node) => {
-            if (node.id === nodeABounds.id) return false;
-
-            // 检查节点是否在可见区域内（有重叠）
-            return (
-                node.right > viewportLeft &&
-                node.left < viewportRight &&
-                node.bottom > viewportTop &&
-                node.top < viewportBottom
-            );
-        });
+    const nodeBounds = getInViewportNodeBounds().filter((bound) => bound.id !== nodeABounds.id);
 
     // 吸附线
     const snapLines = getSnapLines(nodeABounds, nodeBounds, props.spinDistance);
@@ -127,47 +189,8 @@ const handleNodeSinglePositionChange = (change: NodePositionChange) => {
         change.position.y = snapLines.snapY;
     }
 
-    if (snapLines.horizontalMap.has('top-top') && snapLines.horizontalMap.has('bottom-bottom')) {
-        snapLines.horizontalMap.delete('centerY');
-        snapLines.horizontalMap.delete('top-bottom');
-        snapLines.horizontalMap.delete('bottom-top');
-    } else if (snapLines.horizontalMap.has('centerY')) {
-        snapLines.horizontalMap.delete('top-top');
-        snapLines.horizontalMap.delete('bottom-bottom');
-        snapLines.horizontalMap.delete('top-bottom');
-        snapLines.horizontalMap.delete('bottom-top');
-    }
-    const horizontalValues = [...snapLines.horizontalMap.values()];
-    hSnapLines.value = horizontalValues.map(({value, targets}) => {
-        const minX = Math.min(nodeABounds.left, ...targets.map((it) => it.left));
-        const maxX = Math.max(nodeABounds.right, ...targets.map((it) => it.right));
-        return {
-            startX: xGraphToCanvas(minX) - props.spinLineExtension,
-            endX: xGraphToCanvas(maxX) + props.spinLineExtension,
-            y: yGraphToCanvas(value),
-        };
-    });
-
-    if (snapLines.verticalMap.has('left-left') && snapLines.verticalMap.has('right-right')) {
-        snapLines.verticalMap.delete('centerX');
-        snapLines.verticalMap.delete('left-right');
-        snapLines.verticalMap.delete('right-left');
-    } else if (snapLines.verticalMap.has('centerX')) {
-        snapLines.verticalMap.delete('left-left');
-        snapLines.verticalMap.delete('right-right');
-        snapLines.verticalMap.delete('left-right');
-        snapLines.verticalMap.delete('right-left');
-    }
-    const verticalValues = [...snapLines.verticalMap.values()];
-    vSnapLines.value = verticalValues.map(({value, targets}) => {
-        const minY = Math.min(nodeABounds.top, ...targets.map((it) => it.top));
-        const maxY = Math.max(nodeABounds.bottom, ...targets.map((it) => it.bottom));
-        return {
-            x: xGraphToCanvas(value),
-            startY: yGraphToCanvas(minY) - props.spinLineExtension,
-            endY: yGraphToCanvas(maxY) + props.spinLineExtension,
-        };
-    });
+    setHSnapLines(snapLines.horizontalMap, nodeABounds);
+    setVSnapLines(snapLines.verticalMap, nodeABounds);
 
     // 水平间距对齐线
     const hSpacingGroup = getHorizontalSpacingAlign(
@@ -176,14 +199,14 @@ const handleNodeSinglePositionChange = (change: NodePositionChange) => {
         props.spacingAlignTolerance,
     );
     if (hSpacingGroup) {
-        hSpacingLines.value = hSpacingGroup.lines.map((line) => ({
+        hSpacingLines = hSpacingGroup.lines.map((line) => ({
             startX: xGraphToCanvas(line.startX),
             endX: xGraphToCanvas(line.endX),
             y: yGraphToCanvas(line.y),
         }));
         if (hSpacingGroup.snapX !== change.position.x) {
             change.position.x = hSpacingGroup.snapX;
-            vSnapLines.value = [];
+            vSnapLines = undefined;
         }
     }
 
@@ -194,32 +217,131 @@ const handleNodeSinglePositionChange = (change: NodePositionChange) => {
         props.spacingAlignTolerance,
     );
     if (vSpacingGroup) {
-        vSpacingLines.value = vSpacingGroup.lines.map((line) => ({
+        vSpacingLines = vSpacingGroup.lines.map((line) => ({
             x: xGraphToCanvas(line.x),
             startY: yGraphToCanvas(line.startY),
             endY: yGraphToCanvas(line.endY),
         }));
         if (vSpacingGroup.snapY !== change.position.y) {
             change.position.y = vSpacingGroup.snapY;
-            hSnapLines.value = [];
+            hSnapLines = undefined;
         }
     }
 
-    vueFlow.value.nodes.value = vueFlow.value.applyNodeChanges([change]);
+    vueFlow.value.applyNodeChanges([change]);
+
+    drawHelperLines();
 };
 
+const handleNodeResize = (nodeA: GraphNode, resizeOrigin: NodeResizeOrigin, args: OnResize) => {
+    const nodeABounds: NodeBounds = {
+        id: mindMap.currentLayer.value.id + nodeA.id,
+        left: args.params.x,
+        right: args.params.x + args.params.width,
+        top: args.params.y,
+        bottom: args.params.y + args.params.height,
+        width: args.params.width,
+        height: args.params.height,
+    };
+    const nodeBounds = getInViewportNodeBounds().filter((bound) => bound.id !== nodeABounds.id);
+
+    const positionChange: NodePositionChange = {
+        id: nodeA.id,
+        type: 'position',
+        from: {
+            x: nodeA.position.x,
+            y: nodeA.position.y,
+        },
+        position: {
+            x: nodeA.position.x,
+            y: nodeA.position.y,
+        },
+    };
+    const dimensionsChange: Omit<NodeDimensionChange, 'dimensions'> & {
+        dimensions: Dimensions;
+    } = {
+        id: nodeA.id,
+        type: 'dimensions',
+        dimensions: {
+            width: nodeA.dimensions.width,
+            height: nodeA.dimensions.height,
+        },
+    };
+
+    // 根据尺寸变化类型移除部分吸附线
+    const isLeftChange = !!args.params.direction[0] && args.params.x !== resizeOrigin.x;
+    const isRightChange = !!args.params.direction[0] && args.params.x === resizeOrigin.x;
+    const isTopChange = !!args.params.direction[1] && args.params.y !== resizeOrigin.y;
+    const isBottomChange = !!args.params.direction[1] && args.params.y === resizeOrigin.y;
+
+    const ignoreVType: VerticalType[] = ['centerX'];
+    const ignoreHType: HorizontalType[] = ['centerY'];
+    // 吸附线
+    const snapLines = getSnapLines(
+        nodeABounds,
+        nodeBounds,
+        props.spinDistance,
+        ignoreVType,
+        ignoreHType,
+    );
+
+    // 修正位置
+    if (snapLines.snapX !== undefined) {
+        positionChange.position.x = snapLines.snapX;
+        // 根据拖拽方向调整宽度
+        if (isLeftChange) {
+            // 左侧拖拽：位置改变，宽度需要补偿
+            dimensionsChange.dimensions.width =
+                nodeABounds.width + (nodeABounds.left - snapLines.snapX);
+        } else if (isRightChange) {
+            // 右侧拖拽：位置不变，宽度由吸附点决定
+            dimensionsChange.dimensions.width =
+                nodeABounds.width + (snapLines.snapX - nodeABounds.left);
+        }
+    }
+
+    if (snapLines.snapY !== undefined) {
+        positionChange.position.y = snapLines.snapY;
+        // 根据拖拽方向调整高度
+        if (isTopChange) {
+            // 顶部拖拽：位置改变，高度需要补偿
+            dimensionsChange.dimensions.height =
+                nodeABounds.height + (nodeABounds.top - snapLines.snapY);
+        } else if (isBottomChange) {
+            // 底部拖拽：位置不变，高度由吸附点决定
+            dimensionsChange.dimensions.height =
+                nodeABounds.height + (snapLines.snapY - nodeABounds.top);
+        }
+    }
+    setHSnapLines(snapLines.horizontalMap, nodeABounds);
+    setVSnapLines(snapLines.verticalMap, nodeABounds);
+
+    vueFlow.value.applyNodeChanges([positionChange, dimensionsChange]);
+
+    drawHelperLines();
+};
+
+onMounted(() => {
+    onResizeWithHelperLine(handleNodeResize);
+});
+onBeforeUnmount(() => {
+    offResizeWithHelperLine(handleNodeResize);
+});
+
 const produceNodeChange = (changes: NodeChange[]) => {
-    hSnapLines.value = [];
-    vSnapLines.value = [];
-    hSpacingLines.value = [];
-    vSpacingLines.value = [];
-
-    if (changes.length > 1) return;
-    const change = changes[0];
-    if (!change) return;
-
-    if (change.type === 'position' && 'position' in change && change.position !== undefined) {
-        handleNodeSinglePositionChange(change);
+    if (changes.length > 1) {
+        const positionChanges = changes.filter((change) => change.type === 'position');
+        if (positionChanges.length === changes.length) {
+            console.log('multi position');
+            // TODO multi position
+            return;
+        }
+    } else if (changes.length === 1 && changes[0]) {
+        const change = changes[0];
+        if (change.type === 'position') {
+            handleNodePositionChange(change);
+            return;
+        }
     }
 };
 
@@ -235,28 +357,7 @@ watch(
     },
 );
 
-const cleanHelperLines = () => {
-    hSnapLines.value = [];
-    vSnapLines.value = [];
-    hSpacingLines.value = [];
-    vSpacingLines.value = [];
-
-    const canvas = canvasRef.value;
-    const ctx = canvas?.getContext('2d');
-
-    if (!ctx || !canvas) {
-        return;
-    }
-
-    const dpi = window.devicePixelRatio;
-    canvas.width = width.value * dpi;
-    canvas.height = height.value * dpi;
-
-    ctx.scale(dpi, dpi);
-    ctx.clearRect(0, 0, width.value, height.value);
-};
-
-const drawHelperLines = () => {
+const drawHelperLines = throttle(() => {
     const canvas = canvasRef.value;
     const ctx = canvas?.getContext('2d');
 
@@ -276,13 +377,17 @@ const drawHelperLines = () => {
     ctx.strokeStyle = themeStore.primaryColor.value;
     ctx.lineWidth = props.spinLineWidth;
     ctx.setLineDash([props.spinLineDashed, props.spinLineDashed]);
-    for (const line of vSnapLines.value) {
-        ctx.moveTo(line.x, line.startY);
-        ctx.lineTo(line.x, line.endY);
+    if (vSnapLines !== undefined) {
+        for (const line of vSnapLines) {
+            ctx.moveTo(line.x, line.startY);
+            ctx.lineTo(line.x, line.endY);
+        }
     }
-    for (const line of hSnapLines.value) {
-        ctx.moveTo(line.startX, line.y);
-        ctx.lineTo(line.endX, line.y);
+    if (hSnapLines !== undefined) {
+        for (const line of hSnapLines) {
+            ctx.moveTo(line.startX, line.y);
+            ctx.lineTo(line.endX, line.y);
+        }
     }
     ctx.stroke();
     ctx.setLineDash([]);
@@ -291,52 +396,79 @@ const drawHelperLines = () => {
     ctx.beginPath();
     ctx.strokeStyle = 'orange';
     ctx.lineWidth = props.spacingAlignLineWidth;
-    for (const line of hSpacingLines.value) {
-        const startY = line.y + props.spacingAlignOffset;
-        const centerY = startY + props.spacingAlignExtension;
-        const endY = centerY + props.spacingAlignExtension;
+    if (hSpacingLines !== undefined) {
+        for (const line of hSpacingLines) {
+            const startY = line.y + props.spacingAlignOffset;
+            const centerY = startY + props.spacingAlignExtension;
+            const endY = centerY + props.spacingAlignExtension;
 
-        const startX = line.startX + props.spacingAlignLineWidth;
-        const endX = line.endX - props.spacingAlignLineWidth;
+            const startX = line.startX + props.spacingAlignLineWidth;
+            const endX = line.endX - props.spacingAlignLineWidth;
 
-        ctx.moveTo(startX, centerY);
-        ctx.lineTo(endX, centerY);
+            ctx.moveTo(startX, centerY);
+            ctx.lineTo(endX, centerY);
 
-        ctx.moveTo(startX, startY);
-        ctx.lineTo(startX, endY);
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(startX, endY);
 
-        ctx.moveTo(endX, startY);
-        ctx.lineTo(endX, endY);
+            ctx.moveTo(endX, startY);
+            ctx.lineTo(endX, endY);
+        }
     }
-    for (const line of vSpacingLines.value) {
-        const startX = line.x + props.spacingAlignOffset;
-        const centerX = startX + props.spacingAlignExtension;
-        const endX = centerX + props.spacingAlignExtension;
+    if (vSpacingLines !== undefined) {
+        for (const line of vSpacingLines) {
+            const startX = line.x + props.spacingAlignOffset;
+            const centerX = startX + props.spacingAlignExtension;
+            const endX = centerX + props.spacingAlignExtension;
 
-        const startY = line.startY + props.spacingAlignLineWidth;
-        const endY = line.endY - props.spacingAlignLineWidth;
+            const startY = line.startY + props.spacingAlignLineWidth;
+            const endY = line.endY - props.spacingAlignLineWidth;
 
-        ctx.moveTo(centerX, startY);
-        ctx.lineTo(centerX, endY);
+            ctx.moveTo(centerX, startY);
+            ctx.lineTo(centerX, endY);
 
-        ctx.moveTo(startX, startY);
-        ctx.lineTo(endX, startY);
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, startY);
 
-        ctx.moveTo(startX, endY);
-        ctx.lineTo(endX, endY);
+            ctx.moveTo(startX, endY);
+            ctx.lineTo(endX, endY);
+        }
     }
     ctx.stroke();
-};
+}, 100);
+
+const cleanHelperLines = throttle(() => {
+    hSnapLines = undefined;
+    vSnapLines = undefined;
+    hSpacingLines = undefined;
+    vSpacingLines = undefined;
+
+    const canvas = canvasRef.value;
+    const ctx = canvas?.getContext('2d');
+
+    if (!ctx || !canvas) {
+        return;
+    }
+
+    const dpi = window.devicePixelRatio;
+    canvas.width = width.value * dpi;
+    canvas.height = height.value * dpi;
+
+    ctx.scale(dpi, dpi);
+    ctx.clearRect(0, 0, width.value, height.value);
+}, 100);
 
 watch(
-    () => [width.value, height.value, x.value, y.value, zoom.value],
+    () => [
+        width.value,
+        height.value,
+        x.value,
+        y.value,
+        zoom.value,
+        vueFlow.value.getSelectedNodes.value.length,
+        vueFlow.value.getSelectedEdges.value.length,
+    ],
     () => cleanHelperLines(),
-    {immediate: true},
-);
-
-watch(
-    () => [hSnapLines.value, vSnapLines.value, hSpacingLines.value, vSpacingLines.value],
-    () => drawHelperLines(),
     {immediate: true},
 );
 </script>
