@@ -8,7 +8,7 @@ export type SnapLine = {
     targets: [NodeBounds, ...NodeBounds[]];
 };
 
-type SnapLineResult = {
+export type SnapLineResult = {
     horizontalMap: Map<HorizontalType, SnapLine>;
     verticalMap: Map<VerticalType, SnapLine>;
     snapX: number | undefined;

@@ -13,6 +13,7 @@ import {
     getSnapLines,
     type HorizontalType,
     type SnapLine,
+    type SnapLineResult,
     type VerticalType,
 } from '@/mindMap/helperLines/snapLines.ts';
 import {useThemeStore} from '@/store/themeStore.ts';
@@ -229,7 +230,7 @@ const handleNodePositionChange = (change: NodePositionChange) => {
             vSnapLines = undefined;
         }
     } else {
-        setHSpacingLines([]);
+        hSpacingLines = undefined;
     }
 
     // 垂直间距对齐线
@@ -245,10 +246,103 @@ const handleNodePositionChange = (change: NodePositionChange) => {
             hSnapLines = undefined;
         }
     } else {
-        setVSpacingLines([]);
+        vSpacingLines = undefined;
     }
 
     vueFlow.value.applyNodeChanges([change]);
+
+    drawHelperLines();
+};
+
+const handleNodeBatchPositionChange = (changes: NodePositionChange[]) => {
+    if (changes.length === 0 || !changes[0]) return;
+
+    // 收集所有被拖拽节点的边界信息
+    const changedNodesBounds: NodeBounds[] = [];
+    const changedIdSet = new Set<string>();
+
+    for (const change of changes) {
+        if (!('position' in change) || !change.position) continue;
+
+        const node = vueFlow.value.nodes.value.find((n) => n.id === change.id);
+        if (!node) continue;
+
+        const boundIds = mindMap.currentLayer.value.id + node.id;
+        changedIdSet.add(boundIds);
+        changedNodesBounds.push({
+            id: boundIds,
+            left: change.position.x,
+            right: change.position.x + node.dimensions.width,
+            top: change.position.y,
+            bottom: change.position.y + node.dimensions.height,
+            width: node.dimensions.width,
+            height: node.dimensions.height,
+        });
+    }
+
+    if (changedNodesBounds.length === 0) return;
+
+    // 获取其他未移动的节点边界
+    const nodesBounds = getInViewportNodeBounds().filter((bound) => !changedIdSet.has(bound.id));
+
+    const snapLinesPair: [NodeBounds, SnapLineResult][] = changedNodesBounds.map((nodeABounds) => {
+        return [nodeABounds, getSnapLines(nodeABounds, nodesBounds, props.spinDistance)];
+    });
+
+    // 寻找最小的snapX和snapY对应的snapLines
+    let minSnapX: number | undefined;
+    let minSnapY: number | undefined;
+    let bestSnapXResult: SnapLineResult | undefined;
+    let bestSnapYResult: SnapLineResult | undefined;
+    let bestSnapXBounds: NodeBounds | undefined;
+    let bestSnapYBounds: NodeBounds | undefined;
+
+    for (const pair of snapLinesPair) {
+        const [nodeBounds, snapLines] = pair;
+        if (snapLines.snapX !== undefined) {
+            if (minSnapX === undefined || snapLines.snapX < minSnapX) {
+                minSnapX = snapLines.snapX;
+                bestSnapXResult = snapLines;
+                bestSnapXBounds = nodeBounds;
+            }
+        }
+        if (snapLines.snapY !== undefined) {
+            if (minSnapY === undefined || snapLines.snapY < minSnapY) {
+                minSnapY = snapLines.snapY;
+                bestSnapYResult = snapLines;
+                bestSnapYBounds = nodeBounds;
+            }
+        }
+    }
+
+    // 计算整体边界的偏移量
+    const offsetX = minSnapX !== undefined && bestSnapXBounds ? minSnapX - bestSnapXBounds.left : 0;
+    const offsetY = minSnapY !== undefined && bestSnapYBounds ? minSnapY - bestSnapYBounds.top : 0;
+
+    // 将偏移应用到所有被拖拽的节点
+    for (let i = 0; i < changes.length; i++) {
+        const change = changes[i];
+        if (!change || !('position' in change) || !change.position) continue;
+
+        if (offsetX !== 0) {
+            change.position.x += offsetX;
+        }
+        if (offsetY !== 0) {
+            change.position.y += offsetY;
+        }
+    }
+
+    // 使用最佳匹配的snapLines进行显示
+    if (bestSnapXResult && bestSnapXBounds) {
+        setVSnapLines(bestSnapXResult.verticalMap, bestSnapXBounds);
+    }
+    if (bestSnapYResult && bestSnapYBounds) {
+        setHSnapLines(bestSnapYResult.horizontalMap, bestSnapYBounds);
+    }
+    hSpacingLines = undefined;
+    vSpacingLines = undefined;
+
+    vueFlow.value.applyNodeChanges(changes);
 
     drawHelperLines();
 };
@@ -335,6 +429,8 @@ const handleNodeResize = (nodeA: GraphNode, resizeOrigin: NodeResizeOrigin, args
     }
     setHSnapLines(snapLines.horizontalMap, nodeABounds);
     setVSnapLines(snapLines.verticalMap, nodeABounds);
+    hSpacingLines = undefined;
+    vSpacingLines = undefined;
 
     vueFlow.value.applyNodeChanges([positionChange, dimensionsChange]);
 
@@ -352,8 +448,7 @@ const produceNodeChange = (changes: NodeChange[]) => {
     if (changes.length > 1) {
         const positionChanges = changes.filter((change) => change.type === 'position');
         if (positionChanges.length === changes.length) {
-            console.log('multi position');
-            // TODO multi position
+            handleNodeBatchPositionChange(positionChanges);
             return;
         }
     } else if (changes.length === 1 && changes[0]) {
