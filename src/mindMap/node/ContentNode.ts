@@ -11,8 +11,8 @@ export type ContentType = (typeof ContentType_CONSTANTS)[number];
 
 export const ContentType_DEFAULT = ContentType_CONSTANTS[0];
 
-export const ContentNode_Markdown_minWidth = 24;
-export const ContentNode_Markdown_minHeight = 24;
+export const ContentNode_minWidth = 20;
+export const ContentNode_minHeight = 24;
 
 // 内容节点数据
 export type ContentNodeData = {

@@ -43,12 +43,12 @@ const updateTextSize = () => {
         inputRef.value,
     );
     width.value =
-        (innerWidth <= 0 ? 1 : innerWidth) +
+        Math.max(innerWidth, 2) +
         props.borderWidth * 2 +
         fullPadding.value.left +
         fullPadding.value.right;
     height.value =
-        (innerHeight < props.fontSize ? props.fontSize : innerHeight) +
+        Math.max(innerHeight, props.fontSize) +
         props.borderWidth * 2 +
         fullPadding.value.top +
         fullPadding.value.bottom;
@@ -61,12 +61,12 @@ const handleComposition = (e: CompositionEvent) => {
     const text = innerValue.value.slice(0, start) + e.data + innerValue.value.slice(start);
     const {width: innerWidth, height: innerHeight} = getTextLineSize(text, inputRef.value);
     width.value =
-        (innerWidth <= 0 ? 1 : innerWidth) +
+        Math.max(innerWidth, 2) +
         props.borderWidth * 2 +
         fullPadding.value.left +
         fullPadding.value.right;
     height.value =
-        (innerHeight < props.fontSize ? props.fontSize : innerHeight) +
+        Math.max(innerHeight, props.fontSize) +
         props.borderWidth * 2 +
         fullPadding.value.top +
         fullPadding.value.bottom;
@@ -132,7 +132,7 @@ defineExpose({el: inputRef, isFocus});
             paddingBottom: `${fullPadding.bottom}px`,
             borderWidth: `${props.borderWidth}px`,
             fontSize: `${props.fontSize}px`,
-            lineHeight: `${lineHeight}px`,
+            lineHeight: `${props.lineHeight}px`,
             width: `${width}px`,
             height: `${height}px`,
             cursor: isFocus ? 'text' : 'default',

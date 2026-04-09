@@ -19,8 +19,8 @@ import IconMarkdownOff from '@/components/icons/IconMarkdownOff.vue';
 import {type RawMindMapLayer} from '@/mindMap/layer/MindMapLayer.ts';
 import {
     type ContentNode,
-    ContentNode_Markdown_minHeight,
-    ContentNode_Markdown_minWidth,
+    ContentNode_minHeight,
+    ContentNode_minWidth,
     type ContentNodeData,
     ContentNodeHandles,
     type ContentType,
@@ -530,8 +530,8 @@ const executeDelete = () => {
             :node-id="id"
             :is-visible="data.type === 'markdown' && isFocus && !layer.lock"
             :class="{noWheel: isResizing}"
-            :min-width="ContentNode_Markdown_minWidth"
-            :min-height="ContentNode_Markdown_minHeight"
+            :min-width="ContentNode_minWidth"
+            :min-height="ContentNode_minHeight"
             @resize="handleMarkdownEditorResize"
             @resize-start="handleMarkdownEditorResizeStart"
             @resize-end="handleMarkdownEditorResizeEnd"
