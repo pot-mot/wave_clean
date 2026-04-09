@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {computed, nextTick, onBeforeUnmount, onMounted, useTemplateRef, watch} from 'vue';
+import {computed, onBeforeUnmount, onMounted, useTemplateRef, watch} from 'vue';
 import {useMindMap} from '@/mindMap/useMindMap.ts';
 import type {
     Dimensions,
@@ -162,6 +162,30 @@ const setVSnapLines = (snapLineMap: Map<VerticalType, SnapLine>, nodeABounds: No
     });
 };
 
+const setHSpacingLines = (lines: HorizontalHelperLine[]) => {
+    if (lines.length === 0) {
+        hSpacingLines = undefined;
+        return;
+    }
+    hSpacingLines = lines.map((line) => ({
+        startX: xGraphToCanvas(line.startX),
+        endX: xGraphToCanvas(line.endX),
+        y: yGraphToCanvas(line.y),
+    }));
+};
+
+const setVSpacingLines = (lines: VerticalHelperLine[]) => {
+    if (lines.length === 0) {
+        vSpacingLines = undefined;
+        return;
+    }
+    vSpacingLines = lines.map((line) => ({
+        x: xGraphToCanvas(line.x),
+        startY: yGraphToCanvas(line.startY),
+        endY: yGraphToCanvas(line.endY),
+    }));
+};
+
 const handleNodePositionChange = (change: NodePositionChange) => {
     if (!('position' in change) || !change.position) return;
 
@@ -199,15 +223,13 @@ const handleNodePositionChange = (change: NodePositionChange) => {
         props.spacingAlignTolerance,
     );
     if (hSpacingGroup) {
-        hSpacingLines = hSpacingGroup.lines.map((line) => ({
-            startX: xGraphToCanvas(line.startX),
-            endX: xGraphToCanvas(line.endX),
-            y: yGraphToCanvas(line.y),
-        }));
+        setHSpacingLines(hSpacingGroup.lines);
         if (hSpacingGroup.snapX !== change.position.x) {
             change.position.x = hSpacingGroup.snapX;
             vSnapLines = undefined;
         }
+    } else {
+        setHSpacingLines([]);
     }
 
     // 垂直间距对齐线
@@ -217,15 +239,13 @@ const handleNodePositionChange = (change: NodePositionChange) => {
         props.spacingAlignTolerance,
     );
     if (vSpacingGroup) {
-        vSpacingLines = vSpacingGroup.lines.map((line) => ({
-            x: xGraphToCanvas(line.x),
-            startY: yGraphToCanvas(line.startY),
-            endY: yGraphToCanvas(line.endY),
-        }));
+        setVSpacingLines(vSpacingGroup.lines);
         if (vSpacingGroup.snapY !== change.position.y) {
             change.position.y = vSpacingGroup.snapY;
             hSnapLines = undefined;
         }
+    } else {
+        setVSpacingLines([]);
     }
 
     vueFlow.value.applyNodeChanges([change]);

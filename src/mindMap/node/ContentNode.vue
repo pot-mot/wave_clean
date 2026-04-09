@@ -232,6 +232,14 @@ const handleMarkdownEditorResizeEnd = () => {
     const node = _node.value;
     if (!node) return;
 
+    if (
+        node.dimensions.width === markdownResizeOrigin.width &&
+        node.dimensions.height === markdownResizeOrigin.height &&
+        node.position.x === markdownResizeOrigin.x &&
+        node.position.y === markdownResizeOrigin.y
+    )
+        return;
+
     recordNodeResize(props.id, {
         oldSize: {
             width: markdownResizeOrigin.width,
@@ -250,6 +258,8 @@ const handleMarkdownEditorResizeEnd = () => {
             y: node.position.y,
         },
     });
+
+    markdownResizeOrigin = undefined;
 };
 
 // 阻止 splitter drag
