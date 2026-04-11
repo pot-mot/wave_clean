@@ -68,4 +68,6 @@ export const localeZhCn: MainLocale = {
     quickInput_value: '快捷输入内容',
 
     MESSAGE_delete_confirm: (deleteTarget: string) => `确定要删除 ${deleteTarget} 吗？`,
+
+    markdown_element_not_exist: 'Markdown 元素不存在',
 };

@@ -66,6 +66,8 @@ export type MainLocale = {
     quickInput_value: string;
 
     MESSAGE_delete_confirm: (deleteTarget: string) => string;
+
+    markdown_element_not_exist: string;
 };
 
 type BaseLocale = {

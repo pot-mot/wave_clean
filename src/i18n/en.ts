@@ -68,4 +68,6 @@ export const localeEn: MainLocale = {
     quickInput_value: 'value',
 
     MESSAGE_delete_confirm: (deleteTarget: string) => `Are you sure to delete ${deleteTarget}?`,
+
+    markdown_element_not_exist: 'Markdown Element Not Exist',
 };
