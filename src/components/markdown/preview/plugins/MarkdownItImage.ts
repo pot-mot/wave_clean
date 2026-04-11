@@ -11,6 +11,7 @@ import {
 } from '@/utils/file/fileDownload.ts';
 import {sendMessage} from '@/components/message/messageApi.ts';
 import {withLoading} from '@/components/loading/loadingApi.ts';
+import {translate} from '@/store/i18nStore.ts';
 
 export const MarkdownItImage = (md: MarkdownIt) => {
     // @ts-ignore
@@ -19,10 +20,13 @@ export const MarkdownItImage = (md: MarkdownIt) => {
     };
 
     md.renderer.rules.image = (tokens, idx, options, env, self) => {
-        // 添加 target="_blank" 属性
-        tokens[idx]?.attrPush(['target', '_blank']);
-        tokens[idx]?.attrPush(['onload', "this.classList.remove('error');"]);
-        tokens[idx]?.attrPush(['onerror', "this.classList.add('error');"]);
+        const token = tokens[idx];
+        if (token) {
+            token.attrSet('alt', token.content);
+            token.attrSet('target', '_blank');
+            token.attrSet('onload', "this.classList.remove('error');");
+            token.attrSet('onerror', "this.classList.add('error');");
+        }
         // 调用默认渲染器以实现默认行为
         return defaultRender(tokens, idx, options, env, self);
     };
@@ -40,24 +44,31 @@ const handleImageDownload = async (e: Event) => {
     if (!image || !(image instanceof HTMLImageElement)) return;
 
     await withLoading('Export MindMap', async () => {
-        let path;
-        const filename = `image-${Date.now()}`;
+        let path: string | null = null;
+        const filename = image.alt || `image-${Date.now()}`;
         if (SVG_PREFIX_REGEX.test(image.src)) {
             path = await downloadSvgFile(image.src, {filename});
         } else if (IMAGE_BASE64_PREFIX.test(image.src)) {
             path = await downloadImageFile(image.src, {filename});
         } else {
-            sendMessage('Save Unsupported', {type: 'warning'});
+            sendMessage(translate('download_unsupported'), {type: 'warning'});
         }
-        if (path) {
-            sendMessage(`Save ${filename} Success\nAt ${path}`, {type: 'success'});
+        if (path !== null) {
+            sendMessage(translate({key: 'download_success', args: [filename, path]}), {
+                type: 'success',
+            });
+        } else {
+            sendMessage(translate({key: 'download_fail', args: [filename]}), {type: 'error'});
         }
     });
 };
 
 export const imagePreview = (currentElement: Element, previewElement: HTMLElement) => {
     const images = previewElement.querySelectorAll('img, svg');
-    const imageSrcList: string[] = [];
+    const imageSrcList: {
+        src: string;
+        alt: string;
+    }[] = [];
 
     // 初始图片下标
     let initialViewIndex = 0;
@@ -69,12 +80,18 @@ export const imagePreview = (currentElement: Element, previewElement: HTMLElemen
         if (!image) continue;
 
         if (image instanceof HTMLImageElement && !image.classList.contains('error')) {
-            imageSrcList.push((<HTMLImageElement>images[i]).src);
+            imageSrcList.push({
+                src: image.src,
+                alt: image.alt,
+            });
         } else if (image instanceof SVGSVGElement) {
             const svgString = serializer.serializeToString(image);
             // 将字符串编码为Base64格式
             const base64String = btoa(svgString);
-            imageSrcList.push(`data:image/svg+xml;base64,${base64String}`);
+            imageSrcList.push({
+                src: `data:image/svg+xml;base64,${base64String}`,
+                alt: `svg-${i}`,
+            });
         }
 
         if (!isMatchCurrent) {

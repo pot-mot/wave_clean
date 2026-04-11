@@ -70,4 +70,9 @@ export const localeZhCn: MainLocale = {
     MESSAGE_delete_confirm: (deleteTarget: string) => `确定要删除 ${deleteTarget} 吗？`,
 
     markdown_element_not_exist: 'Markdown 元素不存在',
+
+    download_unsupported: '不支持下载',
+    unknown_download_path: '未知下载路径',
+    download_success: (fileName: string, path: string) => `${fileName} 下载成功，保存在 ${path}`,
+    download_fail: (fileName: string) => `${fileName} 下载失败`,
 };

@@ -113,7 +113,7 @@ export const downloadImageFile = async (
         },
         () => {
             downloadFileUsingAnchor(dataUrl, filename);
-            return 'download path';
+            return translate('unknown_download_path');
         },
     );
 };
@@ -151,7 +151,7 @@ export const downloadSvgFile = async (
         },
         () => {
             downloadFileUsingAnchor(dataUrl, filename);
-            return 'download path';
+            return translate('unknown_download_path');
         },
     );
 };
