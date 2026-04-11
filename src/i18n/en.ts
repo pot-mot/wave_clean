@@ -72,7 +72,7 @@ export const localeEn: MainLocale = {
     markdown_element_not_exist: 'Markdown Element Not Exist',
 
     download_unsupported: 'Download Unsupported',
-    unknown_download_path: 'Unknown Download Path',
+    browser_download_path: '[Browser Download Path]',
     download_success: (fileName: string, path: string) =>
         `Download Success: ${fileName} -> ${path}`,
     download_fail: (fileName: string) => `Download Fail: ${fileName}`,

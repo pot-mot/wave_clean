@@ -70,7 +70,7 @@ export type MainLocale = {
     markdown_element_not_exist: string;
 
     download_unsupported: string;
-    unknown_download_path: string;
+    browser_download_path: string;
     download_success: (fileName: string, path: string) => string;
     download_fail: (fileName: string) => string;
 };

@@ -76,7 +76,7 @@ export const downloadTextFile = async (
         () => {
             const dataUrl = `${TEXT_PREFIX}${encodeURIComponent(text)}`;
             downloadFileUsingAnchor(dataUrl, filename);
-            return 'download path';
+            return translate('browser_download_path');
         },
     );
 };
@@ -113,7 +113,7 @@ export const downloadImageFile = async (
         },
         () => {
             downloadFileUsingAnchor(dataUrl, filename);
-            return translate('unknown_download_path');
+            return translate('browser_download_path');
         },
     );
 };
@@ -151,7 +151,7 @@ export const downloadSvgFile = async (
         },
         () => {
             downloadFileUsingAnchor(dataUrl, filename);
-            return translate('unknown_download_path');
+            return translate('browser_download_path');
         },
     );
 };
