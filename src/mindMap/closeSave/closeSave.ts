@@ -30,7 +30,6 @@ export const confirmSave = () => {
 export const initCloseSave = () =>
     noTauriInvokeSubstitution(
         async () => {
-            debugger;
             const appWindow = getCurrentWindow();
 
             await listen('before-exit', async () => {
