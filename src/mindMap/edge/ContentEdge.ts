@@ -16,8 +16,8 @@ export type ContentEdgeData = {
     arrowType?: ContentEdgeArrowType;
     color?: string;
     withBorder?: boolean;
-    sourceControlPoint?: {x: number; y: number};
-    targetControlPoint?: {x: number; y: number};
+    sourceControlPointOffset?: {x: number; y: number};
+    targetControlPointOffset?: {x: number; y: number};
 } & SizePositionEdgePartial['data'];
 
 // 内容边
@@ -64,13 +64,13 @@ export const ContentEdge_JsonSchema: JSONSchemaType<ContentEdge> = {
                     nullable: true,
                 },
 
-                sourceControlPoint: {
+                sourceControlPointOffset: {
                     type: 'object',
                     required: ['x', 'y'],
                     properties: {x: {type: 'number'}, y: {type: 'number'}},
                     nullable: true,
                 },
-                targetControlPoint: {
+                targetControlPointOffset: {
                     type: 'object',
                     required: ['x', 'y'],
                     properties: {x: {type: 'number'}, y: {type: 'number'}},
@@ -97,8 +97,8 @@ export const toPureContentEdge = (edge: ContentEdge): ContentEdge => {
             arrowType: edge.data.arrowType,
             color: edge.data.color,
             withBorder: edge.data.withBorder,
-            sourceControlPoint: edge.data.sourceControlPoint,
-            targetControlPoint: edge.data.targetControlPoint,
+            sourceControlPointOffset: edge.data.sourceControlPointOffset,
+            targetControlPointOffset: edge.data.targetControlPointOffset,
         },
     };
 };

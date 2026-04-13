@@ -47,16 +47,6 @@ function getControlWithCurvature({
     return [ctX, ctY];
 }
 
-interface GetBezierPathParams {
-    sourceX: number;
-    sourceY: number;
-    sourcePosition?: Position;
-    targetX: number;
-    targetY: number;
-    targetPosition?: Position;
-    curvature?: number;
-}
-
 export interface PaddingBezierPathResult {
     path: string;
     sourceControlPoint: XYPosition;
@@ -64,24 +54,33 @@ export interface PaddingBezierPathResult {
 }
 
 export const getPaddingBezierPath = (
-    bezierPathParams: GetBezierPathParams,
-    sourceControlPoint?: XYPosition,
-    targetControlPoint?: XYPosition,
-    sourcePadding: number = 8,
-    targetPadding: number = 8,
+    source: {
+        x: number;
+        y: number;
+        position: Position;
+        controlPoint?: XYPosition;
+        padding: number;
+    },
+    target: {
+        x: number;
+        y: number;
+        position: Position;
+        controlPoint?: XYPosition;
+        padding: number;
+    },
+    curvature: number = 0.25,
 ): PaddingBezierPathResult | undefined => {
-    const {
-        sourceX,
-        sourceY,
-        sourcePosition,
-        targetX,
-        targetY,
-        targetPosition,
-        curvature = 0.25,
-    } = bezierPathParams;
-    if (!sourcePosition || !targetPosition) {
-        return;
-    }
+    const sourceX = source.x;
+    const sourceY = source.y;
+    const sourcePosition = source.position;
+    const sourcePadding = source.padding;
+    let sourceControlPoint = source.controlPoint;
+
+    const targetX = target.x;
+    const targetY = target.y;
+    const targetPosition = target.position;
+    const targetPadding = target.padding;
+    let targetControlPoint = target.controlPoint;
 
     // 新增：startX/startY 是 source 前的偏移点
     let startX = sourceX;

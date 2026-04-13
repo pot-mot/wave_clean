@@ -1,5 +1,14 @@
 <script setup lang="ts">
-import {computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch} from 'vue';
+import {
+    computed,
+    nextTick,
+    onBeforeUnmount,
+    onMounted,
+    ref,
+    shallowRef,
+    useTemplateRef,
+    watch,
+} from 'vue';
 import {BaseEdge, type EdgeProps, type XYPosition} from '@vue-flow/core';
 import {useMindMap} from '@/mindMap/useMindMap.ts';
 import FitSizeBlockInput from '@/components/input/FitSizeBlockInput.vue';
@@ -89,38 +98,142 @@ const handleToolBarResize = (size: {width: number; height: number}) => {
 useEdgeUpdaterTouch(props.id);
 
 // 贝塞尔曲线控制点
-const sourceControlPoint = ref<XYPosition | undefined>(props.data.sourceControlPoint);
-const targetControlPoint = ref<XYPosition | undefined>(props.data.targetControlPoint);
-const sourceControlFixed = ref(!!props.data.sourceControlPoint);
-const targetControlFixed = ref(!!props.data.targetControlPoint);
+const sourceControlPointOffset = shallowRef<XYPosition | undefined>();
+const targetControlPointOffset = shallowRef<XYPosition | undefined>();
+const sourceControlFixed = ref<boolean>(!!props.data.sourceControlPointOffset);
+const targetControlFixed = ref<boolean>(!!props.data.targetControlPointOffset);
 watch(
-    () => props.data.sourceControlPoint,
+    () => props.data.sourceControlPointOffset,
     (value) => {
         sourceControlFixed.value = !!value;
+        sourceControlPointOffset.value = value
+            ? {
+                  x: value.x,
+                  y: value.y,
+              }
+            : undefined;
     },
+    {immediate: true},
 );
 watch(
-    () => props.data.targetControlPoint,
+    () => props.data.targetControlPointOffset,
     (value) => {
         targetControlFixed.value = !!value;
+        targetControlPointOffset.value = value
+            ? {
+                  x: value.x,
+                  y: value.y,
+              }
+            : undefined;
+    },
+    {immediate: true},
+);
+const sourceControlPoint = computed({
+    get() {
+        return sourceControlPointOffset.value
+            ? {
+                  x: props.sourceX + sourceControlPointOffset.value.x,
+                  y: props.sourceY + sourceControlPointOffset.value.y,
+              }
+            : undefined;
+    },
+    set(value) {
+        if (!value) return;
+        sourceControlPointOffset.value = {
+            x: value.x - props.sourceX,
+            y: value.y - props.sourceY,
+        };
+    },
+});
+const targetControlPoint = computed({
+    get() {
+        return targetControlPointOffset.value
+            ? {
+                  x: props.targetX + targetControlPointOffset.value.x,
+                  y: props.targetY + targetControlPointOffset.value.y,
+              }
+            : undefined;
+    },
+    set(value) {
+        if (!value) return;
+        targetControlPointOffset.value = {
+            x: value.x - props.targetX,
+            y: value.y - props.targetY,
+        };
+    },
+});
+
+// path 计算
+const path = ref<string>('');
+
+const calculateBezier = () => {
+    return getPaddingBezierPath(
+        {
+            x: props.sourceX,
+            y: props.sourceY,
+            position: props.sourcePosition,
+            controlPoint: sourceControlFixed.value ? sourceControlPoint.value : undefined,
+            padding: 8,
+        },
+        {
+            x: props.targetX,
+            y: props.targetY,
+            position: props.targetPosition,
+            controlPoint: targetControlFixed.value ? targetControlPoint.value : undefined,
+            padding: 8,
+        },
+        props.curvature,
+    );
+};
+
+const controlPointWatchHandle = watch(
+    () => [sourceControlPointOffset.value, targetControlPointOffset.value],
+    () => {
+        const bezier = calculateBezier();
+        if (!bezier) return;
+        path.value = bezier.path;
     },
 );
 
-// 贝塞尔曲线 path
-const path = computed<string>(() => {
-    const bezier = getPaddingBezierPath(
-        props,
-        sourceControlFixed.value ? sourceControlPoint.value : undefined,
-        targetControlFixed.value ? targetControlPoint.value : undefined,
-    );
+watch(
+    () => [
+        props.sourceX,
+        props.sourceY,
+        props.sourcePosition,
+        props.targetX,
+        props.targetY,
+        props.targetPosition,
+    ],
+    () => {
+        const bezier = calculateBezier();
+        if (!bezier) return;
+        controlPointWatchHandle.pause();
+        sourceControlPoint.value = bezier.sourceControlPoint;
+        targetControlPoint.value = bezier.targetControlPoint;
+        path.value = bezier.path;
+        controlPointWatchHandle.resume();
+    },
+    {
+        immediate: true,
+    },
+);
 
-    if (!bezier) return '';
-
-    sourceControlPoint.value = bezier.sourceControlPoint;
-    targetControlPoint.value = bezier.targetControlPoint;
-
-    return bezier.path;
-});
+const handleSourceControlPointDragEnd = (value: XYPosition) => {
+    updateEdgeData(props.id, {
+        sourceControlPointOffset: {
+            x: value.x - props.sourceX,
+            y: value.y - props.sourceY,
+        },
+    });
+};
+const handleTargetControlPointDragEnd = (value: XYPosition) => {
+    updateEdgeData(props.id, {
+        targetControlPointOffset: {
+            x: value.x - props.targetX,
+            y: value.y - props.targetY,
+        },
+    });
+};
 
 // 两头的 marker 样式
 const currentArrowId = uuid();
@@ -359,7 +472,7 @@ const executeDelete = () => {
                 :layer="layer"
                 @control-point-drag-start="sourceControlFixed = true"
                 @control-point-drag="(newPos: XYPosition) => (sourceControlPoint = newPos)"
-                @control-point-drag-end="() => updateEdgeData(props.id, {sourceControlPoint})"
+                @control-point-drag-end="handleSourceControlPointDragEnd"
             />
             <ControlPointLine
                 :start-point="{x: targetX, y: targetY}"
@@ -367,7 +480,7 @@ const executeDelete = () => {
                 :layer="layer"
                 @control-point-drag-start="targetControlFixed = true"
                 @control-point-drag="(newPos: XYPosition) => (targetControlPoint = newPos)"
-                @control-point-drag-end="() => updateEdgeData(props.id, {targetControlPoint})"
+                @control-point-drag-end="handleTargetControlPointDragEnd"
             />
         </template>
     </g>
