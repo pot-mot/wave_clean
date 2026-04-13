@@ -51,8 +51,8 @@ importers:
         specifier: ^21.3.3
         version: 21.3.3
       html-to-image:
-        specifier: ^1.11.13
-        version: 1.11.13
+        specifier: '=1.11.11'
+        version: 1.11.11
       katex:
         specifier: ^0.16.33
         version: 0.16.33
@@ -1596,8 +1596,8 @@ packages:
     resolution: {integrity: sha512-CV9TW3Y3f8/wT0BRFc1/KAVQ3TUHiXmaAb6VW9vtiMFf7SLoMd1PdAc4W3KFOFETBJUb90KatHqlsZMWV+R9Gg==}
     engines: {node: ^20.19.0 || ^22.12.0 || >=24.0.0}
 
-  html-to-image@1.11.13:
-    resolution: {integrity: sha512-cuOPoI7WApyhBElTTb9oqsawRvZ0rHhaHwghRLlTuffoD1B2aDemlCruLeZrUIIdvG7gs9xeELEPm6PhuASqrg==}
+  html-to-image@1.11.11:
+    resolution: {integrity: sha512-9gux8QhvjRO/erSnDPv28noDZcPZmYE7e1vFsBLKLlRlKDSqNJYebj6Qz1TGd5lsRV+X+xYyjCKjuZdABinWjA==}
 
   http-proxy-agent@7.0.2:
     resolution: {integrity: sha512-T1gkAiYYDWYx3V5Bmyu7HcfcvL7mUrTWiM6yOfa3PIphViJ/gFPbvidQ+veqSOHci/PxBcDabeUNCzpOODJZig==}
@@ -3750,7 +3750,7 @@ snapshots:
     transitivePeerDependencies:
       - '@noble/hashes'
 
-  html-to-image@1.11.13: {}
+  html-to-image@1.11.11: {}
 
   http-proxy-agent@7.0.2:
     dependencies:

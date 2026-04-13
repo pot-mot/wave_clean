@@ -39,7 +39,7 @@
         "clipboard-polyfill": "^4.1.1",
         "core-js": "^3.48.0",
         "file-type": "^21.3.3",
-        "html-to-image": "^1.11.13",
+        "html-to-image": "=1.11.11",
         "katex": "^0.16.33",
         "lodash-es": "^4.18.1",
         "markdown-it": "^14.1.1",
