@@ -59,8 +59,6 @@ interface GetBezierPathParams {
 
 export interface PaddingBezierPathResult {
     path: string;
-    startPoint: XYPosition;
-    endPoint: XYPosition;
     sourceControlPoint: XYPosition;
     targetControlPoint: XYPosition;
 }
@@ -147,17 +145,12 @@ export const getPaddingBezierPath = (
         targetControlPoint = {x, y};
     }
 
-    // 构建带 padding 的完整路径
     const path = `
         M${sourceX},${sourceY}
-        L${startX},${startY}
-        C${sourceControlPoint.x},${sourceControlPoint.y} ${targetControlPoint.x},${targetControlPoint.y} ${endX},${endY}
-        L${targetX},${targetY}`;
+        C${sourceControlPoint.x},${sourceControlPoint.y} ${targetControlPoint.x},${targetControlPoint.y} ${targetX},${targetY}`;
 
     return {
         path,
-        startPoint: {x: startX, y: startY},
-        endPoint: {x: endX, y: endY},
         sourceControlPoint,
         targetControlPoint,
     };

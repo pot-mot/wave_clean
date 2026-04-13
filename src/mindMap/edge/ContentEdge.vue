@@ -89,8 +89,6 @@ const handleToolBarResize = (size: {width: number; height: number}) => {
 useEdgeUpdaterTouch(props.id);
 
 // 贝塞尔曲线控制点
-const offsetStartPoint = ref<XYPosition | undefined>();
-const offsetEndPoint = ref<XYPosition | undefined>();
 const sourceControlPoint = ref<XYPosition | undefined>(props.data.sourceControlPoint);
 const targetControlPoint = ref<XYPosition | undefined>(props.data.targetControlPoint);
 const sourceControlFixed = ref(!!props.data.sourceControlPoint);
@@ -118,8 +116,6 @@ const path = computed<string>(() => {
 
     if (!bezier) return '';
 
-    offsetStartPoint.value = bezier.startPoint;
-    offsetEndPoint.value = bezier.endPoint;
     sourceControlPoint.value = bezier.sourceControlPoint;
     targetControlPoint.value = bezier.targetControlPoint;
 
@@ -299,35 +295,6 @@ const executeDelete = () => {
             :marker-end="markerEnd"
         />
 
-        <!-- 控制线 - 仅在选中时显示 -->
-        <template
-            v-if="
-                selected &&
-                graphSelection.selectedCount.value === 1 &&
-                offsetStartPoint &&
-                offsetEndPoint &&
-                sourceControlPoint &&
-                targetControlPoint
-            "
-        >
-            <ControlPointLine
-                :start-point="offsetStartPoint"
-                :control-point="sourceControlPoint"
-                :layer="layer"
-                @control-point-drag-start="sourceControlFixed = true"
-                @control-point-drag="(newPos: XYPosition) => (sourceControlPoint = newPos)"
-                @control-point-drag-end="() => updateEdgeData(props.id, {sourceControlPoint})"
-            />
-            <ControlPointLine
-                :start-point="offsetEndPoint"
-                :control-point="targetControlPoint"
-                :layer="layer"
-                @control-point-drag-start="targetControlFixed = true"
-                @control-point-drag="(newPos: XYPosition) => (targetControlPoint = newPos)"
-                @control-point-drag-end="() => updateEdgeData(props.id, {targetControlPoint})"
-            />
-        </template>
-
         <AutoResizeForeignObject
             @resize="handleInputResize"
             :transform="`translate(${curveMidpoint.x - inputWidth / 2} ${curveMidpoint.y - inputHeight / 2})`"
@@ -376,6 +343,33 @@ const executeDelete = () => {
                 </button>
             </div>
         </AutoResizeForeignObject>
+
+        <!-- 控制线 - 仅在选中时显示 -->
+        <template
+            v-if="
+                selected &&
+                graphSelection.selectedCount.value === 1 &&
+                sourceControlPoint &&
+                targetControlPoint
+            "
+        >
+            <ControlPointLine
+                :start-point="{x: sourceX, y: sourceY}"
+                :control-point="sourceControlPoint"
+                :layer="layer"
+                @control-point-drag-start="sourceControlFixed = true"
+                @control-point-drag="(newPos: XYPosition) => (sourceControlPoint = newPos)"
+                @control-point-drag-end="() => updateEdgeData(props.id, {sourceControlPoint})"
+            />
+            <ControlPointLine
+                :start-point="{x: targetX, y: targetY}"
+                :control-point="targetControlPoint"
+                :layer="layer"
+                @control-point-drag-start="targetControlFixed = true"
+                @control-point-drag="(newPos: XYPosition) => (targetControlPoint = newPos)"
+                @control-point-drag-end="() => updateEdgeData(props.id, {targetControlPoint})"
+            />
+        </template>
     </g>
 </template>
 
