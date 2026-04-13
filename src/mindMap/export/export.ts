@@ -9,46 +9,22 @@ import {downloadTextFile} from '@/utils/file/fileDownload.ts';
 import {jsonPrettyFormat} from '@/utils/json/jsonStringify.ts';
 import {nextFrame} from '@/utils/animationFrame/nextFrame.ts';
 import {type MindMapLayer} from '@/mindMap/layer/MindMapLayer.ts';
-import {type ContentNode, validateContentNode} from '@/mindMap/node/ContentNode.ts';
-import {type ContentEdge, validateContentEdge} from '@/mindMap/edge/ContentEdge.ts';
+import {
+    type ContentNode,
+    toPureContentNode,
+    validateContentNode,
+} from '@/mindMap/node/ContentNode.ts';
+import {
+    type ContentEdge,
+    toPureContentEdge,
+    validateContentEdge,
+} from '@/mindMap/edge/ContentEdge.ts';
 import {validateSizePositionEdgePartial} from '@/mindMap/edge/SizePositionEdge.ts';
 import {type MindMapData} from '@/mindMap/MindMapData.ts';
 
 export type MindMapExportData = {
     nodes: ContentNode[];
     edges: ContentEdge[];
-};
-
-const toPureContentNode = (node: ContentNode): ContentNode => {
-    return {
-        id: node.id,
-        type: 'CONTENT_NODE',
-        position: node.position,
-        dimensions: node.dimensions,
-        data: {
-            content: node.data.content,
-            type: node.data.type,
-            color: node.data.color,
-            withBorder: node.data.withBorder,
-        },
-    };
-};
-
-const toPureContentEdge = (edge: ContentEdge): ContentEdge => {
-    return {
-        id: edge.id,
-        type: 'CONTENT_EDGE',
-        source: edge.source,
-        sourceHandle: edge.sourceHandle,
-        target: edge.target,
-        targetHandle: edge.targetHandle,
-        data: {
-            content: edge.data.content,
-            arrowType: edge.data.arrowType,
-            color: edge.data.color,
-            withBorder: edge.data.withBorder,
-        },
-    };
 };
 
 export const exportMindMapData = (vueFlow: VueFlowStore): MindMapExportData => {

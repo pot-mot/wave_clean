@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch} from 'vue';
-import {BaseEdge, type EdgeProps} from '@vue-flow/core';
+import {BaseEdge, type EdgeProps, type XYPosition} from '@vue-flow/core';
 import {useMindMap} from '@/mindMap/useMindMap.ts';
 import FitSizeBlockInput from '@/components/input/FitSizeBlockInput.vue';
 import {useEdgeUpdaterTouch} from '@/mindMap/edge/useEdgeUpdaterTouch.ts';
@@ -17,6 +17,7 @@ import {v7 as uuid} from 'uuid';
 import {type RawMindMapLayer} from '@/mindMap/layer/MindMapLayer.ts';
 import {type SizePositionEdgePartial} from '@/mindMap/edge/SizePositionEdge.ts';
 import {type ContentEdgeData} from '@/mindMap/edge/ContentEdge.ts';
+import ControlPointLine from '@/mindMap/edge/controlPoint/ControlPointLine.vue';
 
 const {
     updateEdgeData,
@@ -87,9 +88,42 @@ const handleToolBarResize = (size: {width: number; height: number}) => {
 
 useEdgeUpdaterTouch(props.id);
 
+// 贝塞尔曲线控制点
+const offsetStartPoint = ref<XYPosition | undefined>();
+const offsetEndPoint = ref<XYPosition | undefined>();
+const sourceControlPoint = ref<XYPosition | undefined>(props.data.sourceControlPoint);
+const targetControlPoint = ref<XYPosition | undefined>(props.data.targetControlPoint);
+const sourceControlFixed = ref(!!props.data.sourceControlPoint);
+const targetControlFixed = ref(!!props.data.targetControlPoint);
+watch(
+    () => props.data.sourceControlPoint,
+    (value) => {
+        sourceControlFixed.value = !!value;
+    },
+);
+watch(
+    () => props.data.targetControlPoint,
+    (value) => {
+        targetControlFixed.value = !!value;
+    },
+);
+
 // 贝塞尔曲线 path
-const bezierPath = computed(() => {
-    return getPaddingBezierPath(props);
+const path = computed<string>(() => {
+    const bezier = getPaddingBezierPath(
+        props,
+        sourceControlFixed.value ? sourceControlPoint.value : undefined,
+        targetControlFixed.value ? targetControlPoint.value : undefined,
+    );
+
+    if (!bezier) return '';
+
+    offsetStartPoint.value = bezier.startPoint;
+    offsetEndPoint.value = bezier.endPoint;
+    sourceControlPoint.value = bezier.sourceControlPoint;
+    targetControlPoint.value = bezier.targetControlPoint;
+
+    return bezier.path;
 });
 
 // 两头的 marker 样式
@@ -260,10 +294,39 @@ const executeDelete = () => {
             ref="bezierRef"
             v-bind.prop="props"
             class="content-edge-line"
-            :path="bezierPath"
+            :path="path"
             :marker-start="markerStart"
             :marker-end="markerEnd"
         />
+
+        <!-- 控制线 - 仅在选中时显示 -->
+        <template
+            v-if="
+                selected &&
+                graphSelection.selectedCount.value === 1 &&
+                offsetStartPoint &&
+                offsetEndPoint &&
+                sourceControlPoint &&
+                targetControlPoint
+            "
+        >
+            <ControlPointLine
+                :start-point="offsetStartPoint"
+                :control-point="sourceControlPoint"
+                :layer="layer"
+                @control-point-drag-start="sourceControlFixed = true"
+                @control-point-drag="(newPos: XYPosition) => (sourceControlPoint = newPos)"
+                @control-point-drag-end="() => updateEdgeData(props.id, {sourceControlPoint})"
+            />
+            <ControlPointLine
+                :start-point="offsetEndPoint"
+                :control-point="targetControlPoint"
+                :layer="layer"
+                @control-point-drag-start="targetControlFixed = true"
+                @control-point-drag="(newPos: XYPosition) => (targetControlPoint = newPos)"
+                @control-point-drag-end="() => updateEdgeData(props.id, {targetControlPoint})"
+            />
+        </template>
 
         <AutoResizeForeignObject
             @resize="handleInputResize"

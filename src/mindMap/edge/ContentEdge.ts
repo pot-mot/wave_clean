@@ -16,6 +16,8 @@ export type ContentEdgeData = {
     arrowType?: ContentEdgeArrowType;
     color?: string;
     withBorder?: boolean;
+    sourceControlPoint?: {x: number; y: number};
+    targetControlPoint?: {x: number; y: number};
 } & SizePositionEdgePartial['data'];
 
 // 内容边
@@ -61,6 +63,19 @@ export const ContentEdge_JsonSchema: JSONSchemaType<ContentEdge> = {
                     properties: {left: {type: 'number'}, top: {type: 'number'}},
                     nullable: true,
                 },
+
+                sourceControlPoint: {
+                    type: 'object',
+                    required: ['x', 'y'],
+                    properties: {x: {type: 'number'}, y: {type: 'number'}},
+                    nullable: true,
+                },
+                targetControlPoint: {
+                    type: 'object',
+                    required: ['x', 'y'],
+                    properties: {x: {type: 'number'}, y: {type: 'number'}},
+                    nullable: true,
+                },
             },
             required: ['content'],
         },
@@ -68,3 +83,22 @@ export const ContentEdge_JsonSchema: JSONSchemaType<ContentEdge> = {
 };
 
 export const validateContentEdge = createSchemaValidator<ContentEdge>(ContentEdge_JsonSchema);
+
+export const toPureContentEdge = (edge: ContentEdge): ContentEdge => {
+    return {
+        id: edge.id,
+        type: 'CONTENT_EDGE',
+        source: edge.source,
+        sourceHandle: edge.sourceHandle,
+        target: edge.target,
+        targetHandle: edge.targetHandle,
+        data: {
+            content: edge.data.content,
+            arrowType: edge.data.arrowType,
+            color: edge.data.color,
+            withBorder: edge.data.withBorder,
+            sourceControlPoint: edge.data.sourceControlPoint,
+            targetControlPoint: edge.data.targetControlPoint,
+        },
+    };
+};

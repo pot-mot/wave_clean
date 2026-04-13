@@ -532,6 +532,7 @@ const executeDelete = () => {
             :class="{noWheel: isResizing}"
             :min-width="ContentNode_minWidth"
             :min-height="ContentNode_minHeight"
+            :auto-scale="false"
             @resize="handleMarkdownEditorResize"
             @resize-start="handleMarkdownEditorResizeStart"
             @resize-end="handleMarkdownEditorResizeEnd"

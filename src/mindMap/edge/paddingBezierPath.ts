@@ -1,4 +1,4 @@
-import {Position} from '@vue-flow/core';
+import {Position, type XYPosition} from '@vue-flow/core';
 
 function calculateControlOffset(distance: number, curvature: number) {
     if (distance >= 0) {
@@ -57,20 +57,33 @@ interface GetBezierPathParams {
     curvature?: number;
 }
 
+export interface PaddingBezierPathResult {
+    path: string;
+    startPoint: XYPosition;
+    endPoint: XYPosition;
+    sourceControlPoint: XYPosition;
+    targetControlPoint: XYPosition;
+}
+
 export const getPaddingBezierPath = (
     bezierPathParams: GetBezierPathParams,
+    sourceControlPoint?: XYPosition,
+    targetControlPoint?: XYPosition,
     sourcePadding: number = 8,
     targetPadding: number = 8,
-): string => {
+): PaddingBezierPathResult | undefined => {
     const {
         sourceX,
         sourceY,
-        sourcePosition = Position.Bottom,
+        sourcePosition,
         targetX,
         targetY,
-        targetPosition = Position.Top,
+        targetPosition,
         curvature = 0.25,
     } = bezierPathParams;
+    if (!sourcePosition || !targetPosition) {
+        return;
+    }
 
     // 新增：startX/startY 是 source 前的偏移点
     let startX = sourceX;
@@ -108,28 +121,44 @@ export const getPaddingBezierPath = (
             break;
     }
 
-    const [sourceControlX, sourceControlY] = getControlWithCurvature({
-        pos: sourcePosition,
-        x1: startX,
-        y1: startY,
-        x2: endX,
-        y2: endY,
-        c: curvature,
-    });
+    if (!sourceControlPoint) {
+        const [x, y] = getControlWithCurvature({
+            pos: sourcePosition,
+            x1: startX,
+            y1: startY,
+            x2: endX,
+            y2: endY,
+            c: curvature,
+        });
 
-    const [targetControlX, targetControlY] = getControlWithCurvature({
-        pos: targetPosition,
-        x1: endX,
-        y1: endY,
-        x2: startX,
-        y2: startY,
-        c: curvature,
-    });
+        sourceControlPoint = {x, y};
+    }
+
+    if (!targetControlPoint) {
+        const [x, y] = getControlWithCurvature({
+            pos: targetPosition,
+            x1: endX,
+            y1: endY,
+            x2: startX,
+            y2: startY,
+            c: curvature,
+        });
+
+        targetControlPoint = {x, y};
+    }
 
     // 构建带 padding 的完整路径
-    return `
+    const path = `
         M${sourceX},${sourceY}
         L${startX},${startY}
-        C${sourceControlX},${sourceControlY} ${targetControlX},${targetControlY} ${endX},${endY}
+        C${sourceControlPoint.x},${sourceControlPoint.y} ${targetControlPoint.x},${targetControlPoint.y} ${endX},${endY}
         L${targetX},${targetY}`;
+
+    return {
+        path,
+        startPoint: {x: startX, y: startY},
+        endPoint: {x: endX, y: endY},
+        sourceControlPoint,
+        targetControlPoint,
+    };
 };

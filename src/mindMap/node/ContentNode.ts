@@ -75,3 +75,18 @@ export const ContentNode_JsonSchema: JSONSchemaType<ContentNode> = {
 };
 
 export const validateContentNode = createSchemaValidator<ContentNode>(ContentNode_JsonSchema);
+
+export const toPureContentNode = (node: ContentNode): ContentNode => {
+    return {
+        id: node.id,
+        type: 'CONTENT_NODE',
+        position: node.position,
+        dimensions: node.dimensions,
+        data: {
+            content: node.data.content,
+            type: node.data.type,
+            color: node.data.color,
+            withBorder: node.data.withBorder,
+        },
+    };
+};
