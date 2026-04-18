@@ -30,7 +30,10 @@ const closeSettings = () => {
 </script>
 
 <template>
-    <div class="quick-input-bar-container">
+    <div
+        class="quick-input-bar-container"
+        @touchend.prevent
+    >
         <CollapseItem
             min-height="2rem"
             max-height="6.5rem"
