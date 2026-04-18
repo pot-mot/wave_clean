@@ -30,10 +30,11 @@ onBeforeUnmount(() => {
 const nodes = computed<GraphNode[]>(() => props.layer.vueFlow.nodes.value);
 
 type ComputedNode = {
-    left: string;
-    top: string;
-    width: string;
-    height: string;
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+    zIndex: number;
 };
 
 const getComputedNodes = (): ComputedNode[] => {
@@ -76,11 +77,17 @@ const getComputedNodes = (): ComputedNode[] => {
 
     const scale = width > height ? size.value.width / width : size.value.height / height;
 
+    const scaledWidth = width * scale;
+    const scaledHeight = height * scale;
+    const offsetX = (size.value.width - scaledWidth) / 2;
+    const offsetY = (size.value.height - scaledHeight) / 2;
+
     return nodes.value.map((node) => ({
-        left: (node.position.x - minLeft) * scale + 'px',
-        top: (node.position.y - minTop) * scale + 'px',
-        width: node.dimensions.width * scale + 'px',
-        height: node.dimensions.height * scale + 'px',
+        left: (node.position.x - minLeft) * scale + offsetX,
+        top: (node.position.y - minTop) * scale + offsetY,
+        width: node.dimensions.width * scale,
+        height: node.dimensions.height * scale,
+        zIndex: node.zIndex ?? 0,
     }));
 };
 
@@ -118,10 +125,11 @@ watch(
                 v-for="node in computedNodes"
                 class="layer-view-node"
                 :style="{
-                    left: node.left,
-                    top: node.top,
-                    width: node.width,
-                    height: node.height,
+                    left: node.left + 'px',
+                    top: node.top + 'px',
+                    width: node.width + 'px',
+                    height: node.height + 'px',
+                    zIndex: node.zIndex,
                 }"
             />
         </div>
@@ -145,6 +153,7 @@ watch(
 
 .layer-view-node {
     background: var(--background-color-hover);
+    border: var(--border);
     transition: background-color 0.5s;
     position: absolute;
 }
