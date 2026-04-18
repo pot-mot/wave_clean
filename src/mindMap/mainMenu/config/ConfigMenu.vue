@@ -22,29 +22,35 @@ const primaryColor = computed({
 
 <template>
     <div class="config-menu">
-        <span class="config-item">
-            {{ translate('primary_color') }}
+        <div class="config-item">
+            <div>{{ translate('primary_color') }}</div>
             <ColorInput v-model="primaryColor" />
-        </span>
+        </div>
 
-        <span class="config-item">
-            {{ translate('language') }}
+        <div class="config-item">
+            <div>{{ translate('language') }}</div>
             <select
+                class="language-select"
                 :value="language"
-                @change="(e) => setLanguage((e.target as HTMLSelectElement).value as LanguageType)"
+                @change="
+                    (e: Event) => setLanguage((e.target as HTMLSelectElement).value as LanguageType)
+                "
             >
                 <option value="zh-cn">{{ translate('language_zh_cn') }}</option>
                 <option value="en">{{ translate('language_en') }}</option>
             </select>
-        </span>
+        </div>
 
-        <span class="config-item">
-            {{ translate('theme') }}
-            <button @click="themeStore.toggleTheme()">
+        <div class="config-item">
+            <div>{{ translate('theme') }}</div>
+            <button
+                class="theme-button"
+                @click="themeStore.toggleTheme()"
+            >
                 <IconLight v-if="themeStore.theme.value === 'light'" />
                 <IconDark v-else-if="themeStore.theme.value === 'dark'" />
             </button>
-        </span>
+        </div>
     </div>
 </template>
 
@@ -61,6 +67,17 @@ const primaryColor = computed({
 }
 
 .config-item {
-    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.language-select {
+    border-radius: 0.25rem;
+}
+
+.theme-button {
+    border: none;
+    border-radius: 0.25rem;
 }
 </style>
