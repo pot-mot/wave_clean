@@ -288,6 +288,7 @@ const handleNodeFocus = () => {
     if (canMultiSelect.value) return;
     if (!props.selected) return;
     isFocus.value = true;
+    if (currentLayer.value.lock) return;
     if (dataTypeOrDefault.value === 'text') {
         inputRef.value?.el?.focus();
     } else if (dataTypeOrDefault.value === 'markdown') {

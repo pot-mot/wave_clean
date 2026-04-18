@@ -110,10 +110,10 @@ const toggleOnion = () => {
         <DragList
             :data="reversedLayers"
             :current-item="currentLayer"
-            :to-key="(layer) => layer.id"
+            :to-key="(layer: MindMapLayer) => layer.id"
             @drag="handleDrag"
             @swap="handleSwap"
-            @remove="(it) => removeLayer(it.id)"
+            @remove="(layer: MindMapLayer) => removeLayer(layer.id)"
         >
             <template #default="{item: layer, index}">
                 <CollapseDetail>
@@ -122,20 +122,23 @@ const toggleOnion = () => {
                             class="layer-menu-item"
                             @click="toggleLayer(layer.id)"
                         >
-                            <button
-                                @click.stop="toggleLayerVisible(layer)"
-                                class="layer-menu-item-visible"
-                            >
-                                <IconVisible v-if="layer.visible" />
-                                <IconInvisible v-else />
-                            </button>
+                            <div class="layer-menu-item-buttons">
+                                <button @click.stop="toggleLayerVisible(layer)">
+                                    <IconVisible v-if="layer.visible" />
+                                    <IconInvisible v-else />
+                                </button>
+                                <button @click.stop="toggleLayerLock(layer)">
+                                    <IconLock v-if="layer.lock" />
+                                    <IconLockOpen v-else />
+                                </button>
+                            </div>
                             <div class="layer-menu-item-view">
                                 <LayerView :layer="layer" />
                             </div>
                             <input
                                 :value="layer.name"
                                 class="layer-menu-item-name"
-                                @change="(e) => handleLayerNameChange(layer, e)"
+                                @change="(e: Event) => handleLayerNameChange(layer, e)"
                             />
                         </div>
                     </template>
@@ -148,18 +151,6 @@ const toggleOnion = () => {
                                 @click.stop="mergeLayer(layers.length - 1 - index)"
                             >
                                 <IconLayerMerge />
-                            </button>
-
-                            <button
-                                class="layer-menu-item-lock"
-                                @click.stop="toggleLayerLock(layer)"
-                            >
-                                <template v-if="layer.lock">
-                                    <IconLock />
-                                </template>
-                                <template v-else>
-                                    <IconLockOpen />
-                                </template>
                             </button>
 
                             <button
@@ -219,7 +210,7 @@ const toggleOnion = () => {
     width: 100%;
     display: grid;
     grid-gap: 0.5rem;
-    grid-template-columns: 1.5rem 4rem calc(100% - 6.5rem);
+    grid-template-columns: 1.75rem 4rem calc(100% - 6.75rem);
     user-select: none;
 }
 
@@ -227,10 +218,10 @@ const toggleOnion = () => {
     position: relative;
     height: 5rem;
     width: 100%;
-    padding-left: 2rem;
+    padding-left: 2.25rem;
     padding-right: 1rem;
     display: grid;
-    grid-template-columns: 4rem calc(100% - 4.5rem);
+    grid-template-columns: 4rem 1fr;
     grid-gap: 0.5rem;
     opacity: 0.8;
     background-color: var(--primary-color);
@@ -242,13 +233,21 @@ const toggleOnion = () => {
     margin-top: 0.5rem;
 }
 
-.layer-menu-item-visible {
-    margin-top: 1.75rem;
-    height: 1.5rem;
-    width: 1.5rem;
+.layer-menu-item-buttons {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.5rem;
+    padding-left: 0.25rem;
 }
 
-.layer-menu-item-visible:hover {
+.layer-menu-item-buttons > button {
+    height: 1.5rem;
+    width: 1.5rem;
+    border-radius: 0.25rem;
+}
+
+.layer-menu-item-buttons > button:hover {
     background-color: var(--background-color-hover);
 }
 
