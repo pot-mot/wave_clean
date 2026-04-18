@@ -23,7 +23,7 @@ export type ContentNodeData = {
 };
 
 // 内容节点
-export type ContentNode = Pick<GraphNode, 'id' | 'position'> & {
+export type ContentNode = Pick<GraphNode, 'id' | 'position' | 'zIndex'> & {
     data: ContentNodeData;
     type: typeof NodeType_CONTENT;
     dimensions?:
@@ -61,6 +61,7 @@ export const ContentNode_JsonSchema: JSONSchemaType<ContentNode> = {
             properties: {width: {type: 'number'}, height: {type: 'number'}},
             nullable: true,
         },
+        zIndex: {type: 'number', nullable: true},
         data: {
             type: 'object',
             properties: {
@@ -82,6 +83,7 @@ export const toPureContentNode = (node: ContentNode): ContentNode => {
         type: 'CONTENT_NODE',
         position: node.position,
         dimensions: node.dimensions,
+        zIndex: node.zIndex,
         data: {
             content: node.data.content,
             type: node.data.type,

@@ -21,7 +21,7 @@ export type ContentEdgeData = {
 } & SizePositionEdgePartial['data'];
 
 // 内容边
-export type ContentEdge = Pick<Edge, 'id' | 'source' | 'target'> & {
+export type ContentEdge = Pick<Edge, 'id' | 'source' | 'target' | 'zIndex'> & {
     data: ContentEdgeData;
     type: typeof EdgeType_CONTENT;
     sourceHandle: string;
@@ -36,9 +36,10 @@ export const ContentEdge_JsonSchema: JSONSchemaType<ContentEdge> = {
         id: {type: 'string'},
         type: {type: 'string', enum: ['CONTENT_EDGE']},
         source: {type: 'string'},
-        target: {type: 'string'},
         sourceHandle: {type: 'string'},
+        target: {type: 'string'},
         targetHandle: {type: 'string'},
+        zIndex: {type: 'number', nullable: true},
         data: {
             type: 'object',
             properties: {
@@ -88,6 +89,7 @@ export const toPureContentEdge = (edge: ContentEdge): ContentEdge => {
     return {
         id: edge.id,
         type: 'CONTENT_EDGE',
+        zIndex: edge.zIndex,
         source: edge.source,
         sourceHandle: edge.sourceHandle,
         target: edge.target,
