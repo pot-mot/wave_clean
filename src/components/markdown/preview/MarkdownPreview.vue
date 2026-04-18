@@ -85,6 +85,8 @@ watch(
 
 // 处理点击事件
 const handleClick = (e: MouseEvent) => {
+    checkOverflow();
+
     const selection = window.getSelection();
     let isSelectionEmpty = true;
 
