@@ -189,8 +189,9 @@ const toggleOnion = () => {
 }
 
 .layer-menu-header {
-    height: 2rem;
-    position: relative;
+    height: 1.5rem;
+    display: grid;
+    grid-template-columns: 1fr auto;
 }
 
 .layer-add-button {
@@ -203,6 +204,21 @@ const toggleOnion = () => {
 
 .layer-add-button:hover {
     background-color: var(--background-color-hover);
+}
+
+.onion-toggle-button {
+    --icon-size: 1.2rem;
+    cursor: pointer;
+    padding: 0.25rem;
+    border: none;
+}
+
+.onion-toggle-button:hover {
+    background-color: var(--background-color-hover);
+}
+
+.onion-toggle-button.enabled {
+    --icon-color: var(--primary-color);
 }
 
 .layer-menu-item {
@@ -297,24 +313,5 @@ const toggleOnion = () => {
 
 .layer-menu-item-operations button:hover {
     background-color: var(--background-color-hover);
-}
-
-.onion-toggle-button {
-    position: absolute;
-    top: 0.2rem;
-    right: 0.2rem;
-    --icon-size: 1.2rem;
-    cursor: pointer;
-    padding: 0.2rem;
-    border-radius: 0.25rem;
-    border: none;
-}
-
-.onion-toggle-button:hover {
-    background-color: var(--background-color-hover);
-}
-
-.onion-toggle-button.enabled {
-    --icon-color: var(--primary-color);
 }
 </style>
