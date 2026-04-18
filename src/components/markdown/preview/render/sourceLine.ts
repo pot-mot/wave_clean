@@ -1,5 +1,5 @@
 import {validateAttrName} from './validateAttrName';
-import {DOM_ATTR_NAME} from '@/components/markdown/preview/render/constant/domAttrName.ts';
+import {DOM_ATTR_NAME} from '@/components/markdown/preview/render/domAttrName.ts';
 import type Token from 'markdown-it/lib/token.mjs';
 
 const getLine = (token: Token, env?: Record<string, any>): [number, number] => {

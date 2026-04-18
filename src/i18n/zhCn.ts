@@ -2,8 +2,14 @@ import {type MainLocale} from '@/i18n/index.ts';
 
 export const localeZhCn: MainLocale = {
     copy: '复制',
-    cut: '剪切',
+    copy_success: '复制成功',
+    copy_fail: '复制失败',
     paste: '粘贴',
+    paste_success: '粘贴成功',
+    paste_fail: '粘贴失败',
+    cut: '剪切',
+    cut_success: '剪切成功',
+    cut_fail: '剪切失败',
 
     edit: '编辑',
     submit: '提交',

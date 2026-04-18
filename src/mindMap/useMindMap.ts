@@ -1369,10 +1369,10 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
         ) => {
             try {
                 const result = await layer.copy(data);
-                sendMessage('copy', {type: 'success'});
+                sendMessage(translate('copy_success'), {type: 'success'});
                 return result;
             } catch (e) {
-                sendMessage(`copy fail: ${e}`, {type: 'warning'});
+                sendMessage(`${translate('copy_fail')}: ${e}`, {type: 'warning'});
                 throw e;
             }
         },
@@ -1383,10 +1383,10 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                     return;
                 }
                 const result = await layer.paste();
-                sendMessage('paste', {type: 'success'});
+                sendMessage(translate('paste_success'), {type: 'success'});
                 return result;
             } catch (e) {
-                sendMessage(`paste fail: ${e}`, {type: 'warning'});
+                sendMessage(`${translate('paste_fail')}: ${e}`, {type: 'warning'});
                 throw e;
             }
         },
@@ -1397,11 +1397,11 @@ export const useMindMap = createStore((data: MindMapData = getDefaultMindMapData
                     return;
                 }
                 const result = await layer.cut();
-                sendMessage('cut', {type: 'success'});
+                sendMessage(translate('cut_success'), {type: 'success'});
                 focus();
                 return result;
             } catch (e) {
-                sendMessage(`cut fail: ${e}`, {type: 'warning'});
+                sendMessage(`${translate('cut_fail')}: ${e}`, {type: 'warning'});
                 throw e;
             }
         },

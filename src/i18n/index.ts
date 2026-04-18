@@ -1,7 +1,13 @@
 export type MainLocale = {
     copy: string;
-    cut: string;
+    copy_success: string;
+    copy_fail: string;
     paste: string;
+    paste_success: string;
+    paste_fail: string;
+    cut: string;
+    cut_success: string;
+    cut_fail: string;
 
     edit: string;
     submit: string;

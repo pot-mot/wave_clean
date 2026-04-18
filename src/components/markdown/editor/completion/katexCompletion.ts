@@ -10,7 +10,7 @@ import {
 import {md} from '@/components/markdown/preview/markdownRender.ts';
 import {katexExamples} from '@/components/markdown/editor/katex/katexExamples.ts';
 import {COMMAND_removeRange} from '@/components/markdown/editor/command/customCommand.ts';
-import {katexLanguages} from '@/components/markdown/preview/plugins/MarkdownItPrismCode.ts';
+import {katexLanguages} from '@/components/markdown/preview/plugins/code/render.ts';
 
 const katexSuggestions: Omit<CompletionItem, 'range'>[] = katexExamples.flatMap((it) => {
     return it.map((it2) => {

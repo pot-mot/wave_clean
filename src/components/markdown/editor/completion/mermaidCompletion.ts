@@ -5,7 +5,7 @@ import {
     getFoldingRanges,
 } from '@/components/markdown/editor/folding/ModelWithFoldingRanges.ts';
 import {md} from '@/components/markdown/preview/markdownRender.ts';
-import {mermaidLanguages} from '@/components/markdown/preview/plugins/MarkdownItPrismCode.ts';
+import {mermaidLanguages} from '@/components/markdown/preview/plugins/code/render.ts';
 import {mermaidCompletionProvider} from '@/components/markdown/editor/mermaid/mermaidLanguage.ts';
 
 export const markdownMermaidCompletionProvider: CompletionItemProvider = {

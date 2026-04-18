@@ -6,7 +6,7 @@ import {
     getCurrentFoldingRange,
     getFoldingRanges,
 } from '@/components/markdown/editor/folding/ModelWithFoldingRanges.ts';
-import {allLanguages} from '@/components/markdown/preview/plugins/MarkdownItPrismCode.ts';
+import {allLanguages} from '@/components/markdown/preview/plugins/code/render.ts';
 
 const codeblockStart = /^\s*(```|~~~)/;
 

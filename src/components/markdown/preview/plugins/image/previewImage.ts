@@ -1,8 +1,6 @@
-import MarkdownIt from 'markdown-it';
 import {api as viewerApi} from 'v-viewer';
-import 'viewerjs/dist/viewer.css';
-import '@/utils/image/imageViewerDownloadIcon.css';
 import {getMatchedElementOrParent} from '@/utils/event/judgeEventTarget.ts';
+import {withLoading} from '@/components/loading/loadingApi.ts';
 import {
     downloadImageFile,
     downloadSvgFile,
@@ -10,27 +8,9 @@ import {
     SVG_PREFIX_REGEX,
 } from '@/utils/file/fileDownload.ts';
 import {sendMessage} from '@/components/message/messageApi.ts';
-import {withLoading} from '@/components/loading/loadingApi.ts';
 import {translate} from '@/store/i18nStore.ts';
-
-export const MarkdownItImage = (md: MarkdownIt) => {
-    // @ts-ignore
-    const defaultRender = (tokens, idx, options, env, self) => {
-        return self.renderToken(tokens, idx, options);
-    };
-
-    md.renderer.rules.image = (tokens, idx, options, env, self) => {
-        const token = tokens[idx];
-        if (token) {
-            token.attrSet('alt', token.content);
-            token.attrSet('target', '_blank');
-            token.attrSet('onload', "this.classList.remove('error');");
-            token.attrSet('onerror', "this.classList.add('error');");
-        }
-        // 调用默认渲染器以实现默认行为
-        return defaultRender(tokens, idx, options, env, self);
-    };
-};
+import 'viewerjs/dist/viewer.css';
+import '@/utils/image/imageViewerDownloadIcon.css';
 
 const serializer = new XMLSerializer();
 
@@ -63,7 +43,7 @@ const handleImageDownload = async (e: Event) => {
     });
 };
 
-export const imagePreview = (currentElement: Element, previewElement: HTMLElement) => {
+export const previewImage = (currentElement: Element, previewElement: HTMLElement) => {
     const images = previewElement.querySelectorAll('img, svg');
     const imageSrcList: {
         src: string;

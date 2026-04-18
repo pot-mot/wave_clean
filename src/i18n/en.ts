@@ -2,8 +2,14 @@ import {type MainLocale} from '@/i18n/index.ts';
 
 export const localeEn: MainLocale = {
     copy: 'Copy',
-    cut: 'Cut',
+    copy_success: 'Copy Success',
+    copy_fail: 'Copy Fail',
     paste: 'Paste',
+    paste_success: 'Paste Success',
+    paste_fail: 'Paste Fail',
+    cut: 'Cut',
+    cut_success: 'Cut Success',
+    cut_fail: 'Cut Fail',
 
     edit: 'Edit',
     submit: 'Submit',

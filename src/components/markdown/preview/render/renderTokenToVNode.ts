@@ -1,11 +1,12 @@
 import {Comment, createVNode, Fragment, Text, type VNode} from 'vue';
 import {validateAttrName} from './validateAttrName';
 import {setSourceLine} from './sourceLine.ts';
-import {DOM_ATTR_NAME} from '@/components/markdown/preview/render/constant/domAttrName.ts';
-import type Token from 'markdown-it/lib/token.mjs';
-import {createHtmlVNode} from '@/components/markdown/preview/render/rules/html.ts';
-import {type Options} from 'markdown-it';
+import {DOM_ATTR_NAME} from '@/components/markdown/preview/render/domAttrName.ts';
+import {createHtmlVNode} from '@/components/markdown/preview/render/htmlVNode.ts';
 import Renderer from 'markdown-it/lib/renderer.mjs';
+import type Token from 'markdown-it/lib/token.mjs';
+import {type Options} from 'markdown-it';
+import type {VNodeRuleRecord} from '@/components/markdown/preview/render/VNodeRuleRecord.ts';
 
 const defaultRender = (tokens: Token[], idx: number): VNode | undefined => {
     const token: Token | undefined = tokens[idx];
@@ -26,7 +27,7 @@ const defaultRender = (tokens: Token[], idx: number): VNode | undefined => {
     return createVNode(token.tag, renderAttrs(token), []);
 };
 
-const renderAttrs = (token: Token): Record<string, string> => {
+export const renderAttrs = (token: Token): Record<string, string> => {
     if (!token.attrs) {
         return {};
     }
@@ -49,6 +50,7 @@ export const renderTokenToVNode = (
     env?: Record<string, any>,
 ): VNode[] => {
     const vNodeParents: VNode[] = [];
+    const rules: VNodeRuleRecord = renderer.rules as VNodeRuleRecord;
 
     return tokens
         .map((token, i) => {
@@ -73,30 +75,17 @@ export const renderTokenToVNode = (
             } else if (type === 'html_inline' || type === 'html_block') {
                 vNode = createHtmlVNode(token.content);
             } else {
-                const rule = renderer.rules[type];
+                const rule = rules[type];
                 if (rule) {
-                    const result = rule(tokens, i, options, env, renderer) as
-                        | string
-                        | {
-                              node: VNode | null | undefined;
-                              parent: VNode | null | undefined;
-                          }
-                        | VNode
-                        | null
-                        | undefined;
+                    const result = rule(tokens, i, options, env, renderer);
                     if (result) {
                         if (typeof result === 'string') {
                             vNode = createHtmlVNode(result);
-                        } else if (
-                            typeof result === 'object' &&
-                            'node' in result &&
-                            result.node &&
-                            result.parent
-                        ) {
+                        } else if (typeof result === 'object' && 'node' in result) {
                             parent = result.parent;
                             vNode = result.node;
                         } else {
-                            vNode = result as VNode;
+                            vNode = result;
                         }
                     }
                 } else {

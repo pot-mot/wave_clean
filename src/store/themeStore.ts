@@ -3,8 +3,8 @@ import {type Theme, getCurrentWindow} from '@tauri-apps/api/window';
 import {useDeviceStore} from '@/store/deviceStore.ts';
 import {createStore} from '@/utils/store/createStore.ts';
 import {tinycolor} from 'vue-color';
-import {setMermaidTheme} from '@/components/markdown/preview/plugins/MarkdownItMermaid.ts';
 import {cleanMarkdownRenderCache} from '@/components/markdown/preview/markdownRender.ts';
+import {setMermaidTheme} from '@/components/markdown/preview/plugins/mermaid/render.ts';
 
 const theme = ref<Theme>('light');
 

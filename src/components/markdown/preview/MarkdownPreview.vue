@@ -11,16 +11,14 @@ import {
     watch,
 } from 'vue';
 import '@/components/markdown/preview/markdown-preview.css';
-import '@/components/markdown/preview/codeStyle/code.css';
-import {imagePreview} from '@/components/markdown/preview/plugins/MarkdownItImage.ts';
+import '@/components/markdown/preview/plugins/code/style.css';
 import {getMatchedElementOrParent} from '@/utils/event/judgeEventTarget.ts';
-import {copyText} from '@/utils/clipBoard/useClipBoard.ts';
 import {sendMessage} from '@/components/message/messageApi.ts';
-import {copyButtonFindCodeBlockPre} from '@/components/markdown/preview/plugins/MarkdownItPrismCode.ts';
 import {useThemeStore} from '@/store/themeStore.ts';
 import {translate} from '@/store/i18nStore.ts';
 import {debounce} from 'lodash-es';
 import {VNodeComponent} from '@/components/markdown/preview/render/VNodeComponent.ts';
+import {previewImage} from '@/components/markdown/preview/plugins/image/previewImage.ts';
 
 const themeStore = useThemeStore();
 
@@ -97,23 +95,11 @@ const handleClick = (e: MouseEvent) => {
     if (e.target && e.target instanceof Element && elementRef.value) {
         const currentElement: Element = e.target;
 
-        if (currentElement.classList.contains('code-copy-button')) {
-            const codeBlockPre = copyButtonFindCodeBlockPre(currentElement);
-            if (codeBlockPre) {
-                copyText(codeBlockPre.textContent || '');
-                sendMessage('Copy success', {type: 'success'});
-                return;
-            } else {
-                sendMessage('Copy fail, target not found', {type: 'error'});
-                return;
-            }
-        }
-
         if (
             currentElement instanceof HTMLImageElement &&
             !currentElement.classList.contains('error')
         ) {
-            imagePreview(currentElement, elementRef.value);
+            previewImage(currentElement, elementRef.value);
             return;
         }
 
@@ -122,7 +108,7 @@ const handleClick = (e: MouseEvent) => {
             (el) => el instanceof SVGSVGElement,
         );
         if (svgSvgElement && isSelectionEmpty) {
-            imagePreview(svgSvgElement, elementRef.value);
+            previewImage(svgSvgElement, elementRef.value);
             return;
         }
     }
