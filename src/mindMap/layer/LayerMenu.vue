@@ -123,11 +123,17 @@ const toggleOnion = () => {
                             @click="toggleLayer(layer.id)"
                         >
                             <div class="layer-menu-item-buttons">
-                                <button @click.stop="toggleLayerVisible(layer)">
+                                <button
+                                    @click.stop="toggleLayerVisible(layer)"
+                                    :class="{enabled: !layer.visible}"
+                                >
                                     <IconVisible v-if="layer.visible" />
                                     <IconInvisible v-else />
                                 </button>
-                                <button @click.stop="toggleLayerLock(layer)">
+                                <button
+                                    @click.stop="toggleLayerLock(layer)"
+                                    :class="{enabled: layer.lock}"
+                                >
                                     <IconLock v-if="layer.lock" />
                                     <IconLockOpen v-else />
                                 </button>
@@ -146,7 +152,6 @@ const toggleOnion = () => {
                     <template #body>
                         <div class="layer-menu-item-operations">
                             <button
-                                class="layer-menu-item-merge"
                                 v-if="layers.length > 1 && layers.length - 1 - index !== 0"
                                 @click.stop="mergeLayer(layers.length - 1 - index)"
                             >
@@ -154,7 +159,6 @@ const toggleOnion = () => {
                             </button>
 
                             <button
-                                class="layer-menu-item-delete"
                                 :class="{disabled: layers.length <= 1}"
                                 @click.stop="handleDelete(layer)"
                             >
@@ -258,9 +262,14 @@ const toggleOnion = () => {
 }
 
 .layer-menu-item-buttons > button {
-    height: 1.5rem;
-    width: 1.5rem;
-    border-radius: 0.25rem;
+    height: 1.25rem;
+    width: 1.25rem;
+    border-radius: 0.125rem;
+    border: none;
+}
+
+.layer-menu-item-buttons > button.enabled {
+    outline: 1px solid var(--icon-color);
 }
 
 .layer-menu-item-buttons > button:hover {
@@ -301,17 +310,18 @@ const toggleOnion = () => {
     padding: 0 0.5rem 0.5rem;
 }
 
-.layer-menu-item-operations button {
+.layer-menu-item-operations > button {
     height: 1.5rem;
     min-width: 1.5rem;
+    border-radius: 0.25rem;
 }
 
-.layer-menu-item-operations button.disabled {
+.layer-menu-item-operations > button.disabled {
     background-color: var(--background-color-hover);
     cursor: not-allowed;
 }
 
-.layer-menu-item-operations button:hover {
+.layer-menu-item-operations > button:hover {
     background-color: var(--background-color-hover);
 }
 </style>
