@@ -1,5 +1,4 @@
 <script setup lang="ts" generic="T">
-import {defineEmits, defineProps} from 'vue';
 import DragList from './DragList.vue';
 
 const data = defineModel<T[]>({
