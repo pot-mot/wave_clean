@@ -1,6 +1,15 @@
 <script setup lang="ts">
 import {md} from '@/components/markdown/preview/markdownRender.ts';
-import {nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch} from 'vue';
+import {
+    nextTick,
+    onBeforeUnmount,
+    onMounted,
+    type Ref,
+    ref,
+    useTemplateRef,
+    type VNode,
+    watch,
+} from 'vue';
 import '@/components/markdown/preview/markdown-preview.css';
 import '@/components/markdown/preview/codeStyle/code.css';
 import {imagePreview} from '@/components/markdown/preview/plugins/MarkdownItImage.ts';
@@ -11,6 +20,7 @@ import {copyButtonFindCodeBlockPre} from '@/components/markdown/preview/plugins/
 import {useThemeStore} from '@/store/themeStore.ts';
 import {translate} from '@/store/i18nStore.ts';
 import {debounce} from 'lodash-es';
+import {VNodeComponent} from '@/components/markdown/preview/render/VNodeComponent.ts';
 
 const themeStore = useThemeStore();
 
@@ -20,7 +30,7 @@ const props = defineProps<{
 
 const elementRef = useTemplateRef<HTMLDivElement>('elementRef');
 
-const renderResult = ref('');
+const renderResult: Ref<VNode[]> = ref([]);
 
 // 计算内容是否溢出
 const isOverflow = ref(false);
@@ -43,7 +53,7 @@ onBeforeUnmount(() => {
 });
 
 const render = () => {
-    renderResult.value = md.render(props.value);
+    renderResult.value = md.render(props.value) as any;
 };
 
 onMounted(() => {
@@ -126,10 +136,11 @@ defineExpose({
     <div
         tabindex="-1"
         class="markdown-preview"
-        v-html="renderResult"
         ref="elementRef"
         @click="handleClick"
-    />
+    >
+        <VNodeComponent :content="renderResult" />
+    </div>
 </template>
 
 <style scoped>

@@ -21,6 +21,7 @@ import {
     MarkdownItPrismCode,
     cleanPrismCache,
 } from '@/components/markdown/preview/plugins/MarkdownItPrismCode.ts';
+import {renderTokenToVNode} from '@/components/markdown/preview/render/renderTokenToVNode.ts';
 
 const markdownDefaultOptions: Options = {
     html: true,
@@ -41,6 +42,10 @@ md.use(MarkdownItLink)
     .use(MarkdownItPrismCode)
     .use(MarkdownItKatex)
     .use(MarkdownItMultiMdTable, {multiline: true, rowspan: true, headerless: true});
+
+md.renderer.render = (tokens, options, env) => {
+    return renderTokenToVNode(tokens, md.renderer, options, env) as any;
+};
 
 export const cleanMarkdownRenderCache = () => {
     cleanMermaidCache();
