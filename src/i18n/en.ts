@@ -62,8 +62,10 @@ export const localeEn: MainLocale = {
     layer_is_invisible: 'Current Layer is Invisible',
     layer_is_locked: 'Current Layer is Locked',
 
+    mindMap_create_dialog_title: 'Create New MindMap',
     mindMap_title_placeholder: 'New MindMap Title',
 
+    quickInput_dialog_title: 'QuickInput Config',
     quickInput_label: 'label',
     quickInput_value: 'value',
 

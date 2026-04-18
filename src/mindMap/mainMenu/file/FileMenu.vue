@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import IconDelete from '@/components/icons/IconDelete.vue';
-import {useMindMapStore} from '@/store/mindMapStore.ts';
+import {type MindMapMetaData, useMindMapStore} from '@/store/mindMapStore.ts';
 import {computed, ref} from 'vue';
 import {sendMessage} from '@/components/message/messageApi.ts';
 import IconAdd from '@/components/icons/IconAdd.vue';
@@ -16,6 +16,9 @@ import IconLoad from '@/components/icons/IconLoad.vue';
 import {readJson, removeJsonSuffix} from '@/utils/file/jsonRead.ts';
 import {validateMindMapData} from '@/mindMap/MindMapData.ts';
 import {confirmSave} from '@/mindMap/closeSave/closeSave.ts';
+import IconCheck from '@/components/icons/IconCheck.vue';
+import IconClose from '@/components/icons/IconClose.vue';
+import Dialog from '@/components/dialog/Dialog.vue';
 
 const mindMapStore = useMindMapStore();
 
@@ -25,14 +28,25 @@ const currentFile = computed(() => {
     );
 });
 
+const isFileAddDialogOpen = ref(false);
 const newName = ref('');
 
-const handleAdd = () => {
+const handleAddStart = () => {
+    newName.value = '';
+    isFileAddDialogOpen.value = true;
+};
+
+const handleAddCancel = () => {
+    isFileAddDialogOpen.value = false;
+};
+
+const handleAddSubmit = () => {
     if (newName.value.length === 0) {
         sendMessage('Please set a name', {type: 'warning'});
         return;
     }
     mindMapStore.add(0, newName.value);
+    isFileAddDialogOpen.value = false;
     newName.value = '';
 };
 
@@ -98,16 +112,10 @@ const handleDelete = async (mindMap: {name: string; key: string}) => {
 
 <template>
     <div class="file-menu">
-        <div class="new-file-wrapper">
-            <input
-                class="new-file-name"
-                v-model="newName"
-                :placeholder="translate('mindMap_title_placeholder')"
-                @keydown.enter="handleAdd"
-            />
+        <div class="file-menu-header">
             <button
-                class="new-file-button"
-                @click="handleAdd"
+                class="mindMap-create-button"
+                @click="handleAddStart"
             >
                 <IconAdd />
             </button>
@@ -117,14 +125,43 @@ const handleDelete = async (mindMap: {name: string; key: string}) => {
             >
                 <IconLoad />
             </button>
+
+            <Dialog
+                v-if="isFileAddDialogOpen"
+                :title="translate('mindMap_create_dialog_title')"
+                :onClose="handleAddCancel"
+            >
+                <input
+                    class="mind-map-name-input"
+                    v-model="newName"
+                    :placeholder="translate('mindMap_title_placeholder')"
+                    @keydown.enter="handleAddStart"
+                />
+                <div class="confirm-actions">
+                    <button
+                        @click="handleAddCancel"
+                        class="cancel-button"
+                    >
+                        <IconClose />
+                        {{ translate('cancel') }}
+                    </button>
+                    <button
+                        @click="handleAddSubmit"
+                        class="confirm-button"
+                    >
+                        <IconCheck />
+                        {{ translate('confirm') }}
+                    </button>
+                </div>
+            </Dialog>
         </div>
 
         <DragModelList
             class="file-list"
             v-model="mindMapStore.meta.value.mindMaps"
             :current-item="currentFile"
-            :to-key="(mindMap) => mindMap.key"
-            @remove="(mindMap) => mindMapStore.remove(mindMap.key)"
+            :to-key="(mindMap: MindMapMetaData) => mindMap.key"
+            @remove="(mindMap: MindMapMetaData) => mindMapStore.remove(mindMap.key)"
         >
             <template #default="{item: mindMap}">
                 <CollapseDetail>
@@ -137,7 +174,7 @@ const handleDelete = async (mindMap: {name: string; key: string}) => {
                                 <input
                                     class="file-name"
                                     :value="mindMap.name"
-                                    @change="(e) => handleRename(mindMap.key, e)"
+                                    @change="(e: Event) => handleRename(mindMap.key, e)"
                                     @click.stop
                                 />
                                 <div class="last-edit-time">
@@ -186,32 +223,22 @@ const handleDelete = async (mindMap: {name: string; key: string}) => {
 .file-menu {
     height: 100%;
     width: 100%;
-    padding: 0.5rem;
 }
 
-.new-file-wrapper {
+.file-menu-header {
     display: grid;
     width: 100%;
-    grid-template-columns: 1fr auto auto;
-    height: 1.5rem;
+    grid-template-columns: 1fr auto;
+    height: 2rem;
     line-height: 1.5rem;
 }
 
-.new-file-name {
-    height: 100%;
-    border-radius: 0;
-    padding: 0 0.5rem;
-    width: 100%;
-}
-
-.new-file-button {
-    width: 1.5rem;
-    border-left: none;
+.mindMap-create-button {
+    border: none;
     border-radius: 0;
 }
 
 .load-file-button {
-    margin-left: 0.5rem;
     width: 1.5rem;
     border: none;
 }
@@ -301,5 +328,43 @@ const handleDelete = async (mindMap: {name: string; key: string}) => {
 
 .file-item-operations button:hover {
     background-color: var(--background-color-hover);
+}
+
+.mind-map-name-input {
+    border-radius: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    width: 100%;
+    font-size: 1rem;
+}
+
+.confirm-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+}
+
+.cancel-button,
+.confirm-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    border: var(--border);
+    border-color: var(--border-color-light);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+.cancel-button {
+    border-color: var(--warning-color);
+    --icon-color: var(--warning-color);
+}
+
+.confirm-button {
+    border-color: var(--success-color);
+    --icon-color: var(--success-color);
 }
 </style>

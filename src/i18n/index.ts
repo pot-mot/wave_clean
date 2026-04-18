@@ -60,8 +60,10 @@ export type MainLocale = {
     layer_is_invisible: string;
     layer_is_locked: string;
 
+    mindMap_create_dialog_title: string;
     mindMap_title_placeholder: string;
 
+    quickInput_dialog_title: string;
     quickInput_label: string;
     quickInput_value: string;
 

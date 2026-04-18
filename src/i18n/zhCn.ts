@@ -53,7 +53,7 @@ export const localeZhCn: MainLocale = {
 
     path_select_cancel: '路径选择取消',
 
-    primary_color: '颜色',
+    primary_color: '主色',
     language: '语言',
     language_zh_cn: '中文',
     language_en: 'English',
@@ -62,8 +62,10 @@ export const localeZhCn: MainLocale = {
     layer_is_invisible: '当前图层不可见',
     layer_is_locked: '当前图层已锁定',
 
+    mindMap_create_dialog_title: '创建新脑图',
     mindMap_title_placeholder: '新脑图名称',
 
+    quickInput_dialog_title: '快捷输入配置',
     quickInput_label: '展示文本',
     quickInput_value: '快捷输入内容',
 

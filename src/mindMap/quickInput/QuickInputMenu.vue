@@ -64,8 +64,8 @@ const handleDelete = (item: QuickInputItem) => {
             class="quick-input-list"
             v-model="meta.quickInputs"
             :current-item="currentItem"
-            :to-key="(quickInput) => quickInput.id"
-            @remove="(quickInput) => handleDelete(quickInput)"
+            :to-key="(quickInput: QuickInputItem) => quickInput.id"
+            @remove="(quickInput: QuickInputItem) => handleDelete(quickInput)"
         >
             <template #default="{item: quickInput}">
                 <div
@@ -149,6 +149,8 @@ const handleDelete = (item: QuickInputItem) => {
     height: 1.5rem;
     line-height: 1.5rem;
     padding: 0 0.5rem;
+    border-radius: 0.25rem;
+    border: none;
 }
 
 .label-input,
