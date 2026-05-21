@@ -135,7 +135,7 @@ const handleDelete = async (mindMap: {name: string; key: string}) => {
                     class="mind-map-name-input"
                     v-model="newName"
                     :placeholder="translate('mindMap_title_placeholder')"
-                    @keydown.enter="handleAddStart"
+                    @keydown.enter="handleAddSubmit()"
                 />
                 <div class="confirm-actions">
                     <button
