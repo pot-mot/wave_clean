@@ -8,6 +8,9 @@ import {judgeTargetIsInteraction} from '@/utils/event/judgeEventTarget.ts';
 import {useDeviceStore} from '@/store/deviceStore.ts';
 import MindMapSelectionRect from '@/mindMap/selectionRect/MindMapSelectionRect.vue';
 import HelperLines from '@/mindMap/helperLines/HelperLines.vue';
+import MindMapSearcher from '@/mindMap/searcher/MindMapSearcher.vue';
+import {nextTick, ref, useTemplateRef} from 'vue';
+import IconClose from '@/components/icons/IconClose.vue';
 
 const {isTouchDevice} = useDeviceStore();
 
@@ -28,6 +31,17 @@ const {
     cut,
     paste,
 } = useMindMap();
+
+const searcherRef = useTemplateRef('searcherRef');
+const searcherShow = ref(false);
+const handleSearchStart = async () => {
+    searcherShow.value = true;
+    await nextTick();
+    await searcherRef.value?.focusInput();
+};
+const handleSearchEnd = () => {
+    searcherShow.value = false;
+};
 
 const handleKeyDown = async (e: KeyboardEvent) => {
     // 按下 Delete 键删除选中的节点和边
@@ -124,6 +138,15 @@ const handleKeyDown = async (e: KeyboardEvent) => {
 
             graphSelection.selectAll();
         }
+
+        // 搜索
+        else if (e.key === 'f' || e.key === 'F') {
+            if (judgeTargetIsInteraction(e)) return;
+
+            e.preventDefault();
+
+            handleSearchStart();
+        }
     }
 };
 </script>
@@ -148,6 +171,15 @@ const handleKeyDown = async (e: KeyboardEvent) => {
         <HelperLines />
 
         <MindMapSelectionRect :rect="selectionRect" />
+
+        <MindMapSearcher
+            v-if="searcherShow"
+            ref="searcherRef"
+        >
+            <button @click="handleSearchEnd">
+                <icon-close />
+            </button>
+        </MindMapSearcher>
 
         <template v-if="isTouchDevice">
             <MobileToolbar />
