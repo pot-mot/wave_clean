@@ -83,4 +83,10 @@ export const localeZhCn: MainLocale = {
     browser_download_path: '[浏览器下载路径]',
     download_success: (fileName: string, path: string) => `${fileName} 下载成功，保存在 ${path}`,
     download_fail: (fileName: string) => `${fileName} 下载失败`,
+
+    searchType_whole: '完整',
+    searchType_splitByBlank: '按空格分隔',
+    searchType_regex: '正则',
+
+    searchConfig_caseSensitive: '区分大小写',
 };

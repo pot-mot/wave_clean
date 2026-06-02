@@ -5,11 +5,13 @@ import {h} from 'vue';
 const props = withDefaults(
     defineProps<{
         showFirst?: number | undefined;
+        contextExpandLength?: number | undefined;
         content: string;
         viewRanges: [number, number][];
     }>(),
     {
         showFirst: 3,
+        contextExpandLength: 20,
     },
 );
 
@@ -20,13 +22,17 @@ const highlightedFragments = computed<VNode[][]>(() => {
     }
 
     // 获取需要显示的匹配项（前showFirst个）
-    const rangesToShow = props.viewRanges.slice(0, props.showFirst);
+    const showFirst = Math.max(Math.min(props.showFirst, props.viewRanges.length), 0);
+    const rangesToShow = props.viewRanges.slice(0, showFirst);
+
+    // 设置上下文扩展范围
+    const contextExpandLength = Math.max(props.contextExpandLength, 0);
 
     // 为每个匹配项提取上下文并生成VNode数组
     return rangesToShow.map((range): VNode[] => {
         const [start, end] = range;
-        const contextStart = Math.max(0, start - 20);
-        const contextEnd = Math.min(props.content.length, end + 20);
+        const contextStart = Math.max(0, start - contextExpandLength);
+        const contextEnd = Math.min(props.content.length, end + contextExpandLength);
 
         const beforeMatch = props.content.substring(contextStart, start);
         const match = props.content.substring(start, end);

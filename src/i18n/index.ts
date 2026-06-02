@@ -81,6 +81,12 @@ export type MainLocale = {
     browser_download_path: string;
     download_success: (fileName: string, path: string) => string;
     download_fail: (fileName: string) => string;
+
+    searchType_whole: string;
+    searchType_splitByBlank: string;
+    searchType_regex: string;
+
+    searchConfig_caseSensitive: string;
 };
 
 type BaseLocale = {

@@ -7,11 +7,17 @@ import {sendMessage} from '@/components/message/messageApi.ts';
 import type {MatchedEdgeInfo, MatchedNodeInfo} from '@/mindMap/searcher/MatchedInfo.ts';
 import ResultContent from '@/mindMap/searcher/HighlightContent.vue';
 import IconSearch from '@/components/icons/IconSearch.vue';
+import {translate} from '@/store/i18nStore.ts';
 
 const {layers, fitRect, currentLayer, toggleLayer, selectNode, selectEdge, graphSelection} =
     useMindMap();
 
 const searchKeywords = ref('');
+
+type SearchType = 'whole' | 'splitByBlank' | 'regex';
+const searchType = ref<SearchType>('whole');
+
+const caseSensitive = ref(false);
 
 const searchInputRef = useTemplateRef<HTMLInputElement>('searchInputRef');
 
@@ -27,10 +33,7 @@ const handleSearch = () => {
     searchResult.value.nodes = [];
     searchResult.value.edges = [];
 
-    const keywords = searchKeywords.value
-        .trim()
-        .split(/s+/)
-        .filter((it) => it.length > 0);
+    const keywords = getKeywords();
     if (keywords.length === 0) return;
 
     for (const layer of layers) {
@@ -41,17 +44,17 @@ const handleSearch = () => {
             if (!validateContentNode(node)) continue;
             let matchedItem: MatchedNodeInfo | undefined;
             for (const keyword of keywords) {
-                const start = (node as ContentNode).data.content.indexOf(keyword);
-                if (start !== -1) {
+                const matches = findMatches((node as ContentNode).data.content, keyword);
+                if (matches.length > 0) {
                     if (matchedItem === undefined) {
                         matchedItem = {
                             node,
                             layerId: layer.id,
-                            viewRanges: [[start, start + keywords.length]],
+                            viewRanges: matches,
                         };
                         searchResult.value.nodes.push(matchedItem);
                     } else {
-                        matchedItem.viewRanges.push([start, start + keywords.length]);
+                        matchedItem.viewRanges.push(...matches);
                     }
                 }
             }
@@ -60,22 +63,87 @@ const handleSearch = () => {
             if (!validateContentEdge(edge)) continue;
             let matchedItem: MatchedEdgeInfo | undefined;
             for (const keyword of keywords) {
-                const start = (edge as ContentEdge).data.content.indexOf(keyword);
-                if (start !== -1) {
+                const matches = findMatches((edge as ContentEdge).data.content, keyword);
+                if (matches.length > 0) {
                     if (matchedItem === undefined) {
                         matchedItem = {
                             edge,
                             layerId: layer.id,
-                            viewRanges: [[start, start + keywords.length]],
+                            viewRanges: matches,
                         };
                         searchResult.value.edges.push(matchedItem);
                     } else {
-                        matchedItem.viewRanges.push([start, start + keywords.length]);
+                        matchedItem.viewRanges.push(...matches);
                     }
                 }
             }
         }
     }
+};
+
+const getKeywords = (): string[] => {
+    const input = searchKeywords.value.trim();
+    if (!input) return [];
+
+    switch (searchType.value) {
+        case 'splitByBlank':
+            return input.split(/\s+/).filter((it) => it.length > 0);
+        case 'regex':
+            // 正则模式下，整个输入作为一个正则表达式
+            return [input];
+        case 'whole':
+        default:
+            return [input];
+    }
+};
+
+const findMatches = (content: string, keyword: string): [number, number][] => {
+    const matches: [number, number][] = [];
+
+    switch (searchType.value) {
+        case 'regex': {
+            try {
+                const flags = caseSensitive.value ? 'g' : 'gi';
+                const regex = new RegExp(keyword, flags);
+                let match;
+                while ((match = regex.exec(content)) !== null) {
+                    matches.push([match.index, match.index + match[0].length]);
+                }
+            } catch (e) {
+                // 正则表达式无效时返回空数组
+                console.warn('Invalid regex:', e);
+            }
+            break;
+        }
+        case 'whole':
+        case 'splitByBlank':
+        default: {
+            if (caseSensitive.value) {
+                // 区分大小写的普通搜索
+                let startIndex = 0;
+                while (true) {
+                    const index = content.indexOf(keyword, startIndex);
+                    if (index === -1) break;
+                    matches.push([index, index + keyword.length]);
+                    startIndex = index + keyword.length;
+                }
+            } else {
+                // 不区分大小写的普通搜索
+                const lowerContent = content.toLowerCase();
+                const lowerKeyword = keyword.toLowerCase();
+                let startIndex = 0;
+                while (true) {
+                    const index = lowerContent.indexOf(lowerKeyword, startIndex);
+                    if (index === -1) break;
+                    matches.push([index, index + keyword.length]);
+                    startIndex = index + keyword.length;
+                }
+            }
+            break;
+        }
+    }
+
+    return matches;
 };
 
 const focusNode = (item: MatchedNodeInfo) => {
@@ -151,6 +219,21 @@ defineExpose({
                     v-model="searchKeywords"
                     @keydown.enter="handleSearch()"
                 />
+                <select
+                    v-model="searchType"
+                    class="search-type-select"
+                >
+                    <option value="whole">{{ translate('searchType_whole') }}</option>
+                    <option value="splitByBlank">{{ translate('searchType_splitByBlank') }}</option>
+                    <option value="regex">{{ translate('searchType_regex') }}</option>
+                </select>
+                <label class="case-sensitive-label">
+                    <input
+                        type="checkbox"
+                        v-model="caseSensitive"
+                    />
+                    <span>{{ translate('searchConfig_caseSensitive') }}</span>
+                </label>
                 <button @click="handleSearch()">
                     <icon-search />
                 </button>
@@ -209,6 +292,25 @@ defineExpose({
 
 .search-input {
     width: 100%;
+}
+
+.search-type-select {
+    margin-top: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    border: var(--border);
+    border-radius: var(--border-radius);
+    background-color: var(--background-color);
+    cursor: pointer;
+}
+
+.case-sensitive-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-top: 0.5rem;
+    margin-left: 0.5rem;
+    cursor: pointer;
+    user-select: none;
 }
 
 .search-result {

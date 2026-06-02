@@ -84,4 +84,10 @@ export const localeEn: MainLocale = {
     download_success: (fileName: string, path: string) =>
         `Download Success: ${fileName} -> ${path}`,
     download_fail: (fileName: string) => `Download Fail: ${fileName}`,
+
+    searchType_whole: 'Whole',
+    searchType_splitByBlank: 'Split by Blank',
+    searchType_regex: 'Regex',
+
+    searchConfig_caseSensitive: 'Case Sensitive',
 };
