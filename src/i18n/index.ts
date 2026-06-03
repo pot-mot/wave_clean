@@ -87,6 +87,10 @@ export type MainLocale = {
     searchType_regex: string;
 
     searchConfig_caseSensitive: string;
+    searchConfig_selectLayers: string;
+    searchConfig_allLayers: string;
+
+    searchResult_noResult: string;
 };
 
 type BaseLocale = {

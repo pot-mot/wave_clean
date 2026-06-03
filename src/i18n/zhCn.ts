@@ -89,4 +89,8 @@ export const localeZhCn: MainLocale = {
     searchType_regex: '正则',
 
     searchConfig_caseSensitive: '区分大小写',
+    searchConfig_selectLayers: '选择图层',
+    searchConfig_allLayers: '全部图层',
+
+    searchResult_noResult: '无搜索结果',
 };

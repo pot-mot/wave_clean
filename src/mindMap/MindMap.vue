@@ -38,9 +38,28 @@ const handleSearchStart = async () => {
     searcherShow.value = true;
     await nextTick();
     await searcherRef.value?.focusInput();
+    document.documentElement.addEventListener('keydown', searchEndByEsc, {capture: true});
 };
 const handleSearchEnd = () => {
+    document.documentElement.removeEventListener('keydown', searchEndByEsc);
     searcherShow.value = false;
+};
+const searchEndByEsc = (e: KeyboardEvent) => {
+    if (searcherShow.value && e.key === 'Escape') {
+        handleSearchEnd();
+    }
+};
+
+const handleSearcherKeydown = async (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+        handleSearchEnd();
+    } else if (e.ctrlKey && e.key === 'F') {
+        if (judgeTargetIsInteraction(e)) return;
+
+        e.preventDefault();
+
+        await searcherRef.value?.focusInput();
+    }
 };
 
 const handleKeyDown = async (e: KeyboardEvent) => {
@@ -145,7 +164,7 @@ const handleKeyDown = async (e: KeyboardEvent) => {
 
             e.preventDefault();
 
-            handleSearchStart();
+            await handleSearchStart();
         }
     }
 };
@@ -175,6 +194,7 @@ const handleKeyDown = async (e: KeyboardEvent) => {
         <MindMapSearcher
             v-if="searcherShow"
             ref="searcherRef"
+            @keydown="handleSearcherKeydown"
         >
             <button @click="handleSearchEnd">
                 <icon-close />

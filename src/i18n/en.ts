@@ -90,4 +90,8 @@ export const localeEn: MainLocale = {
     searchType_regex: 'Regex',
 
     searchConfig_caseSensitive: 'Case Sensitive',
+    searchConfig_selectLayers: 'Select Layers',
+    searchConfig_allLayers: 'All Layers',
+
+    searchResult_noResult: 'No Result',
 };

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {ref, useTemplateRef} from 'vue';
+import {ref, useTemplateRef, computed} from 'vue';
 import {type ContentNode, validateContentNode} from '@/mindMap/node/ContentNode.ts';
 import {type ContentEdge, validateContentEdge} from '@/mindMap/edge/ContentEdge.ts';
 import {useMindMap} from '@/mindMap/useMindMap.ts';
@@ -19,24 +19,54 @@ const searchType = ref<SearchType>('whole');
 
 const caseSensitive = ref(false);
 
+// 图层选择功能：存储选中的图层ID，空数组表示全选
+const selectedLayerIdSet = ref<Set<string>>(new Set<string>([currentLayer.value.id]));
+
 const searchInputRef = useTemplateRef<HTMLInputElement>('searchInputRef');
 
 const searchResult = ref<{
     nodes: MatchedNodeInfo[];
     edges: MatchedEdgeInfo[];
-}>({
-    nodes: [],
-    edges: [],
+}>();
+
+// 计算是否全选
+const isAllLayersSelected = computed(() => {
+    return selectedLayerIdSet.value.size === layers.length;
 });
 
+// 切换全选状态
+const toggleAllLayers = () => {
+    if (isAllLayersSelected.value) {
+        // 如果当前是全选，则取消全选（清空）
+        selectedLayerIdSet.value.clear();
+    } else {
+        // 如果当前不是全选，则全选
+        selectedLayerIdSet.value = new Set(layers.map((layer) => layer.id));
+    }
+};
+
+// 切换单个图层选择
+const toggleLayerSelection = (layerId: string) => {
+    if (selectedLayerIdSet.value.has(layerId)) {
+        selectedLayerIdSet.value.delete(layerId);
+    } else {
+        selectedLayerIdSet.value.add(layerId);
+    }
+};
+
 const handleSearch = () => {
-    searchResult.value.nodes = [];
-    searchResult.value.edges = [];
+    searchResult.value = {
+        nodes: [],
+        edges: [],
+    };
 
     const keywords = getKeywords();
     if (keywords.length === 0) return;
 
-    for (const layer of layers) {
+    // 确定要搜索的图层列表
+    const layersToSearch = layers.filter((layer) => selectedLayerIdSet.value.has(layer.id));
+
+    for (const layer of layersToSearch) {
         const nodes = layer.vueFlow.getNodes.value;
         const edges = layer.vueFlow.getEdges.value;
 
@@ -211,7 +241,10 @@ defineExpose({
 
 <template>
     <teleport to="body">
-        <div class="mind-map-searcher">
+        <div
+            class="mind-map-searcher"
+            tabindex="-1"
+        >
             <div>
                 <input
                     ref="searchInputRef"
@@ -234,12 +267,39 @@ defineExpose({
                     />
                     <span>{{ translate('searchConfig_caseSensitive') }}</span>
                 </label>
+                <div class="layer-selection">
+                    <label class="layer-selection-label">
+                        <input
+                            type="checkbox"
+                            :checked="isAllLayersSelected"
+                            @change="toggleAllLayers"
+                        />
+                        <span>{{ translate('searchConfig_allLayers') }}</span>
+                    </label>
+                    <div class="layer-checkboxes">
+                        <label
+                            v-for="layer in layers"
+                            :key="layer.id"
+                            class="layer-checkbox-label"
+                        >
+                            <input
+                                type="checkbox"
+                                :checked="selectedLayerIdSet.has(layer.id)"
+                                @change="toggleLayerSelection(layer.id)"
+                            />
+                            <span>{{ layer.name }}</span>
+                        </label>
+                    </div>
+                </div>
                 <button @click="handleSearch()">
                     <icon-search />
                 </button>
                 <slot />
             </div>
-            <div class="search-result">
+            <div
+                v-if="searchResult"
+                class="search-result"
+            >
                 <div
                     v-for="node in searchResult.nodes"
                     :key="node.node.id + node.layerId"
@@ -269,6 +329,11 @@ defineExpose({
                         :content="edge.edge.data.content"
                         :view-ranges="edge.viewRanges"
                     />
+                </div>
+                <div v-if="searchResult.nodes.length <= 0 && searchResult.edges.length <= 0">
+                    <div>
+                        {{ translate('searchResult_noResult') }}
+                    </div>
                 </div>
             </div>
         </div>
@@ -311,6 +376,49 @@ defineExpose({
     margin-left: 0.5rem;
     cursor: pointer;
     user-select: none;
+}
+
+.layer-selection {
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    border: var(--border);
+    border-radius: var(--border-radius);
+    background-color: var(--background-color-hover);
+}
+
+.layer-selection-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    cursor: pointer;
+    user-select: none;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.layer-checkboxes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    max-height: 120px;
+    overflow-y: auto;
+}
+
+.layer-checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    cursor: pointer;
+    user-select: none;
+    padding: 0.25rem 0.5rem;
+    border: var(--border);
+    border-radius: var(--border-radius);
+    background-color: var(--background-color);
+    transition: background-color 0.2s;
+}
+
+.layer-checkbox-label:hover {
+    background-color: var(--background-color-hover, rgba(0, 0, 0, 0.1));
 }
 
 .search-result {
