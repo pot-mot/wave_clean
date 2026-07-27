@@ -240,119 +240,112 @@ defineExpose({
 </script>
 
 <template>
-    <teleport to="body">
-        <div
-            class="mind-map-searcher"
-            tabindex="-1"
-        >
-            <div>
+    <div
+        class="mind-map-searcher"
+        tabindex="-1"
+    >
+        <div>
+            <input
+                ref="searchInputRef"
+                class="search-input"
+                v-model="searchKeywords"
+                @keydown.enter="handleSearch()"
+            />
+            <select
+                v-model="searchType"
+                class="search-type-select"
+            >
+                <option value="whole">{{ translate('searchType_whole') }}</option>
+                <option value="splitByBlank">{{ translate('searchType_splitByBlank') }}</option>
+                <option value="regex">{{ translate('searchType_regex') }}</option>
+            </select>
+            <label class="case-sensitive-label">
                 <input
-                    ref="searchInputRef"
-                    class="search-input"
-                    v-model="searchKeywords"
-                    @keydown.enter="handleSearch()"
+                    type="checkbox"
+                    v-model="caseSensitive"
                 />
-                <select
-                    v-model="searchType"
-                    class="search-type-select"
-                >
-                    <option value="whole">{{ translate('searchType_whole') }}</option>
-                    <option value="splitByBlank">{{ translate('searchType_splitByBlank') }}</option>
-                    <option value="regex">{{ translate('searchType_regex') }}</option>
-                </select>
-                <label class="case-sensitive-label">
+                <span>{{ translate('searchConfig_caseSensitive') }}</span>
+            </label>
+            <div class="layer-selection">
+                <label class="layer-selection-label">
                     <input
                         type="checkbox"
-                        v-model="caseSensitive"
+                        :checked="isAllLayersSelected"
+                        @change="toggleAllLayers"
                     />
-                    <span>{{ translate('searchConfig_caseSensitive') }}</span>
+                    <span>{{ translate('searchConfig_allLayers') }}</span>
                 </label>
-                <div class="layer-selection">
-                    <label class="layer-selection-label">
+                <div class="layer-checkboxes">
+                    <label
+                        v-for="layer in layers"
+                        :key="layer.id"
+                        class="layer-checkbox-label"
+                    >
                         <input
                             type="checkbox"
-                            :checked="isAllLayersSelected"
-                            @change="toggleAllLayers"
+                            :checked="selectedLayerIdSet.has(layer.id)"
+                            @change="toggleLayerSelection(layer.id)"
                         />
-                        <span>{{ translate('searchConfig_allLayers') }}</span>
+                        <span>{{ layer.name }}</span>
                     </label>
-                    <div class="layer-checkboxes">
-                        <label
-                            v-for="layer in layers"
-                            :key="layer.id"
-                            class="layer-checkbox-label"
-                        >
-                            <input
-                                type="checkbox"
-                                :checked="selectedLayerIdSet.has(layer.id)"
-                                @change="toggleLayerSelection(layer.id)"
-                            />
-                            <span>{{ layer.name }}</span>
-                        </label>
-                    </div>
                 </div>
-                <button @click="handleSearch()">
-                    <icon-search />
-                </button>
-                <slot />
+            </div>
+            <button @click="handleSearch()">
+                <icon-search />
+            </button>
+            <slot />
+        </div>
+        <div
+            v-if="searchResult"
+            class="search-result"
+        >
+            <div
+                v-for="node in searchResult.nodes"
+                :key="node.node.id + node.layerId"
+                class="search-result-item"
+                @click="focusNode(node)"
+            >
+                <span>
+                    {{ layers.find((it) => it.id === node.layerId)?.name }}
+                </span>
+                <span> Node </span>
+                <ResultContent
+                    :content="node.node.data.content"
+                    :view-ranges="node.viewRanges"
+                />
             </div>
             <div
-                v-if="searchResult"
-                class="search-result"
+                v-for="edge in searchResult.edges"
+                :key="edge.edge.id + edge.layerId"
+                class="search-result-item"
+                @click="focusEdge(edge)"
             >
-                <div
-                    v-for="node in searchResult.nodes"
-                    :key="node.node.id + node.layerId"
-                    class="search-result-item"
-                    @click="focusNode(node)"
-                >
-                    <span>
-                        {{ layers.find((it) => it.id === node.layerId)?.name }}
-                    </span>
-                    <span> Node </span>
-                    <ResultContent
-                        :content="node.node.data.content"
-                        :view-ranges="node.viewRanges"
-                    />
-                </div>
-                <div
-                    v-for="edge in searchResult.edges"
-                    :key="edge.edge.id + edge.layerId"
-                    class="search-result-item"
-                    @click="focusEdge(edge)"
-                >
-                    <span>
-                        {{ layers.find((it) => it.id === edge.layerId)?.name }}
-                    </span>
-                    <span> Edge </span>
-                    <ResultContent
-                        :content="edge.edge.data.content"
-                        :view-ranges="edge.viewRanges"
-                    />
-                </div>
-                <div v-if="searchResult.nodes.length <= 0 && searchResult.edges.length <= 0">
-                    <div>
-                        {{ translate('searchResult_noResult') }}
-                    </div>
+                <span>
+                    {{ layers.find((it) => it.id === edge.layerId)?.name }}
+                </span>
+                <span> Edge </span>
+                <ResultContent
+                    :content="edge.edge.data.content"
+                    :view-ranges="edge.viewRanges"
+                />
+            </div>
+            <div v-if="searchResult.nodes.length <= 0 && searchResult.edges.length <= 0">
+                <div>
+                    {{ translate('searchResult_noResult') }}
                 </div>
             </div>
         </div>
-    </teleport>
+    </div>
 </template>
 
 <style scoped>
 .mind-map-searcher {
-    position: absolute;
-    top: 20%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 60vw;
-    z-index: var(--toolbar-z-index);
-    padding: 1rem 0.5rem;
+    padding: 0 1rem;
     font-size: 1rem;
-    border: var(--border);
-    border-radius: var(--border-radius);
-    background-color: var(--background-color);
+    display: grid;
+    grid-template-rows: 1fr auto;
+    height: 100%;
+    width: 100%;
 }
 
 .search-input {
@@ -422,7 +415,6 @@ defineExpose({
 }
 
 .search-result {
-    max-height: calc(60 * var(--vh));
     overflow-y: auto;
 }
 

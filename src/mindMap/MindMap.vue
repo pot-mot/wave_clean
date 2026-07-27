@@ -10,7 +10,7 @@ import MindMapSelectionRect from '@/mindMap/selectionRect/MindMapSelectionRect.v
 import HelperLines from '@/mindMap/helperLines/HelperLines.vue';
 import MindMapSearcher from '@/mindMap/searcher/MindMapSearcher.vue';
 import {nextTick, ref, useTemplateRef} from 'vue';
-import IconClose from '@/components/icons/IconClose.vue';
+import DragResizeDialog from '@/components/dialog/DragResizeDialog/DragResizeDialog.vue';
 
 const {isTouchDevice} = useDeviceStore();
 
@@ -191,15 +191,16 @@ const handleKeyDown = async (e: KeyboardEvent) => {
 
         <MindMapSelectionRect :rect="selectionRect" />
 
-        <MindMapSearcher
-            v-if="searcherShow"
-            ref="searcherRef"
-            @keydown="handleSearcherKeydown"
+        <DragResizeDialog
+            v-model="searcherShow"
+            can-resize
         >
-            <button @click="handleSearchEnd">
-                <icon-close />
-            </button>
-        </MindMapSearcher>
+            <MindMapSearcher
+                v-if="searcherShow"
+                ref="searcherRef"
+                @keydown="handleSearcherKeydown"
+            />
+        </DragResizeDialog>
 
         <template v-if="isTouchDevice">
             <MobileToolbar />
