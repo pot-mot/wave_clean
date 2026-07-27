@@ -26,8 +26,10 @@ import {useFocusTargetStore} from '@/store/focusTargetStore.ts';
 import QuickInputBar from '@/mindMap/quickInput/QuickInputBar.vue';
 import {checkIsMarkdownEditorElement} from '@/components/markdown/editor/MarkdownEditorElement.ts';
 import IconDotsVertical from '@/components/icons/IconDotsVertical.vue';
+import IconSearch from '@/components/icons/IconSearch.vue';
 import {useMindMapStore} from '@/store/mindMapStore.ts';
 import {confirmSave} from '@/mindMap/closeSave/closeSave.ts';
+import {useSearchStore} from '@/store/searchStore.ts';
 
 const {
     save,
@@ -50,6 +52,8 @@ const {
     cut,
     paste,
 } = useMindMap();
+
+const searchStore = useSearchStore();
 
 const metaMenuOpen = ref(false);
 
@@ -211,6 +215,10 @@ watch(
         <div class="container">
             <button @click="fitView()">
                 <IconFit />
+            </button>
+
+            <button @click="searchStore.openSearch()">
+                <IconSearch />
             </button>
 
             <button

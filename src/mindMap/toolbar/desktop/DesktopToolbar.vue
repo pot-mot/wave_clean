@@ -11,7 +11,9 @@ import IconMenu from '@/components/icons/IconMenu.vue';
 import IconLayer from '@/components/icons/IconLayer.vue';
 import IconDrag from '@/components/icons/IconDrag.vue';
 import IconSelectRect from '@/components/icons/IconSelectRect.vue';
+import IconSearch from '@/components/icons/IconSearch.vue';
 import DownloadSelect from '@/mindMap/export/ExportSelect.vue';
+import {useSearchStore} from '@/store/searchStore.ts';
 
 const {
     save,
@@ -24,6 +26,8 @@ const {
     defaultMouseAction,
     toggleDefaultMouseAction,
 } = useMindMap();
+
+const searchStore = useSearchStore();
 
 const metaMenuOpen = ref(false);
 
@@ -43,6 +47,10 @@ const layersMenuOpen = ref(false);
         </button>
 
         <DownloadSelect style="margin-left: 0.5rem; margin-right: 0.5rem" />
+
+        <button @click="searchStore.openSearch()">
+            <IconSearch />
+        </button>
 
         <button
             :disabled="!canUndo"

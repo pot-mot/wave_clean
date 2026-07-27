@@ -5,10 +5,16 @@ import IconLight from '@/components/icons/IconLight.vue';
 import {computed} from 'vue';
 import ColorInput from '@/components/color/ColorInput.vue';
 import {type LanguageType, translate, useI18nStore} from '@/store/i18nStore.ts';
+import CustomSelect from '@/components/select/CustomSelect.vue';
+import type {CustomSelectOption} from '@/components/select/createOptions.ts';
 
 const themeStore = useThemeStore();
 
 const {language, setLanguage} = useI18nStore();
+
+const onLanguageChange = (val: LanguageType | LanguageType[] | undefined) => {
+    setLanguage(val as LanguageType);
+};
 
 const primaryColor = computed({
     get(): string {
@@ -18,6 +24,11 @@ const primaryColor = computed({
         themeStore.setPrimaryColor(color);
     },
 });
+
+const languageOptions: CustomSelectOption<LanguageType>[] = [
+    {id: 'zh-cn', label: translate('language_zh_cn'), value: 'zh-cn'},
+    {id: 'en', label: translate('language_en'), value: 'en'},
+];
 </script>
 
 <template>
@@ -29,16 +40,11 @@ const primaryColor = computed({
 
         <div class="config-item">
             <div>{{ translate('language') }}</div>
-            <select
-                class="language-select"
-                :value="language"
-                @change="
-                    (e: Event) => setLanguage((e.target as HTMLSelectElement).value as LanguageType)
-                "
-            >
-                <option value="zh-cn">{{ translate('language_zh_cn') }}</option>
-                <option value="en">{{ translate('language_en') }}</option>
-            </select>
+            <CustomSelect
+                :model-value="language"
+                :options="languageOptions"
+                @update:model-value="onLanguageChange"
+            />
         </div>
 
         <div class="config-item">
@@ -72,7 +78,7 @@ const primaryColor = computed({
     gap: 0.25rem;
 }
 
-.language-select {
+:deep(.custom-select-trigger) {
     border-radius: 0.25rem;
 }
 

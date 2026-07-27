@@ -9,10 +9,12 @@ import {useDeviceStore} from '@/store/deviceStore.ts';
 import MindMapSelectionRect from '@/mindMap/selectionRect/MindMapSelectionRect.vue';
 import HelperLines from '@/mindMap/helperLines/HelperLines.vue';
 import MindMapSearcher from '@/mindMap/searcher/MindMapSearcher.vue';
-import {nextTick, ref, useTemplateRef} from 'vue';
+import {computed} from 'vue';
 import DragResizeDialog from '@/components/dialog/DragResizeDialog/DragResizeDialog.vue';
+import {useSearchStore} from '@/store/searchStore.ts';
 
 const {isTouchDevice} = useDeviceStore();
+const searchStore = useSearchStore();
 
 const {
     layers,
@@ -31,36 +33,6 @@ const {
     cut,
     paste,
 } = useMindMap();
-
-const searcherRef = useTemplateRef('searcherRef');
-const searcherShow = ref(false);
-const handleSearchStart = async () => {
-    searcherShow.value = true;
-    await nextTick();
-    await searcherRef.value?.focusInput();
-    document.documentElement.addEventListener('keydown', searchEndByEsc, {capture: true});
-};
-const handleSearchEnd = () => {
-    document.documentElement.removeEventListener('keydown', searchEndByEsc);
-    searcherShow.value = false;
-};
-const searchEndByEsc = (e: KeyboardEvent) => {
-    if (searcherShow.value && e.key === 'Escape') {
-        handleSearchEnd();
-    }
-};
-
-const handleSearcherKeydown = async (e: KeyboardEvent) => {
-    if (e.key === 'Escape') {
-        handleSearchEnd();
-    } else if (e.ctrlKey && e.key === 'F') {
-        if (judgeTargetIsInteraction(e)) return;
-
-        e.preventDefault();
-
-        await searcherRef.value?.focusInput();
-    }
-};
 
 const handleKeyDown = async (e: KeyboardEvent) => {
     // 按下 Delete 键删除选中的节点和边
@@ -164,8 +136,25 @@ const handleKeyDown = async (e: KeyboardEvent) => {
 
             e.preventDefault();
 
-            await handleSearchStart();
+            await searchStore.openSearch();
         }
+    }
+};
+
+const searchDialogMaxWidth = computed(() =>
+    isTouchDevice.value ? undefined : window.innerWidth * 0.5,
+);
+const searchDialogInitW = computed(() =>
+    isTouchDevice.value ? undefined : window.innerWidth * 0.5,
+);
+const searchDialogMaxHeight = computed(() => window.innerHeight * 0.65);
+const searchDialogInitH = computed(() => window.innerHeight * 0.5);
+
+const handleSearchDialogToggle = (val: boolean) => {
+    if (val) {
+        searchStore.openSearch();
+    } else {
+        searchStore.closeSearch();
     }
 };
 </script>
@@ -192,14 +181,15 @@ const handleKeyDown = async (e: KeyboardEvent) => {
         <MindMapSelectionRect :rect="selectionRect" />
 
         <DragResizeDialog
-            v-model="searcherShow"
+            :model-value="searchStore.searcherShow.value"
+            @update:model-value="handleSearchDialogToggle"
             can-resize
+            :max-width="searchDialogMaxWidth"
+            :max-height="searchDialogMaxHeight"
+            :init-w="searchDialogInitW"
+            :init-h="searchDialogInitH"
         >
-            <MindMapSearcher
-                v-if="searcherShow"
-                ref="searcherRef"
-                @keydown="handleSearcherKeydown"
-            />
+            <MindMapSearcher v-if="searchStore.searcherShow.value" />
         </DragResizeDialog>
 
         <template v-if="isTouchDevice">

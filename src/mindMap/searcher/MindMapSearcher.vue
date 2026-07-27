@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {ref, useTemplateRef, computed} from 'vue';
+import {ref, useTemplateRef, computed, onMounted, watch} from 'vue';
 import {type ContentNode, validateContentNode} from '@/mindMap/node/ContentNode.ts';
 import {type ContentEdge, validateContentEdge} from '@/mindMap/edge/ContentEdge.ts';
 import {useMindMap} from '@/mindMap/useMindMap.ts';
@@ -8,6 +8,10 @@ import type {MatchedEdgeInfo, MatchedNodeInfo} from '@/mindMap/searcher/MatchedI
 import ResultContent from '@/mindMap/searcher/HighlightContent.vue';
 import IconSearch from '@/components/icons/IconSearch.vue';
 import {translate} from '@/store/i18nStore.ts';
+import {useSearchStore} from '@/store/searchStore.ts';
+import {judgeTargetIsInteraction} from '@/utils/event/judgeEventTarget.ts';
+import CustomSelect from '@/components/select/CustomSelect.vue';
+import type {CustomSelectOption} from '@/components/select/createOptions.ts';
 
 const {layers, fitRect, currentLayer, toggleLayer, selectNode, selectEdge, graphSelection} =
     useMindMap();
@@ -19,40 +23,53 @@ const searchType = ref<SearchType>('whole');
 
 const caseSensitive = ref(false);
 
-// 图层选择功能：存储选中的图层ID，空数组表示全选
-const selectedLayerIdSet = ref<Set<string>>(new Set<string>([currentLayer.value.id]));
+const selectedLayerIds = ref<string[]>([currentLayer.value.id]);
 
 const searchInputRef = useTemplateRef<HTMLInputElement>('searchInputRef');
+
+const searchStore = useSearchStore();
+
+onMounted(() => {
+    searchStore.registerFocusFn(() => {
+        searchInputRef.value?.focus();
+    });
+});
+
+watch(
+    () => searchStore.searcherShow.value,
+    (val) => {
+        if (val) {
+            selectedLayerIds.value = [currentLayer.value.id];
+        }
+    },
+);
+
+const handleKeydown = (e: KeyboardEvent) => {
+    if (e.ctrlKey && (e.key === 'f' || e.key === 'F')) {
+        if (judgeTargetIsInteraction(e)) return;
+        e.preventDefault();
+        searchInputRef.value?.focus();
+    }
+};
 
 const searchResult = ref<{
     nodes: MatchedNodeInfo[];
     edges: MatchedEdgeInfo[];
 }>();
 
-// 计算是否全选
-const isAllLayersSelected = computed(() => {
-    return selectedLayerIdSet.value.size === layers.length;
-});
+const searchTypeOptions: CustomSelectOption<SearchType>[] = [
+    {id: 'whole', label: translate('searchType_whole'), value: 'whole'},
+    {id: 'splitByBlank', label: translate('searchType_splitByBlank'), value: 'splitByBlank'},
+    {id: 'regex', label: translate('searchType_regex'), value: 'regex'},
+];
 
-// 切换全选状态
-const toggleAllLayers = () => {
-    if (isAllLayersSelected.value) {
-        // 如果当前是全选，则取消全选（清空）
-        selectedLayerIdSet.value.clear();
-    } else {
-        // 如果当前不是全选，则全选
-        selectedLayerIdSet.value = new Set(layers.map((layer) => layer.id));
-    }
-};
-
-// 切换单个图层选择
-const toggleLayerSelection = (layerId: string) => {
-    if (selectedLayerIdSet.value.has(layerId)) {
-        selectedLayerIdSet.value.delete(layerId);
-    } else {
-        selectedLayerIdSet.value.add(layerId);
-    }
-};
+const layerOptions = computed<CustomSelectOption<string>[]>(() =>
+    layers.map((layer) => ({
+        id: layer.id,
+        label: layer.name,
+        value: layer.id,
+    })),
+);
 
 const handleSearch = () => {
     searchResult.value = {
@@ -63,8 +80,8 @@ const handleSearch = () => {
     const keywords = getKeywords();
     if (keywords.length === 0) return;
 
-    // 确定要搜索的图层列表
-    const layersToSearch = layers.filter((layer) => selectedLayerIdSet.value.has(layer.id));
+    const selectedSet = new Set(selectedLayerIds.value);
+    const layersToSearch = layers.filter((layer) => selectedSet.has(layer.id));
 
     for (const layer of layersToSearch) {
         const nodes = layer.vueFlow.getNodes.value;
@@ -119,7 +136,6 @@ const getKeywords = (): string[] => {
         case 'splitByBlank':
             return input.split(/\s+/).filter((it) => it.length > 0);
         case 'regex':
-            // 正则模式下，整个输入作为一个正则表达式
             return [input];
         case 'whole':
         default:
@@ -140,7 +156,6 @@ const findMatches = (content: string, keyword: string): [number, number][] => {
                     matches.push([match.index, match.index + match[0].length]);
                 }
             } catch (e) {
-                // 正则表达式无效时返回空数组
                 console.warn('Invalid regex:', e);
             }
             break;
@@ -149,7 +164,6 @@ const findMatches = (content: string, keyword: string): [number, number][] => {
         case 'splitByBlank':
         default: {
             if (caseSensitive.value) {
-                // 区分大小写的普通搜索
                 let startIndex = 0;
                 while (true) {
                     const index = content.indexOf(keyword, startIndex);
@@ -158,7 +172,6 @@ const findMatches = (content: string, keyword: string): [number, number][] => {
                     startIndex = index + keyword.length;
                 }
             } else {
-                // 不区分大小写的普通搜索
                 const lowerContent = content.toLowerCase();
                 const lowerKeyword = keyword.toLowerCase();
                 let startIndex = 0;
@@ -231,18 +244,13 @@ const focusEdge = (item: MatchedEdgeInfo) => {
     graphSelection.unselectAll();
     selectEdge(edge.id);
 };
-
-defineExpose({
-    focusInput: () => {
-        searchInputRef.value?.focus();
-    },
-});
 </script>
 
 <template>
     <div
         class="mind-map-searcher"
         tabindex="-1"
+        @keydown="handleKeydown"
     >
         <div>
             <input
@@ -251,45 +259,40 @@ defineExpose({
                 v-model="searchKeywords"
                 @keydown.enter="handleSearch()"
             />
-            <select
-                v-model="searchType"
-                class="search-type-select"
-            >
-                <option value="whole">{{ translate('searchType_whole') }}</option>
-                <option value="splitByBlank">{{ translate('searchType_splitByBlank') }}</option>
-                <option value="regex">{{ translate('searchType_regex') }}</option>
-            </select>
-            <label class="case-sensitive-label">
-                <input
-                    type="checkbox"
-                    v-model="caseSensitive"
+
+            <div class="search-options-row">
+                <CustomSelect
+                    v-model="searchType"
+                    :options="searchTypeOptions"
                 />
-                <span>{{ translate('searchConfig_caseSensitive') }}</span>
-            </label>
-            <div class="layer-selection">
-                <label class="layer-selection-label">
+                <label class="case-sensitive-label">
                     <input
                         type="checkbox"
-                        :checked="isAllLayersSelected"
-                        @change="toggleAllLayers"
+                        v-model="caseSensitive"
                     />
-                    <span>{{ translate('searchConfig_allLayers') }}</span>
+                    <span>{{ translate('searchConfig_caseSensitive') }}</span>
                 </label>
-                <div class="layer-checkboxes">
-                    <label
-                        v-for="layer in layers"
-                        :key="layer.id"
-                        class="layer-checkbox-label"
-                    >
-                        <input
-                            type="checkbox"
-                            :checked="selectedLayerIdSet.has(layer.id)"
-                            @change="toggleLayerSelection(layer.id)"
-                        />
-                        <span>{{ layer.name }}</span>
-                    </label>
-                </div>
             </div>
+
+            <CustomSelect
+                v-model="selectedLayerIds"
+                :options="layerOptions"
+                class="layer-select"
+                multiple
+                :select-all-label="translate('searchConfig_allLayers')"
+                :placeholder="translate('searchConfig_selectLayers')"
+            >
+                <template #trigger="{selectedOptions}">
+                    <span class="layer-trigger-label">
+                        {{
+                            selectedOptions.length === 0
+                                ? translate('searchConfig_selectLayers')
+                                : selectedOptions.map((o) => o.label).join(', ')
+                        }}
+                    </span>
+                </template>
+            </CustomSelect>
+
             <button @click="handleSearch()">
                 <icon-search />
             </button>
@@ -330,7 +333,7 @@ defineExpose({
                 />
             </div>
             <div v-if="searchResult.nodes.length <= 0 && searchResult.edges.length <= 0">
-                <div>
+                <div class="search-controls">
                     {{ translate('searchResult_noResult') }}
                 </div>
             </div>
@@ -342,76 +345,46 @@ defineExpose({
 .mind-map-searcher {
     padding: 0 1rem;
     font-size: 1rem;
+    overflow-x: auto;
     display: grid;
-    grid-template-rows: 1fr auto;
+    grid-template-rows: auto 1fr;
+    grid-template-columns: minmax(0, 1fr);
     height: 100%;
     width: 100%;
+}
+
+.search-controls {
+    min-width: 0;
+    overflow-x: auto;
 }
 
 .search-input {
     width: 100%;
 }
 
-.search-type-select {
+.search-options-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     margin-top: 0.5rem;
-    padding: 0.25rem 0.5rem;
-    border: var(--border);
-    border-radius: var(--border-radius);
-    background-color: var(--background-color);
-    cursor: pointer;
 }
 
 .case-sensitive-label {
     display: inline-flex;
     align-items: center;
     gap: 0.25rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+.layer-select {
     margin-top: 0.5rem;
-    margin-left: 0.5rem;
-    cursor: pointer;
-    user-select: none;
+    width: 100%;
+    overflow-x: auto;
 }
 
-.layer-selection {
-    margin-top: 0.5rem;
-    padding: 0.5rem;
-    border: var(--border);
-    border-radius: var(--border-radius);
-    background-color: var(--background-color-hover);
-}
-
-.layer-selection-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    cursor: pointer;
-    user-select: none;
-    font-weight: bold;
-    margin-bottom: 0.5rem;
-}
-
-.layer-checkboxes {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    max-height: 120px;
-    overflow-y: auto;
-}
-
-.layer-checkbox-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    cursor: pointer;
-    user-select: none;
-    padding: 0.25rem 0.5rem;
-    border: var(--border);
-    border-radius: var(--border-radius);
-    background-color: var(--background-color);
-    transition: background-color 0.2s;
-}
-
-.layer-checkbox-label:hover {
-    background-color: var(--background-color-hover, rgba(0, 0, 0, 0.1));
+.layer-trigger-label {
+    white-space: nowrap;
 }
 
 .search-result {
