@@ -3,6 +3,8 @@
     --loading-z-index: 10000000;
     /*--image-viewer-z-index: 5000000;*/
     --mask-z-index: 5000000;
+    /* 下拉框需要高于弹窗遮罩，否则会被 Dialog 遮挡 */
+    --custom-select-z-index: 6000000;
     --quick-input-toolbar-z-index: 4000000;
     --editor-full-screen-z-index: 3000000;
     --toolbar-z-index: 2000000;

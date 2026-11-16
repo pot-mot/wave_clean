@@ -94,4 +94,16 @@ export const localeEn: MainLocale = {
     searchConfig_allLayers: 'All Layers',
 
     searchResult_noResult: 'No Result',
+
+    node_settings_title: 'Node Settings',
+    edge_settings_title: 'Edge Settings',
+    node_markdown: 'Markdown mode',
+    edge_source_arrow: 'Source arrow',
+    edge_target_arrow: 'Target arrow',
+    edge_stroke_width: 'Line width',
+    arrowShape_none: 'None',
+    arrowShape_arrow: 'Arrow',
+    arrowShape_triangle: 'Triangle',
+    arrowShape_diamond: 'Diamond',
+    arrowShape_circle: 'Circle',
 };

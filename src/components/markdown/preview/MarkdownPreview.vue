@@ -107,7 +107,8 @@ const handleClick = (e: MouseEvent) => {
             currentElement,
             (el) => el instanceof SVGSVGElement,
         );
-        if (svgSvgElement && isSelectionEmpty) {
+        // 边等组件本身渲染在 SVG 内，向上查找会命中外层画布 SVG，这里只处理预览内容里的 SVG
+        if (svgSvgElement && isSelectionEmpty && elementRef.value.contains(svgSvgElement)) {
             previewImage(svgSvgElement, elementRef.value);
             return;
         }

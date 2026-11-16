@@ -93,4 +93,16 @@ export const localeZhCn: MainLocale = {
     searchConfig_allLayers: '全部图层',
 
     searchResult_noResult: '无搜索结果',
+
+    node_settings_title: '节点设置',
+    edge_settings_title: '连线设置',
+    node_markdown: 'Markdown 模式',
+    edge_source_arrow: '起点箭头',
+    edge_target_arrow: '终点箭头',
+    edge_stroke_width: '线条粗细',
+    arrowShape_none: '无',
+    arrowShape_arrow: '箭头',
+    arrowShape_triangle: '三角',
+    arrowShape_diamond: '菱形',
+    arrowShape_circle: '圆点',
 };

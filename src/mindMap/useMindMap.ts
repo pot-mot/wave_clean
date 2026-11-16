@@ -56,11 +56,8 @@ import {
     type MindMapLayerDiffData,
     MindMapLayerDiffDataKeys,
 } from '@/mindMap/layer/MindMapLayer.ts';
-import {
-    type ContentNodeData,
-    ContentType_DEFAULT,
-    NodeType_CONTENT,
-} from '@/mindMap/node/ContentNode.ts';
+import {type ContentNodeData, NodeType_CONTENT} from '@/mindMap/node/ContentNode.ts';
+import {ContentType_DEFAULT} from '@/mindMap/ContentType.ts';
 import {type ContentEdgeData, EdgeType_CONTENT} from '@/mindMap/edge/ContentEdge.ts';
 import {translate} from '@/store/i18nStore.ts';
 

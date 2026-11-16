@@ -275,7 +275,7 @@ onBeforeUnmount(() => {
 
 .custom-select-dropdown {
     position: fixed;
-    z-index: var(--custom-select-z-index, 4000000);
+    z-index: var(--custom-select-z-index, 6000000);
     background-color: var(--background-color);
     border: var(--border);
     border-color: var(--background-color-hover);

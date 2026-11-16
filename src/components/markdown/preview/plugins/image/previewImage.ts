@@ -83,6 +83,8 @@ export const previewImage = (currentElement: Element, previewElement: HTMLElemen
         }
     }
 
+    if (imageSrcList.length === 0) return;
+
     viewerApi({
         images: imageSrcList,
         options: {

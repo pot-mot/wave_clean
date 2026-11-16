@@ -91,6 +91,18 @@ export type MainLocale = {
     searchConfig_allLayers: string;
 
     searchResult_noResult: string;
+
+    node_settings_title: string;
+    edge_settings_title: string;
+    node_markdown: string;
+    edge_source_arrow: string;
+    edge_target_arrow: string;
+    edge_stroke_width: string;
+    arrowShape_none: string;
+    arrowShape_arrow: string;
+    arrowShape_triangle: string;
+    arrowShape_diamond: string;
+    arrowShape_circle: string;
 };
 
 type BaseLocale = {

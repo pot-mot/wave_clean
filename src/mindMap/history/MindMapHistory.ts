@@ -502,6 +502,21 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
         },
     });
 
+    // 同步节点尺寸：NodeResizer 会写入 style.width/height，
+    // 撤销/重做时只改 dimensions 会导致外层节点尺寸与连接点不更新
+    const applyGraphNodeSize = (node: GraphNode, size: {width: number; height: number}) => {
+        node.width = size.width;
+        node.height = size.height;
+        node.dimensions = {width: size.width, height: size.height};
+
+        const style = typeof node.style === 'object' && node.style !== null ? node.style : {};
+        node.style = {
+            ...style,
+            width: `${size.width}px`,
+            height: `${size.height}px`,
+        };
+    };
+
     history.registerCommand('node:resize', {
         applyAction: (options) => {
             const {layerId, id, newSize, newPosition} = options;
@@ -509,10 +524,7 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
             const vueFlow = getVueFlow(layerId);
             const node = getGraphNode(id, vueFlow);
 
-            node.width = newSize.width;
-            node.height = newSize.height;
-            node.dimensions.width = newSize.width;
-            node.dimensions.height = newSize.height;
+            applyGraphNodeSize(node, newSize);
             node.position.x = newPosition.x;
             node.position.y = newPosition.y;
 
@@ -522,10 +534,7 @@ export const useMindMapHistory = (global: MindMapGlobal) => {
             const vueFlow = getVueFlow(layerId);
             const node = getGraphNode(id, vueFlow);
 
-            node.width = oldSize.width;
-            node.height = oldSize.height;
-            node.dimensions.width = oldSize.width;
-            node.dimensions.height = oldSize.height;
+            applyGraphNodeSize(node, oldSize);
             node.position.x = oldPosition.x;
             node.position.y = oldPosition.y;
         },

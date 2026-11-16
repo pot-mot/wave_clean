@@ -1,18 +1,17 @@
 import {type GraphNode, Position} from '@vue-flow/core';
 import type {JSONSchemaType} from 'ajv/lib/types/json-schema.ts';
 import {createSchemaValidator} from '@/utils/type/typeGuard.ts';
+import {
+    ContentType_CONSTANTS,
+    type ContentType,
+    ContentType_DEFAULT,
+} from '@/mindMap/ContentType.ts';
+
+// 重新导出以保持向后兼容
+export {ContentType_CONSTANTS, type ContentType, ContentType_DEFAULT};
 
 // 内容节点的节点类型
 export const NodeType_CONTENT = 'CONTENT_NODE' as const;
-
-// 内容类型
-export const ContentType_CONSTANTS = ['text', 'markdown'] as const;
-export type ContentType = (typeof ContentType_CONSTANTS)[number];
-
-export const ContentType_DEFAULT = ContentType_CONSTANTS[0];
-
-export const ContentNode_minWidth = 20;
-export const ContentNode_minHeight = 24;
 
 // 内容节点数据
 export type ContentNodeData = {

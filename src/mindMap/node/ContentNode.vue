@@ -14,18 +14,21 @@ import {useMindMapStore} from '@/store/mindMapStore.ts';
 import MarkdownPreview from '@/components/markdown/preview/MarkdownPreview.vue';
 import IconEdit from '@/components/icons/IconEdit.vue';
 import IconCheck from '@/components/icons/IconCheck.vue';
-import IconMarkdown from '@/components/icons/IconMarkdown.vue';
-import IconMarkdownOff from '@/components/icons/IconMarkdownOff.vue';
+import IconSettings from '@/components/icons/IconSettings.vue';
+import Dialog from '@/components/dialog/Dialog.vue';
+import {translate} from '@/store/i18nStore.ts';
 import {type RawMindMapLayer} from '@/mindMap/layer/MindMapLayer.ts';
 import {
     type ContentNode,
-    ContentNode_minHeight,
-    ContentNode_minWidth,
     type ContentNodeData,
     ContentNodeHandles,
+} from '@/mindMap/node/ContentNode.ts';
+import {
     type ContentType,
     ContentType_DEFAULT,
-} from '@/mindMap/node/ContentNode.ts';
+    Content_minWidth,
+    Content_minHeight,
+} from '@/mindMap/ContentType.ts';
 import MarkdownCompositeEditor from '@/components/markdown/compositeEditor/MarkdownCompositeEditor.vue';
 import IconFullScreen from '@/components/icons/IconFullScreen.vue';
 import {
@@ -61,6 +64,9 @@ const props = defineProps<
 const _node = computed(() => findNode(props.id, props.layer.vueFlow));
 
 const dataTypeOrDefault = computed<ContentType>(() => props.data.type ?? ContentType_DEFAULT);
+
+// 设置 Dialog 状态
+const isSettingsOpen = ref(false);
 
 // 是否已聚焦
 const isFocus = ref(false);
@@ -447,6 +453,13 @@ const executeToggleType = async () => {
     });
 };
 
+// 关闭设置：恢复节点焦点，避免焦点落到画布导致 Backspace 误删节点
+const executeCloseSettings = async () => {
+    isSettingsOpen.value = false;
+    await nextTick();
+    handleNodeFocus();
+};
+
 // 删除
 const executeDelete = () => {
     if (
@@ -531,8 +544,8 @@ const executeDelete = () => {
             :node-id="id"
             :is-visible="data.type === 'markdown' && isFocus && !layer.lock"
             :class="{noWheel: isResizing}"
-            :min-width="ContentNode_minWidth"
-            :min-height="ContentNode_minHeight"
+            :min-width="Content_minWidth"
+            :min-height="Content_minHeight"
             :auto-scale="false"
             @resize="handleMarkdownEditorResize"
             @resize-start="handleMarkdownEditorResizeStart"
@@ -552,6 +565,7 @@ const executeDelete = () => {
             :node-id="id"
             :is-visible="selected && isFocus"
             class="toolbar"
+            @mousedown.prevent
         >
             <button @mousedown.capture.prevent.stop="executeButtonCopy">
                 <IconCopy />
@@ -562,11 +576,10 @@ const executeDelete = () => {
             </button>
 
             <button
-                @mousedown.capture.prevent.stop="executeToggleType"
+                @mousedown.capture.prevent.stop="isSettingsOpen = true"
                 v-if="!layer.lock"
             >
-                <IconMarkdown v-if="dataTypeOrDefault === 'text'" />
-                <IconMarkdownOff v-else-if="dataTypeOrDefault === 'markdown'" />
+                <IconSettings />
             </button>
 
             <button
@@ -593,6 +606,23 @@ const executeDelete = () => {
                 <IconFullScreen />
             </button>
         </NodeToolbar>
+
+        <Dialog
+            v-if="isSettingsOpen"
+            :title="translate('node_settings_title')"
+            :onClose="executeCloseSettings"
+        >
+            <div class="node-settings">
+                <div class="settings-row">
+                    <span>{{ translate('node_markdown') }}</span>
+                    <input
+                        type="checkbox"
+                        :checked="dataTypeOrDefault === 'markdown'"
+                        @change="executeToggleType"
+                    />
+                </div>
+            </div>
+        </Dialog>
     </div>
 </template>
 
@@ -666,6 +696,25 @@ const executeDelete = () => {
 
 .toolbar > button:hover {
     background-color: var(--background-color-hover);
+}
+
+.node-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.5rem 0 1rem;
+    min-width: 14rem;
+}
+
+.node-settings .settings-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.node-settings .settings-row > span:first-child {
+    flex: 0 0 auto;
+    min-width: 6rem;
 }
 
 .hide-scroll::-webkit-scrollbar-thumb {

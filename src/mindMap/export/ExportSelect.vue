@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import {computed} from 'vue';
 import {useMindMap} from '@/mindMap/useMindMap.ts';
 import IconDownload from '@/components/icons/IconDownload.vue';
 import {ExportFileType_CONSTANTS} from '@/mindMap/export/export.ts';
@@ -7,7 +8,8 @@ import {createOptions} from '@/components/select/createOptions.ts';
 
 const {exportFileType, exportFile} = useMindMap();
 
-const exportOptions = createOptions(ExportFileType_CONSTANTS);
+// 保持选项为响应式，避免以后加入翻译后只在 setup 时计算一次
+const exportOptions = computed(() => createOptions(ExportFileType_CONSTANTS));
 </script>
 
 <template>
